@@ -275,3 +275,77 @@ class TestBug5ReadLaterViewNotPersistent:
             f"Bug 5 fix broken: custom_id is '{button.custom_id}', "
             f"expected format 'read_later_{{8-char hex}}'."
         )
+
+
+# ---------------------------------------------------------------------------
+# Bug 6: Discord message length - oversized draft crashes followup.send
+# ---------------------------------------------------------------------------
+
+class TestBug6DiscordMessageLength:
+    """
+    Bug Condition: When len(draft) > 2000, news_now passes the full string
+    directly to interaction.followup.send(content=draft, ...), which causes
+    Discord's API to return HTTP 400 Bad Request.
+
+    Property 1: Bug Condition - Oversized Draft Crashes followup.send
+
+    Exploration strategy:
+      - Mock the LLM to return a draft longer than 2000 characters.
+      - Call the news_now handler.
+      - Assert that followup.send was called with len(content) > 2000.
+      - This FAILS after the fix (confirming the fix works).
+      - Run on UNFIXED code: test PASSES (confirming the bug exists).
+
+    _Requirements: 1.1, 1.2_
+    """
+
+    @pytest.mark.asyncio
+    async def test_bug6_oversized_draft_sent_without_truncation(self):
+        """
+        Property 1: Bug Condition - Oversized Draft Crashes followup.send
+
+        On UNFIXED code: followup.send is called with len(content) > 2000.
+        This confirms the bug exists (counterexample: 2001-char draft passed raw).
+        After the fix: followup.send is called with len(content) <= 2000.
+        """
+        from app.bot.cogs.news_commands import NewsCommands
+
+        oversized_draft = "A" * 2001  # isBugCondition(draft) = True
+
+        mock_bot = MagicMock()
+        cog = NewsCommands(mock_bot)
+
+        mock_interaction = MagicMock()
+        mock_interaction.response = AsyncMock()
+        mock_interaction.response.defer = AsyncMock()
+        mock_interaction.followup = AsyncMock()
+        mock_interaction.followup.send = AsyncMock()
+        mock_interaction.user = MagicMock()
+
+        mock_notion = MagicMock()
+        mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
+
+        mock_rss = MagicMock()
+        mock_rss.fetch_all_feeds = AsyncMock(return_value=[MagicMock()])
+
+        mock_llm = MagicMock()
+        mock_llm.evaluate_batch = AsyncMock(return_value=[MagicMock(ai_analysis=MagicMock(tinkering_index=5))])
+        mock_llm.generate_weekly_newsletter = AsyncMock(return_value=oversized_draft)
+
+        mock_view = MagicMock()
+
+        with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
+             patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
+             patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
+             patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_view):
+            await cog.news_now.callback(cog, mock_interaction)
+
+        # On unfixed code: content sent is > 2000 chars (the bug)
+        # After fix: content sent is <= 2000 chars (the fix)
+        call_kwargs = mock_interaction.followup.send.call_args
+        content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
+        assert len(content_sent) <= 2000, (
+            f"Bug 6 confirmed on unfixed code: followup.send called with "
+            f"{len(content_sent)}-char string (> 2000). "
+            f"Counterexample: draft='{'A' * 2001}' → content_sent has len={len(content_sent)}"
+        )

@@ -232,3 +232,72 @@ class TestPreservation5PBTAddToReadLater:
             f"Expected parent={{'database_id': '{read_later_db_id}'}}, "
             f"got {kwargs.get('parent')}"
         )
+
+
+# ---------------------------------------------------------------------------
+# Preservation 6 (PBT): Short drafts are sent unmodified
+# ---------------------------------------------------------------------------
+
+class TestPreservation6DiscordShortDraft:
+    """
+    Property 2: Preservation - Short Draft Sent Unmodified
+
+    For all draft strings where len(draft) <= 2000 (isBugCondition = False),
+    the news_now handler SHALL send the content unmodified in a single
+    followup.send call.
+
+    Observation on unfixed code:
+      - followup.send(content=draft, view=view) is called with the exact draft string
+      - No modification occurs when len(draft) <= 2000
+
+    **Validates: Requirements 3.1, 3.2**
+    """
+
+    @pytest.mark.asyncio
+    @given(draft=st.text(min_size=0, max_size=2000))
+    @h_settings(max_examples=50)
+    async def test_short_draft_sent_unmodified(self, draft):
+        """
+        Property 2: Preservation - for any draft where len(draft) <= 2000,
+        followup.send is called exactly once with the content unchanged.
+        """
+        from app.bot.cogs.news_commands import NewsCommands
+
+        mock_bot = MagicMock()
+        cog = NewsCommands(mock_bot)
+
+        mock_interaction = MagicMock()
+        mock_interaction.response = AsyncMock()
+        mock_interaction.response.defer = AsyncMock()
+        mock_interaction.followup = AsyncMock()
+        mock_interaction.followup.send = AsyncMock()
+        mock_interaction.user = MagicMock()
+
+        mock_notion = MagicMock()
+        mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
+
+        mock_rss = MagicMock()
+        mock_rss.fetch_all_feeds = AsyncMock(return_value=[MagicMock()])
+
+        mock_llm = MagicMock()
+        mock_llm.evaluate_batch = AsyncMock(return_value=[MagicMock(ai_analysis=MagicMock(tinkering_index=3))])
+        mock_llm.generate_weekly_newsletter = AsyncMock(return_value=draft)
+
+        mock_view = MagicMock()
+
+        with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
+             patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
+             patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
+             patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_view):
+            await cog.news_now.callback(cog, mock_interaction)
+
+        mock_interaction.followup.send.assert_called_once()
+        call_kwargs = mock_interaction.followup.send.call_args
+        content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
+        assert content_sent == draft, (
+            f"Preservation broken: draft of len {len(draft)} was modified. "
+            f"Expected content == draft, got len={len(content_sent)}"
+        )
+        # view must always be attached
+        view_sent = call_kwargs.kwargs.get("view")
+        assert view_sent == mock_view, "Preservation broken: view not attached to followup.send"

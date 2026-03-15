@@ -44,12 +44,16 @@ class NewsCommands(commands.Cog):
             from app.bot.cogs.interactions import ReadLaterView # Local import to prevent circular deps
             
             draft = await llm.generate_weekly_newsletter(hardcore_articles)
-            
+
+            # Hard enforcement: Discord's message content limit is 2000 chars.
+            # The LLM prompt soft limit is unreliable, so we truncate here.
+            DISCORD_LIMIT = 2000
+            TRUNCATION_SUFFIX = "..."
+            if len(draft) > DISCORD_LIMIT:
+                draft = draft[:DISCORD_LIMIT - len(TRUNCATION_SUFFIX)] + TRUNCATION_SUFFIX
+
             # 5. Send results back to Discord Channel
             view = ReadLaterView(articles=hardcore_articles[:7]) # Attach read later buttons for top 7
-            
-            # Note: Discord limit is 4000 for standard embeds or 2000 for messages. 
-            # We enforce 3500 max in the LLM prompt.
             await interaction.followup.send(content=draft, view=view)
             
         except Exception as e:
