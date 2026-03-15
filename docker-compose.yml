@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  tech-news-agent:
+    build: .
+    container_name: tech-news-agent
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "8000:8000"
+    volumes:
+      # Optional: Map a local logs directory if you want persistent logs outside the container
+      - ./logs:/app/logs
+    environment:
+      - TZ=Asia/Taipei

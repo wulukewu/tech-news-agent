@@ -1,0 +1,12 @@
+fastapi>=0.111.0
+uvicorn>=0.30.1
+pydantic>=2.7.4
+pydantic-settings>=2.3.4
+discord.py>=2.4.0
+httpx>=0.27.0
+feedparser>=6.0.11
+tenacity>=8.4.1
+openai>=1.35.3
+notion-client>=2.2.1
+APScheduler>=3.10.4
+python-dotenv>=1.0.1
