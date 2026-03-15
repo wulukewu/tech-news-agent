@@ -22,7 +22,7 @@ class NotionService:
             results = await self.client.databases.query(
                 database_id=self.feeds_db_id,
                 filter={
-                    "property": "Is_Active",
+                    "property": "Active",
                     "checkbox": {
                         "equals": True
                     }

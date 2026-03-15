@@ -1,3 +1,11 @@
+import os
+import certifi
+import ssl
+
+# Fix for macOS Python SSL Certificate Verification Error
+os.environ["SSL_CERT_FILE"] = certifi.where()
+os.environ["SSL_CERT_DIR"] = os.path.dirname(certifi.where())
+
 import logging
 import asyncio
 from contextlib import asynccontextmanager
@@ -34,6 +42,16 @@ async def lifespan(app: FastAPI):
         logger.info("Starting Discord Bot in background...")
         # create_task ensures it doesn't block FastAPI startup
         bot_task = asyncio.create_task(bot.start(settings.discord_token))
+        
+        def handle_bot_error(task: asyncio.Task):
+            try:
+                task.result()
+            except asyncio.CancelledError:
+                pass
+            except Exception as e:
+                logger.error(f"Discord Bot background task failed: {e}", exc_info=True)
+                
+        bot_task.add_done_callback(handle_bot_error)
     else:
         logger.warning("No DISCORD_TOKEN found. Bot will not start.")
         
@@ -74,4 +92,4 @@ async def health_check():
 
 if __name__ == "__main__":
     # Local testing entry point
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=False)

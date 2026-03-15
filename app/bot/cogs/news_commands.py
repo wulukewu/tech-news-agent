@@ -15,6 +15,7 @@ class NewsCommands(commands.Cog):
         
     @app_commands.command(name="news_now", description="強制立即抓取並生成本週的技術新聞報表")
     async def news_now(self, interaction: discord.Interaction):
+        logger.info(f"Command /news_now triggered by {interaction.user}")
         # Notify the user that processing has started, because LLM inference takes time
         await interaction.response.defer(thinking=True)
         

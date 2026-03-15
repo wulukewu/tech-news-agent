@@ -23,17 +23,18 @@ class TechNewsBot(commands.Bot):
         logger.info("Loading Discord Cogs...")
         await self.load_extension("app.bot.cogs.news_commands")
         await self.load_extension("app.bot.cogs.interactions")
-        
-        # Sync the command tree to Discord (makes slash commands visible)
-        try:
-            synced = await self.tree.sync()
-            logger.info(f"Synced {len(synced)} slash command(s).")
-        except Exception as e:
-            logger.error(f"Failed to sync slash commands: {e}")
 
     async def on_ready(self):
         logger.info(f"Logged in as {self.user} (ID: {self.user.id})")
+        # Sync the command tree to Discord (makes slash commands visible)
+        try:
+            synced = await self.tree.sync()
+            logger.info(f"Successfully synced {len(synced)} slash command(s).")
+        except Exception as e:
+            logger.error(f"Failed to sync slash commands: {e}")
         logger.info("Discord Bot is fully ready and listening.")
+
+
 
 # Singleton instance
 bot = TechNewsBot()
