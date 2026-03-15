@@ -1,10 +1,11 @@
 import os
-import certifi
-import ssl
+import sys
 
 # Fix for macOS Python SSL Certificate Verification Error
-os.environ["SSL_CERT_FILE"] = certifi.where()
-os.environ["SSL_CERT_DIR"] = os.path.dirname(certifi.where())
+if sys.platform == "darwin":
+    import certifi
+    os.environ["SSL_CERT_FILE"] = certifi.where()
+    os.environ["SSL_CERT_DIR"] = os.path.dirname(certifi.where())
 
 import logging
 import asyncio

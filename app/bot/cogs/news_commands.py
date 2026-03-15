@@ -63,10 +63,16 @@ class NewsCommands(commands.Cog):
         category="分類 (例如: AI, Frontend, Backend)"
     )
     async def add_feed(self, interaction: discord.Interaction, name: str, url: str, category: str):
-        # We can directly use Notion API to add a new row here
-        # For full implementation, we'd add `add_feed` to notion_service.py
-        # Here's a placeholder response
-        await interaction.response.send_message(f"✅ 已收到您的請求：新增 `{name}` ({category})\n🔗 {url}\n\n*(此功能 Notion 寫入邏輯待實作)*")
+        await interaction.response.defer(thinking=True)
+        try:
+            notion = NotionService()
+            await notion.add_feed(name, url, category)
+            await interaction.followup.send(
+                f"✅ 已成功新增 `{name}` ({category}) 至 Notion！\n🔗 {url}"
+            )
+        except Exception as e:
+            logger.error(f"Error during /add_feed execution: {e}", exc_info=True)
+            await interaction.followup.send(f"❌ 新增失敗：{e}")
 
 
 async def setup(bot: commands.Bot):

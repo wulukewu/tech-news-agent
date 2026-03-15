@@ -13,7 +13,7 @@ from app.bot.cogs.interactions import ReadLaterView
 logger = logging.getLogger(__name__)
 
 # Global scheduler instance
-scheduler = AsyncIOScheduler(timezone=settings.model_config.get("timezone", "Asia/Taipei"))
+scheduler = AsyncIOScheduler(timezone=settings.timezone)
 
 async def weekly_news_job():
     """The cron job that mimics n8n's workflow: fetch, score, generate, post to Discord."""

@@ -1,3 +1,4 @@
+import hashlib
 import logging
 import discord
 from discord.ext import commands
@@ -11,7 +12,7 @@ class ReadLaterButton(discord.ui.Button):
     def __init__(self, article: ArticleSchema, index: int):
         # Labels have limits, so we truncate the title slightly for the button
         label_text = f"⭐ 稍後閱讀: {article.title[:20]}..." if len(article.title) > 20 else f"⭐ 稍後閱讀: {article.title}"
-        super().__init__(style=discord.ButtonStyle.primary, label=label_text, custom_id=f"read_later_{index}")
+        super().__init__(style=discord.ButtonStyle.primary, label=label_text, custom_id=f"read_later_{hashlib.md5(article.url.encode()).hexdigest()[:8]}")
         self.article = article
 
     async def callback(self, interaction: discord.Interaction):

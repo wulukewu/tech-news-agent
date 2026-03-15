@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     
     # LLM (Groq) Configuration
     groq_api_key: str
+
+    # Timezone Configuration
+    timezone: str = "Asia/Taipei"
     
     model_config = SettingsConfigDict(
         env_file=".env",

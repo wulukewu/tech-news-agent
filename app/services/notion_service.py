@@ -19,12 +19,13 @@ class NotionService:
         """Fetch all active RSS feeds from the Feeds Database."""
         try:
             logger.info("Fetching active RSS feeds from Notion...")
-            results = await self.client.databases.query(
-                database_id=self.feeds_db_id,
-                filter={
-                    "property": "Active",
-                    "checkbox": {
-                        "equals": True
+            results = await self.client.request(
+                path=f"databases/{self.feeds_db_id}/query",
+                method="POST",
+                body={
+                    "filter": {
+                        "property": "Active",
+                        "checkbox": {"equals": True}
                     }
                 }
             )
@@ -102,3 +103,29 @@ class NotionService:
         except Exception as e:
             logger.error(f"Failed to save article to Read Later: {e}")
             raise NotionServiceError(f"Error saving to Notion Read Later DB: {e}")
+
+    async def add_feed(self, name: str, url: str, category: str) -> None:
+        """新增一個 RSS 訂閱源至 Notion Feeds 資料庫。"""
+        try:
+            logger.info(f"Adding new feed to Notion: {name} ({category}) - {url}")
+            await self.client.pages.create(
+                parent={"database_id": self.feeds_db_id},
+                properties={
+                    "Name": {
+                        "title": [{"text": {"content": name[:2000]}}]
+                    },
+                    "URL": {
+                        "url": url[:2000]
+                    },
+                    "Category": {
+                        "select": {"name": category}
+                    },
+                    "Active": {
+                        "checkbox": True
+                    },
+                }
+            )
+            logger.info(f"Successfully added feed '{name}' to Notion.")
+        except Exception as e:
+            logger.error(f"Failed to add feed to Notion: {e}")
+            raise NotionServiceError(f"Error adding feed to Notion: {e}")
