@@ -23,8 +23,13 @@ class TechNewsBot(commands.Bot):
         logger.info("Loading Discord Cogs...")
         await self.load_extension("app.bot.cogs.news_commands")
         await self.load_extension("app.bot.cogs.interactions")
-        from app.bot.cogs.interactions import ReadLaterView
-        self.add_view(ReadLaterView(articles=[]))
+        from app.bot.cogs.interactions import ReadLaterView, FilterView, DeepDiveView
+        try:
+            self.add_view(ReadLaterView(articles=[]))
+            self.add_view(FilterView(articles=[]))
+            self.add_view(DeepDiveView(articles=[]))
+        except Exception as e:
+            logger.warning(f"Failed to register persistent views: {e}")
 
     async def on_ready(self):
         logger.info(f"Logged in as {self.user} (ID: {self.user.id})")

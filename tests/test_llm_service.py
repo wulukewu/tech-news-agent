@@ -251,3 +251,265 @@ class TestGenerateWeeklyNewsletter:
         idx_5 = content.find("Article 5")
         idx_1 = content.find("Article 1")
         assert idx_5 < idx_1, "Articles not sorted by tinkering_index descending"
+
+
+# ---------------------------------------------------------------------------
+# generate_deep_dive
+# ---------------------------------------------------------------------------
+
+def make_article_with_analysis(title="Deep Dive Article", content_preview="Some content", source_category="AI"):
+    article = ArticleSchema(
+        title=title,
+        url="https://example.com/deep-dive",
+        content_preview=content_preview,
+        source_category=source_category,
+        source_name="TestSource",
+    )
+    article.ai_analysis = AIAnalysis(
+        is_hardcore=True,
+        reason="Has architecture discussion",
+        actionable_takeaway="Deploy with Kubernetes",
+        tinkering_index=4,
+    )
+    return article
+
+
+class TestGenerateDeepDive:
+    @pytest.mark.asyncio
+    async def test_returns_string_on_success(self):
+        """generate_deep_dive returns a non-empty string when LLM responds."""
+        service = LLMService.__new__(LLMService)
+        mock_response = MagicMock()
+        mock_response.choices[0].message.content = "深度分析內容"
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        service.client = mock_client
+
+        result = await service.generate_deep_dive(make_article_with_analysis())
+
+        assert isinstance(result, str)
+        assert result == "深度分析內容"
+
+    @pytest.mark.asyncio
+    async def test_uses_summarize_model(self):
+        """generate_deep_dive uses SUMMARIZE_MODEL (llama-3.3-70b-versatile)."""
+        from app.services.llm_service import SUMMARIZE_MODEL
+
+        service = LLMService.__new__(LLMService)
+        captured = {}
+
+        async def fake_create(**kwargs):
+            captured["model"] = kwargs["model"]
+            mock_response = MagicMock()
+            mock_response.choices[0].message.content = "分析"
+            return mock_response
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = fake_create
+        service.client = mock_client
+
+        await service.generate_deep_dive(make_article_with_analysis())
+
+        assert captured["model"] == SUMMARIZE_MODEL
+        assert captured["model"] == "llama-3.3-70b-versatile"
+
+    @pytest.mark.asyncio
+    async def test_uses_max_tokens_600(self):
+        """generate_deep_dive sets max_tokens=600."""
+        service = LLMService.__new__(LLMService)
+        captured = {}
+
+        async def fake_create(**kwargs):
+            captured["max_tokens"] = kwargs["max_tokens"]
+            mock_response = MagicMock()
+            mock_response.choices[0].message.content = "分析"
+            return mock_response
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = fake_create
+        service.client = mock_client
+
+        await service.generate_deep_dive(make_article_with_analysis())
+
+        assert captured["max_tokens"] == 600
+
+    @pytest.mark.asyncio
+    async def test_system_prompt_contains_traditional_chinese(self):
+        """generate_deep_dive system prompt requires Traditional Chinese output."""
+        service = LLMService.__new__(LLMService)
+        captured = {}
+
+        async def fake_create(**kwargs):
+            captured["system"] = kwargs["messages"][0]["content"]
+            mock_response = MagicMock()
+            mock_response.choices[0].message.content = "分析"
+            return mock_response
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = fake_create
+        service.client = mock_client
+
+        await service.generate_deep_dive(make_article_with_analysis())
+
+        assert "繁體中文" in captured["system"]
+
+    @pytest.mark.asyncio
+    async def test_prompt_includes_title_and_content_preview(self):
+        """generate_deep_dive includes title and content_preview in user prompt."""
+        service = LLMService.__new__(LLMService)
+        captured = {}
+
+        async def fake_create(**kwargs):
+            captured["user"] = kwargs["messages"][1]["content"]
+            mock_response = MagicMock()
+            mock_response.choices[0].message.content = "分析"
+            return mock_response
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = fake_create
+        service.client = mock_client
+
+        article = make_article_with_analysis(title="My Title", content_preview="My preview content")
+        await service.generate_deep_dive(article)
+
+        assert "My Title" in captured["user"]
+        assert "My preview content" in captured["user"]
+
+    @pytest.mark.asyncio
+    async def test_empty_content_preview_uses_only_title(self):
+        """generate_deep_dive still generates when content_preview is empty, using only title."""
+        service = LLMService.__new__(LLMService)
+        captured = {}
+
+        async def fake_create(**kwargs):
+            captured["user"] = kwargs["messages"][1]["content"]
+            mock_response = MagicMock()
+            mock_response.choices[0].message.content = "分析"
+            return mock_response
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = fake_create
+        service.client = mock_client
+
+        article = make_article_with_analysis(title="Only Title", content_preview="")
+        await service.generate_deep_dive(article)
+
+        assert "Only Title" in captured["user"]
+        assert "content_preview" not in captured["user"].lower() or "Only Title" in captured["user"]
+        # Ensure the API was still called (no early return)
+        assert captured["user"] != ""
+
+    @pytest.mark.asyncio
+    async def test_returns_default_string_on_empty_response(self):
+        """generate_deep_dive returns default string when LLM returns empty content."""
+        service = LLMService.__new__(LLMService)
+        mock_response = MagicMock()
+        mock_response.choices[0].message.content = ""
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        service.client = mock_client
+
+        result = await service.generate_deep_dive(make_article_with_analysis())
+
+        assert result == "無法生成深度摘要內容。"
+
+    @pytest.mark.asyncio
+    async def test_returns_default_string_on_none_response(self):
+        """generate_deep_dive returns default string when LLM returns None content."""
+        service = LLMService.__new__(LLMService)
+        mock_response = MagicMock()
+        mock_response.choices[0].message.content = None
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        service.client = mock_client
+
+        result = await service.generate_deep_dive(make_article_with_analysis())
+
+        assert result == "無法生成深度摘要內容。"
+
+    @pytest.mark.asyncio
+    async def test_raises_llm_service_error_on_api_failure(self):
+        """generate_deep_dive raises LLMServiceError when API call fails."""
+        service = LLMService.__new__(LLMService)
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(side_effect=Exception("API error"))
+        service.client = mock_client
+
+        with pytest.raises(LLMServiceError):
+            await service.generate_deep_dive(make_article_with_analysis())
+
+
+# ---------------------------------------------------------------------------
+# generate_deep_dive — property-based tests (Property 6)
+# ---------------------------------------------------------------------------
+
+from hypothesis import given, settings
+from hypothesis import strategies as st
+from pydantic import HttpUrl
+
+
+def _make_article_strategy():
+    """Strategy to generate random ArticleSchema instances."""
+    return st.builds(
+        ArticleSchema,
+        title=st.text(min_size=1, max_size=100),
+        url=st.just("https://example.com/article"),
+        content_preview=st.text(max_size=200),  # includes empty string
+        source_category=st.text(min_size=1, max_size=50),
+        source_name=st.text(min_size=1, max_size=50),
+        published_date=st.none(),
+        ai_analysis=st.none(),
+        raw_data=st.none(),
+    )
+
+
+class TestGenerateDeepDiveProperty:
+    # Feature: discord-interaction-enhancement, Property 6: generate_deep_dive 的 prompt 包含文章關鍵欄位
+    # Validates: Requirements 5.2, 5.4
+
+    @given(article=_make_article_strategy())
+    @settings(max_examples=100)
+    def test_prompt_always_contains_title(self, article):
+        """Property 6: user prompt always contains the article title."""
+        import asyncio
+
+        service = LLMService.__new__(LLMService)
+        captured = {}
+
+        async def fake_create(**kwargs):
+            captured["user"] = kwargs["messages"][1]["content"]
+            mock_response = MagicMock()
+            mock_response.choices[0].message.content = "分析"
+            return mock_response
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = fake_create
+        service.client = mock_client
+
+        asyncio.get_event_loop().run_until_complete(service.generate_deep_dive(article))
+
+        assert article.title in captured["user"]
+
+    @given(article=_make_article_strategy())
+    @settings(max_examples=100)
+    def test_prompt_contains_content_preview_when_non_empty(self, article):
+        """Property 6: user prompt contains content_preview when it is non-empty."""
+        import asyncio
+
+        service = LLMService.__new__(LLMService)
+        captured = {}
+
+        async def fake_create(**kwargs):
+            captured["user"] = kwargs["messages"][1]["content"]
+            mock_response = MagicMock()
+            mock_response.choices[0].message.content = "分析"
+            return mock_response
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = fake_create
+        service.client = mock_client
+
+        asyncio.get_event_loop().run_until_complete(service.generate_deep_dive(article))
+
+        if article.content_preview:
+            assert article.content_preview in captured["user"]

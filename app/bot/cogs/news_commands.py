@@ -41,7 +41,7 @@ class NewsCommands(commands.Cog):
             hardcore_articles = await llm.evaluate_batch(all_articles)
             
             # 4. Generate Markdown
-            from app.bot.cogs.interactions import ReadLaterView # Local import to prevent circular deps
+            from app.bot.cogs.interactions import ReadLaterView, FilterView, DeepDiveView # Local import to prevent circular deps
             
             draft = await llm.generate_weekly_newsletter(hardcore_articles)
 
@@ -53,8 +53,10 @@ class NewsCommands(commands.Cog):
                 draft = draft[:DISCORD_LIMIT - len(TRUNCATION_SUFFIX)] + TRUNCATION_SUFFIX
 
             # 5. Send results back to Discord Channel
-            view = ReadLaterView(articles=hardcore_articles[:7]) # Attach read later buttons for top 7
-            await interaction.followup.send(content=draft, view=view)
+            combined_view = FilterView(articles=hardcore_articles)
+            for item in DeepDiveView(articles=hardcore_articles[:5]).children:
+                combined_view.add_item(item)
+            await interaction.followup.send(content=draft, view=combined_view)
             
         except Exception as e:
             logger.error(f"Error during /news_now execution: {e}", exc_info=True)

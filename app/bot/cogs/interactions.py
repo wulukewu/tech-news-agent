@@ -1,10 +1,14 @@
 import hashlib
 import logging
+from collections import Counter
+from typing import List
+
 import discord
 from discord.ext import commands
 
 from app.schemas.article import ArticleSchema
 from app.services.notion_service import NotionService
+from app.services.llm_service import LLMService
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +43,83 @@ class ReadLaterView(discord.ui.View):
         # In this UI design, we attach buttons dynamically based on the articles curated
         for i, article in enumerate(articles):
             self.add_item(ReadLaterButton(article, i))
+
+class FilterSelect(discord.ui.Select):
+    def __init__(self, articles: List[ArticleSchema]):
+        self.articles = articles
+
+        category_counts = Counter(a.source_category for a in articles)
+        top_categories = [cat for cat, _ in category_counts.most_common(24)]
+
+        options = [discord.SelectOption(label="📋 顯示全部", value="__all__")]
+        options += [discord.SelectOption(label=cat, value=cat) for cat in top_categories]
+
+        super().__init__(placeholder="請選擇分類篩選文章…", options=options)
+
+    async def callback(self, interaction: discord.Interaction):
+        try:
+            selected = self.values[0]
+
+            if selected == "__all__":
+                filtered = self.articles
+            else:
+                filtered = [a for a in self.articles if a.source_category == selected]
+
+            if not filtered:
+                await interaction.response.send_message("⚠️ 此分類目前沒有文章。", ephemeral=True)
+                return
+
+            lines = []
+            for article in filtered:
+                lines.append(f"**{article.title}**")
+                lines.append(f"🔗 {article.url}")
+                lines.append(f"📂 {article.source_category}")
+                lines.append("")
+            content = "\n".join(lines).strip()
+
+            if len(content) > 2000:
+                content = content[:1997] + "..."
+
+            await interaction.response.send_message(content, ephemeral=True)
+        except Exception as e:
+            logger.error(f"FilterSelect callback error: {e}")
+            await interaction.response.send_message("❌ 篩選時發生錯誤，請稍後再試。", ephemeral=True)
+
+
+class FilterView(discord.ui.View):
+    def __init__(self, articles: List[ArticleSchema]):
+        super().__init__(timeout=None)
+        self.add_item(FilterSelect(articles))
+
+
+class DeepDiveButton(discord.ui.Button):
+    def __init__(self, article: ArticleSchema):
+        label_text = f"📖 {article.title[:20]}..." if len(article.title) > 20 else f"📖 {article.title}"
+        super().__init__(
+            style=discord.ButtonStyle.secondary,
+            label=label_text,
+            custom_id=f"deep_dive_{hashlib.md5(str(article.url).encode()).hexdigest()[:8]}"
+        )
+        self.article = article
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        try:
+            result = await LLMService().generate_deep_dive(self.article)
+            if len(result) > 2000:
+                result = result[:1997] + "..."
+            await interaction.followup.send(result, ephemeral=True)
+        except Exception as e:
+            logger.error(f"DeepDiveButton callback error: {e}")
+            await interaction.followup.send("❌ 生成深度摘要時發生錯誤，請稍後再試。", ephemeral=True)
+
+
+class DeepDiveView(discord.ui.View):
+    def __init__(self, articles: List[ArticleSchema]):
+        super().__init__(timeout=None)
+        for article in articles[:5]:
+            self.add_item(DeepDiveButton(article))
+
 
 class InteractionsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):

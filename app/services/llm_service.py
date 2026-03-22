@@ -98,6 +98,62 @@ class LLMService:
         logger.info(f"Retained {len(hardcore_articles)} hardcore articles out of {len(set_of_articles)}.")
         return hardcore_articles
         
+    async def generate_deep_dive(self, article: ArticleSchema) -> str:
+        """Generate a deep-dive technical analysis for a single article in Traditional Chinese."""
+        logger.debug(f"Generating deep dive for article: {article.title}")
+
+        system_prompt = (
+            "你是一位資深技術分析師，請以繁體中文針對以下文章提供深度技術分析。\n"
+            "分析必須包含以下四個部分：\n"
+            "1. 🔍 核心技術概念：說明文章涉及的核心技術原理與概念。\n"
+            "2. 🚀 應用場景：描述此技術可應用的實際場景與使用案例。\n"
+            "3. ⚠️ 潛在風險：列出採用此技術可能面臨的風險或限制。\n"
+            "4. 👣 建議下一步：提供具體可行的下一步行動建議。\n\n"
+            "請直接輸出分析內容，不要加上多餘的前言或結語。"
+        )
+
+        # Build user prompt; use only title if content_preview is empty
+        if article.content_preview:
+            content_section = f"文章內容預覽：{article.content_preview}\n"
+        else:
+            content_section = ""
+
+        ai_section = ""
+        if article.ai_analysis:
+            ai_section = (
+                f"AI 初步評估：\n"
+                f"  推薦原因：{article.ai_analysis.reason}\n"
+                f"  行動價值：{article.ai_analysis.actionable_takeaway}\n"
+                f"  折騰指數：{article.ai_analysis.tinkering_index} / 5\n"
+            )
+
+        user_prompt = (
+            f"文章標題：{article.title}\n"
+            f"文章分類：{article.source_category}\n"
+            f"{content_section}"
+            f"{ai_section}"
+        )
+
+        try:
+            response = await self.client.chat.completions.create(
+                model=SUMMARIZE_MODEL,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.7,
+                max_tokens=600
+            )
+
+            content = response.choices[0].message.content
+            if not content or not content.strip():
+                return "無法生成深度摘要內容。"
+            return content.strip()
+
+        except Exception as e:
+            logger.error(f"Failed to generate deep dive for '{article.title}': {e}")
+            raise LLMServiceError(f"Deep dive generation error: {e}")
+
     async def generate_weekly_newsletter(self, hardcore_articles: List[ArticleSchema]) -> Optional[str]:
         """Group top 7 hardcore articles into a beautiful Discord-ready Markdown."""
         if not hardcore_articles:
