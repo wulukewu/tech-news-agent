@@ -32,7 +32,10 @@ class MarkAsReadButton(discord.ui.Button):
             notion = NotionService()
             await notion.mark_as_read(self.item.page_id)
             self.disabled = True
-            await interaction.message.edit(view=self.view)
+            try:
+                await interaction.message.edit(view=self.view)
+            except discord.NotFound:
+                pass  # message expired or was deleted, safe to ignore
             await interaction.followup.send(
                 f"✅ 已將《{self.item.title}》標記為已讀！", ephemeral=True
             )

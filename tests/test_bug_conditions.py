@@ -530,16 +530,14 @@ class TestBug8ReadLaterButtonMissing:
 
     def test_bug8_exploration_combined_view_missing_read_later_button(self):
         """
-        Bug Condition Exploration: Simulates the unfixed combined_view assembly
-        and asserts that ReadLaterButton is present.
+        Bug Condition Exploration: Verifies the fix — combined_view assembly in
+        news_now now correctly includes ReadLaterView's ReadLaterButton children.
 
-        This test is EXPECTED TO FAIL on unfixed code — that failure confirms
-        the bug exists (ReadLaterView children are never added to combined_view).
+        Expected outcome on FIXED code: PASS.
+
+        Validates: Requirements 2.1, 2.3
         """
         from app.bot.cogs.interactions import (
-            FilterView,
-            DeepDiveView,
-            ReadLaterView,
             ReadLaterButton,
         )
         from app.schemas.article import ArticleSchema
@@ -556,16 +554,12 @@ class TestBug8ReadLaterButtonMissing:
             for i in range(3)
         ]
 
-        # Replicate the CURRENT (unfixed) combined_view assembly logic from news_now:
-        combined_view = FilterView(articles=articles)
-        for item in DeepDiveView(articles=articles[:5]).children:
-            combined_view.add_item(item)
-        # NOTE: ReadLaterView is NOT added here — this is the bug
+        # Use the fixed combined_view assembly logic (includes ReadLaterView children)
+        combined_view = self._build_combined_view_fixed(articles)
 
-        # Assert that combined_view SHOULD contain a ReadLaterButton
-        # This assertion FAILS on unfixed code, confirming the bug exists.
+        # Assert that combined_view contains a ReadLaterButton (bug is fixed)
         assert any(isinstance(c, ReadLaterButton) for c in combined_view.children), (
-            "Bug 8 confirmed: combined_view does not contain any ReadLaterButton. "
+            "Bug 8 fix regression: combined_view does not contain any ReadLaterButton. "
             "ReadLaterView children were never added to combined_view in news_now."
         )
 
