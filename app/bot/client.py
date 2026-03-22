@@ -23,6 +23,7 @@ class TechNewsBot(commands.Bot):
         logger.info("Loading Discord Cogs...")
         await self.load_extension("app.bot.cogs.news_commands")
         await self.load_extension("app.bot.cogs.interactions")
+        await self.load_extension("app.bot.cogs.reading_list")
         from app.bot.cogs.interactions import ReadLaterView, FilterView, DeepDiveView
         try:
             self.add_view(ReadLaterView(articles=[]))

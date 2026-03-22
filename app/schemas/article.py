@@ -28,3 +28,11 @@ class ArticleSchema(BaseModel):
     
     # Raw data for fallback
     raw_data: Optional[Dict[str, Any]] = None
+
+class ReadingListItem(BaseModel):
+    page_id: str                          # Notion Page ID
+    title: str                            # 文章標題
+    url: HttpUrl                          # 文章 URL
+    source_category: str                  # 分類（來自 Source_Category 欄位）
+    added_at: Optional[datetime] = None   # 新增時間（來自 Added_At 欄位）
+    rating: Optional[int] = None          # 評分（1–5，未評分為 None）

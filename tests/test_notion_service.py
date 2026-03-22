@@ -233,3 +233,238 @@ class TestAddFeed:
 
         _, kwargs = mock_client.pages.create.call_args
         assert kwargs["parent"] == {"database_id": feeds_db_id}
+
+
+# ---------------------------------------------------------------------------
+# Helpers for ReadingListItem tests
+# ---------------------------------------------------------------------------
+
+def make_notion_reading_page(
+    page_id="page-001",
+    title="Test Article",
+    url="https://example.com/article",
+    status="Unread",
+    category="AI",
+    added_at="2024-01-01T00:00:00+00:00",
+    rating=None,
+):
+    rating_prop = {"number": rating} if rating is not None else {"number": None}
+    return {
+        "id": page_id,
+        "properties": {
+            "Title": {"title": [{"plain_text": title}]},
+            "URL": {"url": url},
+            "Status": {"status": {"name": status}},
+            "Source_Category": {"select": {"name": category}},
+            "Added_At": {"date": {"start": added_at}},
+            "Rating": rating_prop,
+        }
+    }
+
+
+# ---------------------------------------------------------------------------
+# get_reading_list
+# ---------------------------------------------------------------------------
+
+class TestGetReadingList:
+    @pytest.mark.asyncio
+    async def test_returns_reading_list_items(self):
+        """get_reading_list returns a list of ReadingListItem for Unread pages."""
+        from app.schemas.article import ReadingListItem
+        page = make_notion_reading_page()
+        mock_client = MagicMock()
+        mock_client.databases = MagicMock()
+        mock_client.databases.query = AsyncMock(return_value={"results": [page]})
+
+        with patch("app.services.notion_service.AsyncClient", return_value=mock_client):
+            service = NotionService()
+            result = await service.get_reading_list()
+
+        assert len(result) == 1
+        assert isinstance(result[0], ReadingListItem)
+        assert result[0].page_id == "page-001"
+        assert result[0].title == "Test Article"
+
+    @pytest.mark.asyncio
+    async def test_filters_by_unread_status(self):
+        """get_reading_list passes the correct Unread filter to Notion."""
+        mock_client = MagicMock()
+        mock_client.databases = MagicMock()
+        mock_client.databases.query = AsyncMock(return_value={"results": []})
+
+        with patch("app.services.notion_service.AsyncClient", return_value=mock_client):
+            service = NotionService()
+            await service.get_reading_list()
+
+        _, kwargs = mock_client.databases.query.call_args
+        assert kwargs["filter"]["property"] == "Status"
+        assert kwargs["filter"]["status"]["equals"] == "Unread"
+
+    @pytest.mark.asyncio
+    async def test_rating_is_none_when_not_set(self):
+        """get_reading_list sets rating=None when Notion Rating field is null."""
+        page = make_notion_reading_page(rating=None)
+        mock_client = MagicMock()
+        mock_client.databases = MagicMock()
+        mock_client.databases.query = AsyncMock(return_value={"results": [page]})
+
+        with patch("app.services.notion_service.AsyncClient", return_value=mock_client):
+            service = NotionService()
+            result = await service.get_reading_list()
+
+        assert result[0].rating is None
+
+    @pytest.mark.asyncio
+    async def test_returns_empty_list_when_no_results(self):
+        """get_reading_list returns [] when Notion returns no pages."""
+        mock_client = MagicMock()
+        mock_client.databases = MagicMock()
+        mock_client.databases.query = AsyncMock(return_value={"results": []})
+
+        with patch("app.services.notion_service.AsyncClient", return_value=mock_client):
+            service = NotionService()
+            result = await service.get_reading_list()
+
+        assert result == []
+
+    @pytest.mark.asyncio
+    async def test_raises_notion_service_error_on_failure(self):
+        """get_reading_list raises NotionServiceError on API failure."""
+        mock_client = MagicMock()
+        mock_client.databases = MagicMock()
+        mock_client.databases.query = AsyncMock(side_effect=Exception("API error"))
+
+        with patch("app.services.notion_service.AsyncClient", return_value=mock_client):
+            service = NotionService()
+            with pytest.raises(NotionServiceError):
+                await service.get_reading_list()
+
+
+# ---------------------------------------------------------------------------
+# mark_as_read
+# ---------------------------------------------------------------------------
+
+class TestMarkAsRead:
+    @pytest.mark.asyncio
+    async def test_calls_pages_update_with_read_status(self):
+        """mark_as_read calls pages.update with Status='Read' for the given page_id."""
+        mock_client = MagicMock()
+        mock_client.pages = MagicMock()
+        mock_client.pages.update = AsyncMock(return_value={})
+
+        with patch("app.services.notion_service.AsyncClient", return_value=mock_client):
+            service = NotionService()
+            await service.mark_as_read("page-001")
+
+        mock_client.pages.update.assert_called_once()
+        _, kwargs = mock_client.pages.update.call_args
+        assert kwargs["page_id"] == "page-001"
+        assert kwargs["properties"]["Status"]["status"]["name"] == "Read"
+
+    @pytest.mark.asyncio
+    async def test_raises_notion_service_error_on_failure(self):
+        """mark_as_read raises NotionServiceError on API failure."""
+        mock_client = MagicMock()
+        mock_client.pages = MagicMock()
+        mock_client.pages.update = AsyncMock(side_effect=Exception("API error"))
+
+        with patch("app.services.notion_service.AsyncClient", return_value=mock_client):
+            service = NotionService()
+            with pytest.raises(NotionServiceError):
+                await service.mark_as_read("page-001")
+
+
+# ---------------------------------------------------------------------------
+# rate_article
+# ---------------------------------------------------------------------------
+
+class TestRateArticle:
+    @pytest.mark.asyncio
+    async def test_calls_pages_update_with_rating(self):
+        """rate_article calls pages.update with the correct Rating number."""
+        mock_client = MagicMock()
+        mock_client.pages = MagicMock()
+        mock_client.pages.update = AsyncMock(return_value={})
+
+        with patch("app.services.notion_service.AsyncClient", return_value=mock_client):
+            service = NotionService()
+            await service.rate_article("page-001", 4)
+
+        mock_client.pages.update.assert_called_once()
+        _, kwargs = mock_client.pages.update.call_args
+        assert kwargs["page_id"] == "page-001"
+        assert kwargs["properties"]["Rating"]["number"] == 4
+
+    @pytest.mark.asyncio
+    async def test_raises_notion_service_error_on_failure(self):
+        """rate_article raises NotionServiceError on API failure."""
+        mock_client = MagicMock()
+        mock_client.pages = MagicMock()
+        mock_client.pages.update = AsyncMock(side_effect=Exception("API error"))
+
+        with patch("app.services.notion_service.AsyncClient", return_value=mock_client):
+            service = NotionService()
+            with pytest.raises(NotionServiceError):
+                await service.rate_article("page-001", 3)
+
+
+# ---------------------------------------------------------------------------
+# get_highly_rated_articles
+# ---------------------------------------------------------------------------
+
+class TestGetHighlyRatedArticles:
+    @pytest.mark.asyncio
+    async def test_returns_articles_above_threshold(self):
+        """get_highly_rated_articles returns articles with rating >= threshold."""
+        page = make_notion_reading_page(rating=5)
+        mock_client = MagicMock()
+        mock_client.databases = MagicMock()
+        mock_client.databases.query = AsyncMock(return_value={"results": [page]})
+
+        with patch("app.services.notion_service.AsyncClient", return_value=mock_client):
+            service = NotionService()
+            result = await service.get_highly_rated_articles(threshold=4)
+
+        assert len(result) == 1
+        assert result[0].rating == 5
+
+    @pytest.mark.asyncio
+    async def test_uses_correct_filter(self):
+        """get_highly_rated_articles passes the correct number filter to Notion."""
+        mock_client = MagicMock()
+        mock_client.databases = MagicMock()
+        mock_client.databases.query = AsyncMock(return_value={"results": []})
+
+        with patch("app.services.notion_service.AsyncClient", return_value=mock_client):
+            service = NotionService()
+            await service.get_highly_rated_articles(threshold=4)
+
+        _, kwargs = mock_client.databases.query.call_args
+        assert kwargs["filter"]["property"] == "Rating"
+        assert kwargs["filter"]["number"]["greater_than_or_equal_to"] == 4
+
+    @pytest.mark.asyncio
+    async def test_default_threshold_is_4(self):
+        """get_highly_rated_articles defaults threshold to 4."""
+        mock_client = MagicMock()
+        mock_client.databases = MagicMock()
+        mock_client.databases.query = AsyncMock(return_value={"results": []})
+
+        with patch("app.services.notion_service.AsyncClient", return_value=mock_client):
+            service = NotionService()
+            await service.get_highly_rated_articles()
+
+        _, kwargs = mock_client.databases.query.call_args
+        assert kwargs["filter"]["number"]["greater_than_or_equal_to"] == 4
+
+    @pytest.mark.asyncio
+    async def test_raises_notion_service_error_on_failure(self):
+        """get_highly_rated_articles raises NotionServiceError on API failure."""
+        mock_client = MagicMock()
+        mock_client.databases = MagicMock()
+        mock_client.databases.query = AsyncMock(side_effect=Exception("API error"))
+
+        with patch("app.services.notion_service.AsyncClient", return_value=mock_client):
+            service = NotionService()
+            with pytest.raises(NotionServiceError):
+                await service.get_highly_rated_articles()

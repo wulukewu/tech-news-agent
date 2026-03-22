@@ -513,3 +513,132 @@ class TestGenerateDeepDiveProperty:
 
         if article.content_preview:
             assert article.content_preview in captured["user"]
+
+
+# ---------------------------------------------------------------------------
+# generate_reading_recommendation
+# ---------------------------------------------------------------------------
+
+class TestGenerateReadingRecommendation:
+    @pytest.mark.asyncio
+    async def test_returns_string_on_success(self):
+        """generate_reading_recommendation returns a non-empty string when LLM responds."""
+        service = LLMService.__new__(LLMService)
+        mock_response = MagicMock()
+        mock_response.choices[0].message.content = "推薦摘要內容"
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        service.client = mock_client
+
+        result = await service.generate_reading_recommendation(
+            titles=["文章一", "文章二"],
+            categories=["AI", "DevOps"],
+        )
+
+        assert isinstance(result, str)
+        assert result == "推薦摘要內容"
+
+    @pytest.mark.asyncio
+    async def test_raises_llm_service_error_on_api_failure(self):
+        """generate_reading_recommendation raises LLMServiceError when API call fails."""
+        service = LLMService.__new__(LLMService)
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(side_effect=Exception("API error"))
+        service.client = mock_client
+
+        with pytest.raises(LLMServiceError):
+            await service.generate_reading_recommendation(
+                titles=["文章一"],
+                categories=["AI"],
+            )
+
+    @pytest.mark.asyncio
+    async def test_raises_llm_service_error_on_empty_response(self):
+        """generate_reading_recommendation raises LLMServiceError when LLM returns empty content."""
+        service = LLMService.__new__(LLMService)
+        mock_response = MagicMock()
+        mock_response.choices[0].message.content = ""
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        service.client = mock_client
+
+        with pytest.raises(LLMServiceError):
+            await service.generate_reading_recommendation(
+                titles=["文章一"],
+                categories=["AI"],
+            )
+
+    @pytest.mark.asyncio
+    async def test_prompt_includes_titles_and_categories(self):
+        """generate_reading_recommendation includes titles and categories in the user prompt."""
+        service = LLMService.__new__(LLMService)
+        captured = {}
+
+        async def fake_create(**kwargs):
+            captured["user"] = kwargs["messages"][1]["content"]
+            mock_response = MagicMock()
+            mock_response.choices[0].message.content = "摘要"
+            return mock_response
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = fake_create
+        service.client = mock_client
+
+        await service.generate_reading_recommendation(
+            titles=["Kubernetes 深度解析", "Rust 入門"],
+            categories=["DevOps", "Systems"],
+        )
+
+        assert "Kubernetes 深度解析" in captured["user"]
+        assert "Rust 入門" in captured["user"]
+        assert "DevOps" in captured["user"]
+        assert "Systems" in captured["user"]
+
+    @pytest.mark.asyncio
+    async def test_system_prompt_requires_traditional_chinese_and_500_char_limit(self):
+        """generate_reading_recommendation system prompt requires 繁體中文 and 500 char limit."""
+        service = LLMService.__new__(LLMService)
+        captured = {}
+
+        async def fake_create(**kwargs):
+            captured["system"] = kwargs["messages"][0]["content"]
+            mock_response = MagicMock()
+            mock_response.choices[0].message.content = "摘要"
+            return mock_response
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = fake_create
+        service.client = mock_client
+
+        await service.generate_reading_recommendation(
+            titles=["文章一"],
+            categories=["AI"],
+        )
+
+        assert "繁體中文" in captured["system"]
+        assert "500" in captured["system"]
+
+    @pytest.mark.asyncio
+    async def test_uses_summarize_model(self):
+        """generate_reading_recommendation uses SUMMARIZE_MODEL."""
+        from app.services.llm_service import SUMMARIZE_MODEL
+
+        service = LLMService.__new__(LLMService)
+        captured = {}
+
+        async def fake_create(**kwargs):
+            captured["model"] = kwargs["model"]
+            mock_response = MagicMock()
+            mock_response.choices[0].message.content = "摘要"
+            return mock_response
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = fake_create
+        service.client = mock_client
+
+        await service.generate_reading_recommendation(
+            titles=["文章一"],
+            categories=["AI"],
+        )
+
+        assert captured["model"] == SUMMARIZE_MODEL

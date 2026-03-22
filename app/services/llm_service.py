@@ -207,3 +207,54 @@ class LLMService:
         except Exception as e:
             logger.error(f"Failed to generate weekly newsletter: {e}")
             raise LLMServiceError(f"Generation error: {e}")
+
+    async def generate_reading_recommendation(
+        self,
+        titles: List[str],
+        categories: List[str]
+    ) -> str:
+        """根據高評分文章的標題與分類，生成不超過 500 字的繁體中文推薦摘要。"""
+        logger.debug(f"Generating reading recommendation for {len(titles)} articles.")
+
+        titles_text = "\n".join(f"- {t}" for t in titles)
+        categories_text = "、".join(sorted(set(categories)))
+
+        user_prompt = (
+            f"以下是使用者近期評分 4 星以上的高評分文章：\n\n"
+            f"文章標題：\n{titles_text}\n\n"
+            f"涵蓋分類：{categories_text}"
+        )
+
+        system_prompt = (
+            "你是一位技術閱讀顧問，請根據使用者的高評分文章，以繁體中文撰寫一份閱讀推薦摘要。\n"
+            "摘要需包含：\n"
+            "1. 使用者目前關注的技術主題與趨勢分析。\n"
+            "2. 建議持續追蹤的技術關鍵字與主題方向。\n"
+            "3. 下一步閱讀建議。\n\n"
+            "⚠️ 要求：\n"
+            "- 全程使用繁體中文。\n"
+            "- 摘要總字數不超過 500 字。\n"
+            "- 直接輸出摘要內容，不要加上多餘的前言或結語。"
+        )
+
+        try:
+            response = await self.client.chat.completions.create(
+                model=SUMMARIZE_MODEL,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.7,
+                max_tokens=800
+            )
+
+            content = response.choices[0].message.content
+            if not content or not content.strip():
+                raise LLMServiceError("Empty response from LLM")
+            return content.strip()
+
+        except LLMServiceError:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to generate reading recommendation: {e}")
+            raise LLMServiceError(f"Reading recommendation generation error: {e}")
