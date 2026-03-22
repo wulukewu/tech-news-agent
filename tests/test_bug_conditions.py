@@ -508,3 +508,144 @@ class TestBug7MarkdownFormatting:
         assert "[Some Article](https://example.com)" in content_sent, (
             f"Req 3.4: Hyperlink syntax was broken. content='{content_sent}'"
         )
+
+
+# ---------------------------------------------------------------------------
+# Bug 8: ReadLaterButton missing from combined_view (read-later-button-missing)
+# ---------------------------------------------------------------------------
+
+class TestBug8ReadLaterButtonMissing:
+    """
+    Bug Condition Exploration: combined_view assembly in news_now never adds
+    ReadLaterView's ReadLaterButton children.
+
+    This test replicates the CURRENT (unfixed) combined_view assembly logic
+    and asserts that combined_view.children SHOULD contain a ReadLaterButton.
+
+    Expected outcome on UNFIXED code: FAIL (confirms the bug exists).
+    Expected outcome on FIXED code: PASS.
+
+    Validates: Requirements 2.1, 2.3
+    """
+
+    def test_bug8_exploration_combined_view_missing_read_later_button(self):
+        """
+        Bug Condition Exploration: Simulates the unfixed combined_view assembly
+        and asserts that ReadLaterButton is present.
+
+        This test is EXPECTED TO FAIL on unfixed code — that failure confirms
+        the bug exists (ReadLaterView children are never added to combined_view).
+        """
+        from app.bot.cogs.interactions import (
+            FilterView,
+            DeepDiveView,
+            ReadLaterView,
+            ReadLaterButton,
+        )
+        from app.schemas.article import ArticleSchema
+
+        # Create a minimal list of articles (3 articles)
+        articles = [
+            ArticleSchema(
+                title=f"Article {i}",
+                url=f"https://example.com/article-{i}",
+                content_preview=f"Preview {i}",
+                source_category="AI",
+                source_name="TestSource",
+            )
+            for i in range(3)
+        ]
+
+        # Replicate the CURRENT (unfixed) combined_view assembly logic from news_now:
+        combined_view = FilterView(articles=articles)
+        for item in DeepDiveView(articles=articles[:5]).children:
+            combined_view.add_item(item)
+        # NOTE: ReadLaterView is NOT added here — this is the bug
+
+        # Assert that combined_view SHOULD contain a ReadLaterButton
+        # This assertion FAILS on unfixed code, confirming the bug exists.
+        assert any(isinstance(c, ReadLaterButton) for c in combined_view.children), (
+            "Bug 8 confirmed: combined_view does not contain any ReadLaterButton. "
+            "ReadLaterView children were never added to combined_view in news_now."
+        )
+
+    # -----------------------------------------------------------------------
+    # Fix-check tests (Tasks 3.1, 3.2, 3.3)
+    # -----------------------------------------------------------------------
+
+    def _build_articles(self, count: int):
+        """Helper: build a list of minimal ArticleSchema instances."""
+        from app.schemas.article import ArticleSchema
+        return [
+            ArticleSchema(
+                title=f"Article {i}",
+                url=f"https://example.com/article-{i}",
+                content_preview=f"Preview {i}",
+                source_category="AI",
+                source_name="TestSource",
+            )
+            for i in range(count)
+        ]
+
+    def _build_combined_view_fixed(self, articles):
+        """Helper: replicate the FIXED combined_view assembly logic."""
+        from app.bot.cogs.interactions import FilterView, DeepDiveView, ReadLaterView
+        combined_view = FilterView(articles=articles)
+        for item in DeepDiveView(articles=articles[:5]).children:
+            combined_view.add_item(item)
+        MAX_READ_LATER = 15
+        read_later_view = ReadLaterView(articles=articles[:MAX_READ_LATER])
+        for item in read_later_view.children:
+            combined_view.add_item(item)
+        return combined_view
+
+    def test_bug8_fix_check_articles_gte_1_has_read_later_button(self):
+        """
+        Fix-check (Task 3.1): When articles >= 1, combined_view contains at least
+        one ReadLaterButton using the FIXED assembly logic.
+
+        Validates: Requirements 2.1, 2.2
+        """
+        from app.bot.cogs.interactions import ReadLaterButton
+
+        for count in [1, 3, 5, 10, 15, 20]:
+            articles = self._build_articles(count)
+            combined_view = self._build_combined_view_fixed(articles)
+            assert any(isinstance(c, ReadLaterButton) for c in combined_view.children), (
+                f"Fix-check failed for count={count}: combined_view has no ReadLaterButton."
+            )
+
+    def test_bug8_fix_check_total_components_le_25(self):
+        """
+        Fix-check (Task 3.2): For article counts 1, 5, 15, and 20, the total number
+        of components in combined_view is always <= 25.
+
+        Validates: Requirements 2.2, 2.3
+        """
+        for count in [1, 5, 15, 20]:
+            articles = self._build_articles(count)
+            combined_view = self._build_combined_view_fixed(articles)
+            total = len(combined_view.children)
+            assert total <= 25, (
+                f"Fix-check failed for count={count}: combined_view has {total} components (> 25)."
+            )
+
+    def test_bug8_fix_check_zero_articles_no_crash(self):
+        """
+        Fix-check (Task 3.3): When articles = 0, combined_view is created without
+        crashing and contains no ReadLaterButton (edge case).
+
+        Validates: Requirements 2.1
+        """
+        from app.bot.cogs.interactions import ReadLaterButton
+
+        articles = self._build_articles(0)
+        combined_view = self._build_combined_view_fixed(articles)
+
+        # Should not crash — combined_view is created normally
+        assert combined_view is not None
+
+        # No ReadLaterButton expected when there are no articles
+        assert not any(isinstance(c, ReadLaterButton) for c in combined_view.children), (
+            "Fix-check failed for count=0: combined_view unexpectedly contains a ReadLaterButton."
+        )

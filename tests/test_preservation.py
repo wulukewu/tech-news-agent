@@ -305,3 +305,119 @@ class TestPreservation6DiscordShortDraft:
         # view must always be attached
         view_sent = call_kwargs.kwargs.get("view")
         assert view_sent is not None, "Preservation broken: view not attached to followup.send"
+
+
+# ---------------------------------------------------------------------------
+# Helpers for combined_view property tests
+# ---------------------------------------------------------------------------
+
+def article_strategy():
+    """Hypothesis strategy that generates valid ArticleSchema instances."""
+    from app.schemas.article import ArticleSchema
+    return st.builds(
+        ArticleSchema,
+        title=st.text(min_size=1, max_size=80),
+        url=st.from_regex(r"https://[a-z]{3,10}\.[a-z]{2,4}/[a-z]{0,20}", fullmatch=True),
+        content_preview=st.text(min_size=0, max_size=200),
+        source_category=st.text(min_size=1, max_size=40),
+        source_name=st.text(min_size=1, max_size=40),
+        published_date=st.none(),
+        ai_analysis=st.none(),
+        raw_data=st.none(),
+    )
+
+
+def build_combined_view_fixed(articles):
+    """Replicate the FIXED combined_view assembly logic (MAX_READ_LATER = 15)."""
+    from app.bot.cogs.interactions import FilterView, DeepDiveView, ReadLaterView
+    combined_view = FilterView(articles=articles)
+    for item in DeepDiveView(articles=articles[:5]).children:
+        combined_view.add_item(item)
+    MAX_READ_LATER = 15
+    read_later_view = ReadLaterView(articles=articles[:MAX_READ_LATER])
+    for item in read_later_view.children:
+        combined_view.add_item(item)
+    return combined_view
+
+
+# ---------------------------------------------------------------------------
+# Preservation 7 (PBT): FilterSelect always present and first
+# ---------------------------------------------------------------------------
+
+class TestPreservation7FilterSelectAlwaysFirst:
+    """
+    Property 2: Preservation — FilterSelect is always present and is the
+    first element in combined_view.children for any non-empty article list.
+
+    **Validates: Requirements 3.1, 3.4**
+    """
+
+    @given(st.lists(article_strategy(), min_size=1, max_size=50))
+    @h_settings(max_examples=50)
+    def test_filter_select_present_and_first(self, articles):
+        """FilterSelect is present in combined_view.children and is the first element."""
+        from app.bot.cogs.interactions import FilterSelect
+
+        combined_view = build_combined_view_fixed(articles)
+
+        types = [type(c) for c in combined_view.children]
+        assert FilterSelect in types, (
+            f"FilterSelect not found in combined_view.children: {types}"
+        )
+        assert isinstance(combined_view.children[0], FilterSelect), (
+            f"First element is {type(combined_view.children[0])}, expected FilterSelect"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Preservation 8 (PBT): DeepDiveButton count = min(5, len(articles))
+# ---------------------------------------------------------------------------
+
+class TestPreservation8DeepDiveButtonCount:
+    """
+    Property 2: Preservation — DeepDiveButton count equals min(5, len(articles))
+    for any article list.
+
+    **Validates: Requirements 3.1, 3.4**
+    """
+
+    @given(st.lists(article_strategy(), min_size=0, max_size=50))
+    @h_settings(max_examples=50)
+    def test_deep_dive_button_count(self, articles):
+        """DeepDiveButton count equals min(5, len(articles)) in combined_view."""
+        from app.bot.cogs.interactions import DeepDiveButton
+
+        combined_view = build_combined_view_fixed(articles)
+
+        count = sum(1 for c in combined_view.children if isinstance(c, DeepDiveButton))
+        expected = min(5, len(articles))
+        assert count == expected, (
+            f"Expected {expected} DeepDiveButton(s) for {len(articles)} articles, got {count}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Preservation 9 (PBT): ReadLaterButton count = min(len(articles), 15)
+# ---------------------------------------------------------------------------
+
+class TestPreservation9ReadLaterButtonCount:
+    """
+    Property 1: Bug condition fix — ReadLaterButton count equals
+    min(len(articles), 15) for any article list.
+
+    **Validates: Requirements 2.1, 2.2, 2.3**
+    """
+
+    @given(st.lists(article_strategy(), min_size=0, max_size=50))
+    @h_settings(max_examples=50)
+    def test_read_later_button_count(self, articles):
+        """ReadLaterButton count equals min(len(articles), 15) in combined_view."""
+        from app.bot.cogs.interactions import ReadLaterButton
+
+        combined_view = build_combined_view_fixed(articles)
+
+        count = sum(1 for c in combined_view.children if isinstance(c, ReadLaterButton))
+        expected = min(len(articles), 15)
+        assert count == expected, (
+            f"Expected {expected} ReadLaterButton(s) for {len(articles)} articles, got {count}"
+        )

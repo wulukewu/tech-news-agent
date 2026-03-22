@@ -63,6 +63,14 @@ class NewsCommands(commands.Cog):
             combined_view = FilterView(articles=hardcore_articles)
             for item in DeepDiveView(articles=hardcore_articles[:5]).children:
                 combined_view.add_item(item)
+            # Add ReadLaterButtons, capped at 15 to keep total components ≤ 25.
+            # Discord allows 5 rows × 5 items = 25 slots, but a Select occupies a full row:
+            # Row 0: 1 FilterSelect (width=5), Row 1: up to 5 DeepDiveButtons,
+            # Rows 2-4: up to 15 ReadLaterButtons → total max = 1 + 5 + 15 = 21 ≤ 25
+            MAX_READ_LATER = 15
+            read_later_view = ReadLaterView(articles=hardcore_articles[:MAX_READ_LATER])
+            for item in read_later_view.children:
+                combined_view.add_item(item)
             await interaction.followup.send(content=draft, view=combined_view)
             
         except Exception as e:
