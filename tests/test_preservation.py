@@ -283,12 +283,16 @@ class TestPreservation6DiscordShortDraft:
         mock_llm.evaluate_batch = AsyncMock(return_value=[MagicMock(ai_analysis=MagicMock(tinkering_index=3))])
         mock_llm.generate_weekly_newsletter = AsyncMock(return_value=draft)
 
-        mock_view = MagicMock()
+        mock_filter_view = MagicMock()
+        mock_filter_view.children = []
+        mock_deep_dive_view = MagicMock()
+        mock_deep_dive_view.children = []
 
         with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
              patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
              patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
-             patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_view):
+             patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
+             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view):
             await cog.news_now.callback(cog, mock_interaction)
 
         mock_interaction.followup.send.assert_called_once()
@@ -300,4 +304,4 @@ class TestPreservation6DiscordShortDraft:
         )
         # view must always be attached
         view_sent = call_kwargs.kwargs.get("view")
-        assert view_sent == mock_view, "Preservation broken: view not attached to followup.send"
+        assert view_sent is not None, "Preservation broken: view not attached to followup.send"

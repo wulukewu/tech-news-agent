@@ -45,6 +45,13 @@ class NewsCommands(commands.Cog):
             
             draft = await llm.generate_weekly_newsletter(hardcore_articles)
 
+            # Fix Markdown formatting issues from LLM output:
+            # 1. Replace `+` list markers with `-` (Discord doesn't render `+` as list items)
+            # 2. Ensure metadata items after hyperlinks start on their own line
+            import re
+            draft = re.sub(r'(?m)^\+\s', '- ', draft)
+            draft = re.sub(r'(\]\([^)]+\))([^\n])', r'\1\n\2', draft)
+
             # Hard enforcement: Discord's message content limit is 2000 chars.
             # The LLM prompt soft limit is unreliable, so we truncate here.
             DISCORD_LIMIT = 2000

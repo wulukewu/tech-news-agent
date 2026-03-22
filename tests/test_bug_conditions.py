@@ -332,12 +332,16 @@ class TestBug6DiscordMessageLength:
         mock_llm.evaluate_batch = AsyncMock(return_value=[MagicMock(ai_analysis=MagicMock(tinkering_index=5))])
         mock_llm.generate_weekly_newsletter = AsyncMock(return_value=oversized_draft)
 
-        mock_view = MagicMock()
+        mock_filter_view = MagicMock()
+        mock_filter_view.children = []
+        mock_deep_dive_view = MagicMock()
+        mock_deep_dive_view.children = []
 
         with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
              patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
              patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
-             patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_view):
+             patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
+             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view):
             await cog.news_now.callback(cog, mock_interaction)
 
         # On unfixed code: content sent is > 2000 chars (the bug)
@@ -348,4 +352,159 @@ class TestBug6DiscordMessageLength:
             f"Bug 6 confirmed on unfixed code: followup.send called with "
             f"{len(content_sent)}-char string (> 2000). "
             f"Counterexample: draft='{'A' * 2001}' → content_sent has len={len(content_sent)}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Bug 7: Markdown formatting - `+` list markers and missing newlines
+# ---------------------------------------------------------------------------
+
+class TestBug7MarkdownFormatting:
+    """
+    Bug Condition (Requirements 1.3, 1.4):
+    - Metadata items (💡 推薦原因, 🎯 行動價值, 🛠️ 折騰指數) appear directly after
+      a hyperlink with no newline, causing them to be concatenated with the link.
+    - `+` is used as a list marker, which Discord does not render as a list item.
+
+    Expected Behavior (Requirements 2.3, 2.4):
+    - Each metadata item must appear on its own line after a hyperlink.
+    - `+` list markers must be replaced with `-`.
+    """
+
+    @pytest.mark.asyncio
+    async def test_plus_list_markers_replaced_with_dash(self):
+        """
+        Req 2.4: `+` list markers in the draft are replaced with `-` before sending.
+        """
+        from app.bot.cogs.news_commands import NewsCommands
+
+        draft_with_plus = "+ 推薦原因：很硬核\n+ 行動價值：可以用\n+ 折騰指數：3/5"
+
+        mock_bot = MagicMock()
+        cog = NewsCommands(mock_bot)
+
+        mock_interaction = MagicMock()
+        mock_interaction.response = AsyncMock()
+        mock_interaction.response.defer = AsyncMock()
+        mock_interaction.followup = AsyncMock()
+        mock_interaction.followup.send = AsyncMock()
+        mock_interaction.user = MagicMock()
+
+        mock_notion = MagicMock()
+        mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
+        mock_rss = MagicMock()
+        mock_rss.fetch_all_feeds = AsyncMock(return_value=[MagicMock()])
+        mock_llm = MagicMock()
+        mock_llm.evaluate_batch = AsyncMock(return_value=[MagicMock(ai_analysis=MagicMock(tinkering_index=3))])
+        mock_llm.generate_weekly_newsletter = AsyncMock(return_value=draft_with_plus)
+
+        mock_filter_view = MagicMock()
+        mock_filter_view.children = []
+        mock_deep_dive_view = MagicMock()
+        mock_deep_dive_view.children = []
+
+        with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
+             patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
+             patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
+             patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
+             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view):
+            await cog.news_now.callback(cog, mock_interaction)
+
+        call_kwargs = mock_interaction.followup.send.call_args
+        content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
+        assert "+ " not in content_sent, (
+            f"Bug 7 (req 2.4): `+` list markers were not replaced. content='{content_sent}'"
+        )
+        assert "- 推薦原因" in content_sent
+        assert "- 行動價值" in content_sent
+
+    @pytest.mark.asyncio
+    async def test_metadata_after_hyperlink_gets_newline(self):
+        """
+        Req 2.3: Metadata items concatenated directly after a hyperlink get a newline inserted.
+        """
+        from app.bot.cogs.news_commands import NewsCommands
+
+        # Simulates LLM output where metadata follows link with no newline
+        draft_no_newline = "[Some Article](https://example.com)💡 推薦原因：很硬核"
+
+        mock_bot = MagicMock()
+        cog = NewsCommands(mock_bot)
+
+        mock_interaction = MagicMock()
+        mock_interaction.response = AsyncMock()
+        mock_interaction.response.defer = AsyncMock()
+        mock_interaction.followup = AsyncMock()
+        mock_interaction.followup.send = AsyncMock()
+        mock_interaction.user = MagicMock()
+
+        mock_notion = MagicMock()
+        mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
+        mock_rss = MagicMock()
+        mock_rss.fetch_all_feeds = AsyncMock(return_value=[MagicMock()])
+        mock_llm = MagicMock()
+        mock_llm.evaluate_batch = AsyncMock(return_value=[MagicMock(ai_analysis=MagicMock(tinkering_index=3))])
+        mock_llm.generate_weekly_newsletter = AsyncMock(return_value=draft_no_newline)
+
+        mock_filter_view = MagicMock()
+        mock_filter_view.children = []
+        mock_deep_dive_view = MagicMock()
+        mock_deep_dive_view.children = []
+
+        with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
+             patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
+             patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
+             patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
+             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view):
+            await cog.news_now.callback(cog, mock_interaction)
+
+        call_kwargs = mock_interaction.followup.send.call_args
+        content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
+        assert ")\n💡" in content_sent, (
+            f"Bug 7 (req 2.3): No newline inserted after hyperlink. content='{content_sent}'"
+        )
+
+    @pytest.mark.asyncio
+    async def test_hyperlink_syntax_preserved(self):
+        """
+        Req 3.4: Markdown hyperlink syntax [title](url) is preserved after post-processing.
+        """
+        from app.bot.cogs.news_commands import NewsCommands
+
+        draft = "[Some Article](https://example.com)\n- 推薦原因：很硬核"
+
+        mock_bot = MagicMock()
+        cog = NewsCommands(mock_bot)
+
+        mock_interaction = MagicMock()
+        mock_interaction.response = AsyncMock()
+        mock_interaction.response.defer = AsyncMock()
+        mock_interaction.followup = AsyncMock()
+        mock_interaction.followup.send = AsyncMock()
+        mock_interaction.user = MagicMock()
+
+        mock_notion = MagicMock()
+        mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
+        mock_rss = MagicMock()
+        mock_rss.fetch_all_feeds = AsyncMock(return_value=[MagicMock()])
+        mock_llm = MagicMock()
+        mock_llm.evaluate_batch = AsyncMock(return_value=[MagicMock(ai_analysis=MagicMock(tinkering_index=3))])
+        mock_llm.generate_weekly_newsletter = AsyncMock(return_value=draft)
+
+        mock_filter_view = MagicMock()
+        mock_filter_view.children = []
+        mock_deep_dive_view = MagicMock()
+        mock_deep_dive_view.children = []
+
+        with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
+             patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
+             patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
+             patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
+             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view):
+            await cog.news_now.callback(cog, mock_interaction)
+
+        call_kwargs = mock_interaction.followup.send.call_args
+        content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
+        assert "[Some Article](https://example.com)" in content_sent, (
+            f"Req 3.4: Hyperlink syntax was broken. content='{content_sent}'"
         )
