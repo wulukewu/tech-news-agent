@@ -12,7 +12,7 @@ class ReadLaterButton(discord.ui.Button):
     def __init__(self, article: ArticleSchema, index: int):
         # Labels have limits, so we truncate the title slightly for the button
         label_text = f"⭐ 稍後閱讀: {article.title[:20]}..." if len(article.title) > 20 else f"⭐ 稍後閱讀: {article.title}"
-        super().__init__(style=discord.ButtonStyle.primary, label=label_text, custom_id=f"read_later_{hashlib.md5(article.url.encode()).hexdigest()[:8]}")
+        super().__init__(style=discord.ButtonStyle.primary, label=label_text, custom_id=f"read_later_{hashlib.md5(str(article.url).encode()).hexdigest()[:8]}")
         self.article = article
 
     async def callback(self, interaction: discord.Interaction):
@@ -32,9 +32,9 @@ class ReadLaterButton(discord.ui.Button):
 
 class ReadLaterView(discord.ui.View):
     def __init__(self, articles: list[ArticleSchema]):
-        # Timeout None means the view persists across bot restarts if we register it, 
-        # but for simplicity we'll just let it time out eventually (default 180s).
-        super().__init__(timeout=None) 
+        # timeout=None makes the view persistent across bot restarts
+        # (requires the view to be registered via bot.add_view() in setup_hook)
+        super().__init__(timeout=None)
         
         # In this UI design, we attach buttons dynamically based on the articles curated
         for i, article in enumerate(articles):

@@ -88,7 +88,7 @@
 ## Discord 指令
 
 - /news_now：立即觸發本週的技術新聞抓取與生成。
-- /add_feed：(開發中) 快速將 RSS 加入 Notion。
+- /add_feed：快速將 RSS 加入 Notion（需提供名稱、URL、分類）。
 
 ## 專案架構
 

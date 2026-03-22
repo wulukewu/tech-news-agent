@@ -52,6 +52,12 @@ async def weekly_news_job():
         # 4. Generate Markdown
         draft = await llm.generate_weekly_newsletter(hardcore_articles)
 
+        # Hard enforcement: Discord message content limit is 2000 chars.
+        DISCORD_LIMIT = 2000
+        TRUNCATION_SUFFIX = "..."
+        if len(draft) > DISCORD_LIMIT:
+            draft = draft[:DISCORD_LIMIT - len(TRUNCATION_SUFFIX)] + TRUNCATION_SUFFIX
+
         # 5. Send results back to Discord Channel
         view = ReadLaterView(articles=hardcore_articles[:7])
         
@@ -63,10 +69,10 @@ async def weekly_news_job():
 
 def setup_scheduler():
     """Register jobs to the scheduler."""
-    # Run every Friday at 17:00
+    # Run every Friday at 17:00 in the configured timezone
     scheduler.add_job(
         weekly_news_job,
-        trigger=CronTrigger(day_of_week='fri', hour=17, minute=0, timezone="Asia/Taipei"),
+        trigger=CronTrigger(day_of_week='fri', hour=17, minute=0, timezone=settings.timezone),
         id='weekly_news',
         name='Send Weekly Tech News',
         replace_existing=True

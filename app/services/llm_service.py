@@ -80,19 +80,18 @@ class LLMService:
     async def evaluate_batch(self, set_of_articles: List[ArticleSchema]) -> List[ArticleSchema]:
         """Concurrently evaluate a list of articles."""
         logger.info(f"Evaluating {len(set_of_articles)} articles.")
-        tasks = [self.evaluate_article(article) for article in set_of_articles]
-        
-        # We limit concurrency roughly to avoid hitting rate limits on OpenRouter
+
+        # Semaphore limits true concurrency to avoid hitting Groq rate limits.
+        # The coroutine is created *inside* sem_task so it only starts executing
+        # once the semaphore slot is acquired (not at list-comprehension time).
         semaphore = asyncio.Semaphore(5)
-        
-        async def sem_task(article, task):
+
+        async def sem_task(article: ArticleSchema) -> ArticleSchema:
             async with semaphore:
-                result = await task
-                article.ai_analysis = result
+                article.ai_analysis = await self.evaluate_article(article)
                 return article
-                
-        # Gather all
-        evaluated = await asyncio.gather(*(sem_task(a, t) for a, t in zip(set_of_articles, tasks)))
+
+        evaluated = await asyncio.gather(*(sem_task(a) for a in set_of_articles))
         
         # Filter for hardcore only
         hardcore_articles = [a for a in evaluated if getattr(a.ai_analysis, "is_hardcore", False)]

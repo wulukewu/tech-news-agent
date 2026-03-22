@@ -64,7 +64,7 @@ class NotionService:
             now_iso = datetime.now(timezone.utc).isoformat()
             
             # Ensure URL fits in the url property limitation (2000 chars), though highly unlikely to exceed
-            safe_url = article.url[:2000] if article.url else ""
+            safe_url = str(article.url)[:2000] if article.url else ""
 
             await self.client.pages.create(
                 parent={"database_id": self.read_later_db_id},

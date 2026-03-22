@@ -15,7 +15,7 @@ class AIAnalysis(BaseModel):
 
 class ArticleSchema(BaseModel):
     title: str
-    url: str
+    url: HttpUrl
     content_preview: str # A short preview of the content (first 800 chars)
     published_date: Optional[datetime] = None
     

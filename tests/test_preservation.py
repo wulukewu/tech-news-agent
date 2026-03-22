@@ -293,7 +293,7 @@ class TestPreservation6DiscordShortDraft:
 
         mock_interaction.followup.send.assert_called_once()
         call_kwargs = mock_interaction.followup.send.call_args
-        content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
+        content_sent = call_kwargs.kwargs.get("content", call_kwargs.args[0] if call_kwargs.args else "")
         assert content_sent == draft, (
             f"Preservation broken: draft of len {len(draft)} was modified. "
             f"Expected content == draft, got len={len(content_sent)}"
