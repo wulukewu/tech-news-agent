@@ -1,6 +1,6 @@
 """
 Unit tests for scheduler.py
-Covers: weekly_news_job (truncation fix, timezone fix), setup_scheduler
+Covers: weekly_news_job (Discord notification, timezone fix), setup_scheduler
 """
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -25,107 +25,46 @@ def make_hardcore_article(title="Article", tinkering_index=3):
     return article
 
 
+def _make_base_mocks(hardcore_articles=None):
+    """Return a set of base mocks for weekly_news_job tests."""
+    if hardcore_articles is None:
+        hardcore_articles = [make_hardcore_article()]
+
+    mock_notion = MagicMock()
+    mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
+    mock_notion.create_weekly_digest_page = AsyncMock(
+        return_value=("page-id", "https://notion.so/page-id")
+    )
+    mock_notion.build_digest_blocks = MagicMock(return_value=[])
+    mock_notion.append_digest_blocks = AsyncMock(return_value=None)
+
+    mock_rss = MagicMock()
+    mock_rss.fetch_all_feeds = AsyncMock(return_value=[MagicMock()])
+
+    mock_llm = MagicMock()
+    mock_llm.evaluate_batch = AsyncMock(return_value=hardcore_articles)
+    mock_llm.generate_digest_intro = AsyncMock(return_value="intro text")
+
+    mock_channel = AsyncMock()
+    mock_channel.send = AsyncMock()
+
+    mock_bot = MagicMock()
+    mock_bot.get_channel = MagicMock(return_value=mock_channel)
+
+    return mock_notion, mock_rss, mock_llm, mock_channel, mock_bot
+
+
 # ---------------------------------------------------------------------------
-# weekly_news_job — Discord message truncation fix
+# weekly_news_job — Discord notification (new Notion-based flow)
 # ---------------------------------------------------------------------------
 
 class TestWeeklyNewsJobTruncation:
     @pytest.mark.asyncio
-    async def test_oversized_draft_is_truncated_to_2000_chars(self):
-        """weekly_news_job truncates draft to 2000 chars before sending to Discord."""
+    async def test_discord_message_within_2000_chars(self):
+        """weekly_news_job sends a Discord message within the 2000-char limit."""
         from app.tasks.scheduler import weekly_news_job
 
-        oversized_draft = "A" * 2500
-        mock_channel = AsyncMock()
-        mock_channel.send = AsyncMock()
-
-        mock_notion = MagicMock()
-        mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
-
-        mock_rss = MagicMock()
-        mock_rss.fetch_all_feeds = AsyncMock(return_value=[MagicMock()])
-
-        mock_llm = MagicMock()
-        mock_llm.evaluate_batch = AsyncMock(return_value=[make_hardcore_article()])
-        mock_llm.generate_weekly_newsletter = AsyncMock(return_value=oversized_draft)
-
-        mock_bot = MagicMock()
-        mock_bot.get_channel = MagicMock(return_value=mock_channel)
-
-        mock_view = MagicMock()
-
-        with patch("app.tasks.scheduler.NotionService", return_value=mock_notion), \
-             patch("app.tasks.scheduler.RSSService", return_value=mock_rss), \
-             patch("app.tasks.scheduler.LLMService", return_value=mock_llm), \
-             patch("app.tasks.scheduler.bot", mock_bot), \
-             patch("app.tasks.scheduler.ReadLaterView", return_value=mock_view), \
-             patch("app.tasks.scheduler.settings") as mock_settings:
-            mock_settings.discord_channel_id = 123456789
-            mock_settings.timezone = "Asia/Taipei"
-            await weekly_news_job()
-
-        call_kwargs = mock_channel.send.call_args
-        content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
-        assert len(content_sent) <= 2000, (
-            f"Scheduler sent {len(content_sent)}-char message, exceeds Discord 2000-char limit"
-        )
-
-    @pytest.mark.asyncio
-    async def test_short_draft_sent_unmodified(self):
-        """weekly_news_job sends drafts <= 2000 chars without modification."""
-        from app.tasks.scheduler import weekly_news_job
-
-        short_draft = "Short newsletter content"
-        mock_channel = AsyncMock()
-        mock_channel.send = AsyncMock()
-
-        mock_notion = MagicMock()
-        mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
-
-        mock_rss = MagicMock()
-        mock_rss.fetch_all_feeds = AsyncMock(return_value=[MagicMock()])
-
-        mock_llm = MagicMock()
-        mock_llm.evaluate_batch = AsyncMock(return_value=[make_hardcore_article()])
-        mock_llm.generate_weekly_newsletter = AsyncMock(return_value=short_draft)
-
-        mock_bot = MagicMock()
-        mock_bot.get_channel = MagicMock(return_value=mock_channel)
-
-        mock_view = MagicMock()
-
-        with patch("app.tasks.scheduler.NotionService", return_value=mock_notion), \
-             patch("app.tasks.scheduler.RSSService", return_value=mock_rss), \
-             patch("app.tasks.scheduler.LLMService", return_value=mock_llm), \
-             patch("app.tasks.scheduler.bot", mock_bot), \
-             patch("app.tasks.scheduler.ReadLaterView", return_value=mock_view), \
-             patch("app.tasks.scheduler.settings") as mock_settings:
-            mock_settings.discord_channel_id = 123456789
-            mock_settings.timezone = "Asia/Taipei"
-            await weekly_news_job()
-
-        call_kwargs = mock_channel.send.call_args
-        content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
-        assert content_sent == short_draft
-
-    @pytest.mark.asyncio
-    async def test_truncated_draft_ends_with_ellipsis(self):
-        """weekly_news_job appends '...' when truncating an oversized draft."""
-        from app.tasks.scheduler import weekly_news_job
-
-        oversized_draft = "B" * 2001
-        mock_channel = AsyncMock()
-        mock_channel.send = AsyncMock()
-
-        mock_notion = MagicMock()
-        mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
-        mock_rss = MagicMock()
-        mock_rss.fetch_all_feeds = AsyncMock(return_value=[MagicMock()])
-        mock_llm = MagicMock()
-        mock_llm.evaluate_batch = AsyncMock(return_value=[make_hardcore_article()])
-        mock_llm.generate_weekly_newsletter = AsyncMock(return_value=oversized_draft)
-        mock_bot = MagicMock()
-        mock_bot.get_channel = MagicMock(return_value=mock_channel)
+        mock_notion, mock_rss, mock_llm, mock_channel, mock_bot = _make_base_mocks()
 
         with patch("app.tasks.scheduler.NotionService", return_value=mock_notion), \
              patch("app.tasks.scheduler.RSSService", return_value=mock_rss), \
@@ -135,11 +74,66 @@ class TestWeeklyNewsJobTruncation:
              patch("app.tasks.scheduler.settings") as mock_settings:
             mock_settings.discord_channel_id = 123456789
             mock_settings.timezone = "Asia/Taipei"
+            mock_settings.notion_weekly_digests_db_id = "some-db-id"
             await weekly_news_job()
 
         call_kwargs = mock_channel.send.call_args
         content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
-        assert content_sent.endswith("...")
+        assert len(content_sent) <= 2000, (
+            f"Scheduler sent {len(content_sent)}-char message, exceeds Discord 2000-char limit"
+        )
+
+    @pytest.mark.asyncio
+    async def test_discord_message_contains_stats(self):
+        """weekly_news_job Discord notification contains article stats."""
+        from app.tasks.scheduler import weekly_news_job
+
+        mock_notion, mock_rss, mock_llm, mock_channel, mock_bot = _make_base_mocks(
+            hardcore_articles=[make_hardcore_article(f"Article {i}") for i in range(3)]
+        )
+        mock_rss.fetch_all_feeds = AsyncMock(return_value=[MagicMock()] * 10)
+
+        with patch("app.tasks.scheduler.NotionService", return_value=mock_notion), \
+             patch("app.tasks.scheduler.RSSService", return_value=mock_rss), \
+             patch("app.tasks.scheduler.LLMService", return_value=mock_llm), \
+             patch("app.tasks.scheduler.bot", mock_bot), \
+             patch("app.tasks.scheduler.ReadLaterView", return_value=MagicMock()), \
+             patch("app.tasks.scheduler.settings") as mock_settings:
+            mock_settings.discord_channel_id = 123456789
+            mock_settings.timezone = "Asia/Taipei"
+            mock_settings.notion_weekly_digests_db_id = "some-db-id"
+            await weekly_news_job()
+
+        call_kwargs = mock_channel.send.call_args
+        content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
+        # Should contain stats numbers
+        assert "10" in content_sent or "3" in content_sent
+
+    @pytest.mark.asyncio
+    async def test_discord_message_contains_notion_url(self):
+        """weekly_news_job Discord notification contains the Notion page URL."""
+        from app.tasks.scheduler import weekly_news_job
+
+        page_url = "https://notion.so/test-page-xyz"
+        mock_notion, mock_rss, mock_llm, mock_channel, mock_bot = _make_base_mocks()
+        mock_notion.create_weekly_digest_page = AsyncMock(
+            return_value=("page-xyz", page_url)
+        )
+
+        with patch("app.tasks.scheduler.NotionService", return_value=mock_notion), \
+             patch("app.tasks.scheduler.RSSService", return_value=mock_rss), \
+             patch("app.tasks.scheduler.LLMService", return_value=mock_llm), \
+             patch("app.tasks.scheduler.bot", mock_bot), \
+             patch("app.tasks.scheduler.ReadLaterView", return_value=MagicMock()), \
+             patch("app.tasks.scheduler.settings") as mock_settings:
+            mock_settings.discord_channel_id = 123456789
+            mock_settings.timezone = "Asia/Taipei"
+            mock_settings.notion_weekly_digests_db_id = "some-db-id"
+            await weekly_news_job()
+
+        call_kwargs = mock_channel.send.call_args
+        content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
+        assert page_url in content_sent
 
     @pytest.mark.asyncio
     async def test_returns_early_when_no_channel(self):

@@ -240,28 +240,36 @@ class TestPreservation5PBTAddToReadLater:
 
 class TestPreservation6DiscordShortDraft:
     """
-    Property 2: Preservation - Short Draft Sent Unmodified
+    Property 2: Preservation - Discord notification is always ≤ 2000 chars and
+    contains a view attachment.
 
-    For all draft strings where len(draft) <= 2000 (isBugCondition = False),
-    the news_now handler SHALL send the content unmodified in a single
-    followup.send call.
+    Updated for Task 9: /news_now now uses build_discord_notification (structured
+    lightweight format) instead of generate_weekly_newsletter + raw draft sending.
 
-    Observation on unfixed code:
-      - followup.send(content=draft, view=view) is called with the exact draft string
-      - No modification occurs when len(draft) <= 2000
-
-    **Validates: Requirements 3.1, 3.2**
+    **Validates: Requirements 5.1, 5.2**
     """
 
     @pytest.mark.asyncio
-    @given(draft=st.text(min_size=0, max_size=2000))
-    @h_settings(max_examples=50)
-    async def test_short_draft_sent_unmodified(self, draft):
+    async def test_notification_sent_with_view(self):
         """
-        Property 2: Preservation - for any draft where len(draft) <= 2000,
-        followup.send is called exactly once with the content unchanged.
+        Req 5.1, 5.2: /news_now sends a notification ≤ 2000 chars with a view attached.
         """
         from app.bot.cogs.news_commands import NewsCommands
+        from app.schemas.article import ArticleSchema, AIAnalysis
+
+        article = ArticleSchema(
+            title="Test Article",
+            url="https://example.com/article",
+            content_preview="Preview",
+            source_category="AI",
+            source_name="TestSource",
+            ai_analysis=AIAnalysis(
+                is_hardcore=True,
+                reason="Very hardcore",
+                actionable_takeaway="Can be used",
+                tinkering_index=3,
+            ),
+        )
 
         mock_bot = MagicMock()
         cog = NewsCommands(mock_bot)
@@ -275,36 +283,43 @@ class TestPreservation6DiscordShortDraft:
 
         mock_notion = MagicMock()
         mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
+        mock_notion.create_weekly_digest_page = AsyncMock(return_value=("page-id", "https://notion.so/page"))
+        mock_notion.build_digest_blocks = MagicMock(return_value=[])
+        mock_notion.append_digest_blocks = AsyncMock()
 
         mock_rss = MagicMock()
-        mock_rss.fetch_all_feeds = AsyncMock(return_value=[MagicMock()])
+        mock_rss.fetch_all_feeds = AsyncMock(return_value=[article])
 
         mock_llm = MagicMock()
-        mock_llm.evaluate_batch = AsyncMock(return_value=[MagicMock(ai_analysis=MagicMock(tinkering_index=3))])
-        mock_llm.generate_weekly_newsletter = AsyncMock(return_value=draft)
+        mock_llm.evaluate_batch = AsyncMock(return_value=[article])
+        mock_llm.generate_digest_intro = AsyncMock(return_value="本週前言")
 
         mock_filter_view = MagicMock()
         mock_filter_view.children = []
         mock_deep_dive_view = MagicMock()
         mock_deep_dive_view.children = []
+        mock_read_later_view = MagicMock()
+        mock_read_later_view.children = []
 
         with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
              patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
              patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
+             patch("app.bot.cogs.news_commands.settings") as mock_settings, \
              patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
-             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view):
+             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view), \
+             patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view):
+            mock_settings.notion_weekly_digests_db_id = "test-db-id"
             await cog.news_now.callback(cog, mock_interaction)
 
         mock_interaction.followup.send.assert_called_once()
         call_kwargs = mock_interaction.followup.send.call_args
         content_sent = call_kwargs.kwargs.get("content", call_kwargs.args[0] if call_kwargs.args else "")
-        assert content_sent == draft, (
-            f"Preservation broken: draft of len {len(draft)} was modified. "
-            f"Expected content == draft, got len={len(content_sent)}"
+        assert len(content_sent) <= 2000, (
+            f"Req 5.2: notification exceeds 2000 chars (len={len(content_sent)})"
         )
         # view must always be attached
         view_sent = call_kwargs.kwargs.get("view")
-        assert view_sent is not None, "Preservation broken: view not attached to followup.send"
+        assert view_sent is not None, "Req 5.5: view not attached to followup.send"
 
 
 # ---------------------------------------------------------------------------

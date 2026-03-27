@@ -208,6 +208,45 @@ class LLMService:
             logger.error(f"Failed to generate weekly newsletter: {e}")
             raise LLMServiceError(f"Generation error: {e}")
 
+    async def generate_digest_intro(self, hardcore_articles: List[ArticleSchema]) -> str:
+        """Generate a Traditional Chinese technical trend intro (≤300 chars) with humorous geek style.
+        
+        On failure, returns default fallback text without raising exceptions.
+        """
+        logger.debug(f"Generating digest intro for {len(hardcore_articles)} hardcore articles.")
+
+        titles_text = "\n".join(f"- {a.title}" for a in hardcore_articles[:10])
+
+        system_prompt = (
+            "你是一位幽默風趣的極客技術編輯，請以繁體中文撰寫本週技術趨勢前言。\n"
+            "要求：\n"
+            "1. 風格幽默且具極客氣息，避免罐頭語氣。\n"
+            "2. 總字數不超過 300 字。\n"
+            "3. 直接輸出前言內容，不要加上多餘的前言或結語。"
+        )
+
+        user_prompt = f"本週精選技術文章如下：\n{titles_text}"
+
+        try:
+            response = await self.client.chat.completions.create(
+                model=SUMMARIZE_MODEL,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                temperature=0.7,
+                max_tokens=400
+            )
+
+            content = response.choices[0].message.content
+            if not content or not content.strip():
+                raise LLMServiceError("Empty response from LLM")
+            return content.strip()
+
+        except Exception as e:
+            logger.error(f"Failed to generate digest intro, using fallback: {e}")
+            return "本週精選技術文章，請展開各項目查看詳情。"
+
     async def generate_reading_recommendation(
         self,
         titles: List[str],

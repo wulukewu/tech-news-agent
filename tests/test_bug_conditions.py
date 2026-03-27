@@ -17,6 +17,8 @@ import pytest
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
 
+from app.core.exceptions import NotionServiceError
+
 
 # ---------------------------------------------------------------------------
 # Bug 1: Notion API AttributeError
@@ -283,34 +285,35 @@ class TestBug5ReadLaterViewNotPersistent:
 
 class TestBug6DiscordMessageLength:
     """
-    Bug Condition: When len(draft) > 2000, news_now passes the full string
-    directly to interaction.followup.send(content=draft, ...), which causes
-    Discord's API to return HTTP 400 Bad Request.
+    Bug 6 test updated to reflect the new /news_now flow (Task 9):
+    - The command now uses build_discord_notification which enforces ≤ 2000 chars.
+    - Tests verify the notification is always within Discord's limit.
 
-    Property 1: Bug Condition - Oversized Draft Crashes followup.send
-
-    Exploration strategy:
-      - Mock the LLM to return a draft longer than 2000 characters.
-      - Call the news_now handler.
-      - Assert that followup.send was called with len(content) > 2000.
-      - This FAILS after the fix (confirming the fix works).
-      - Run on UNFIXED code: test PASSES (confirming the bug exists).
-
-    _Requirements: 1.1, 1.2_
+    _Requirements: 5.2_
     """
 
     @pytest.mark.asyncio
-    async def test_bug6_oversized_draft_sent_without_truncation(self):
+    async def test_bug6_notification_within_discord_limit(self):
         """
-        Property 1: Bug Condition - Oversized Draft Crashes followup.send
-
-        On UNFIXED code: followup.send is called with len(content) > 2000.
-        This confirms the bug exists (counterexample: 2001-char draft passed raw).
-        After the fix: followup.send is called with len(content) <= 2000.
+        Req 5.2: The Discord notification sent by /news_now must be ≤ 2000 chars.
+        The new flow uses build_discord_notification which enforces this limit.
         """
         from app.bot.cogs.news_commands import NewsCommands
+        from app.schemas.article import ArticleSchema, AIAnalysis
 
-        oversized_draft = "A" * 2001  # isBugCondition(draft) = True
+        article = ArticleSchema(
+            title="Test Article",
+            url="https://example.com/article",
+            content_preview="Preview",
+            source_category="AI",
+            source_name="TestSource",
+            ai_analysis=AIAnalysis(
+                is_hardcore=True,
+                reason="Very hardcore",
+                actionable_takeaway="Can be used",
+                tinkering_index=5,
+            ),
+        )
 
         mock_bot = MagicMock()
         cog = NewsCommands(mock_bot)
@@ -324,34 +327,38 @@ class TestBug6DiscordMessageLength:
 
         mock_notion = MagicMock()
         mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
+        mock_notion.create_weekly_digest_page = AsyncMock(return_value=("page-id", "https://notion.so/page"))
+        mock_notion.build_digest_blocks = MagicMock(return_value=[])
+        mock_notion.append_digest_blocks = AsyncMock()
 
         mock_rss = MagicMock()
-        mock_rss.fetch_all_feeds = AsyncMock(return_value=[MagicMock()])
+        mock_rss.fetch_all_feeds = AsyncMock(return_value=[article])
 
         mock_llm = MagicMock()
-        mock_llm.evaluate_batch = AsyncMock(return_value=[MagicMock(ai_analysis=MagicMock(tinkering_index=5))])
-        mock_llm.generate_weekly_newsletter = AsyncMock(return_value=oversized_draft)
+        mock_llm.evaluate_batch = AsyncMock(return_value=[article])
+        mock_llm.generate_digest_intro = AsyncMock(return_value="本週前言")
 
         mock_filter_view = MagicMock()
         mock_filter_view.children = []
         mock_deep_dive_view = MagicMock()
         mock_deep_dive_view.children = []
+        mock_read_later_view = MagicMock()
+        mock_read_later_view.children = []
 
         with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
              patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
              patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
+             patch("app.bot.cogs.news_commands.settings") as mock_settings, \
              patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
-             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view):
+             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view), \
+             patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view):
+            mock_settings.notion_weekly_digests_db_id = "test-db-id"
             await cog.news_now.callback(cog, mock_interaction)
 
-        # On unfixed code: content sent is > 2000 chars (the bug)
-        # After fix: content sent is <= 2000 chars (the fix)
         call_kwargs = mock_interaction.followup.send.call_args
         content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
         assert len(content_sent) <= 2000, (
-            f"Bug 6 confirmed on unfixed code: followup.send called with "
-            f"{len(content_sent)}-char string (> 2000). "
-            f"Counterexample: draft='{'A' * 2001}' → content_sent has len={len(content_sent)}"
+            f"Req 5.2: notification exceeds 2000 chars (len={len(content_sent)})"
         )
 
 
@@ -361,117 +368,38 @@ class TestBug6DiscordMessageLength:
 
 class TestBug7MarkdownFormatting:
     """
-    Bug Condition (Requirements 1.3, 1.4):
-    - Metadata items (💡 推薦原因, 🎯 行動價值, 🛠️ 折騰指數) appear directly after
-      a hyperlink with no newline, causing them to be concatenated with the link.
-    - `+` is used as a list marker, which Discord does not render as a list item.
-
-    Expected Behavior (Requirements 2.3, 2.4):
-    - Each metadata item must appear on its own line after a hyperlink.
-    - `+` list markers must be replaced with `-`.
+    Bug 7 tests updated to reflect the new /news_now flow (Task 9):
+    - The command now uses build_discord_notification (lightweight structured format)
+      instead of generate_weekly_newsletter + regex post-processing.
+    - The new format is inherently free of `+` markers and hyperlink concatenation issues.
+    - Tests now verify the new structured notification format.
     """
 
-    @pytest.mark.asyncio
-    async def test_plus_list_markers_replaced_with_dash(self):
-        """
-        Req 2.4: `+` list markers in the draft are replaced with `-` before sending.
-        """
-        from app.bot.cogs.news_commands import NewsCommands
-
-        draft_with_plus = "+ 推薦原因：很硬核\n+ 行動價值：可以用\n+ 折騰指數：3/5"
-
-        mock_bot = MagicMock()
-        cog = NewsCommands(mock_bot)
-
-        mock_interaction = MagicMock()
-        mock_interaction.response = AsyncMock()
-        mock_interaction.response.defer = AsyncMock()
-        mock_interaction.followup = AsyncMock()
-        mock_interaction.followup.send = AsyncMock()
-        mock_interaction.user = MagicMock()
-
-        mock_notion = MagicMock()
-        mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
-        mock_rss = MagicMock()
-        mock_rss.fetch_all_feeds = AsyncMock(return_value=[MagicMock()])
-        mock_llm = MagicMock()
-        mock_llm.evaluate_batch = AsyncMock(return_value=[MagicMock(ai_analysis=MagicMock(tinkering_index=3))])
-        mock_llm.generate_weekly_newsletter = AsyncMock(return_value=draft_with_plus)
-
-        mock_filter_view = MagicMock()
-        mock_filter_view.children = []
-        mock_deep_dive_view = MagicMock()
-        mock_deep_dive_view.children = []
-
-        with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
-             patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
-             patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
-             patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
-             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view):
-            await cog.news_now.callback(cog, mock_interaction)
-
-        call_kwargs = mock_interaction.followup.send.call_args
-        content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
-        assert "+ " not in content_sent, (
-            f"Bug 7 (req 2.4): `+` list markers were not replaced. content='{content_sent}'"
-        )
-        assert "- 推薦原因" in content_sent
-        assert "- 行動價值" in content_sent
-
-    @pytest.mark.asyncio
-    async def test_metadata_after_hyperlink_gets_newline(self):
-        """
-        Req 2.3: Metadata items concatenated directly after a hyperlink get a newline inserted.
-        """
-        from app.bot.cogs.news_commands import NewsCommands
-
-        # Simulates LLM output where metadata follows link with no newline
-        draft_no_newline = "[Some Article](https://example.com)💡 推薦原因：很硬核"
-
-        mock_bot = MagicMock()
-        cog = NewsCommands(mock_bot)
-
-        mock_interaction = MagicMock()
-        mock_interaction.response = AsyncMock()
-        mock_interaction.response.defer = AsyncMock()
-        mock_interaction.followup = AsyncMock()
-        mock_interaction.followup.send = AsyncMock()
-        mock_interaction.user = MagicMock()
-
-        mock_notion = MagicMock()
-        mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
-        mock_rss = MagicMock()
-        mock_rss.fetch_all_feeds = AsyncMock(return_value=[MagicMock()])
-        mock_llm = MagicMock()
-        mock_llm.evaluate_batch = AsyncMock(return_value=[MagicMock(ai_analysis=MagicMock(tinkering_index=3))])
-        mock_llm.generate_weekly_newsletter = AsyncMock(return_value=draft_no_newline)
-
-        mock_filter_view = MagicMock()
-        mock_filter_view.children = []
-        mock_deep_dive_view = MagicMock()
-        mock_deep_dive_view.children = []
-
-        with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
-             patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
-             patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
-             patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
-             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view):
-            await cog.news_now.callback(cog, mock_interaction)
-
-        call_kwargs = mock_interaction.followup.send.call_args
-        content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
-        assert ")\n💡" in content_sent, (
-            f"Bug 7 (req 2.3): No newline inserted after hyperlink. content='{content_sent}'"
+    def _make_article(self, title="Test Article", url="https://example.com/article"):
+        from app.schemas.article import ArticleSchema, AIAnalysis
+        return ArticleSchema(
+            title=title,
+            url=url,
+            content_preview="Preview content",
+            source_category="AI",
+            source_name="TestSource",
+            ai_analysis=AIAnalysis(
+                is_hardcore=True,
+                reason="Very hardcore",
+                actionable_takeaway="Can be used",
+                tinkering_index=3,
+            ),
         )
 
     @pytest.mark.asyncio
-    async def test_hyperlink_syntax_preserved(self):
+    async def test_notification_within_discord_limit(self):
         """
-        Req 3.4: Markdown hyperlink syntax [title](url) is preserved after post-processing.
+        Req 5.2: The Discord notification sent by /news_now must be ≤ 2000 chars.
+        The new flow uses build_discord_notification which enforces this limit.
         """
         from app.bot.cogs.news_commands import NewsCommands
 
-        draft = "[Some Article](https://example.com)\n- 推薦原因：很硬核"
+        article = self._make_article()
 
         mock_bot = MagicMock()
         cog = NewsCommands(mock_bot)
@@ -485,28 +413,142 @@ class TestBug7MarkdownFormatting:
 
         mock_notion = MagicMock()
         mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
+        mock_notion.create_weekly_digest_page = AsyncMock(return_value=("page-id", "https://notion.so/page"))
+        mock_notion.build_digest_blocks = MagicMock(return_value=[])
+        mock_notion.append_digest_blocks = AsyncMock()
         mock_rss = MagicMock()
-        mock_rss.fetch_all_feeds = AsyncMock(return_value=[MagicMock()])
+        mock_rss.fetch_all_feeds = AsyncMock(return_value=[article])
         mock_llm = MagicMock()
-        mock_llm.evaluate_batch = AsyncMock(return_value=[MagicMock(ai_analysis=MagicMock(tinkering_index=3))])
-        mock_llm.generate_weekly_newsletter = AsyncMock(return_value=draft)
+        mock_llm.evaluate_batch = AsyncMock(return_value=[article])
+        mock_llm.generate_digest_intro = AsyncMock(return_value="本週前言")
 
         mock_filter_view = MagicMock()
         mock_filter_view.children = []
         mock_deep_dive_view = MagicMock()
         mock_deep_dive_view.children = []
+        mock_read_later_view = MagicMock()
+        mock_read_later_view.children = []
 
         with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
              patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
              patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
+             patch("app.bot.cogs.news_commands.settings") as mock_settings, \
              patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
-             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view):
+             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view), \
+             patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view):
+            mock_settings.notion_weekly_digests_db_id = "test-db-id"
             await cog.news_now.callback(cog, mock_interaction)
 
         call_kwargs = mock_interaction.followup.send.call_args
         content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
-        assert "[Some Article](https://example.com)" in content_sent, (
-            f"Req 3.4: Hyperlink syntax was broken. content='{content_sent}'"
+        assert len(content_sent) <= 2000, (
+            f"Req 5.2: notification exceeds 2000 chars (len={len(content_sent)})"
+        )
+
+    @pytest.mark.asyncio
+    async def test_notification_contains_article_hyperlink(self):
+        """
+        Req 5.1: The Discord notification contains article hyperlinks in Markdown format.
+        The new build_discord_notification format includes [title](url) links.
+        """
+        from app.bot.cogs.news_commands import NewsCommands
+
+        article = self._make_article(title="Some Article", url="https://example.com/article")
+
+        mock_bot = MagicMock()
+        cog = NewsCommands(mock_bot)
+
+        mock_interaction = MagicMock()
+        mock_interaction.response = AsyncMock()
+        mock_interaction.response.defer = AsyncMock()
+        mock_interaction.followup = AsyncMock()
+        mock_interaction.followup.send = AsyncMock()
+        mock_interaction.user = MagicMock()
+
+        mock_notion = MagicMock()
+        mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
+        mock_notion.create_weekly_digest_page = AsyncMock(return_value=("page-id", "https://notion.so/page"))
+        mock_notion.build_digest_blocks = MagicMock(return_value=[])
+        mock_notion.append_digest_blocks = AsyncMock()
+        mock_rss = MagicMock()
+        mock_rss.fetch_all_feeds = AsyncMock(return_value=[article])
+        mock_llm = MagicMock()
+        mock_llm.evaluate_batch = AsyncMock(return_value=[article])
+        mock_llm.generate_digest_intro = AsyncMock(return_value="本週前言")
+
+        mock_filter_view = MagicMock()
+        mock_filter_view.children = []
+        mock_deep_dive_view = MagicMock()
+        mock_deep_dive_view.children = []
+        mock_read_later_view = MagicMock()
+        mock_read_later_view.children = []
+
+        with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
+             patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
+             patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
+             patch("app.bot.cogs.news_commands.settings") as mock_settings, \
+             patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
+             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view), \
+             patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view):
+            mock_settings.notion_weekly_digests_db_id = "test-db-id"
+            await cog.news_now.callback(cog, mock_interaction)
+
+        call_kwargs = mock_interaction.followup.send.call_args
+        content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
+        assert "[Some Article](https://example.com/article)" in content_sent, (
+            f"Req 5.1: Article hyperlink not found in notification. content='{content_sent}'"
+        )
+
+    @pytest.mark.asyncio
+    async def test_degraded_notification_when_notion_fails(self):
+        """
+        Req 5.4: When Notion page creation fails, /news_now sends a degraded notification
+        with a warning instead of a Notion link.
+        """
+        from app.bot.cogs.news_commands import NewsCommands
+
+        article = self._make_article()
+
+        mock_bot = MagicMock()
+        cog = NewsCommands(mock_bot)
+
+        mock_interaction = MagicMock()
+        mock_interaction.response = AsyncMock()
+        mock_interaction.response.defer = AsyncMock()
+        mock_interaction.followup = AsyncMock()
+        mock_interaction.followup.send = AsyncMock()
+        mock_interaction.user = MagicMock()
+
+        mock_notion = MagicMock()
+        mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
+        mock_notion.create_weekly_digest_page = AsyncMock(side_effect=NotionServiceError("API error"))
+        mock_rss = MagicMock()
+        mock_rss.fetch_all_feeds = AsyncMock(return_value=[article])
+        mock_llm = MagicMock()
+        mock_llm.evaluate_batch = AsyncMock(return_value=[article])
+        mock_llm.generate_digest_intro = AsyncMock(return_value="本週前言")
+
+        mock_filter_view = MagicMock()
+        mock_filter_view.children = []
+        mock_deep_dive_view = MagicMock()
+        mock_deep_dive_view.children = []
+        mock_read_later_view = MagicMock()
+        mock_read_later_view.children = []
+
+        with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
+             patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
+             patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
+             patch("app.bot.cogs.news_commands.settings") as mock_settings, \
+             patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
+             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view), \
+             patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view):
+            mock_settings.notion_weekly_digests_db_id = "test-db-id"
+            await cog.news_now.callback(cog, mock_interaction)
+
+        call_kwargs = mock_interaction.followup.send.call_args
+        content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
+        assert "Notion 頁面建立失敗" in content_sent, (
+            f"Req 5.4: Degraded notification missing warning. content='{content_sent}'"
         )
 
 
