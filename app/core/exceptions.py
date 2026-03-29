@@ -2,6 +2,10 @@ class TechNewsException(Exception):
     """Base exception for Tech News Agent."""
     pass
 
+class ConfigurationError(TechNewsException):
+    """Exception raised for configuration errors."""
+    pass
+
 class NotionServiceError(TechNewsException):
     """Exception raised for errors in the Notion Service."""
     pass

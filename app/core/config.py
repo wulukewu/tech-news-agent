@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     notion_token: str
     notion_feeds_db_id: str
     notion_read_later_db_id: str
-    notion_weekly_digests_db_id: str = ""
+    notion_weekly_digests_db_id: str
     
     # Discord Configuration
     discord_token: str

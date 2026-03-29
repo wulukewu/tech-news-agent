@@ -29,11 +29,12 @@ class ArticleSchema(BaseModel):
     # Raw data for fallback
     raw_data: Optional[Dict[str, Any]] = None
 
-class WeeklyDigestResult(BaseModel):
+class ArticlePageResult(BaseModel):
     page_id: str
     page_url: str
-    article_count: int
-    top_articles: List[ArticleSchema]
+    title: str
+    category: str
+    tinkering_index: int
 
 class ReadingListItem(BaseModel):
     page_id: str                          # Notion Page ID

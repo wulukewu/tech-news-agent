@@ -6,10 +6,10 @@
 
 - 自動化抓取：每週五 17:00 自動從 Notion 取得 RSS 訂閱源並抓取文章。
 - 硬核評分：使用 Groq (Llama 3.1 8B) 進行技術價值與「折騰指數」評估。
-- Notion 週報頁面：自動在 Notion 建立結構完整的週報，充分運用 Toggle、Callout、Bookmark 等 Block，不受 2000 字元限制。
-- 輕量 Discord 通知：改為發送精簡摘要（統計 + Top 5 文章 + Notion 連結），取代原本的完整 Markdown 廣播。
-- 優雅降級：若 Notion 頁面建立失敗，Discord 仍會收到含警告標示的通知，不中斷整體流程。
-- 雙向互動：支援 `/news_now` 斜線指令與按鈕互動（篩選、深度分析、存入稍後閱讀）。
+- 獨立文章頁面：每篇精選文章在 Notion Weekly Digests 資料庫建立獨立 Page，方便管理與追蹤。
+- 閱讀狀態管理：支援文章閱讀狀態追蹤（未讀/已讀/已封存），可直接從 Discord 標記已讀。
+- 簡化 Discord 通知：發送文章列表與各文章的 Notion Page 連結，方便快速跳轉閱讀。
+- 雙向互動：支援 `/news_now` 斜線指令與按鈕互動（標記已讀、篩選、深度分析、存入稍後閱讀）。
 
 ---
 
@@ -40,15 +40,17 @@
 | `Source_Category` | Select |                                  |
 | `Status`          | Status | 必須包含一個名為 `Unread` 的選項 |
 
-**Weekly Digests 資料庫**（自動建立每週週報頁面）：
+**Weekly Digests 資料庫**（儲存獨立文章頁面）：
 
-| 欄位名稱         | 類型   | 備註                          |
-| ---------------- | ------ | ----------------------------- |
-| `Title`          | Title  | 預設標題欄，保持原名即可      |
-| `Published_Date` | Date   | 系統自動填入執行日期（UTC+8） |
-| `Article_Count`  | Number | 系統自動填入本週精選文章數    |
-
-> 建立完成後，將資料庫 ID 填入 `.env` 的 `NOTION_WEEKLY_DIGESTS_DB_ID`，並確認 Notion Integration 已加入此資料庫的 Connect 權限。若留空，系統會跳過 Notion 頁面建立，改發降級通知。
+| 欄位名稱          | 類型   | 備註                                  |
+| ----------------- | ------ | ------------------------------------- |
+| `Title`           | Title  | 文章標題                              |
+| `URL`             | URL    | 文章原始連結                          |
+| `Source_Category` | Select | 文章分類（例如 AI、DevOps、Security） |
+| `Published_Week`  | Text   | 發布週次（ISO 格式：YYYY-WW）         |
+| `Tinkering_Index` | Number | 折騰指數（1-5）                       |
+| `Status`          | Status | 閱讀狀態（Unread / Read / Archived）  |
+| `Added_At`        | Date   | 文章加入日期                          |
 
 ### 2. Discord Bot 設定
 
@@ -99,15 +101,15 @@
 
 ## 環境變數說明
 
-| 變數名稱                      | 必填 | 說明                                                 |
-| ----------------------------- | ---- | ---------------------------------------------------- |
-| `NOTION_TOKEN`                | ✅   | Notion Integration Token                             |
-| `NOTION_FEEDS_DB_ID`          | ✅   | Feeds 資料庫 ID                                      |
-| `NOTION_READ_LATER_DB_ID`     | ✅   | Read Later 資料庫 ID                                 |
-| `NOTION_WEEKLY_DIGESTS_DB_ID` | ⬜   | Weekly Digests 資料庫 ID，留空則跳過 Notion 頁面建立 |
-| `DISCORD_TOKEN`               | ✅   | Discord Bot Token                                    |
-| `DISCORD_CHANNEL_ID`          | ✅   | 推播通知的 Discord 頻道 ID                           |
-| `GROQ_API_KEY`                | ✅   | Groq Cloud API Key                                   |
+| 變數名稱                      | 必填 | 說明                             |
+| ----------------------------- | ---- | -------------------------------- |
+| `NOTION_TOKEN`                | ✅   | Notion Integration Token         |
+| `NOTION_FEEDS_DB_ID`          | ✅   | Feeds 資料庫 ID                  |
+| `NOTION_READ_LATER_DB_ID`     | ✅   | Read Later 資料庫 ID             |
+| `NOTION_WEEKLY_DIGESTS_DB_ID` | ✅   | Weekly Digests 資料庫 ID（必填） |
+| `DISCORD_TOKEN`               | ✅   | Discord Bot Token                |
+| `DISCORD_CHANNEL_ID`          | ✅   | 推播通知的 Discord 頻道 ID       |
+| `GROQ_API_KEY`                | ✅   | Groq Cloud API Key               |
 
 ---
 

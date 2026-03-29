@@ -6,10 +6,10 @@ An automated technical information curation assistant combining FastAPI, Discord
 
 - Automated Scraping: Fetches RSS feeds from Notion and scrapes articles every Friday at 17:00.
 - Hardcore Scoring: Evaluates technical value and "tinkering index" using Groq (Llama 3.1 8B).
-- Notion Weekly Digest: Automatically creates a beautifully structured weekly digest page in Notion with Toggle blocks, Callouts, and Bookmarks — no 2000-char limit.
-- Lightweight Discord Notification: Sends a concise summary (stats + Top 5 articles + Notion link) instead of a full Markdown dump.
-- Graceful Degradation: If Notion page creation fails, Discord still receives a notification with a warning marker.
-- Bidirectional Interaction: Supports `/news_now` slash command and UI buttons (Filter, Deep Dive, Save to Read Later).
+- Independent Article Pages: Each curated article gets its own Notion page in the Weekly Digests database for better management and tracking.
+- Reading Status Management: Track article reading status (Unread/Read/Archived) and mark articles as read directly from Discord.
+- Simplified Discord Notification: Sends article list with Notion page links for each article, making it easy to jump to individual articles.
+- Bidirectional Interaction: Supports `/news_now` slash command and UI buttons (Mark as Read, Filter, Deep Dive, Save to Read Later).
 
 ---
 
@@ -40,13 +40,17 @@ Create three databases and add your Notion Integration (Connect) to their permis
 | `Source_Category` | Select |                                          |
 | `Status`          | Status | Must have an option named `Unread`       |
 
-**Weekly Digests Database** (auto-created weekly digest pages):
+**Weekly Digests Database** (stores individual article pages):
 
-| Column Name      | Type   | Notes                                 |
-| ---------------- | ------ | ------------------------------------- |
-| `Title`          | Title  | Auto-set to `週報 YYYY-WW` (ISO week) |
-| `Published_Date` | Date   | Set to the execution date (UTC+8)     |
-| `Article_Count`  | Number | Total hardcore articles this week     |
+| Column Name       | Type   | Notes                                        |
+| ----------------- | ------ | -------------------------------------------- |
+| `Title`           | Title  | Article title                                |
+| `URL`             | URL    | Original article link                        |
+| `Source_Category` | Select | Article category (e.g. AI, DevOps, Security) |
+| `Published_Week`  | Text   | Publication week in ISO format (YYYY-WW)     |
+| `Tinkering_Index` | Number | Tinkering index (1-5)                        |
+| `Status`          | Status | Reading status (Unread / Read / Archived)    |
+| `Added_At`        | Date   | Date when article was added                  |
 
 ### 2. Discord Bot Setup
 
@@ -97,17 +101,15 @@ Create three databases and add your Notion Integration (Connect) to their permis
 
 ## Environment Variables
 
-| Variable                      | Required | Description                                                                 |
-| ----------------------------- | -------- | --------------------------------------------------------------------------- |
-| `NOTION_TOKEN`                | ✅       | Notion integration token                                                    |
-| `NOTION_FEEDS_DB_ID`          | ✅       | Notion Feeds database ID                                                    |
-| `NOTION_READ_LATER_DB_ID`     | ✅       | Notion Read Later database ID                                               |
-| `NOTION_WEEKLY_DIGESTS_DB_ID` | ⬜       | Notion Weekly Digests database ID. Leave empty to skip Notion page creation |
-| `DISCORD_TOKEN`               | ✅       | Discord bot token                                                           |
-| `DISCORD_CHANNEL_ID`          | ✅       | Discord channel ID for weekly notifications                                 |
-| `GROQ_API_KEY`                | ✅       | Groq Cloud API key                                                          |
-
-> If `NOTION_WEEKLY_DIGESTS_DB_ID` is left empty, the system skips Notion page creation and sends a degraded Discord notification instead.
+| Variable                      | Required | Description                                  |
+| ----------------------------- | -------- | -------------------------------------------- |
+| `NOTION_TOKEN`                | ✅       | Notion integration token                     |
+| `NOTION_FEEDS_DB_ID`          | ✅       | Notion Feeds database ID                     |
+| `NOTION_READ_LATER_DB_ID`     | ✅       | Notion Read Later database ID                |
+| `NOTION_WEEKLY_DIGESTS_DB_ID` | ✅       | Notion Weekly Digests database ID (required) |
+| `DISCORD_TOKEN`               | ✅       | Discord bot token                            |
+| `DISCORD_CHANNEL_ID`          | ✅       | Discord channel ID for weekly notifications  |
+| `GROQ_API_KEY`                | ✅       | Groq Cloud API key                           |
 
 ---
 

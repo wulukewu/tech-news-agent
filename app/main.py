@@ -14,6 +14,7 @@ from fastapi import FastAPI, BackgroundTasks
 import uvicorn
 
 from app.core.config import settings
+from app.core.exceptions import ConfigurationError
 from app.bot.client import bot
 from app.tasks.scheduler import scheduler, setup_scheduler
 
@@ -24,6 +25,11 @@ logging.basicConfig(
 )
 logger = logging.getLogger("TechNewsAgent")
 
+def validate_configuration():
+    """Validate required configuration settings."""
+    if not settings.notion_weekly_digests_db_id or not settings.notion_weekly_digests_db_id.strip():
+        raise ConfigurationError("NOTION_WEEKLY_DIGESTS_DB_ID is required but not set")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -31,6 +37,10 @@ async def lifespan(app: FastAPI):
     Starts the APScheduler and the Discord Bot.
     """
     logger.info("Initializing Tech News Agent lifespan...")
+    
+    # Validate configuration before starting services
+    validate_configuration()
+    logger.info("Configuration validated successfully.")
     
     # 1. Start the Scheduler
     setup_scheduler()

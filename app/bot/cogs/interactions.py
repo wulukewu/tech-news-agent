@@ -6,8 +6,8 @@ from typing import List
 import discord
 from discord.ext import commands
 
-from app.schemas.article import ArticleSchema
-from app.services.notion_service import NotionService
+from app.schemas.article import ArticleSchema, ArticlePageResult
+from app.services.notion_service import NotionService, NotionServiceError
 from app.services.llm_service import LLMService
 
 logger = logging.getLogger(__name__)
@@ -119,6 +119,40 @@ class DeepDiveView(discord.ui.View):
         super().__init__(timeout=None)
         for article in articles[:5]:
             self.add_item(DeepDiveButton(article))
+
+
+class MarkReadButton(discord.ui.Button):
+    def __init__(self, article_page: ArticlePageResult):
+        label_text = f"✅ {article_page.title[:15]}..." if len(article_page.title) > 15 else f"✅ {article_page.title}"
+        super().__init__(
+            style=discord.ButtonStyle.success,
+            label=label_text,
+            custom_id=f"mark_read_{article_page.page_id}"
+        )
+        self.article_page = article_page
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        try:
+            notion = NotionService()
+            await notion.mark_article_as_read(self.article_page.page_id)
+            
+            # Disable the button after successful mark
+            self.disabled = True
+            await interaction.followup.send(f"✅ 已標記「{self.article_page.title}」為已讀", ephemeral=True)
+            await interaction.message.edit(view=self.view)
+        except NotionServiceError as e:
+            logger.error(f"Mark read interaction error: {e}")
+            await interaction.followup.send("❌ 標記失敗，請稍後再試", ephemeral=True)
+
+
+class MarkReadView(discord.ui.View):
+    def __init__(self, article_pages: List[ArticlePageResult]):
+        super().__init__(timeout=None)
+        
+        # Discord limit: max 25 components per view
+        for article_page in article_pages[:25]:
+            self.add_item(MarkReadButton(article_page))
 
 
 class InteractionsCog(commands.Cog):
