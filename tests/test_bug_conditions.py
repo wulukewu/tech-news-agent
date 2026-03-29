@@ -467,21 +467,22 @@ class TestBug7MarkdownFormatting:
 
         mock_notion = MagicMock()
         mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
-        mock_notion.create_weekly_digest_page = AsyncMock(return_value=("page-id", "https://notion.so/page"))
-        mock_notion.build_digest_blocks = MagicMock(return_value=[])
-        mock_notion.append_digest_blocks = AsyncMock()
+        mock_notion.create_article_page = AsyncMock(return_value=("page-id", "https://notion.so/page"))
+        mock_notion.build_article_list_notification = MagicMock(return_value="本週技術週報已發布\n\n本週統計：抓取 1 篇，精選 1 篇\n\n精選文章：\n1. [AI] Some Article\n   https://notion.so/page")
         mock_rss = MagicMock()
         mock_rss.fetch_all_feeds = AsyncMock(return_value=[article])
         mock_llm = MagicMock()
         mock_llm.evaluate_batch = AsyncMock(return_value=[article])
-        mock_llm.generate_digest_intro = AsyncMock(return_value="本週前言")
 
         mock_filter_view = MagicMock()
         mock_filter_view.children = []
+        mock_filter_view.add_item = MagicMock()
         mock_deep_dive_view = MagicMock()
         mock_deep_dive_view.children = []
         mock_read_later_view = MagicMock()
         mock_read_later_view.children = []
+        mock_mark_read_view = MagicMock()
+        mock_mark_read_view.children = []
 
         with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
              patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
@@ -489,13 +490,15 @@ class TestBug7MarkdownFormatting:
              patch("app.bot.cogs.news_commands.settings") as mock_settings, \
              patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
              patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view), \
-             patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view):
+             patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view), \
+             patch("app.bot.cogs.interactions.MarkReadView", return_value=mock_mark_read_view):
             mock_settings.notion_weekly_digests_db_id = "test-db-id"
             await cog.news_now.callback(cog, mock_interaction)
 
         call_kwargs = mock_interaction.followup.send.call_args
         content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
-        assert "[Some Article](https://example.com/article)" in content_sent, (
+        # Check for Notion page link in notification (new format)
+        assert "https://notion.so/page" in content_sent, (
             f"Req 5.1: Article hyperlink not found in notification. content='{content_sent}'"
         )
 
@@ -521,19 +524,21 @@ class TestBug7MarkdownFormatting:
 
         mock_notion = MagicMock()
         mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
-        mock_notion.create_weekly_digest_page = AsyncMock(side_effect=NotionServiceError("API error"))
+        mock_notion.create_article_page = AsyncMock(side_effect=NotionServiceError("API error"))
         mock_rss = MagicMock()
         mock_rss.fetch_all_feeds = AsyncMock(return_value=[article])
         mock_llm = MagicMock()
         mock_llm.evaluate_batch = AsyncMock(return_value=[article])
-        mock_llm.generate_digest_intro = AsyncMock(return_value="本週前言")
 
         mock_filter_view = MagicMock()
         mock_filter_view.children = []
+        mock_filter_view.add_item = MagicMock()
         mock_deep_dive_view = MagicMock()
         mock_deep_dive_view.children = []
         mock_read_later_view = MagicMock()
         mock_read_later_view.children = []
+        mock_mark_read_view = MagicMock()
+        mock_mark_read_view.children = []
 
         with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
              patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
@@ -541,13 +546,15 @@ class TestBug7MarkdownFormatting:
              patch("app.bot.cogs.news_commands.settings") as mock_settings, \
              patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
              patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view), \
-             patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view):
+             patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view), \
+             patch("app.bot.cogs.interactions.MarkReadView", return_value=mock_mark_read_view):
             mock_settings.notion_weekly_digests_db_id = "test-db-id"
             await cog.news_now.callback(cog, mock_interaction)
 
         call_kwargs = mock_interaction.followup.send.call_args
         content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
-        assert "Notion 頁面建立失敗" in content_sent, (
+        # In new workflow, all article page creation failures result in error message
+        assert "所有文章頁面建立失敗" in content_sent, (
             f"Req 5.4: Degraded notification missing warning. content='{content_sent}'"
         )
 
