@@ -50,3 +50,6 @@ venv.bak/
 # Project specific
 logs/
 *.log
+
+.kiro/
+.hypothesis/

@@ -19,7 +19,34 @@ An automated technical information curation assistant combining FastAPI, Discord
 
 ## Prerequisites
 
-### 1. Notion Database Setup
+> ⚠️ **Migration Notice**: This project is migrating from Notion to Supabase. Phase 1 (database infrastructure) is complete. Phase 2 (service migration) is in progress.
+
+### 1. Supabase Database Setup (Phase 1 - Complete)
+
+The project now uses Supabase (PostgreSQL) as the primary database with pgvector support for semantic search.
+
+**Setup Steps:**
+
+1. Create a Supabase project at [supabase.com](https://supabase.com)
+2. Run the initialization script in the SQL Editor:
+   ```bash
+   # The script is located at scripts/init_supabase.sql
+   ```
+3. Run the seed script to populate default RSS feeds:
+   ```bash
+   python scripts/seed_feeds.py
+   ```
+4. Get your Supabase URL and API key from Project Settings > API
+
+**Database Schema:**
+
+- `users` - Discord users with multi-tenant support
+- `feeds` - RSS feed sources with categories
+- `user_subscriptions` - User feed subscriptions
+- `articles` - Scraped articles with AI summaries and embeddings
+- `reading_list` - User reading lists with ratings and status
+
+### 2. Notion Database Setup (Legacy - Phase 2 Migration Pending)
 
 Create three databases and add your Notion Integration (Connect) to their permissions.
 
@@ -106,16 +133,18 @@ Create three databases and add your Notion Integration (Connect) to their permis
 
 ## Environment Variables
 
-| Variable                      | Required | Description                                   |
-| ----------------------------- | -------- | --------------------------------------------- |
-| `NOTION_TOKEN`                | ✅       | Notion integration token                      |
-| `NOTION_FEEDS_DB_ID`          | ✅       | Notion Feeds database ID                      |
-| `NOTION_READ_LATER_DB_ID`     | ✅       | Notion Read Later database ID                 |
-| `NOTION_WEEKLY_DIGESTS_DB_ID` | ✅       | Notion Weekly Digests database ID             |
-| `DISCORD_TOKEN`               | ✅       | Discord bot token                             |
-| `DISCORD_CHANNEL_ID`          | ✅       | Discord channel ID for weekly notifications   |
-| `GROQ_API_KEY`                | ✅       | Groq Cloud API key                            |
-| `TIMEZONE`                    | ⚪       | Timezone for scheduler (default: Asia/Taipei) |
+| Variable                      | Required | Description                                   | Migration Status |
+| ----------------------------- | -------- | --------------------------------------------- | ---------------- |
+| `SUPABASE_URL`                | ✅       | Supabase project URL                          | ✅ Phase 1       |
+| `SUPABASE_KEY`                | ✅       | Supabase API key (anon/service_role)          | ✅ Phase 1       |
+| `NOTION_TOKEN`                | ⚪       | Notion integration token (legacy)             | 🔄 Phase 2       |
+| `NOTION_FEEDS_DB_ID`          | ⚪       | Notion Feeds database ID (legacy)             | 🔄 Phase 2       |
+| `NOTION_READ_LATER_DB_ID`     | ⚪       | Notion Read Later database ID (legacy)        | 🔄 Phase 2       |
+| `NOTION_WEEKLY_DIGESTS_DB_ID` | ⚪       | Notion Weekly Digests database ID (legacy)    | 🔄 Phase 2       |
+| `DISCORD_TOKEN`               | ✅       | Discord bot token                             | -                |
+| `DISCORD_CHANNEL_ID`          | ✅       | Discord channel ID for weekly notifications   | -                |
+| `GROQ_API_KEY`                | ✅       | Groq Cloud API key                            | -                |
+| `TIMEZONE`                    | ⚪       | Timezone for scheduler (default: Asia/Taipei) | -                |
 
 ---
 
@@ -301,6 +330,50 @@ When `/news_now` runs (or via scheduled task), you receive a Discord notificatio
 
 ## Testing
 
+### Supabase Migration Tests (Phase 1)
+
+The Supabase database infrastructure has comprehensive test coverage with property-based testing.
+
+**Run all Supabase migration tests:**
+
+```bash
+pytest tests/test_database_properties.py tests/test_config.py tests/test_seed_feeds.py tests/test_sql_init_integration.py -v
+```
+
+**Test categories:**
+
+- **Configuration tests** (`test_config.py`): Verify Supabase config fields
+- **SQL initialization tests** (`test_sql_init_integration.py`): Verify database schema creation
+- **Seed script tests** (`test_seed_feeds.py`): Verify RSS feed seeding
+- **Property-based tests** (`test_database_properties.py`): 17 correctness properties using Hypothesis
+
+**Property-based tests validate:**
+
+- CASCADE DELETE behavior (users, feeds, articles)
+- UNIQUE constraints (discord_id, URLs, subscriptions)
+- NOT NULL constraints (required fields)
+- CHECK constraints (status values, rating ranges)
+- Timestamp auto-population
+- Database triggers (updated_at)
+- Seed script behavior
+
+**Adjust test speed:**
+
+```bash
+# Fast (10 examples per property)
+HYPOTHESIS_PROFILE=dev pytest tests/test_database_properties.py -v
+
+# Default (20 examples per property)
+pytest tests/test_database_properties.py -v
+
+# CI/Production (100 examples per property)
+HYPOTHESIS_PROFILE=ci pytest tests/test_database_properties.py -v
+```
+
+### Legacy Tests (Notion-based)
+
+**Note:** Some legacy Notion tests will fail until Phase 2 migration is complete. This is expected.
+
 ### Unit & Property Tests (no real API needed)
 
 ```bash
@@ -314,6 +387,15 @@ python -m pytest tests/test_notion_digest_builder.py tests/test_notion_service_d
 ```
 
 Property-based tests use [Hypothesis](https://hypothesis.readthedocs.io/) and run 100 iterations each to verify correctness properties like message length limits, block structure, and ISO week title format.
+
+### Documentation
+
+For detailed testing documentation, see:
+
+- [Supabase Migration Testing Guide](./docs/testing/supabase-migration-testing.md) - Complete testing guide
+- [Test Fixtures Guide](./docs/testing/test-fixtures.md) - Fixture usage and examples
+- [Cleanup Mechanism Guide](./docs/testing/cleanup-mechanism.md) - Test data cleanup
+- [SQL Integration Tests Guide](./docs/testing/sql-integration-tests.md) - SQL initialization tests
 
 ### Manual End-to-End Test
 
@@ -379,24 +461,24 @@ tech-news-agent/
 │   ├── tasks/
 │   │   └── scheduler.py     # APScheduler weekly automation
 │   └── main.py              # FastAPI entry point and lifecycle management
+├── docs/                    # Documentation
+│   └── testing/             # Testing documentation
+│       ├── supabase-migration-testing.md  # Supabase migration testing guide
+│       ├── test-fixtures.md               # Test fixtures guide
+│       ├── cleanup-mechanism.md           # Cleanup mechanism guide
+│       └── sql-integration-tests.md       # SQL integration tests guide
 ├── logs/                    # Application logs directory
+├── scripts/                 # Database and utility scripts
+│   ├── init_supabase.sql    # Supabase database initialization script
+│   └── seed_feeds.py        # RSS feed seeding script
 ├── tests/                   # Unit, property-based, and integration tests
-│   ├── test_article_page_result.py
-│   ├── test_bug_conditions.py
-│   ├── test_build_article_list_notification.py
-│   ├── test_build_week_string.py
-│   ├── test_interactions.py
-│   ├── test_llm_service.py
-│   ├── test_mark_read_view.py
-│   ├── test_notion_service_create_article_page.py
-│   ├── test_notion_service_mark_article_as_read.py
-│   ├── test_notion_service.py
-│   ├── test_preservation.py
-│   ├── test_reading_list.py
-│   ├── test_rss_service.py
-│   ├── test_startup_validation.py
-│   ├── test_weekly_news_job_integration.py
-│   └── test_weekly_news_job_property.py
+│   ├── conftest.py          # Pytest fixtures and configuration
+│   ├── test_config.py       # Supabase configuration tests
+│   ├── test_database_properties.py  # Property-based tests (17 properties)
+│   ├── test_seed_feeds.py   # Seed script tests
+│   ├── test_sql_init_integration.py # SQL initialization tests
+│   ├── test_cleanup_mechanism.py    # Cleanup mechanism tests
+│   └── ...                  # Legacy Notion tests
 ├── .env.example             # Example environment variables
 ├── .gitignore
 ├── docker-compose.yml       # Docker Compose configuration

@@ -19,7 +19,34 @@
 
 ## 前置準備
 
-### 1. Notion 資料庫設定
+> ⚠️ **遷移通知**：本專案正在從 Notion 遷移至 Supabase。Phase 1（資料庫基礎建設）已完成。Phase 2（服務遷移）進行中。
+
+### 1. Supabase 資料庫設定（Phase 1 - 已完成）
+
+本專案現在使用 Supabase (PostgreSQL) 作為主要資料庫，並支援 pgvector 進行語意搜尋。
+
+**設定步驟：**
+
+1. 在 [supabase.com](https://supabase.com) 建立 Supabase 專案
+2. 在 SQL Editor 執行初始化腳本：
+   ```bash
+   # 腳本位於 scripts/init_supabase.sql
+   ```
+3. 執行種子腳本以填入預設 RSS 訂閱源：
+   ```bash
+   python scripts/seed_feeds.py
+   ```
+4. 從 Project Settings > API 取得 Supabase URL 與 API key
+
+**資料庫結構：**
+
+- `users` - Discord 使用者，支援多租戶架構
+- `feeds` - RSS 訂閱源與分類
+- `user_subscriptions` - 使用者訂閱關係
+- `articles` - 抓取的文章，含 AI 摘要與向量嵌入
+- `reading_list` - 使用者閱讀清單，含評分與狀態
+
+### 2. Notion 資料庫設定（舊版 - Phase 2 遷移待完成）
 
 你需要建立三個資料庫，並將 Notion Integration (Connect) 加入各資料庫的權限。
 
@@ -106,16 +133,18 @@
 
 ## 環境變數說明
 
-| 變數名稱                      | 必填 | 說明                            |
-| ----------------------------- | ---- | ------------------------------- |
-| `NOTION_TOKEN`                | ✅   | Notion Integration Token        |
-| `NOTION_FEEDS_DB_ID`          | ✅   | Feeds 資料庫 ID                 |
-| `NOTION_READ_LATER_DB_ID`     | ✅   | Read Later 資料庫 ID            |
-| `NOTION_WEEKLY_DIGESTS_DB_ID` | ✅   | Weekly Digests 資料庫 ID        |
-| `DISCORD_TOKEN`               | ✅   | Discord Bot Token               |
-| `DISCORD_CHANNEL_ID`          | ✅   | 推播通知的 Discord 頻道 ID      |
-| `GROQ_API_KEY`                | ✅   | Groq Cloud API Key              |
-| `TIMEZONE`                    | ⚪   | 排程器時區（預設：Asia/Taipei） |
+| 變數名稱                      | 必填 | 說明                                 | 遷移狀態   |
+| ----------------------------- | ---- | ------------------------------------ | ---------- |
+| `SUPABASE_URL`                | ✅   | Supabase 專案 URL                    | ✅ Phase 1 |
+| `SUPABASE_KEY`                | ✅   | Supabase API key (anon/service_role) | ✅ Phase 1 |
+| `NOTION_TOKEN`                | ⚪   | Notion Integration Token（舊版）     | 🔄 Phase 2 |
+| `NOTION_FEEDS_DB_ID`          | ⚪   | Feeds 資料庫 ID（舊版）              | 🔄 Phase 2 |
+| `NOTION_READ_LATER_DB_ID`     | ⚪   | Read Later 資料庫 ID（舊版）         | 🔄 Phase 2 |
+| `NOTION_WEEKLY_DIGESTS_DB_ID` | ⚪   | Weekly Digests 資料庫 ID（舊版）     | 🔄 Phase 2 |
+| `DISCORD_TOKEN`               | ✅   | Discord Bot Token                    | -          |
+| `DISCORD_CHANNEL_ID`          | ✅   | 推播通知的 Discord 頻道 ID           | -          |
+| `GROQ_API_KEY`                | ✅   | Groq Cloud API Key                   | -          |
+| `TIMEZONE`                    | ⚪   | 排程器時區（預設：Asia/Taipei）      | -          |
 
 ---
 
@@ -301,6 +330,50 @@
 
 ## 測試
 
+### Supabase 遷移測試（Phase 1）
+
+Supabase 資料庫基礎建設具備完整的測試覆蓋，包含屬性測試。
+
+**執行所有 Supabase 遷移測試：**
+
+```bash
+pytest tests/test_database_properties.py tests/test_config.py tests/test_seed_feeds.py tests/test_sql_init_integration.py -v
+```
+
+**測試分類：**
+
+- **配置測試** (`test_config.py`)：驗證 Supabase 配置欄位
+- **SQL 初始化測試** (`test_sql_init_integration.py`)：驗證資料庫結構建立
+- **種子腳本測試** (`test_seed_feeds.py`)：驗證 RSS 訂閱源灌入
+- **屬性測試** (`test_database_properties.py`)：使用 Hypothesis 驗證 17 個正確性屬性
+
+**屬性測試驗證項目：**
+
+- CASCADE DELETE 行為（使用者、訂閱源、文章）
+- UNIQUE 約束（discord_id、URL、訂閱關係）
+- NOT NULL 約束（必填欄位）
+- CHECK 約束（狀態值、評分範圍）
+- 時間戳記自動填入
+- 資料庫觸發器（updated_at）
+- 種子腳本行為
+
+**調整測試速度：**
+
+```bash
+# 快速（每個屬性 10 次迭代）
+HYPOTHESIS_PROFILE=dev pytest tests/test_database_properties.py -v
+
+# 預設（每個屬性 20 次迭代）
+pytest tests/test_database_properties.py -v
+
+# CI/生產環境（每個屬性 100 次迭代）
+HYPOTHESIS_PROFILE=ci pytest tests/test_database_properties.py -v
+```
+
+### 舊版測試（基於 Notion）
+
+**注意：** 部分舊版 Notion 測試在 Phase 2 遷移完成前會失敗，這是預期行為。
+
 ### 單元與屬性測試（不需要真實 API）
 
 ```bash
@@ -314,6 +387,15 @@ python -m pytest tests/test_notion_digest_builder.py tests/test_notion_service_d
 ```
 
 屬性測試使用 [Hypothesis](https://hypothesis.readthedocs.io/)，每個屬性執行 100 次迭代，驗證訊息長度限制、Block 結構、ISO 週次標題格式等正確性。
+
+### 測試文件
+
+詳細的測試文件請參考：
+
+- [Supabase 遷移測試指南](./docs/testing/supabase-migration-testing.md) - 完整測試指南
+- [Test Fixtures 指南](./docs/testing/test-fixtures.md) - Fixture 使用與範例
+- [清理機制指南](./docs/testing/cleanup-mechanism.md) - 測試資料清理
+- [SQL 整合測試指南](./docs/testing/sql-integration-tests.md) - SQL 初始化測試
 
 ### 手動端對端測試
 
@@ -379,24 +461,24 @@ tech-news-agent/
 │   ├── tasks/
 │   │   └── scheduler.py     # APScheduler 週報自動化
 │   └── main.py              # FastAPI 進入點與生命週期管理
+├── docs/                    # 文件
+│   └── testing/             # 測試文件
+│       ├── supabase-migration-testing.md  # Supabase 遷移測試指南
+│       ├── test-fixtures.md               # Test fixtures 指南
+│       ├── cleanup-mechanism.md           # 清理機制指南
+│       └── sql-integration-tests.md       # SQL 整合測試指南
 ├── logs/                    # 應用程式日誌目錄
+├── scripts/                 # 資料庫與工具腳本
+│   ├── init_supabase.sql    # Supabase 資料庫初始化腳本
+│   └── seed_feeds.py        # RSS 訂閱源種子腳本
 ├── tests/                   # 單元、屬性與整合測試
-│   ├── test_article_page_result.py
-│   ├── test_bug_conditions.py
-│   ├── test_build_article_list_notification.py
-│   ├── test_build_week_string.py
-│   ├── test_interactions.py
-│   ├── test_llm_service.py
-│   ├── test_mark_read_view.py
-│   ├── test_notion_service_create_article_page.py
-│   ├── test_notion_service_mark_article_as_read.py
-│   ├── test_notion_service.py
-│   ├── test_preservation.py
-│   ├── test_reading_list.py
-│   ├── test_rss_service.py
-│   ├── test_startup_validation.py
-│   ├── test_weekly_news_job_integration.py
-│   └── test_weekly_news_job_property.py
+│   ├── conftest.py          # Pytest fixtures 與配置
+│   ├── test_config.py       # Supabase 配置測試
+│   ├── test_database_properties.py  # 屬性測試（17 個屬性）
+│   ├── test_seed_feeds.py   # 種子腳本測試
+│   ├── test_sql_init_integration.py # SQL 初始化測試
+│   ├── test_cleanup_mechanism.py    # 清理機制測試
+│   └── ...                  # 舊版 Notion 測試
 ├── .env.example             # 環境變數範例
 ├── .gitignore
 ├── docker-compose.yml       # Docker Compose 設定
