@@ -17,6 +17,10 @@ class LLMServiceError(TechNewsException):
     """Exception raised for errors in LLM processing."""
     pass
 
+class NotionServiceError(TechNewsException):
+    """Exception raised for errors in Notion service operations (legacy compatibility)."""
+    pass
+
 class SupabaseServiceError(Exception):
     """Supabase 服務層例外"""
 
