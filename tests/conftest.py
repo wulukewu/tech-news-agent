@@ -107,6 +107,9 @@ def test_feed(test_supabase_client: Client):
     This fixture provides a reusable test feed with a unique URL.
     The feed is automatically deleted after the test completes.
     
+    IMPORTANT: Test feeds are created as INACTIVE to prevent the scheduler
+    from attempting to fetch them.
+    
     Returns:
         dict: Feed record with keys: id, name, url, category, is_active, created_at
     
@@ -118,12 +121,12 @@ def test_feed(test_supabase_client: Client):
     # Generate unique feed URL
     test_feed_url = f"https://test-feed-{os.urandom(8).hex()}.com/rss.xml"
     
-    # Create feed
+    # Create feed as INACTIVE to prevent scheduler from fetching it
     result = test_supabase_client.table('feeds').insert({
         'name': 'Test Feed',
         'url': test_feed_url,
         'category': 'Test Category',
-        'is_active': True
+        'is_active': False  # Changed from True to False
     }).execute()
     
     feed = result.data[0]
