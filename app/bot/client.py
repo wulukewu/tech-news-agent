@@ -24,13 +24,39 @@ class TechNewsBot(commands.Bot):
         await self.load_extension("app.bot.cogs.news_commands")
         await self.load_extension("app.bot.cogs.interactions")
         await self.load_extension("app.bot.cogs.reading_list")
-        from app.bot.cogs.interactions import ReadLaterView, FilterView, DeepDiveView
+        await self.load_extension("app.bot.cogs.subscription_commands")
+        
+        # Register persistent views that survive bot restarts
+        logger.info("Registering persistent views...")
         try:
-            self.add_view(ReadLaterView(articles=[]))
-            self.add_view(FilterView(articles=[]))
-            self.add_view(DeepDiveView(articles=[]))
+            from app.bot.cogs.persistent_views import (
+                PersistentReadLaterButton,
+                PersistentMarkReadButton,
+                PersistentRatingSelect,
+                PersistentDeepDiveButton
+            )
+            
+            # Create a persistent view for each button/select type
+            # These will handle interactions even after bot restart
+            read_later_view = discord.ui.View(timeout=None)
+            read_later_view.add_item(PersistentReadLaterButton())
+            self.add_view(read_later_view)
+            
+            mark_read_view = discord.ui.View(timeout=None)
+            mark_read_view.add_item(PersistentMarkReadButton())
+            self.add_view(mark_read_view)
+            
+            rating_view = discord.ui.View(timeout=None)
+            rating_view.add_item(PersistentRatingSelect())
+            self.add_view(rating_view)
+            
+            deep_dive_view = discord.ui.View(timeout=None)
+            deep_dive_view.add_item(PersistentDeepDiveButton())
+            self.add_view(deep_dive_view)
+            
+            logger.info("Successfully registered 4 persistent view types")
         except Exception as e:
-            logger.warning(f"Failed to register persistent views: {e}")
+            logger.error(f"Failed to register persistent views: {e}", exc_info=True)
 
     async def on_ready(self):
         logger.info(f"Logged in as {self.user} (ID: {self.user.id})")

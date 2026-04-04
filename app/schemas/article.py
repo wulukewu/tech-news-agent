@@ -18,6 +18,7 @@ class ArticleSchema(BaseModel):
     """文章資料模型（更新以匹配 Supabase 結構）"""
 
     # 基本資訊
+    id: Optional[UUID] = None  # 新增：文章 UUID（從資料庫查詢時使用）
     title: str = Field(..., max_length=2000)
     url: HttpUrl
 

@@ -4,7 +4,10 @@ An automated technical information curation assistant combining FastAPI, Discord
 
 ## Core Features
 
-- **Automated Scraping**: Fetches RSS feeds from Supabase and scrapes articles every Friday at 17:00
+- **Multi-tenant Architecture**: Each Discord user has independent subscriptions and reading lists
+- **Personal Subscriptions**: Subscribe to your own RSS feeds with `/add_feed`
+- **Instant Article Access**: `/news_now` reads from database (no RSS fetching delay)
+- **Automated Scraping**: Background scheduler fetches RSS feeds and analyzes articles every Friday at 17:00
 - **AI-Powered Scoring**: Evaluates technical value and "tinkering index" using Groq (Llama 3.1 8B)
 - **PostgreSQL Storage**: All data stored in Supabase (PostgreSQL) with pgvector support for semantic search
 - **Reading List Management**: View, rate (1-5 stars), and manage your reading list directly from Discord with pagination support
@@ -103,23 +106,71 @@ The project uses Supabase (PostgreSQL) as the primary database with pgvector sup
 
 ## Discord Commands
 
+### `/add_feed`
+
+Subscribe to an RSS feed for personalized news.
+
+**Parameters:**
+
+- `name`: Feed name (e.g., "Hacker News")
+- `url`: RSS/Atom feed URL (must be http:// or https://)
+- `category`: Feed category (e.g., "Tech News", "AI")
+
+**Example:**
+
+```
+/add_feed name:Hacker News url:https://news.ycombinator.com/rss category:Tech News
+```
+
+**Features:**
+
+- Automatic user registration on first use
+- Duplicate subscription handling (won't create duplicates)
+- URL format validation
+
+### `/list_feeds`
+
+View all your subscribed RSS feeds.
+
+**Features:**
+
+- Shows feed name, URL, and category
+- Ordered by subscription date (newest first)
+- Ephemeral response (only you can see it)
+
+### `/unsubscribe_feed`
+
+Unsubscribe from an RSS feed.
+
+**Parameters:**
+
+- `feed_name`: Name of the feed to unsubscribe from
+
+**Example:**
+
+```
+/unsubscribe_feed feed_name:Hacker News
+```
+
 ### `/news_now`
 
-Immediately trigger weekly technical news scraping and Discord notification.
+View the latest technical articles from your subscribed feeds.
 
 **What it does:**
 
-1. Fetches all active RSS feeds from Supabase
-2. Scrapes articles from the past 7 days
-3. Evaluates each article's technical value and "tinkering index" using AI
-4. Sends a notification to Discord with interactive buttons
+1. Queries articles from feeds you've subscribed to
+2. Filters articles from the past 7 days
+3. Shows only AI-analyzed articles (with tinkering_index)
+4. Orders by technical depth (tinkering_index descending)
+5. Limits to top 20 articles
 
 **Interactive Elements:**
 
 - **📋 Filter Menu**: Select a category to filter articles instantly
 - **📖 Deep Dive Buttons**: Get detailed AI-generated technical analysis (up to 5 articles)
+- **⭐ Read Later Buttons**: Save articles to your reading list (up to 10 articles)
 
-**Note:** Some features are still in development (Read Later, Mark as Read).
+**Note:** Articles are fetched by the background scheduler, not in real-time. If you have no subscriptions, you'll be prompted to subscribe first.
 
 ### `/reading_list view`
 
@@ -230,6 +281,8 @@ HYPOTHESIS_PROFILE=ci pytest tests/test_database_properties.py -v
 
 For detailed testing documentation, see:
 
+- [User Guide](./docs/USER_GUIDE.md) - Complete user guide for Discord commands
+- [Developer Guide](./docs/DEVELOPER_GUIDE.md) - Architecture and development guide
 - [Supabase Testing Guide](./docs/testing/supabase-migration-testing.md) - Complete testing guide
 - [Test Fixtures Guide](./docs/testing/test-fixtures.md) - Fixture usage and examples
 - [Cleanup Mechanism Guide](./docs/testing/cleanup-mechanism.md) - Test data cleanup
@@ -315,23 +368,47 @@ tech-news-agent/
 
 ## Feature Highlights
 
+### 🎯 Multi-tenant Architecture
+
+- Each user has independent subscriptions and reading lists
+- Automatic user registration on first command
+- Complete data isolation between users
+- Shared article pool for efficiency
+
+### 📰 Personal Subscription Management
+
+- Subscribe to any RSS/Atom feed
+- View and manage your subscriptions
+- Unsubscribe anytime
+- URL validation and duplicate handling
+
+### 🚀 Instant Article Access
+
+- `/news_now` reads from database (< 3 seconds response)
+- No waiting for RSS fetching
+- Articles pre-analyzed by background scheduler
+- Filtered by your subscriptions
+
 ### 🎯 Smart Article Curation
 
 - AI evaluates each article's technical depth and "tinkering index"
 - Only the most valuable content makes it to your digest
 - Automatic categorization by topic
+- Personalized based on your subscriptions
 
 ### 📚 Comprehensive Reading Management
 
 - Rate articles to build your preference profile
 - Get personalized recommendations based on your ratings
 - Track reading status in Supabase
+- Pagination support for large reading lists
 
 ### 🗄️ PostgreSQL + pgvector
 
 - All data stored in Supabase (PostgreSQL)
 - pgvector support for future semantic search features
 - Efficient indexing with HNSW algorithm
+- Multi-tenant data isolation
 
 ### ⚡ Interactive Discord Experience
 
@@ -350,10 +427,13 @@ tech-news-agent/
 
 ## Tips & Best Practices
 
-1. **Set up categories consistently**: Use the same category names across feeds for better filtering
-2. **Rate articles regularly**: Build up your rating history for better recommendations
-3. **Use Deep Dive sparingly**: Each deep dive costs API tokens, use it for articles you're genuinely interested in
-4. **Customize the schedule**: Edit `scheduler.py` to change the weekly scraping time (default: Friday 17:00)
+1. **Subscribe to quality feeds**: Choose RSS sources with high technical depth
+2. **Use consistent categories**: Use the same category names across feeds for better filtering
+3. **Rate articles regularly**: Build up your rating history for better recommendations
+4. **Use Deep Dive sparingly**: Each deep dive costs API tokens, use it for articles you're genuinely interested in
+5. **Customize the schedule**: Edit `scheduler.py` to change the weekly scraping time (default: Friday 17:00)
+6. **Manage subscriptions**: Regularly review your subscriptions with `/list_feeds`
+7. **Keep reading list clean**: Mark articles as read or archived to maintain organization
 
 ---
 
@@ -364,6 +444,14 @@ tech-news-agent/
 - Check that the bot has proper permissions in your Discord server
 - Verify `DISCORD_TOKEN` is correct
 - Check bot logs for errors
+- Ensure commands are synced (happens automatically on startup)
+
+**No articles shown in /news_now:**
+
+- Check that you've subscribed to feeds with `/add_feed`
+- Wait for the background scheduler to run (Friday 17:00)
+- Verify feeds are active in the database
+- Check that articles have been analyzed (tinkering_index IS NOT NULL)
 
 **Buttons don't work after bot restart:**
 

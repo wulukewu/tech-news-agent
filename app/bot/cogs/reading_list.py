@@ -9,6 +9,7 @@ from app.schemas.article import ReadingListItem
 from app.services.supabase_service import SupabaseService
 from app.services.llm_service import LLMService
 from app.core.exceptions import SupabaseServiceError, LLMServiceError
+from app.bot.utils.validators import validate_rating
 
 logger = logging.getLogger(__name__)
 
@@ -28,25 +29,56 @@ class MarkAsReadButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
+        
+        logger.info(f"User {interaction.user.id} clicked MarkAsReadButton for article {self.item.article_id}")
+        
         try:
             supabase = SupabaseService()
             discord_id = str(interaction.user.id)
-            # Note: item.page_id in the old system was a Notion page ID
-            # In the new system, we need article_id (UUID)
-            # The ReadingListItem should have article_id field
             await supabase.update_article_status(discord_id, self.item.article_id, 'Read')
+            
             self.disabled = True
             try:
                 await interaction.message.edit(view=self.view)
             except discord.NotFound:
+                logger.warning(f"Message not found when editing view for user {interaction.user.id}")
                 pass  # message expired or was deleted, safe to ignore
+            except discord.HTTPException as e:
+                logger.warning(f"HTTP error when editing message for user {interaction.user.id}: {e}")
+                pass  # Handle Discord API errors gracefully
+                
             await interaction.followup.send(
                 f"✅ 已將《{self.item.title}》標記為已讀！", ephemeral=True
             )
-        except Exception as e:
-            logger.error(f"MarkAsReadButton error for article {self.item.article_id}: {e}")
+            logger.info(f"Successfully marked article {self.item.article_id} as read for user {interaction.user.id}")
+            
+        except SupabaseServiceError as e:
+            logger.error(
+                f"Database error in MarkAsReadButton for user {interaction.user.id}, article {self.item.article_id}: {e}",
+                exc_info=True,
+                extra={
+                    "user_id": interaction.user.id,
+                    "article_id": str(self.item.article_id),
+                    "button": "MarkAsReadButton",
+                    "error_type": "SupabaseServiceError"
+                }
+            )
             await interaction.followup.send(
                 "❌ 標記已讀時發生錯誤，請稍後再試。", ephemeral=True
+            )
+        except Exception as e:
+            logger.error(
+                f"Unexpected error in MarkAsReadButton for user {interaction.user.id}, article {self.item.article_id}: {e}",
+                exc_info=True,
+                extra={
+                    "user_id": interaction.user.id,
+                    "article_id": str(self.item.article_id),
+                    "button": "MarkAsReadButton",
+                    "error_type": type(e).__name__
+                }
+            )
+            await interaction.followup.send(
+                "❌ 發生未預期的錯誤，請稍後再試。", ephemeral=True
             )
 
 
@@ -71,18 +103,59 @@ class RatingSelect(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
         rating = int(self.values[0])
+        
+        # Validate rating
+        is_valid, error_msg = validate_rating(rating)
+        if not is_valid:
+            logger.warning(f"Invalid rating {rating} from user {interaction.user.id}: {error_msg}")
+            await interaction.followup.send(
+                f"❌ {error_msg}", ephemeral=True
+            )
+            return
+        
         stars = "⭐" * rating
+        
+        logger.info(f"User {interaction.user.id} rating article {self.item.article_id} with {rating} stars")
+        
         try:
             supabase = SupabaseService()
             discord_id = str(interaction.user.id)
             await supabase.update_article_rating(discord_id, self.item.article_id, rating)
+            
             await interaction.followup.send(
                 f"✅ 已將《{self.item.title}》評為 {stars}（{rating} 星）！", ephemeral=True
             )
-        except Exception as e:
-            logger.error(f"RatingSelect error for article {self.item.article_id}: {e}")
+            logger.info(f"Successfully rated article {self.item.article_id} with {rating} stars for user {interaction.user.id}")
+            
+        except SupabaseServiceError as e:
+            logger.error(
+                f"Database error in RatingSelect for user {interaction.user.id}, article {self.item.article_id}: {e}",
+                exc_info=True,
+                extra={
+                    "user_id": interaction.user.id,
+                    "article_id": str(self.item.article_id),
+                    "rating": rating,
+                    "select": "RatingSelect",
+                    "error_type": "SupabaseServiceError"
+                }
+            )
             await interaction.followup.send(
                 "❌ 評分時發生錯誤，請稍後再試。", ephemeral=True
+            )
+        except Exception as e:
+            logger.error(
+                f"Unexpected error in RatingSelect for user {interaction.user.id}, article {self.item.article_id}: {e}",
+                exc_info=True,
+                extra={
+                    "user_id": interaction.user.id,
+                    "article_id": str(self.item.article_id),
+                    "rating": rating,
+                    "select": "RatingSelect",
+                    "error_type": type(e).__name__
+                }
+            )
+            await interaction.followup.send(
+                "❌ 發生未預期的錯誤，請稍後再試。", ephemeral=True
             )
 
 
@@ -119,7 +192,7 @@ class NextPageButton(discord.ui.Button):
 
 class PaginationView(discord.ui.View):
     def __init__(self, items: List[ReadingListItem], page: int = 0):
-        super().__init__(timeout=300)
+        super().__init__(timeout=None)
         self.items = items
         self.page = page
         self.page_size = PAGE_SIZE
@@ -171,56 +244,123 @@ class ReadingListGroup(app_commands.Group):
 
     @app_commands.command(name="view", description="查看並管理待讀清單")
     async def view(self, interaction: discord.Interaction):
+        logger.info(f"Command /reading_list view triggered by user {interaction.user.id}")
         await interaction.response.defer(ephemeral=True)
+        
         try:
             supabase = SupabaseService()
             discord_id = str(interaction.user.id)
             items = await supabase.get_reading_list(discord_id, status='Unread')
+            
+            if not items:
+                await interaction.followup.send("📭 目前待讀清單是空的！", ephemeral=True)
+                logger.info(f"User {interaction.user.id} has empty reading list")
+                return
+
+            view = PaginationView(items)
+            content = view.build_page_content()
+            await interaction.followup.send(content, view=view, ephemeral=True)
+            logger.info(f"Successfully sent reading list to user {interaction.user.id} with {len(items)} items")
+            
         except SupabaseServiceError as e:
-            logger.error(f"reading_list view command error: {e}")
-            await interaction.followup.send(f"❌ 無法取得待讀清單：{e}", ephemeral=True)
-            return
-
-        if not items:
-            await interaction.followup.send("📭 目前待讀清單是空的！", ephemeral=True)
-            return
-
-        view = PaginationView(items)
-        content = view.build_page_content()
-        await interaction.followup.send(content, view=view, ephemeral=True)
+            logger.error(
+                f"Database error in /reading_list view for user {interaction.user.id}: {e}",
+                exc_info=True,
+                extra={
+                    "user_id": interaction.user.id,
+                    "command": "reading_list_view",
+                    "error_type": "SupabaseServiceError"
+                }
+            )
+            await interaction.followup.send(
+                "❌ 無法取得待讀清單，請稍後再試。", ephemeral=True
+            )
+        except Exception as e:
+            logger.error(
+                f"Unexpected error in /reading_list view for user {interaction.user.id}: {e}",
+                exc_info=True,
+                extra={
+                    "user_id": interaction.user.id,
+                    "command": "reading_list_view",
+                    "error_type": type(e).__name__
+                }
+            )
+            await interaction.followup.send(
+                "❌ 發生未預期的錯誤，請稍後再試。", ephemeral=True
+            )
 
     @app_commands.command(name="recommend", description="根據高評分文章生成推薦摘要")
     async def recommend(self, interaction: discord.Interaction):
+        logger.info(f"Command /reading_list recommend triggered by user {interaction.user.id}")
         await interaction.response.defer(ephemeral=True)
+        
         try:
             supabase = SupabaseService()
             discord_id = str(interaction.user.id)
             high_rated = await supabase.get_highly_rated_articles(discord_id, threshold=4)
+            
+            if not high_rated:
+                await interaction.followup.send(
+                    "尚無足夠的高評分文章，請先對文章評分（4 星以上）後再試。", ephemeral=True
+                )
+                logger.info(f"User {interaction.user.id} has no highly rated articles")
+                return
+
+            titles = [item.title for item in high_rated]
+            categories = [item.category for item in high_rated]
+            
+            logger.info(f"Generating recommendation for user {interaction.user.id} based on {len(high_rated)} highly rated articles")
+
+            try:
+                llm = LLMService()
+                summary = await llm.generate_reading_recommendation(titles, categories)
+                
+                if len(summary) > 2000:
+                    summary = summary[:1997] + "..."
+                    
+                await interaction.followup.send(summary, ephemeral=True)
+                logger.info(f"Successfully sent recommendation to user {interaction.user.id}")
+                
+            except LLMServiceError as e:
+                logger.error(
+                    f"LLM error in /reading_list recommend for user {interaction.user.id}: {e}",
+                    exc_info=True,
+                    extra={
+                        "user_id": interaction.user.id,
+                        "command": "reading_list_recommend",
+                        "error_type": "LLMServiceError"
+                    }
+                )
+                await interaction.followup.send(
+                    "❌ 推薦功能暫時無法使用，請稍後再試。", ephemeral=True
+                )
+                
         except SupabaseServiceError as e:
-            logger.error(f"recommend command supabase error: {e}")
-            await interaction.followup.send(f"❌ 無法取得高評分文章：{e}", ephemeral=True)
-            return
-
-        if not high_rated:
-            await interaction.followup.send(
-                "尚無足夠的高評分文章，請先對文章評分（4 星以上）後再試。", ephemeral=True
+            logger.error(
+                f"Database error in /reading_list recommend for user {interaction.user.id}: {e}",
+                exc_info=True,
+                extra={
+                    "user_id": interaction.user.id,
+                    "command": "reading_list_recommend",
+                    "error_type": "SupabaseServiceError"
+                }
             )
-            return
-
-        titles = [item.title for item in high_rated]
-        categories = [item.category for item in high_rated]
-
-        try:
-            llm = LLMService()
-            summary = await llm.generate_reading_recommendation(titles, categories)
-        except LLMServiceError as e:
-            logger.error(f"recommend command llm error: {e}")
-            await interaction.followup.send("推薦功能暫時無法使用", ephemeral=True)
-            return
-
-        if len(summary) > 2000:
-            summary = summary[:1997] + "..."
-        await interaction.followup.send(summary, ephemeral=True)
+            await interaction.followup.send(
+                "❌ 無法取得高評分文章，請稍後再試。", ephemeral=True
+            )
+        except Exception as e:
+            logger.error(
+                f"Unexpected error in /reading_list recommend for user {interaction.user.id}: {e}",
+                exc_info=True,
+                extra={
+                    "user_id": interaction.user.id,
+                    "command": "reading_list_recommend",
+                    "error_type": type(e).__name__
+                }
+            )
+            await interaction.followup.send(
+                "❌ 發生未預期的錯誤，請稍後再試。", ephemeral=True
+            )
 
 
 class ReadingListCog(commands.Cog):

@@ -348,17 +348,11 @@ class SupabaseService:
         """
         error_str = str(error).lower()
         
-        # Check for not null constraint first (more specific pattern)
-        if ("null value in column" in error_str and "not-null constraint" in error_str) or "23502" in error_str:
-            # 解析缺少的欄位
-            field = self._extract_field_from_error(error_str)
-            raise SupabaseServiceError(
-                f"Missing required field: '{field}' cannot be null",
-                original_error=error,
-                context={**context, "constraint_type": "not_null"}
-            )
+        # Check for specific constraint violations
+        # Order matters: check more specific patterns first
         
-        elif "duplicate key" in error_str or "23505" in error_str:
+        # Check for duplicate key (unique constraint)
+        if "duplicate key" in error_str and "unique constraint" in error_str:
             # 解析重複的欄位名稱
             field = self._extract_field_from_error(error_str)
             raise SupabaseServiceError(
@@ -367,7 +361,8 @@ class SupabaseService:
                 context={**context, "constraint_type": "unique"}
             )
         
-        elif "foreign key" in error_str or "23503" in error_str:
+        # Check for foreign key constraint
+        elif "foreign key" in error_str and "foreign key constraint" in error_str:
             # 解析外鍵參考
             reference = self._extract_reference_from_error(error_str)
             raise SupabaseServiceError(
@@ -376,13 +371,24 @@ class SupabaseService:
                 context={**context, "constraint_type": "foreign_key"}
             )
         
-        elif "check constraint" in error_str or "23514" in error_str:
+        # Check for check constraint
+        elif "check constraint" in error_str and "violates check constraint" in error_str:
             # 解析檢查約束名稱
             constraint = self._extract_constraint_from_error(error_str)
             raise SupabaseServiceError(
                 f"Validation failed: {constraint}",
                 original_error=error,
                 context={**context, "constraint_type": "check"}
+            )
+        
+        # Check for not null constraint
+        elif ("null value in column" in error_str and "not-null constraint" in error_str):
+            # 解析缺少的欄位
+            field = self._extract_field_from_error(error_str)
+            raise SupabaseServiceError(
+                f"Missing required field: '{field}' cannot be null",
+                original_error=error,
+                context={**context, "constraint_type": "not_null"}
             )
         
         else:
@@ -527,11 +533,18 @@ class SupabaseService:
         Raises:
             SupabaseServiceError: 當資料庫操作失敗時
             
-        Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 13.1, 13.2
+        Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 13.1, 13.2, 17.3
         """
         from uuid import UUID
         
-        logger.info(f"Getting or creating user with discord_id: {discord_id}")
+        logger.info(
+            f"Database operation: get_or_create_user",
+            extra={
+                "operation_type": "SELECT",
+                "table": "users",
+                "discord_id": discord_id
+            }
+        )
         
         try:
             # 先嘗試查詢使用者
@@ -540,11 +553,26 @@ class SupabaseService:
             if response.data and len(response.data) > 0:
                 # 使用者已存在，返回 UUID
                 user_uuid = UUID(response.data[0]['id'])
-                logger.info(f"User found with UUID: {user_uuid}")
+                logger.info(
+                    f"Database operation completed: get_or_create_user (user found)",
+                    extra={
+                        "operation_type": "SELECT",
+                        "table": "users",
+                        "affected_records": 1,
+                        "user_uuid": str(user_uuid)
+                    }
+                )
                 return user_uuid
             
             # 使用者不存在，建立新使用者
-            logger.info(f"User not found, creating new user for discord_id: {discord_id}")
+            logger.info(
+                f"Database operation: create_user",
+                extra={
+                    "operation_type": "INSERT",
+                    "table": "users",
+                    "discord_id": discord_id
+                }
+            )
             
             insert_response = self.client.table('users').insert({
                 'discord_id': discord_id
@@ -552,7 +580,15 @@ class SupabaseService:
             
             if insert_response.data and len(insert_response.data) > 0:
                 user_uuid = UUID(insert_response.data[0]['id'])
-                logger.info(f"User created successfully with UUID: {user_uuid}")
+                logger.info(
+                    f"Database operation completed: create_user",
+                    extra={
+                        "operation_type": "INSERT",
+                        "table": "users",
+                        "affected_records": 1,
+                        "user_uuid": str(user_uuid)
+                    }
+                )
                 return user_uuid
             else:
                 raise SupabaseServiceError(
@@ -568,20 +604,54 @@ class SupabaseService:
             
             # 處理 unique constraint 違反（可能是並發建立）
             if "duplicate key" in error_str or "unique" in error_str or "23505" in error_str:
-                logger.warning(f"Concurrent user creation detected for discord_id: {discord_id}, retrying query")
+                logger.warning(
+                    f"Concurrent user creation detected, retrying query",
+                    extra={
+                        "operation_type": "SELECT",
+                        "table": "users",
+                        "discord_id": discord_id,
+                        "error_type": "concurrent_creation"
+                    }
+                )
                 # 重新查詢以取得 UUID
                 try:
                     response = self.client.table('users').select('id').eq('discord_id', discord_id).execute()
                     if response.data and len(response.data) > 0:
                         user_uuid = UUID(response.data[0]['id'])
-                        logger.info(f"User found after concurrent creation with UUID: {user_uuid}")
+                        logger.info(
+                            f"Database operation completed: get_or_create_user (retry after concurrent creation)",
+                            extra={
+                                "operation_type": "SELECT",
+                                "table": "users",
+                                "affected_records": 1,
+                                "user_uuid": str(user_uuid)
+                            }
+                        )
                         return user_uuid
                 except Exception as retry_error:
-                    logger.error(f"Failed to query user after concurrent creation: {retry_error}", exc_info=True)
+                    logger.error(
+                        f"Failed to query user after concurrent creation: {retry_error}",
+                        exc_info=True,
+                        extra={
+                            "operation_type": "SELECT",
+                            "table": "users",
+                            "discord_id": discord_id,
+                            "error_type": type(retry_error).__name__
+                        }
+                    )
                     self._handle_database_error(retry_error, {"discord_id": discord_id, "operation": "get_or_create_user_retry"})
             
             # 處理其他資料庫錯誤
-            logger.error(f"Failed to get or create user: {e}", exc_info=True)
+            logger.error(
+                f"Failed to get or create user: {e}",
+                exc_info=True,
+                extra={
+                    "operation_type": "INSERT/SELECT",
+                    "table": "users",
+                    "discord_id": discord_id,
+                    "error_type": type(e).__name__
+                }
+            )
             self._handle_database_error(e, {"discord_id": discord_id, "operation": "get_or_create_user"})
     
     async def get_active_feeds(self) -> List['RSSSource']:
@@ -772,6 +842,9 @@ class SupabaseService:
     async def save_to_reading_list(self, discord_id: str, article_id: 'UUID') -> None:
         """將文章加入使用者的閱讀清單
         
+        使用 UPSERT 邏輯處理並發操作，確保在多個請求同時嘗試加入相同文章時不會產生錯誤。
+        當記錄已存在時，只更新 updated_at 時間戳。
+        
         Args:
             discord_id: Discord 使用者 ID
             article_id: 文章 UUID
@@ -780,11 +853,19 @@ class SupabaseService:
             SupabaseServiceError: 當資料庫操作失敗時
             ValueError: 當 article_id 格式無效時
             
-        Validates: Requirements 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 13.1, 13.2
+        Validates: Requirements 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8, 13.1, 13.2, 13.3, 17.3
         """
         from uuid import UUID
         
-        logger.info(f"Saving article {article_id} to reading list for user {discord_id}")
+        logger.info(
+            f"Database operation: save_to_reading_list",
+            extra={
+                "operation_type": "UPSERT",
+                "table": "reading_list",
+                "discord_id": discord_id,
+                "article_id": str(article_id)
+            }
+        )
         
         try:
             # 驗證 article_id 格式
@@ -793,37 +874,56 @@ class SupabaseService:
             elif not isinstance(article_id, UUID):
                 raise ValueError(f"article_id must be a UUID or valid UUID string, got {type(article_id)}")
             
-            # 取得或建立使用者
+            # 取得或建立使用者（Requirement 13.1 - 冪等性使用者註冊）
             user_uuid = await self.get_or_create_user(discord_id)
             
-            # 檢查是否已存在
-            existing = self.client.table('reading_list')\
-                .select('id')\
-                .eq('user_id', str(user_uuid))\
-                .eq('article_id', str(article_id))\
-                .execute()
+            # 使用 UPSERT 邏輯處理並發操作（Requirement 13.3）
+            # Supabase Python client 的 upsert() 方法會：
+            # 1. 如果記錄不存在，插入新記錄
+            # 2. 如果記錄已存在（基於 UNIQUE 約束），更新現有記錄
+            # 這確保了並發安全性，不需要先查詢再插入
+            reading_list_data = {
+                'user_id': str(user_uuid),
+                'article_id': str(article_id),
+                'status': 'Unread',
+                'updated_at': datetime.utcnow().isoformat()
+            }
             
-            if existing.data and len(existing.data) > 0:
-                # 更新現有記錄的 updated_at（透過 update 操作自動更新）
-                self.client.table('reading_list')\
-                    .update({'updated_at': datetime.utcnow().isoformat()})\
-                    .eq('id', existing.data[0]['id'])\
-                    .execute()
-                logger.info(f"Updated existing reading list entry for article {article_id}")
-            else:
-                # 插入新記錄
-                self.client.table('reading_list').insert({
-                    'user_id': str(user_uuid),
-                    'article_id': str(article_id),
-                    'status': 'Unread'
-                }).execute()
-                logger.info(f"Added article {article_id} to reading list with status 'Unread'")
+            # 使用 upsert 處理並發情況
+            # on_conflict 指定當 (user_id, article_id) 衝突時的行為
+            # ignoreDuplicates=False 表示衝突時更新記錄
+            response = self.client.table('reading_list').upsert(
+                reading_list_data,
+                on_conflict='user_id,article_id',  # 基於 UNIQUE(user_id, article_id) 約束
+                returning='minimal'  # 減少返回資料以提升效能
+            ).execute()
+            
+            logger.info(
+                f"Database operation completed: save_to_reading_list (UPSERT)",
+                extra={
+                    "operation_type": "UPSERT",
+                    "table": "reading_list",
+                    "affected_records": 1,
+                    "article_id": str(article_id),
+                    "status": "Unread"
+                }
+            )
                 
         except (ValueError, SupabaseServiceError):
             # 重新拋出驗證錯誤和已包裝的錯誤
             raise
         except Exception as e:
-            logger.error(f"Failed to save to reading list: {e}", exc_info=True)
+            logger.error(
+                f"Failed to save to reading list: {e}",
+                exc_info=True,
+                extra={
+                    "operation_type": "UPSERT",
+                    "table": "reading_list",
+                    "discord_id": discord_id,
+                    "article_id": str(article_id),
+                    "error_type": type(e).__name__
+                }
+            )
             self._handle_database_error(e, {
                 "discord_id": discord_id,
                 "article_id": str(article_id),
@@ -847,11 +947,20 @@ class SupabaseService:
             SupabaseServiceError: 當資料庫操作失敗時
             ValueError: 當 status 無效時
             
-        Validates: Requirements 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 13.1, 13.2
+        Validates: Requirements 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 13.1, 13.2, 17.3
         """
         from uuid import UUID
         
-        logger.info(f"Updating article {article_id} status to '{status}' for user {discord_id}")
+        logger.info(
+            f"Database operation: update_article_status",
+            extra={
+                "operation_type": "UPDATE",
+                "table": "reading_list",
+                "discord_id": discord_id,
+                "article_id": str(article_id),
+                "new_status": status
+            }
+        )
         
         try:
             # 驗證狀態
@@ -886,13 +995,32 @@ class SupabaseService:
                     }
                 )
             
-            logger.info(f"Successfully updated article status to '{normalized_status}'")
+            logger.info(
+                f"Database operation completed: update_article_status",
+                extra={
+                    "operation_type": "UPDATE",
+                    "table": "reading_list",
+                    "affected_records": len(response.data),
+                    "new_status": normalized_status
+                }
+            )
             
         except (ValueError, SupabaseServiceError):
             # 重新拋出驗證錯誤和已包裝的錯誤
             raise
         except Exception as e:
-            logger.error(f"Failed to update article status: {e}", exc_info=True)
+            logger.error(
+                f"Failed to update article status: {e}",
+                exc_info=True,
+                extra={
+                    "operation_type": "UPDATE",
+                    "table": "reading_list",
+                    "discord_id": discord_id,
+                    "article_id": str(article_id),
+                    "status": status,
+                    "error_type": type(e).__name__
+                }
+            )
             self._handle_database_error(e, {
                 "discord_id": discord_id,
                 "article_id": str(article_id),
@@ -917,11 +1045,20 @@ class SupabaseService:
             SupabaseServiceError: 當資料庫操作失敗時
             ValueError: 當 rating 超出範圍時
             
-        Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 13.1, 13.2
+        Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7, 8.8, 13.1, 13.2, 17.3
         """
         from uuid import UUID
         
-        logger.info(f"Updating article {article_id} rating to {rating} for user {discord_id}")
+        logger.info(
+            f"Database operation: update_article_rating",
+            extra={
+                "operation_type": "UPDATE",
+                "table": "reading_list",
+                "discord_id": discord_id,
+                "article_id": str(article_id),
+                "rating": rating
+            }
+        )
         
         try:
             # 驗證評分
@@ -956,13 +1093,32 @@ class SupabaseService:
                     }
                 )
             
-            logger.info(f"Successfully updated article rating to {rating}")
+            logger.info(
+                f"Database operation completed: update_article_rating",
+                extra={
+                    "operation_type": "UPDATE",
+                    "table": "reading_list",
+                    "affected_records": len(response.data),
+                    "rating": rating
+                }
+            )
             
         except (ValueError, SupabaseServiceError):
             # 重新拋出驗證錯誤和已包裝的錯誤
             raise
         except Exception as e:
-            logger.error(f"Failed to update article rating: {e}", exc_info=True)
+            logger.error(
+                f"Failed to update article rating: {e}",
+                exc_info=True,
+                extra={
+                    "operation_type": "UPDATE",
+                    "table": "reading_list",
+                    "discord_id": discord_id,
+                    "article_id": str(article_id),
+                    "rating": rating,
+                    "error_type": type(e).__name__
+                }
+            )
             self._handle_database_error(e, {
                 "discord_id": discord_id,
                 "article_id": str(article_id),
@@ -987,12 +1143,20 @@ class SupabaseService:
         Raises:
             SupabaseServiceError: 當資料庫查詢失敗時
             
-        Validates: Requirements 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9, 13.1, 13.2
+        Validates: Requirements 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9, 13.1, 13.2, 17.3
         """
         from app.schemas.article import ReadingListItem
         from typing import List
         
-        logger.info(f"Fetching reading list for user {discord_id}" + (f" with status '{status}'" if status else ""))
+        logger.info(
+            f"Database operation: get_reading_list",
+            extra={
+                "operation_type": "SELECT",
+                "table": "reading_list",
+                "discord_id": discord_id,
+                "status_filter": status
+            }
+        )
         
         try:
             # 驗證狀態（如果提供）
@@ -1015,7 +1179,14 @@ class SupabaseService:
             response = query.order('added_at', desc=True).execute()
             
             if not response.data:
-                logger.info("No reading list items found")
+                logger.info(
+                    f"Database operation completed: get_reading_list (no items found)",
+                    extra={
+                        "operation_type": "SELECT",
+                        "table": "reading_list",
+                        "affected_records": 0
+                    }
+                )
                 return []
             
             # 轉換為 ReadingListItem 物件
@@ -1049,14 +1220,31 @@ class SupabaseService:
                     logger.warning(f"Failed to parse reading list item: {item_data}, error: {e}")
                     continue
             
-            logger.info(f"Retrieved {len(items)} reading list items")
+            logger.info(
+                f"Database operation completed: get_reading_list",
+                extra={
+                    "operation_type": "SELECT",
+                    "table": "reading_list",
+                    "affected_records": len(items)
+                }
+            )
             return items
             
         except (ValueError, SupabaseServiceError):
             # 重新拋出驗證錯誤和已包裝的錯誤
             raise
         except Exception as e:
-            logger.error(f"Failed to fetch reading list: {e}", exc_info=True)
+            logger.error(
+                f"Failed to fetch reading list: {e}",
+                exc_info=True,
+                extra={
+                    "operation_type": "SELECT",
+                    "table": "reading_list",
+                    "discord_id": discord_id,
+                    "status": status,
+                    "error_type": type(e).__name__
+                }
+            )
             self._handle_database_error(e, {
                 "discord_id": discord_id,
                 "status": status,
@@ -1159,11 +1347,19 @@ class SupabaseService:
         Raises:
             SupabaseServiceError: 當資料庫操作失敗時
             
-        Validates: Requirements 11.1, 11.2, 11.3, 11.4, 11.9, 13.1, 13.2
+        Validates: Requirements 11.1, 11.2, 11.3, 11.4, 11.9, 13.1, 13.2, 17.3
         """
         from uuid import UUID
         
-        logger.info(f"Subscribing user {discord_id} to feed {feed_id}")
+        logger.info(
+            f"Database operation: subscribe_to_feed",
+            extra={
+                "operation_type": "INSERT",
+                "table": "user_subscriptions",
+                "discord_id": discord_id,
+                "feed_id": str(feed_id)
+            }
+        )
         
         try:
             # 驗證 feed_id 格式
@@ -1183,7 +1379,15 @@ class SupabaseService:
                 .execute()
             
             if existing.data and len(existing.data) > 0:
-                logger.info(f"User {discord_id} already subscribed to feed {feed_id}")
+                logger.info(
+                    f"Database operation completed: subscribe_to_feed (already subscribed)",
+                    extra={
+                        "operation_type": "SELECT",
+                        "table": "user_subscriptions",
+                        "affected_records": 0,
+                        "feed_id": str(feed_id)
+                    }
+                )
                 return
             
             # 插入訂閱記錄
@@ -1192,7 +1396,15 @@ class SupabaseService:
                 'feed_id': str(feed_id)
             }).execute()
             
-            logger.info(f"Successfully subscribed user {discord_id} to feed {feed_id}")
+            logger.info(
+                f"Database operation completed: subscribe_to_feed",
+                extra={
+                    "operation_type": "INSERT",
+                    "table": "user_subscriptions",
+                    "affected_records": 1,
+                    "feed_id": str(feed_id)
+                }
+            )
             
         except (ValueError, SupabaseServiceError):
             # 重新拋出驗證錯誤和已包裝的錯誤
@@ -1202,10 +1414,29 @@ class SupabaseService:
             
             # 處理重複訂閱（並發情況）
             if "duplicate key" in error_str or "unique" in error_str or "23505" in error_str:
-                logger.info(f"Concurrent subscription detected for user {discord_id} and feed {feed_id}, ignoring")
+                logger.info(
+                    f"Database operation completed: subscribe_to_feed (concurrent duplicate)",
+                    extra={
+                        "operation_type": "INSERT",
+                        "table": "user_subscriptions",
+                        "affected_records": 0,
+                        "feed_id": str(feed_id),
+                        "note": "concurrent_duplicate"
+                    }
+                )
                 return
             
-            logger.error(f"Failed to subscribe to feed: {e}", exc_info=True)
+            logger.error(
+                f"Failed to subscribe to feed: {e}",
+                exc_info=True,
+                extra={
+                    "operation_type": "INSERT",
+                    "table": "user_subscriptions",
+                    "discord_id": discord_id,
+                    "feed_id": str(feed_id),
+                    "error_type": type(e).__name__
+                }
+            )
             self._handle_database_error(e, {
                 "discord_id": discord_id,
                 "feed_id": str(feed_id),
@@ -1222,11 +1453,19 @@ class SupabaseService:
         Raises:
             SupabaseServiceError: 當資料庫操作失敗時
             
-        Validates: Requirements 11.5, 11.6, 11.7, 11.8, 11.9, 13.1, 13.2
+        Validates: Requirements 11.5, 11.6, 11.7, 11.8, 11.9, 13.1, 13.2, 17.3
         """
         from uuid import UUID
         
-        logger.info(f"Unsubscribing user {discord_id} from feed {feed_id}")
+        logger.info(
+            f"Database operation: unsubscribe_from_feed",
+            extra={
+                "operation_type": "DELETE",
+                "table": "user_subscriptions",
+                "discord_id": discord_id,
+                "feed_id": str(feed_id)
+            }
+        )
         
         try:
             # 驗證 feed_id 格式
@@ -1239,19 +1478,38 @@ class SupabaseService:
             user_uuid = await self.get_or_create_user(discord_id)
             
             # 刪除訂閱記錄
-            self.client.table('user_subscriptions')\
+            response = self.client.table('user_subscriptions')\
                 .delete()\
                 .eq('user_id', str(user_uuid))\
                 .eq('feed_id', str(feed_id))\
                 .execute()
             
-            logger.info(f"Successfully unsubscribed user {discord_id} from feed {feed_id}")
+            affected_records = len(response.data) if response.data else 0
+            logger.info(
+                f"Database operation completed: unsubscribe_from_feed",
+                extra={
+                    "operation_type": "DELETE",
+                    "table": "user_subscriptions",
+                    "affected_records": affected_records,
+                    "feed_id": str(feed_id)
+                }
+            )
             
         except (ValueError, SupabaseServiceError):
             # 重新拋出驗證錯誤和已包裝的錯誤
             raise
         except Exception as e:
-            logger.error(f"Failed to unsubscribe from feed: {e}", exc_info=True)
+            logger.error(
+                f"Failed to unsubscribe from feed: {e}",
+                exc_info=True,
+                extra={
+                    "operation_type": "DELETE",
+                    "table": "user_subscriptions",
+                    "discord_id": discord_id,
+                    "feed_id": str(feed_id),
+                    "error_type": type(e).__name__
+                }
+            )
             self._handle_database_error(e, {
                 "discord_id": discord_id,
                 "feed_id": str(feed_id),
@@ -1270,12 +1528,19 @@ class SupabaseService:
         Raises:
             SupabaseServiceError: 當資料庫查詢失敗時
             
-        Validates: Requirements 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 13.1, 13.2
+        Validates: Requirements 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7, 13.1, 13.2, 17.3
         """
         from app.schemas.article import Subscription
         from typing import List
         
-        logger.info(f"Fetching subscriptions for user {discord_id}")
+        logger.info(
+            f"Database operation: get_user_subscriptions",
+            extra={
+                "operation_type": "SELECT",
+                "table": "user_subscriptions",
+                "discord_id": discord_id
+            }
+        )
         
         try:
             # 取得使用者 UUID
@@ -1289,7 +1554,14 @@ class SupabaseService:
                 .execute()
             
             if not response.data:
-                logger.info("No subscriptions found")
+                logger.info(
+                    f"Database operation completed: get_user_subscriptions (no subscriptions found)",
+                    extra={
+                        "operation_type": "SELECT",
+                        "table": "user_subscriptions",
+                        "affected_records": 0
+                    }
+                )
                 return []
             
             # 轉換為 Subscription 物件
@@ -1314,14 +1586,30 @@ class SupabaseService:
                     logger.warning(f"Failed to parse subscription: {sub_data}, error: {e}")
                     continue
             
-            logger.info(f"Retrieved {len(subscriptions)} subscriptions")
+            logger.info(
+                f"Database operation completed: get_user_subscriptions",
+                extra={
+                    "operation_type": "SELECT",
+                    "table": "user_subscriptions",
+                    "affected_records": len(subscriptions)
+                }
+            )
             return subscriptions
             
         except SupabaseServiceError:
             # 重新拋出已包裝的錯誤
             raise
         except Exception as e:
-            logger.error(f"Failed to fetch user subscriptions: {e}", exc_info=True)
+            logger.error(
+                f"Failed to fetch user subscriptions: {e}",
+                exc_info=True,
+                extra={
+                    "operation_type": "SELECT",
+                    "table": "user_subscriptions",
+                    "discord_id": discord_id,
+                    "error_type": type(e).__name__
+                }
+            )
             self._handle_database_error(e, {
                 "discord_id": discord_id,
                 "operation": "get_user_subscriptions"

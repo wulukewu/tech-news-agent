@@ -1,6 +1,8 @@
 import logging
 import asyncio
 from datetime import datetime, timezone, timedelta
+from uuid import UUID
+from collections import defaultdict
 
 import discord
 from discord import app_commands
@@ -11,132 +13,151 @@ from app.services.rss_service import RSSService
 from app.services.llm_service import LLMService
 from app.core.exceptions import SupabaseServiceError
 from app.core.config import settings
-from app.schemas.article import ArticlePageResult
+from app.schemas.article import ArticlePageResult, ArticleSchema
 
 logger = logging.getLogger(__name__)
 
 
-def build_week_string(dt: datetime) -> str:
-    """Build a week string in format YYYY-WW from a datetime object."""
-    year = dt.year
-    week = dt.isocalendar()[1]
-    return f"{year}-{week:02d}"
+async def ensure_user_registered(interaction: discord.Interaction) -> UUID:
+    """
+    Ensure user exists in database and return user UUID.
+    
+    Args:
+        interaction: Discord interaction object
+        
+    Returns:
+        User UUID from database
+        
+    Raises:
+        SupabaseServiceError: If user registration fails
+    """
+    discord_id = str(interaction.user.id)
+    
+    try:
+        supabase = SupabaseService()
+        user_uuid = await supabase.get_or_create_user(discord_id)
+        logger.info(f"User {discord_id} registered/retrieved with UUID: {user_uuid}")
+        return user_uuid
+    except SupabaseServiceError as e:
+        logger.error(
+            f"Failed to register user {discord_id}: {e}",
+            exc_info=True,
+            extra={
+                "discord_id": discord_id,
+                "function": "ensure_user_registered",
+                "error_type": "SupabaseServiceError"
+            }
+        )
+        raise
+    except Exception as e:
+        logger.error(
+            f"Unexpected error registering user {discord_id}: {e}",
+            exc_info=True,
+            extra={
+                "discord_id": discord_id,
+                "function": "ensure_user_registered",
+                "error_type": type(e).__name__
+            }
+        )
+        raise SupabaseServiceError(
+            "使用者註冊失敗",
+            original_error=e,
+            context={"discord_id": discord_id}
+        )
+
 
 class NewsCommands(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         
-    @app_commands.command(name="news_now", description="強制立即抓取並生成本週的技術新聞報表")
+    @app_commands.command(name="news_now", description="查看你訂閱的最新技術文章")
     async def news_now(self, interaction: discord.Interaction):
-        logger.info(f"Command /news_now triggered by {interaction.user}")
+        logger.info(f"Command /news_now triggered by user {interaction.user.id}")
         await interaction.response.defer(thinking=True)
         
         try:
-            # 1. Fetch Feeds
+            # 1. Register user
+            try:
+                user_uuid = await ensure_user_registered(interaction)
+                logger.info(f"User {interaction.user.id} registered with UUID: {user_uuid}")
+            except SupabaseServiceError as e:
+                logger.error(f"User registration failed for {interaction.user.id}: {e}")
+                await interaction.followup.send(
+                    "❌ 無法註冊使用者，請稍後再試。",
+                    ephemeral=True
+                )
+                return
+            
+            # 2. Get user's subscriptions
             supabase = SupabaseService()
-            feeds = await supabase.get_active_feeds()
+            subscriptions = await supabase.get_user_subscriptions(str(interaction.user.id))
             
-            if not feeds:
-                await interaction.followup.send("⚠️ 目前資料庫中沒有任何啟用的 RSS 訂閱源！")
+            if not subscriptions:
+                await interaction.followup.send(
+                    "📭 你還沒有訂閱任何 RSS 來源！\n"
+                    "使用 `/add_feed` 來訂閱感興趣的來源。"
+                )
                 return
             
-            # Build feed_id_map for RSS service
-            feed_id_map = {}
-            try:
-                response = supabase.client.table('feeds')\
-                    .select('id, url')\
-                    .eq('is_active', True)\
-                    .execute()
-                
-                if response.data:
-                    for feed in response.data:
-                        feed_id_map[feed['url']] = feed['id']
-                    logger.info(f"Built feed_id_map with {len(feed_id_map)} entries")
-            except Exception as e:
-                logger.error(f"Failed to build feed_id_map: {e}", exc_info=True)
-                
-            # 2. Scrape Articles (with deduplication)
-            rss = RSSService(days_to_fetch=settings.rss_fetch_days)
+            # 3. Query articles from subscribed feeds
+            feed_ids = [str(sub.feed_id) for sub in subscriptions]
+            seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
             
-            # Use fetch_new_articles to avoid re-processing existing articles
-            all_articles = await rss.fetch_new_articles(feeds, supabase)
+            response = supabase.client.table('articles')\
+                .select('id, title, url, category, tinkering_index, ai_summary, published_at, feed_id')\
+                .in_('feed_id', feed_ids)\
+                .gte('published_at', seven_days_ago)\
+                .not_.is_('tinkering_index', 'null')\
+                .order('tinkering_index', desc=True)\
+                .limit(20)\
+                .execute()
             
-            if not all_articles:
-                await interaction.followup.send("📭 最近 7 天內沒有任何新文章（或所有文章都已處理過）。")
+            if not response.data:
+                await interaction.followup.send(
+                    "📭 最近 7 天沒有新文章。\n"
+                    "背景排程器會定期抓取文章，請稍後再試。"
+                )
                 return
+            
+            # 4. Convert to ArticleSchema objects
+            articles = []
+            for row in response.data:
+                # Find the feed name from subscriptions
+                feed_name = next((sub.name for sub in subscriptions if str(sub.feed_id) == row['feed_id']), 'Unknown')
                 
-            # 3. Evaluate Hardcore level
-            llm = LLMService()
-            hardcore_articles = await llm.evaluate_batch(all_articles)
-            logger.info(f"Evaluated articles: {len(hardcore_articles)} hardcore retained.")
-
-            # Build stats dict
-            stats = {
-                "total_fetched": len(all_articles),
-                "hardcore_count": len(hardcore_articles),
-            }
-
-            # 4. Insert articles into database
-            try:
-                articles_to_insert = []
-                for article in hardcore_articles:
-                    article_dict = {
-                        'title': article.title,
-                        'url': str(article.url),
-                        'feed_id': str(article.feed_id),
-                        'published_at': article.published_at.isoformat() if article.published_at else None,
-                        'tinkering_index': article.tinkering_index,
-                        'ai_summary': article.ai_summary,
-                        'embedding': article.embedding
-                    }
-                    articles_to_insert.append(article_dict)
-                
-                if articles_to_insert:
-                    batch_result = await supabase.insert_articles(articles_to_insert)
-                    logger.info(
-                        f"Article insertion complete: {batch_result.inserted_count} inserted, "
-                        f"{batch_result.updated_count} updated, {batch_result.failed_count} failed"
-                    )
-                    stats['inserted'] = batch_result.inserted_count
-                    stats['updated'] = batch_result.updated_count
-                    stats['failed'] = batch_result.failed_count
-                else:
-                    logger.warning("No articles to insert")
-                    stats['inserted'] = 0
-                    stats['updated'] = 0
-                    stats['failed'] = 0
-                    
-            except Exception as e:
-                logger.error(f"Failed to insert articles into database: {e}", exc_info=True)
-                stats['inserted'] = 0
-                stats['updated'] = 0
-                stats['failed'] = len(hardcore_articles)
-
+                article = ArticleSchema(
+                    id=UUID(row['id']),
+                    title=row['title'],
+                    url=row['url'],
+                    category=row['category'],
+                    tinkering_index=row['tinkering_index'],
+                    ai_summary=row['ai_summary'],
+                    published_at=datetime.fromisoformat(row['published_at']) if row['published_at'] else None,
+                    feed_id=UUID(row['feed_id']),
+                    feed_name=feed_name,
+                    created_at=datetime.now(timezone.utc)
+                )
+                articles.append(article)
+            
+            logger.info(f"User {interaction.user.id} retrieved {len(articles)} articles from {len(feed_ids)} subscribed feeds")
+            
             # 5. Build notification message (with 2000 char limit)
             lines = [
-                "📰 **本週科技新聞精選**",
-                "",
-                f"📊 本週統計：",
-                f"  • 總共抓取：{stats.get('total_fetched', 0)} 篇文章",
-                f"  • 精選推薦：{stats.get('hardcore_count', 0)} 篇",
-                f"  • 新增資料庫：{stats.get('inserted', 0)} 篇",
-                f"  • 更新資料庫：{stats.get('updated', 0)} 篇",
-                "",
-                "🔥 **推薦文章：**",
-                ""
+                "📰 **你的個人化技術新聞**",
+                f"📊 找到 {len(articles)} 篇精選文章\n",
+                "🔥 **推薦文章：**\n"
             ]
             
             # Group articles by category
-            from collections import defaultdict
             by_category = defaultdict(list)
-            for article in hardcore_articles:
+            for article in articles:
                 by_category[article.category].append(article)
             
             # Format articles by category with character limit check
             DISCORD_CHAR_LIMIT = 2000
             RESERVED_CHARS = 100  # Reserve space for truncation message
             
-            for category, articles in sorted(by_category.items()):
+            for category, cat_articles in sorted(by_category.items()):
                 category_line = f"**{category}**"
                 # Check if adding this would exceed limit
                 test_content = "\n".join(lines + [category_line])
@@ -146,8 +167,8 @@ class NewsCommands(commands.Cog):
                     
                 lines.append(category_line)
                 
-                for article in articles[:10]:  # Limit to 10 per category
-                    tinkering = "🔥" * (article.tinkering_index if article.tinkering_index else 0)
+                for article in cat_articles[:5]:  # Limit to 5 per category
+                    tinkering = "🔥" * article.tinkering_index
                     article_lines = [
                         f"  {tinkering} {article.title}",
                         f"    🔗 {article.url}"
@@ -168,43 +189,55 @@ class NewsCommands(commands.Cog):
                 break
             
             notification = "\n".join(lines)
-
-            # 6. Send results back to Discord with interactive buttons
-            from app.bot.cogs.interactions import ReadLaterView, FilterView, DeepDiveView  # Local import to prevent circular deps
-
-            combined_view = FilterView(articles=hardcore_articles)
-            for item in DeepDiveView(articles=hardcore_articles[:5]).children:
-                combined_view.add_item(item)
-            # Add ReadLaterButtons, capped at 10 to keep total components ≤ 25.
-            MAX_READ_LATER = 10
-            read_later_view = ReadLaterView(articles=hardcore_articles[:MAX_READ_LATER])
-            for item in read_later_view.children:
-                combined_view.add_item(item)
-
-            await interaction.followup.send(content=notification, view=combined_view)
             
-        except Exception as e:
-            logger.error(f"Error during /news_now execution: {e}", exc_info=True)
-            await interaction.followup.send(f"❌ 發生錯誤：{e}")
-
-    @app_commands.command(name="add_feed", description="將一個新的 RSS 訂閱源加入資料庫")
-    @app_commands.describe(
-        name="訂閱源名稱 (例如: YCombinator)",
-        url="RSS/Atom 網址",
-        category="分類 (例如: AI, Frontend, Backend)"
-    )
-    async def add_feed(self, interaction: discord.Interaction, name: str, url: str, category: str):
-        await interaction.response.defer(thinking=True)
-        try:
-            # TODO: Implement add_feed in SupabaseService
-            # This requires direct database access to insert into feeds table
-            logger.warning("add_feed command not yet implemented for Supabase")
+            # 6. Create interactive view with article IDs
+            from app.bot.cogs.interactions import ReadLaterView, FilterView, DeepDiveView
+            
+            combined_view = FilterView(articles=articles)
+            
+            # Add Deep Dive buttons (top 5 articles)
+            for article in articles[:5]:
+                from app.bot.cogs.interactions import DeepDiveButton
+                combined_view.add_item(DeepDiveButton(article))
+            
+            # Add Read Later buttons (top 10 articles)
+            for article in articles[:10]:
+                from app.bot.cogs.interactions import ReadLaterButton
+                combined_view.add_item(ReadLaterButton(article.id, article.title))
+            
+            await interaction.followup.send(content=notification, view=combined_view)
+            logger.info(f"Successfully sent news_now response to user {interaction.user.id}")
+            
+        except SupabaseServiceError as e:
+            # Database-specific errors
+            logger.error(
+                f"Database error in /news_now for user {interaction.user.id}: {e}",
+                exc_info=True,
+                extra={
+                    "user_id": interaction.user.id,
+                    "command": "news_now",
+                    "error_type": "SupabaseServiceError"
+                }
+            )
             await interaction.followup.send(
-                f"❌ 此功能暫時無法使用（需要實作 Supabase 的 add_feed 方法）"
+                "❌ 無法取得文章資料，請稍後再試。",
+                ephemeral=True
             )
         except Exception as e:
-            logger.error(f"Error during /add_feed execution: {e}", exc_info=True)
-            await interaction.followup.send(f"❌ 新增失敗：{e}")
+            # Catch-all for unexpected errors
+            logger.error(
+                f"Unexpected error in /news_now for user {interaction.user.id}: {e}",
+                exc_info=True,
+                extra={
+                    "user_id": interaction.user.id,
+                    "command": "news_now",
+                    "error_type": type(e).__name__
+                }
+            )
+            await interaction.followup.send(
+                "❌ 發生未預期的錯誤，請稍後再試。",
+                ephemeral=True
+            )
 
 
 async def setup(bot: commands.Bot):

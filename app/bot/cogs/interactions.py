@@ -2,6 +2,7 @@ import hashlib
 import logging
 from collections import Counter
 from typing import List
+from uuid import UUID
 
 import discord
 from discord.ext import commands
@@ -14,34 +15,71 @@ from app.services.llm_service import LLMService
 logger = logging.getLogger(__name__)
 
 class ReadLaterButton(discord.ui.Button):
-    def __init__(self, article: ArticleSchema, index: int):
+    def __init__(self, article_id: UUID, article_title: str):
         # Labels have limits, so we truncate the title slightly for the button
-        label_text = f"⭐ 稍後閱讀: {article.title[:20]}..." if len(article.title) > 20 else f"⭐ 稍後閱讀: {article.title}"
-        super().__init__(style=discord.ButtonStyle.primary, label=label_text, custom_id=f"read_later_{hashlib.md5(str(article.url).encode()).hexdigest()[:8]}")
-        self.article = article
+        label_text = f"⭐ {article_title[:15]}..." if len(article_title) > 15 else f"⭐ {article_title}"
+        # Custom ID includes the full UUID
+        custom_id = f"read_later_{article_id}"
+        super().__init__(
+            style=discord.ButtonStyle.primary,
+            label=label_text,
+            custom_id=custom_id
+        )
+        self.article_id = article_id
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer(ephemeral=True) # Ephemeral means only the user clicking sees the response
+        await interaction.response.defer(ephemeral=True)
+        
+        logger.info(f"User {interaction.user.id} clicked ReadLaterButton for article {self.article_id}")
+        
         try:
             supabase = SupabaseService()
-            # Note: We need article_id (UUID) but we only have the article object
-            # This is a limitation - we'd need to query the database to get the article_id
-            # For now, we'll log a warning
-            logger.warning(f"Cannot save article to reading list - article_id not available for {self.article.url}")
-            await interaction.followup.send("❌ 此功能暫時無法使用（需要文章 ID）", ephemeral=True)
+            discord_id = str(interaction.user.id)
+            await supabase.save_to_reading_list(discord_id, self.article_id)
             
-            # TODO: Implement proper article lookup by URL to get article_id
-            # article_id = await supabase.get_article_id_by_url(str(self.article.url))
-            # discord_id = str(interaction.user.id)
-            # await supabase.save_to_reading_list(discord_id, article_id)
+            self.disabled = True
+            try:
+                await interaction.message.edit(view=self.view)
+            except discord.NotFound:
+                logger.warning(f"Message not found when editing view for user {interaction.user.id}")
+                pass  # message expired or was deleted, safe to ignore
+            except discord.HTTPException as e:
+                logger.warning(f"HTTP error when editing message for user {interaction.user.id}: {e}")
+                pass  # Handle Discord API errors gracefully
             
-            # Disable the button after attempt
-            # self.disabled = True
-            # await interaction.followup.send(f"✅ 已成功將 **{self.article.title}** 加入閱讀清單！", ephemeral=True)
-            # await interaction.message.edit(view=self.view)
+            await interaction.followup.send(
+                "✅ 已加入閱讀清單！", ephemeral=True
+            )
+            logger.info(f"Successfully added article {self.article_id} to reading list for user {interaction.user.id}")
+            
+        except SupabaseServiceError as e:
+            logger.error(
+                f"Database error in ReadLaterButton for user {interaction.user.id}, article {self.article_id}: {e}",
+                exc_info=True,
+                extra={
+                    "user_id": interaction.user.id,
+                    "article_id": str(self.article_id),
+                    "button": "ReadLaterButton",
+                    "error_type": "SupabaseServiceError"
+                }
+            )
+            await interaction.followup.send(
+                "❌ 儲存失敗，請稍後再試。", ephemeral=True
+            )
         except Exception as e:
-            logger.error(f"Interaction error: {e}")
-            await interaction.followup.send("❌ 儲存時發生錯誤，請稍後再試。", ephemeral=True)
+            logger.error(
+                f"Unexpected error in ReadLaterButton for user {interaction.user.id}, article {self.article_id}: {e}",
+                exc_info=True,
+                extra={
+                    "user_id": interaction.user.id,
+                    "article_id": str(self.article_id),
+                    "button": "ReadLaterButton",
+                    "error_type": type(e).__name__
+                }
+            )
+            await interaction.followup.send(
+                "❌ 發生未預期的錯誤，請稍後再試。", ephemeral=True
+            )
 
 
 class ReadLaterView(discord.ui.View):
@@ -51,8 +89,10 @@ class ReadLaterView(discord.ui.View):
         super().__init__(timeout=None)
         
         # In this UI design, we attach buttons dynamically based on the articles curated
-        for i, article in enumerate(articles):
-            self.add_item(ReadLaterButton(article, i))
+        # Note: articles must have id field populated
+        for article in articles:
+            if article.id:
+                self.add_item(ReadLaterButton(article.id, article.title))
 
 class FilterSelect(discord.ui.Select):
     def __init__(self, articles: List[ArticleSchema]):
@@ -67,6 +107,8 @@ class FilterSelect(discord.ui.Select):
         super().__init__(placeholder="請選擇分類篩選文章…", options=options)
 
     async def callback(self, interaction: discord.Interaction):
+        logger.info(f"User {interaction.user.id} clicked FilterSelect with value: {self.values[0] if self.values else 'none'}")
+        
         try:
             selected = self.values[0]
 
@@ -77,6 +119,7 @@ class FilterSelect(discord.ui.Select):
 
             if not filtered:
                 await interaction.response.send_message("⚠️ 此分類目前沒有文章。", ephemeral=True)
+                logger.info(f"No articles found for category '{selected}' for user {interaction.user.id}")
                 return
 
             lines = []
@@ -91,9 +134,22 @@ class FilterSelect(discord.ui.Select):
                 content = content[:1997] + "..."
 
             await interaction.response.send_message(content, ephemeral=True)
+            logger.info(f"Successfully sent filtered articles (category: {selected}) to user {interaction.user.id}")
+            
         except Exception as e:
-            logger.error(f"FilterSelect callback error: {e}")
-            await interaction.response.send_message("❌ 篩選時發生錯誤，請稍後再試。", ephemeral=True)
+            logger.error(
+                f"Unexpected error in FilterSelect for user {interaction.user.id}: {e}",
+                exc_info=True,
+                extra={
+                    "user_id": interaction.user.id,
+                    "selected_value": self.values[0] if self.values else None,
+                    "select": "FilterSelect",
+                    "error_type": type(e).__name__
+                }
+            )
+            await interaction.response.send_message(
+                "❌ 篩選時發生錯誤，請稍後再試。", ephemeral=True
+            )
 
 
 class FilterView(discord.ui.View):
@@ -105,23 +161,62 @@ class FilterView(discord.ui.View):
 class DeepDiveButton(discord.ui.Button):
     def __init__(self, article: ArticleSchema):
         label_text = f"📖 {article.title[:20]}..." if len(article.title) > 20 else f"📖 {article.title}"
+        # Use article.id if available, otherwise fall back to URL hash
+        if article.id:
+            custom_id = f"deep_dive_{article.id}"
+        else:
+            custom_id = f"deep_dive_{hashlib.md5(str(article.url).encode()).hexdigest()[:8]}"
         super().__init__(
             style=discord.ButtonStyle.secondary,
             label=label_text,
-            custom_id=f"deep_dive_{hashlib.md5(str(article.url).encode()).hexdigest()[:8]}"
+            custom_id=custom_id
         )
         self.article = article
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
+        
+        logger.info(f"User {interaction.user.id} clicked DeepDiveButton for article {self.article.id if self.article.id else 'unknown'}")
+        
         try:
             result = await LLMService().generate_deep_dive(self.article)
+            
             if len(result) > 2000:
                 result = result[:1997] + "..."
+                
             await interaction.followup.send(result, ephemeral=True)
+            logger.info(f"Successfully sent deep dive analysis to user {interaction.user.id}")
+            
+        except LLMServiceError as e:
+            logger.error(
+                f"LLM error in DeepDiveButton for user {interaction.user.id}: {e}",
+                exc_info=True,
+                extra={
+                    "user_id": interaction.user.id,
+                    "article_id": str(self.article.id) if self.article.id else None,
+                    "article_title": self.article.title,
+                    "button": "DeepDiveButton",
+                    "error_type": "LLMServiceError"
+                }
+            )
+            await interaction.followup.send(
+                "❌ 生成深度摘要時發生錯誤，請稍後再試。", ephemeral=True
+            )
         except Exception as e:
-            logger.error(f"DeepDiveButton callback error: {e}")
-            await interaction.followup.send("❌ 生成深度摘要時發生錯誤，請稍後再試。", ephemeral=True)
+            logger.error(
+                f"Unexpected error in DeepDiveButton for user {interaction.user.id}: {e}",
+                exc_info=True,
+                extra={
+                    "user_id": interaction.user.id,
+                    "article_id": str(self.article.id) if self.article.id else None,
+                    "article_title": self.article.title,
+                    "button": "DeepDiveButton",
+                    "error_type": type(e).__name__
+                }
+            )
+            await interaction.followup.send(
+                "❌ 發生未預期的錯誤，請稍後再試。", ephemeral=True
+            )
 
 
 class DeepDiveView(discord.ui.View):
@@ -132,47 +227,80 @@ class DeepDiveView(discord.ui.View):
 
 
 class MarkReadButton(discord.ui.Button):
-    def __init__(self, article_page: ArticlePageResult):
-        label_text = f"✅ {article_page.title[:15]}..." if len(article_page.title) > 15 else f"✅ {article_page.title}"
+    def __init__(self, article_id: UUID, article_title: str):
+        label_text = f"✅ {article_title[:15]}..." if len(article_title) > 15 else f"✅ {article_title}"
+        custom_id = f"mark_read_{article_id}"
         super().__init__(
             style=discord.ButtonStyle.success,
             label=label_text,
-            custom_id=f"mark_read_{article_page.page_id}"
+            custom_id=custom_id
         )
-        self.article_page = article_page
+        self.article_id = article_id
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
+        
+        logger.info(f"User {interaction.user.id} clicked MarkReadButton for article {self.article_id}")
+        
         try:
             supabase = SupabaseService()
             discord_id = str(interaction.user.id)
-            # Note: page_id in the old system was a Notion page ID
-            # In the new system, we need article_id (UUID)
-            # The article_page.page_id might be a URL or other identifier
-            # We need to look up the article by some identifier
-            logger.warning(f"Cannot mark article as read - need to implement article lookup for page_id: {self.article_page.page_id}")
-            await interaction.followup.send("❌ 此功能暫時無法使用（需要實作文章查詢）", ephemeral=True)
+            await supabase.update_article_status(discord_id, self.article_id, 'Read')
             
-            # TODO: Implement proper article lookup
-            # article_id = await supabase.get_article_id_by_url(self.article_page.page_url)
-            # await supabase.update_article_status(discord_id, article_id, 'Read')
+            self.disabled = True
+            try:
+                await interaction.message.edit(view=self.view)
+            except discord.NotFound:
+                logger.warning(f"Message not found when editing view for user {interaction.user.id}")
+                pass  # message expired or was deleted, safe to ignore
+            except discord.HTTPException as e:
+                logger.warning(f"HTTP error when editing message for user {interaction.user.id}: {e}")
+                pass  # Handle Discord API errors gracefully
             
-            # Disable the button after attempt
-            # self.disabled = True
-            # await interaction.followup.send(f"✅ 已標記「{self.article_page.title}」為已讀", ephemeral=True)
-            # await interaction.message.edit(view=self.view)
+            await interaction.followup.send(
+                "✅ 已標記為已讀", ephemeral=True
+            )
+            logger.info(f"Successfully marked article {self.article_id} as read for user {interaction.user.id}")
+            
         except SupabaseServiceError as e:
-            logger.error(f"Mark read interaction error: {e}")
-            await interaction.followup.send("❌ 標記失敗，請稍後再試", ephemeral=True)
+            logger.error(
+                f"Database error in MarkReadButton for user {interaction.user.id}, article {self.article_id}: {e}",
+                exc_info=True,
+                extra={
+                    "user_id": interaction.user.id,
+                    "article_id": str(self.article_id),
+                    "button": "MarkReadButton",
+                    "error_type": "SupabaseServiceError"
+                }
+            )
+            await interaction.followup.send(
+                "❌ 標記失敗，請稍後再試", ephemeral=True
+            )
+        except Exception as e:
+            logger.error(
+                f"Unexpected error in MarkReadButton for user {interaction.user.id}, article {self.article_id}: {e}",
+                exc_info=True,
+                extra={
+                    "user_id": interaction.user.id,
+                    "article_id": str(self.article_id),
+                    "button": "MarkReadButton",
+                    "error_type": type(e).__name__
+                }
+            )
+            await interaction.followup.send(
+                "❌ 發生未預期的錯誤，請稍後再試。", ephemeral=True
+            )
 
 
 class MarkReadView(discord.ui.View):
-    def __init__(self, article_pages: List[ArticlePageResult]):
+    def __init__(self, articles: List[ArticleSchema]):
         super().__init__(timeout=None)
         
         # Discord limit: max 25 components per view
-        for article_page in article_pages[:25]:
-            self.add_item(MarkReadButton(article_page))
+        # articles must have id field populated
+        for article in articles[:25]:
+            if article.id:
+                self.add_item(MarkReadButton(article.id, article.title))
 
 
 class InteractionsCog(commands.Cog):
