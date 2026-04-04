@@ -1,10 +1,10 @@
-# Supabase Migration Phase 1 - Testing Guide
+# Supabase Database Testing Guide
 
-本文件說明如何測試 Supabase 遷移 Phase 1 的資料庫基礎建設。
+本文件說明如何測試 Supabase 資料庫基礎建設。
 
 ## 測試概覽
 
-Phase 1 包含以下測試類別：
+測試包含以下類別：
 
 1. **配置測試** - 驗證環境變數與配置類別
 2. **SQL 初始化測試** - 驗證資料庫結構建立
@@ -246,16 +246,14 @@ export GROQ_API_KEY=test_key
 HYPOTHESIS_PROFILE=ci pytest tests/test_database_properties.py tests/test_config.py tests/test_seed_feeds.py tests/test_sql_init_integration.py -v --tb=short
 ```
 
-## 下一步
+## 持續改進
 
-Phase 1 測試完成後，可以開始 Phase 2 的服務遷移：
+資料庫測試應該持續維護和擴展：
 
-1. 遷移 RSS Service 至 Supabase
-2. 遷移 Notion Service 至 Supabase
-3. 更新 Discord Bot 指令
-4. 更新排程任務
-
-每個階段都應該有對應的測試覆蓋。
+1. 新增功能時添加對應的測試
+2. 發現 bug 時先寫測試重現問題
+3. 定期執行完整測試套件確保穩定性
+4. 在 CI/CD 中整合測試流程
 
 ## 參考文件
 
