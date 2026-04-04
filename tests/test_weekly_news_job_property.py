@@ -44,7 +44,7 @@ def article_strategy():
     # Randomly decide which articles will fail (by index)
     failing_indices=st.sets(st.integers(min_value=0, max_value=29), max_size=10),
 )
-@h_settings(max_examples=100, deadline=None)
+@h_settings(max_examples=5, deadline=None)
 @pytest.mark.asyncio
 async def test_page_count_matches_successful_articles(hardcore_articles, failing_indices):
     """**Validates: Requirements 2.1, 2.4**

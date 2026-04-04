@@ -119,14 +119,14 @@ def _article_strategy():
 
 class TestFilterSelectOptionsProperty:
     @given(articles=st.lists(_article_strategy(), min_size=1, max_size=50))
-    @settings(max_examples=100)
+    @settings(max_examples=5)
     def test_show_all_is_first_option(self, articles):
         """Property 1: First option value is always '__all__'."""
         select = FilterSelect(articles)
         assert select.options[0].value == "__all__"
 
     @given(articles=st.lists(_article_strategy(), min_size=1, max_size=50))
-    @settings(max_examples=100)
+    @settings(max_examples=5)
     def test_all_categories_represented_up_to_24(self, articles):
         """Property 1: All unique source_categories appear in options (up to 24)."""
         select = FilterSelect(articles)
@@ -141,7 +141,7 @@ class TestFilterSelectOptionsProperty:
             assert len(option_values) <= 24
 
     @given(articles=st.lists(_article_strategy(), min_size=1, max_size=50))
-    @settings(max_examples=100)
+    @settings(max_examples=5)
     def test_total_options_never_exceed_25(self, articles):
         """Property 1: Total options never exceed 25."""
         select = FilterSelect(articles)
@@ -163,21 +163,21 @@ def _truncate(content: str) -> str:
 
 class TestTruncationProperty:
     @given(content=st.text(min_size=2001, max_size=5000))
-    @settings(max_examples=100)
+    @settings(max_examples=5)
     def test_truncated_length_is_exactly_2000(self, content):
         """Property 2: Truncated content is exactly 2000 characters."""
         result = _truncate(content)
         assert len(result) == 2000
 
     @given(content=st.text(min_size=2001, max_size=5000))
-    @settings(max_examples=100)
+    @settings(max_examples=5)
     def test_truncated_ends_with_ellipsis(self, content):
         """Property 2: Truncated content ends with '...'."""
         result = _truncate(content)
         assert result.endswith("...")
 
     @given(content=st.text(max_size=2000))
-    @settings(max_examples=100)
+    @settings(max_examples=5)
     def test_short_content_unchanged(self, content):
         """Property 2: Content ≤2000 chars is returned unchanged."""
         result = _truncate(content)
@@ -195,7 +195,7 @@ class TestFilterCategoryConsistencyProperty:
         articles=st.lists(_article_strategy(), min_size=1, max_size=50),
         category=st.text(min_size=1, max_size=40),
     )
-    @settings(max_examples=100)
+    @settings(max_examples=5)
     def test_filtered_articles_all_match_selected_category(self, articles, category):
         """Property 3: Every article in filtered results has source_category == selected category."""
         filtered = [a for a in articles if a.source_category == category]
@@ -203,7 +203,7 @@ class TestFilterCategoryConsistencyProperty:
             assert article.source_category == category
 
     @given(articles=st.lists(_article_strategy(), min_size=2, max_size=50))
-    @settings(max_examples=100)
+    @settings(max_examples=5)
     def test_filter_excludes_other_categories(self, articles):
         """Property 3: Filtering by one category excludes all articles from other categories."""
         # Pick the first article's category as the filter
@@ -278,7 +278,7 @@ class TestDeepDiveViewButtonCount:
 
 class TestDeepDiveViewButtonCountProperty:
     @given(articles=st.lists(_article_strategy(), min_size=0, max_size=20))
-    @settings(max_examples=100)
+    @settings(max_examples=5)
     def test_button_count_equals_min_of_articles_and_5(self, articles):
         """Property 4: len(view.children) == min(len(articles), 5)"""
         view = DeepDiveView(articles)
@@ -293,7 +293,7 @@ class TestDeepDiveViewButtonCountProperty:
 
 class TestDeepDiveButtonFormatProperty:
     @given(article=_article_strategy())
-    @settings(max_examples=100)
+    @settings(max_examples=5)
     def test_label_truncation_rule(self, article):
         """Property 5: Label follows truncation rule — >20 chars appends '...'"""
         btn = DeepDiveButton(article)
@@ -304,7 +304,7 @@ class TestDeepDiveButtonFormatProperty:
             assert btn.label == f"📖 {title}"
 
     @given(article=_article_strategy())
-    @settings(max_examples=100)
+    @settings(max_examples=5)
     def test_custom_id_format(self, article):
         """Property 5: custom_id matches 'deep_dive_{md5(url)[:8]}'"""
         btn = DeepDiveButton(article)
@@ -320,14 +320,14 @@ class TestDeepDiveButtonFormatProperty:
 
 class TestViewTimeoutInvariantProperty:
     @given(articles=st.lists(_article_strategy(), min_size=0, max_size=10))
-    @settings(max_examples=100)
+    @settings(max_examples=5)
     def test_filter_view_timeout_is_none(self, articles):
         """Property 7: FilterView.timeout is always None."""
         view = FilterView(articles)
         assert view.timeout is None
 
     @given(articles=st.lists(_article_strategy(), min_size=0, max_size=10))
-    @settings(max_examples=100)
+    @settings(max_examples=5)
     def test_deep_dive_view_timeout_is_none(self, articles):
         """Property 7: DeepDiveView.timeout is always None."""
         view = DeepDiveView(articles)

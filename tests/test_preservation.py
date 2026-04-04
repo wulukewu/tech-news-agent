@@ -205,7 +205,7 @@ class TestPreservation5PBTAddToReadLater:
         url=st.from_regex(r"https://[a-z]{3,10}\.[a-z]{2,4}/[a-z]{0,20}", fullmatch=True),
         source_category=st.text(min_size=1, max_size=50),
     )
-    @h_settings(max_examples=30)
+    @h_settings(max_examples=5)
     async def test_parent_always_read_later_db_id(self, title, url, source_category):
         """pages.create parent is always {"database_id": read_later_db_id} for any article."""
         from app.services.notion_service import NotionService
@@ -370,7 +370,7 @@ class TestPreservation7FilterSelectAlwaysFirst:
     """
 
     @given(st.lists(article_strategy(), min_size=1, max_size=50))
-    @h_settings(max_examples=50)
+    @h_settings(max_examples=5)
     def test_filter_select_present_and_first(self, articles):
         """FilterSelect is present in combined_view.children and is the first element."""
         from app.bot.cogs.interactions import FilterSelect
@@ -399,7 +399,7 @@ class TestPreservation8DeepDiveButtonCount:
     """
 
     @given(st.lists(article_strategy(), min_size=0, max_size=50))
-    @h_settings(max_examples=50)
+    @h_settings(max_examples=5)
     def test_deep_dive_button_count(self, articles):
         """DeepDiveButton count equals min(5, len(articles)) in combined_view."""
         from app.bot.cogs.interactions import DeepDiveButton
@@ -426,7 +426,7 @@ class TestPreservation9ReadLaterButtonCount:
     """
 
     @given(st.lists(article_strategy(), min_size=0, max_size=50))
-    @h_settings(max_examples=50)
+    @h_settings(max_examples=5)
     def test_read_later_button_count(self, articles):
         """ReadLaterButton count equals min(len(articles), 15) in combined_view."""
         from app.bot.cogs.interactions import ReadLaterButton

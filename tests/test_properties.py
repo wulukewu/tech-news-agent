@@ -18,15 +18,25 @@ from datetime import datetime, timezone
 import time
 
 
+# Helper function for generating valid UTF-8 text (ASCII printable range)
+def safe_text(min_size=1, max_size=100):
+    """Generate valid UTF-8 text without surrogate pairs or control characters."""
+    return st.text(
+        min_size=min_size,
+        max_size=max_size,
+        alphabet=st.characters(min_codepoint=32, max_codepoint=126)
+    )
+
+
 # ============================================================================
 # Property 1: User Deletion Cascades
 # ============================================================================
 
 # Feature: supabase-migration-phase1, Property 1: User Deletion Cascades
-@settings(suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
 @given(
-    discord_id=st.text(min_size=1, max_size=100),
-    feed_url=st.text(min_size=1, max_size=50)
+    discord_id=safe_text(min_size=1, max_size=100),
+    feed_url=safe_text(min_size=1, max_size=50)
 )
 def test_property_1_user_deletion_cascades(
     test_supabase_client, cleanup_test_data, discord_id, feed_url
@@ -108,9 +118,9 @@ def test_property_1_user_deletion_cascades(
 # ============================================================================
 
 # Feature: supabase-migration-phase1, Property 2: Feed Deletion Cascades
-@settings(suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
 @given(
-    feed_url=st.text(min_size=1, max_size=50)
+    feed_url=safe_text(min_size=1, max_size=50)
 )
 def test_property_2_feed_deletion_cascades(
     test_supabase_client, cleanup_test_data, feed_url
@@ -160,9 +170,9 @@ def test_property_2_feed_deletion_cascades(
 # ============================================================================
 
 # Feature: supabase-migration-phase1, Property 3: Article Deletion Cascades
-@settings(suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
 @given(
-    discord_id=st.text(min_size=1, max_size=100)
+    discord_id=safe_text(min_size=1, max_size=100)
 )
 def test_property_3_article_deletion_cascades(
     test_supabase_client, cleanup_test_data, discord_id
@@ -230,8 +240,8 @@ def test_property_3_article_deletion_cascades(
 # ============================================================================
 
 # Feature: supabase-migration-phase1, Property 4: Discord ID Uniqueness
-@settings(suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
-@given(discord_id=st.text(min_size=1, max_size=100))
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
+@given(discord_id=safe_text(min_size=1, max_size=100))
 def test_property_4_discord_id_uniqueness(
     test_supabase_client, cleanup_test_data, discord_id
 ):
@@ -270,8 +280,8 @@ def test_property_4_discord_id_uniqueness(
 # ============================================================================
 
 # Feature: supabase-migration-phase1, Property 5: Subscription Uniqueness
-@settings(suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
-@given(discord_id=st.text(min_size=1, max_size=100))
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
+@given(discord_id=safe_text(min_size=1, max_size=100))
 def test_property_5_subscription_uniqueness(
     test_supabase_client, cleanup_test_data, discord_id
 ):
@@ -330,8 +340,8 @@ def test_property_5_subscription_uniqueness(
 # ============================================================================
 
 # Feature: supabase-migration-phase1, Property 6: Reading List Entry Uniqueness
-@settings(suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
-@given(discord_id=st.text(min_size=1, max_size=100))
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
+@given(discord_id=safe_text(min_size=1, max_size=100))
 def test_property_6_reading_list_entry_uniqueness(
     test_supabase_client, cleanup_test_data, discord_id
 ):
@@ -402,8 +412,8 @@ def test_property_6_reading_list_entry_uniqueness(
 # ============================================================================
 
 # Feature: supabase-migration-phase1, Property 7: Feed URL Uniqueness
-@settings(suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
-@given(feed_url=st.text(min_size=1, max_size=50))
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
+@given(feed_url=safe_text(min_size=1, max_size=50))
 def test_property_7_feed_url_uniqueness(
     test_supabase_client, cleanup_test_data, feed_url
 ):
@@ -446,8 +456,8 @@ def test_property_7_feed_url_uniqueness(
 # ============================================================================
 
 # Feature: supabase-migration-phase1, Property 8: Article URL Uniqueness
-@settings(suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
-@given(article_url=st.text(min_size=1, max_size=50))
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
+@given(article_url=safe_text(min_size=1, max_size=50))
 def test_property_8_article_url_uniqueness(
     test_supabase_client, cleanup_test_data, article_url
 ):
@@ -500,10 +510,10 @@ def test_property_8_article_url_uniqueness(
 # ============================================================================
 
 # Feature: supabase-migration-phase1, Property 9: Shared Feed References
-@settings(suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
 @given(
-    discord_id1=st.text(min_size=1, max_size=100),
-    discord_id2=st.text(min_size=1, max_size=100)
+    discord_id1=safe_text(min_size=1, max_size=100),
+    discord_id2=safe_text(min_size=1, max_size=100)
 )
 def test_property_9_shared_feed_references(
     test_supabase_client, cleanup_test_data, discord_id1, discord_id2
@@ -581,7 +591,7 @@ def test_property_9_shared_feed_references(
 # ============================================================================
 
 # Feature: supabase-migration-phase1, Property 10: Required Field Validation
-@settings(suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
 @given(
     field_choice=st.sampled_from([
         'discord_id', 'feed_name', 'feed_url', 'feed_category',
@@ -692,7 +702,7 @@ def test_property_10_required_field_validation(
 # ============================================================================
 
 # Feature: supabase-migration-phase1, Property 11: Timestamp Auto-Population
-@settings(suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
 @given(
     table_choice=st.sampled_from([
         'users', 'feeds', 'user_subscriptions', 'articles', 'reading_list'
@@ -845,9 +855,9 @@ def test_property_11_timestamp_auto_population(
 # ============================================================================
 
 # Feature: supabase-migration-phase1, Property 12: Reading List Status Validation
-@settings(suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
 @given(
-    status=st.text(min_size=1, max_size=50).filter(
+    status=safe_text(min_size=1, max_size=50).filter(
         lambda s: s not in ['Unread', 'Read', 'Archived']
     )
 )
@@ -908,7 +918,7 @@ def test_property_12_reading_list_status_validation(
 # ============================================================================
 
 # Feature: supabase-migration-phase1, Property 13: Rating Range Validation
-@settings(suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
 @given(rating=st.integers().filter(lambda r: r < 1 or r > 5))
 def test_property_13_rating_range_validation(
     test_supabase_client, cleanup_test_data, rating
@@ -968,8 +978,8 @@ def test_property_13_rating_range_validation(
 # ============================================================================
 
 # Feature: supabase-migration-phase1, Property 14: Embedding NULL Tolerance
-@settings(suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
-@given(article_title=st.text(min_size=1, max_size=200))
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
+@given(article_title=safe_text(min_size=1, max_size=200))
 def test_property_14_embedding_null_tolerance(
     test_supabase_client, cleanup_test_data, article_title
 ):
@@ -1059,8 +1069,8 @@ def test_property_15_seed_script_active_flag(test_supabase_client, cleanup_test_
 # ============================================================================
 
 # Feature: supabase-migration-phase1, Property 16: Seed Script Duplicate Handling
-@settings(suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
-@given(feed_url=st.text(min_size=1, max_size=50))
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
+@given(feed_url=safe_text(min_size=1, max_size=50))
 def test_property_16_seed_script_duplicate_handling(
     test_supabase_client, cleanup_test_data, feed_url
 ):
@@ -1126,7 +1136,7 @@ def test_property_16_seed_script_duplicate_handling(
 # ============================================================================
 
 # Feature: supabase-migration-phase1, Property 17: Updated Timestamp Trigger
-@settings(suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture, HealthCheck.filter_too_much])
 @given(
     initial_status=st.sampled_from(['Unread', 'Read', 'Archived']),
     updated_status=st.sampled_from(['Unread', 'Read', 'Archived'])

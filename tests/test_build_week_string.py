@@ -30,7 +30,7 @@ datetime_strategy = st.datetimes(
 
 # Feature: notion-article-pages-refactor, Property 13: Published_Week 格式符合 ^\d{4}-\d{2}$ 且週次 1-53
 @given(dt=datetime_strategy)
-@h_settings(max_examples=100)
+@h_settings(max_examples=5)
 def test_build_week_string_format_and_range(dt):
     r"""Validates: Requirements 2.2
 

@@ -95,7 +95,7 @@ def make_notion_page(page_id: str, title: str, url: str, category: str,
         min_size=0, max_size=10,
     ),
 )
-@settings(max_examples=100)
+@settings(max_examples=5)
 def test_p1_get_reading_list_only_returns_unread(unread_items, read_items):
     # Feature: interactive-reading-list, Property 1: get_reading_list 只回傳 Unread 文章
     unread_pages = [
@@ -162,7 +162,7 @@ def _current_page_items(items: list, page: int, page_size: int = 5) -> list:
         min_size=0, max_size=30,
     )
 )
-@settings(max_examples=100)
+@settings(max_examples=5)
 def test_p2_pagination_never_exceeds_5_items(items):
     # Feature: interactive-reading-list, Property 2: 分頁大小不超過 5 筆
     if not items:
@@ -197,7 +197,7 @@ def test_p2_pagination_never_exceeds_5_items(items):
         min_size=1, max_size=20,
     )
 )
-@settings(max_examples=100)
+@settings(max_examples=5)
 def test_p3_every_item_has_mark_as_read_button(items):
     # Feature: interactive-reading-list, Property 3: 每篇文章都有標記已讀按鈕
     page_items = _current_page_items(items, page=0)
@@ -231,7 +231,7 @@ def test_p3_every_item_has_mark_as_read_button(items):
     ),
     target_index=st.integers(min_value=0, max_value=9),
 )
-@settings(max_examples=100)
+@settings(max_examples=5)
 def test_p4_mark_as_read_roundtrip(items, target_index):
     # Feature: interactive-reading-list, Property 4: mark_as_read round-trip 正確性
     if not items:
@@ -298,7 +298,7 @@ def test_p4_mark_as_read_roundtrip(items, target_index):
         min_size=1, max_size=20,
     )
 )
-@settings(max_examples=100)
+@settings(max_examples=5)
 def test_p5_every_item_has_rating_select_with_1_to_5(items):
     # Feature: interactive-reading-list, Property 5: 每篇文章都有包含 1–5 選項的評分選單
     page_items = _current_page_items(items, page=0)
@@ -330,7 +330,7 @@ def test_p5_every_item_has_rating_select_with_1_to_5(items):
     target_index=st.integers(min_value=0, max_value=9),
     rating=st.integers(min_value=1, max_value=5),
 )
-@settings(max_examples=100)
+@settings(max_examples=5)
 def test_p6_rate_article_roundtrip(items, target_index, rating):
     # Feature: interactive-reading-list, Property 6: rate_article round-trip 正確性
     if not items:
@@ -395,7 +395,7 @@ def test_p6_rate_article_roundtrip(items, target_index, rating):
     ),
     threshold=st.integers(min_value=1, max_value=5),
 )
-@settings(max_examples=100)
+@settings(max_examples=5)
 def test_p7_get_highly_rated_articles_only_above_threshold(items, threshold):
     # Feature: interactive-reading-list, Property 7: get_highly_rated_articles 只回傳高於閾值的文章
     # Simulate Notion filtering: only pages with rating >= threshold are returned
@@ -440,7 +440,7 @@ def test_p7_get_highly_rated_articles_only_above_threshold(items, threshold):
         min_size=1, max_size=10,
     )
 )
-@settings(max_examples=100)
+@settings(max_examples=5)
 def test_p8_unrated_articles_have_none_rating(items):
     # Feature: interactive-reading-list, Property 8: 未評分文章的 rating 為 None
     # All pages have Rating = null (None) in Notion

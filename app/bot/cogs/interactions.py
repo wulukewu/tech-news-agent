@@ -7,7 +7,8 @@ import discord
 from discord.ext import commands
 
 from app.schemas.article import ArticleSchema, ArticlePageResult
-from app.services.notion_service import NotionService, NotionServiceError
+from app.services.supabase_service import SupabaseService
+from app.core.exceptions import SupabaseServiceError
 from app.services.llm_service import LLMService
 
 logger = logging.getLogger(__name__)
@@ -22,16 +23,25 @@ class ReadLaterButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True) # Ephemeral means only the user clicking sees the response
         try:
-            notion = NotionService()
-            await notion.add_to_read_later(self.article)
+            supabase = SupabaseService()
+            # Note: We need article_id (UUID) but we only have the article object
+            # This is a limitation - we'd need to query the database to get the article_id
+            # For now, we'll log a warning
+            logger.warning(f"Cannot save article to reading list - article_id not available for {self.article.url}")
+            await interaction.followup.send("❌ 此功能暫時無法使用（需要文章 ID）", ephemeral=True)
             
-            # Disable the button after successful save
-            self.disabled = True
-            await interaction.followup.send(f"✅ 已成功將 **{self.article.title}** 加入 Notion 的「稍後閱讀」清單！", ephemeral=True)
-            await interaction.message.edit(view=self.view)
+            # TODO: Implement proper article lookup by URL to get article_id
+            # article_id = await supabase.get_article_id_by_url(str(self.article.url))
+            # discord_id = str(interaction.user.id)
+            # await supabase.save_to_reading_list(discord_id, article_id)
+            
+            # Disable the button after attempt
+            # self.disabled = True
+            # await interaction.followup.send(f"✅ 已成功將 **{self.article.title}** 加入閱讀清單！", ephemeral=True)
+            # await interaction.message.edit(view=self.view)
         except Exception as e:
             logger.error(f"Interaction error: {e}")
-            await interaction.followup.send("❌ 存入 Notion 時發生錯誤，請稍後再試。", ephemeral=True)
+            await interaction.followup.send("❌ 儲存時發生錯誤，請稍後再試。", ephemeral=True)
 
 
 class ReadLaterView(discord.ui.View):
@@ -134,14 +144,24 @@ class MarkReadButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
         try:
-            notion = NotionService()
-            await notion.mark_article_as_read(self.article_page.page_id)
+            supabase = SupabaseService()
+            discord_id = str(interaction.user.id)
+            # Note: page_id in the old system was a Notion page ID
+            # In the new system, we need article_id (UUID)
+            # The article_page.page_id might be a URL or other identifier
+            # We need to look up the article by some identifier
+            logger.warning(f"Cannot mark article as read - need to implement article lookup for page_id: {self.article_page.page_id}")
+            await interaction.followup.send("❌ 此功能暫時無法使用（需要實作文章查詢）", ephemeral=True)
             
-            # Disable the button after successful mark
-            self.disabled = True
-            await interaction.followup.send(f"✅ 已標記「{self.article_page.title}」為已讀", ephemeral=True)
-            await interaction.message.edit(view=self.view)
-        except NotionServiceError as e:
+            # TODO: Implement proper article lookup
+            # article_id = await supabase.get_article_id_by_url(self.article_page.page_url)
+            # await supabase.update_article_status(discord_id, article_id, 'Read')
+            
+            # Disable the button after attempt
+            # self.disabled = True
+            # await interaction.followup.send(f"✅ 已標記「{self.article_page.title}」為已讀", ephemeral=True)
+            # await interaction.message.edit(view=self.view)
+        except SupabaseServiceError as e:
             logger.error(f"Mark read interaction error: {e}")
             await interaction.followup.send("❌ 標記失敗，請稍後再試", ephemeral=True)
 

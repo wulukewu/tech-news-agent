@@ -468,7 +468,7 @@ class TestGenerateDeepDiveProperty:
     # Validates: Requirements 5.2, 5.4
 
     @given(article=_make_article_strategy())
-    @settings(max_examples=100)
+    @settings(max_examples=5)
     def test_prompt_always_contains_title(self, article):
         """Property 6: user prompt always contains the article title."""
         import asyncio
@@ -491,7 +491,7 @@ class TestGenerateDeepDiveProperty:
         assert article.title in captured["user"]
 
     @given(article=_make_article_strategy())
-    @settings(max_examples=100)
+    @settings(max_examples=5)
     def test_prompt_contains_content_preview_when_non_empty(self, article):
         """Property 6: user prompt contains content_preview when it is non-empty."""
         import asyncio

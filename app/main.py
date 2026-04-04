@@ -27,8 +27,9 @@ logger = logging.getLogger("TechNewsAgent")
 
 def validate_configuration():
     """Validate required configuration settings."""
-    if not settings.notion_weekly_digests_db_id or not settings.notion_weekly_digests_db_id.strip():
-        raise ConfigurationError("NOTION_WEEKLY_DIGESTS_DB_ID is required but not set")
+    # Supabase configuration is validated by Pydantic Settings (required fields)
+    # Discord and LLM configuration is validated at runtime when services are used
+    pass
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

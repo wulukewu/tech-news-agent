@@ -12,9 +12,8 @@ jobs:
     env:
       # Dummy values so Pydantic Settings can initialise during tests.
       # Real secrets are never needed because all external calls are mocked.
-      NOTION_TOKEN: dummy_notion_token
-      NOTION_FEEDS_DB_ID: dummy_feeds_db_id
-      NOTION_READ_LATER_DB_ID: dummy_read_later_db_id
+      SUPABASE_URL: https://dummy.supabase.co
+      SUPABASE_KEY: dummy_supabase_key
       DISCORD_TOKEN: dummy_discord_token
       DISCORD_CHANNEL_ID: '123456789012345678'
       GROQ_API_KEY: dummy_groq_api_key

@@ -6,9 +6,9 @@ from discord import app_commands
 from discord.ext import commands
 
 from app.schemas.article import ReadingListItem
-from app.services.notion_service import NotionService
+from app.services.supabase_service import SupabaseService
 from app.services.llm_service import LLMService
-from app.core.exceptions import NotionServiceError, LLMServiceError
+from app.core.exceptions import SupabaseServiceError, LLMServiceError
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ class MarkAsReadButton(discord.ui.Button):
         super().__init__(
             style=discord.ButtonStyle.success,
             label=label,
-            custom_id=f"mark_read_{item.page_id}",
+            custom_id=f"mark_read_{item.article_id}",
             row=row,
         )
         self.item = item
@@ -29,8 +29,12 @@ class MarkAsReadButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
         try:
-            notion = NotionService()
-            await notion.mark_as_read(self.item.page_id)
+            supabase = SupabaseService()
+            discord_id = str(interaction.user.id)
+            # Note: item.page_id in the old system was a Notion page ID
+            # In the new system, we need article_id (UUID)
+            # The ReadingListItem should have article_id field
+            await supabase.update_article_status(discord_id, self.item.article_id, 'Read')
             self.disabled = True
             try:
                 await interaction.message.edit(view=self.view)
@@ -40,7 +44,7 @@ class MarkAsReadButton(discord.ui.Button):
                 f"✅ 已將《{self.item.title}》標記為已讀！", ephemeral=True
             )
         except Exception as e:
-            logger.error(f"MarkAsReadButton error for page {self.item.page_id}: {e}")
+            logger.error(f"MarkAsReadButton error for article {self.item.article_id}: {e}")
             await interaction.followup.send(
                 "❌ 標記已讀時發生錯誤，請稍後再試。", ephemeral=True
             )
@@ -59,7 +63,7 @@ class RatingSelect(discord.ui.Select):
         super().__init__(
             placeholder=f"評分：{title_short}",
             options=options,
-            custom_id=f"rate_{item.page_id}",
+            custom_id=f"rate_{item.article_id}",
             row=row,
         )
         self.item = item
@@ -69,13 +73,14 @@ class RatingSelect(discord.ui.Select):
         rating = int(self.values[0])
         stars = "⭐" * rating
         try:
-            notion = NotionService()
-            await notion.rate_article(self.item.page_id, rating)
+            supabase = SupabaseService()
+            discord_id = str(interaction.user.id)
+            await supabase.update_article_rating(discord_id, self.item.article_id, rating)
             await interaction.followup.send(
                 f"✅ 已將《{self.item.title}》評為 {stars}（{rating} 星）！", ephemeral=True
             )
         except Exception as e:
-            logger.error(f"RatingSelect error for page {self.item.page_id}: {e}")
+            logger.error(f"RatingSelect error for article {self.item.article_id}: {e}")
             await interaction.followup.send(
                 "❌ 評分時發生錯誤，請稍後再試。", ephemeral=True
             )
@@ -148,7 +153,7 @@ class PaginationView(discord.ui.View):
             rating_str = "⭐" * item.rating if item.rating else "未評分"
             lines.append(f"**{i}. {item.title}**")
             lines.append(f"🔗 {item.url}")
-            lines.append(f"📂 {item.source_category}　⭐ {rating_str}")
+            lines.append(f"📂 {item.category}　⭐ {rating_str}")
             lines.append("")
         return "\n".join(lines).strip()
 
@@ -162,15 +167,16 @@ class ReadingListGroup(app_commands.Group):
     """斜線指令群組：/reading_list"""
 
     def __init__(self):
-        super().__init__(name="reading_list", description="查看並管理 Notion 待讀清單")
+        super().__init__(name="reading_list", description="查看並管理待讀清單")
 
-    @app_commands.command(name="view", description="查看並管理 Notion 待讀清單")
+    @app_commands.command(name="view", description="查看並管理待讀清單")
     async def view(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
         try:
-            notion = NotionService()
-            items = await notion.get_reading_list()
-        except NotionServiceError as e:
+            supabase = SupabaseService()
+            discord_id = str(interaction.user.id)
+            items = await supabase.get_reading_list(discord_id, status='Unread')
+        except SupabaseServiceError as e:
             logger.error(f"reading_list view command error: {e}")
             await interaction.followup.send(f"❌ 無法取得待讀清單：{e}", ephemeral=True)
             return
@@ -187,10 +193,11 @@ class ReadingListGroup(app_commands.Group):
     async def recommend(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
         try:
-            notion = NotionService()
-            high_rated = await notion.get_highly_rated_articles(threshold=4)
-        except NotionServiceError as e:
-            logger.error(f"recommend command notion error: {e}")
+            supabase = SupabaseService()
+            discord_id = str(interaction.user.id)
+            high_rated = await supabase.get_highly_rated_articles(discord_id, threshold=4)
+        except SupabaseServiceError as e:
+            logger.error(f"recommend command supabase error: {e}")
             await interaction.followup.send(f"❌ 無法取得高評分文章：{e}", ephemeral=True)
             return
 
@@ -201,7 +208,7 @@ class ReadingListGroup(app_commands.Group):
             return
 
         titles = [item.title for item in high_rated]
-        categories = [item.source_category for item in high_rated]
+        categories = [item.category for item in high_rated]
 
         try:
             llm = LLMService()

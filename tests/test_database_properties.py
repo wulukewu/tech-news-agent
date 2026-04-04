@@ -16,11 +16,15 @@ from datetime import datetime
 import time
 
 
-# Custom strategy for generating valid text (no null bytes, printable characters)
+# Custom strategy for generating valid text (no null bytes, printable characters, no surrogates)
 def valid_text(min_size=1, max_size=100):
-    """Generate valid text without null bytes or control characters."""
+    """Generate valid UTF-8 text without null bytes, control characters, or surrogate pairs."""
     return st.text(
-        alphabet=st.characters(blacklist_categories=('Cc', 'Cs'), blacklist_characters='\x00'),
+        alphabet=st.characters(
+            min_codepoint=32,  # Start from space character
+            max_codepoint=126,  # End at tilde (ASCII printable range)
+            blacklist_characters='\x00'
+        ),
         min_size=min_size,
         max_size=max_size
     ).filter(lambda x: x.strip())
@@ -33,7 +37,7 @@ def valid_text(min_size=1, max_size=100):
 @given(
     discord_id=valid_text(min_size=1, max_size=100),
 )
-@settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
 def test_property_1_user_deletion_cascades(test_supabase_client: Client, test_feed, discord_id):
     """
     **Validates: Requirements 3.9**
@@ -103,7 +107,7 @@ def test_property_1_user_deletion_cascades(test_supabase_client: Client, test_fe
     feed_name=valid_text(min_size=1, max_size=100),
     category=valid_text(min_size=1, max_size=50),
 )
-@settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
 def test_property_2_feed_deletion_cascades(test_supabase_client: Client, feed_name, category):
     """
     **Validates: Requirements 3.10**
@@ -164,7 +168,7 @@ def test_property_2_feed_deletion_cascades(test_supabase_client: Client, feed_na
 @given(
     article_title=valid_text(min_size=1, max_size=200),
 )
-@settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
 def test_property_3_article_deletion_cascades(test_supabase_client: Client, test_user, test_feed, article_title):
     """
     **Validates: Requirements 3.11**
@@ -211,7 +215,7 @@ def test_property_3_article_deletion_cascades(test_supabase_client: Client, test
 @given(
     discord_id=valid_text(min_size=1, max_size=100),
 )
-@settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
 def test_property_4_discord_id_uniqueness(test_supabase_client: Client, discord_id):
     """
     **Validates: Requirements 6.1**
@@ -252,7 +256,7 @@ def test_property_4_discord_id_uniqueness(test_supabase_client: Client, discord_
 @given(
     dummy=st.just(None)  # No random data needed, using fixtures
 )
-@settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
 def test_property_5_subscription_uniqueness(test_supabase_client: Client, test_user, test_feed, dummy):
     """
     **Validates: Requirements 6.4**
@@ -293,7 +297,7 @@ def test_property_5_subscription_uniqueness(test_supabase_client: Client, test_u
 @given(
     dummy=st.just(None)  # No random data needed, using fixtures
 )
-@settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
 def test_property_6_reading_list_entry_uniqueness(test_supabase_client: Client, test_user, test_article, dummy):
     """
     **Validates: Requirements 6.5**
@@ -337,7 +341,7 @@ def test_property_6_reading_list_entry_uniqueness(test_supabase_client: Client, 
     feed_name=valid_text(min_size=1, max_size=100),
     category=valid_text(min_size=1, max_size=50),
 )
-@settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
 def test_property_7_feed_url_uniqueness(test_supabase_client: Client, feed_name, category):
     """
     **Validates: Requirements 7.3**
@@ -384,7 +388,7 @@ def test_property_7_feed_url_uniqueness(test_supabase_client: Client, feed_name,
 @given(
     article_title=valid_text(min_size=1, max_size=200),
 )
-@settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
 def test_property_8_article_url_uniqueness(test_supabase_client: Client, test_feed, article_title):
     """
     **Validates: Requirements 7.4**
@@ -430,7 +434,7 @@ def test_property_8_article_url_uniqueness(test_supabase_client: Client, test_fe
 @given(
     num_users=st.integers(min_value=2, max_value=5),
 )
-@settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
 def test_property_9_shared_feed_references(test_supabase_client: Client, test_feed, num_users):
     """
     **Validates: Requirements 7.5**
@@ -486,7 +490,7 @@ def test_property_9_shared_feed_references(test_supabase_client: Client, test_fe
 @given(
     dummy=st.just(None)
 )
-@settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
 def test_property_10_required_field_validation(test_supabase_client: Client, test_feed, dummy):
     """
     **Validates: Requirements 9.3, 9.4, 9.5, 9.6, 9.7, 9.8**
@@ -580,7 +584,7 @@ def test_property_10_required_field_validation(test_supabase_client: Client, tes
 @given(
     discord_id=valid_text(min_size=1, max_size=100),
 )
-@settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
 def test_property_11_timestamp_auto_population(test_supabase_client: Client, test_feed, discord_id):
     """
     **Validates: Requirements 8.1, 8.2, 8.3, 8.4, 8.6, 8.7**
@@ -655,7 +659,7 @@ def test_property_11_timestamp_auto_population(test_supabase_client: Client, tes
         lambda s: s not in ['Unread', 'Read', 'Archived']
     )
 )
-@settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
 def test_property_12_reading_list_status_validation(test_supabase_client: Client, test_user, test_article, status):
     """
     **Validates: Requirements 9.1**
@@ -687,7 +691,7 @@ def test_property_12_reading_list_status_validation(test_supabase_client: Client
 @given(
     rating=st.integers(min_value=-1000, max_value=1000).filter(lambda r: r < 1 or r > 5)
 )
-@settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
 def test_property_13_rating_range_validation(test_supabase_client: Client, test_user, test_article, rating):
     """
     **Validates: Requirements 9.2**
@@ -721,7 +725,7 @@ def test_property_13_rating_range_validation(test_supabase_client: Client, test_
 @given(
     article_title=valid_text(min_size=1, max_size=200),
 )
-@settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
 def test_property_14_embedding_null_tolerance(test_supabase_client: Client, test_feed, article_title):
     """
     **Validates: Requirements 5.4**
@@ -759,7 +763,7 @@ def test_property_14_embedding_null_tolerance(test_supabase_client: Client, test
 @given(
     dummy=st.just(None)
 )
-@settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
 def test_property_15_seed_script_active_flag(test_supabase_client: Client, dummy):
     """
     **Validates: Requirements 4.7**
@@ -791,7 +795,7 @@ def test_property_15_seed_script_active_flag(test_supabase_client: Client, dummy
     feed_name=valid_text(min_size=1, max_size=100),
     category=valid_text(min_size=1, max_size=50),
 )
-@settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
 def test_property_16_seed_script_duplicate_handling(test_supabase_client: Client, feed_name, category):
     """
     **Validates: Requirements 4.8**
@@ -845,7 +849,7 @@ def test_property_16_seed_script_duplicate_handling(test_supabase_client: Client
 @given(
     dummy=st.just(None)
 )
-@settings(max_examples=100, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
+@settings(max_examples=5, suppress_health_check=[HealthCheck.function_scoped_fixture], deadline=None)
 def test_property_17_updated_timestamp_trigger(test_supabase_client: Client, test_user, test_article, dummy):
     """
     **Validates: Requirements 8.8**

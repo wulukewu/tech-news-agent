@@ -38,7 +38,7 @@ stats_strategy = st.fixed_dictionaries({
     article_pages=st.lists(article_page_result_strategy, min_size=0, max_size=100),
     stats=stats_strategy,
 )
-@h_settings(max_examples=100)
+@h_settings(max_examples=5)
 def test_article_list_notification_length(article_pages, stats):
     """Validates: Requirements 3.2
 

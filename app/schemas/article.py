@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, HttpUrl
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+from uuid import UUID
 
 class RSSSource(BaseModel):
     name: str
@@ -11,23 +12,34 @@ class AIAnalysis(BaseModel):
     is_hardcore: bool = Field(description="Whether the article is recommended or discarded")
     reason: str = Field(description="A one-sentence explanation of why it was recommended or discarded")
     actionable_takeaway: Optional[str] = Field(default="", description="The actionable value extracted (can be empty if discarded)")
-    tinkering_index: int = Field(ge=0, le=5, description="Difficulty of deployment or setup (1-5)")
 
 class ArticleSchema(BaseModel):
-    title: str
+    """文章資料模型（更新以匹配 Supabase 結構）"""
+
+    # 基本資訊
+    title: str = Field(..., max_length=2000)
     url: HttpUrl
-    content_preview: str # A short preview of the content (first 800 chars)
-    published_date: Optional[datetime] = None
-    
-    # Metadata from Notion source
-    source_category: str
-    source_name: str
-    
-    # AI Analysis results
-    ai_analysis: Optional[AIAnalysis] = None
-    
-    # Raw data for fallback
-    raw_data: Optional[Dict[str, Any]] = None
+
+    # 來源資訊（重新命名）
+    feed_id: UUID  # 新增：關聯到 feeds 表
+    feed_name: str  # 重新命名自 source_name
+    category: str  # 重新命名自 source_category
+
+    # 時間資訊
+    published_at: Optional[datetime] = None  # 新增：文章發布時間
+    created_at: datetime = Field(default_factory=datetime.utcnow)  # 新增：系統建立時間
+
+    # AI 分析結果
+    tinkering_index: Optional[int] = Field(None, ge=1, le=5)  # 移至頂層
+    ai_summary: Optional[str] = Field(None, max_length=5000)  # 新增：AI 摘要
+    ai_analysis: Optional[AIAnalysis] = None  # 保留：完整 AI 分析
+
+    # 向量嵌入
+    embedding: Optional[List[float]] = None  # 新增：用於語義搜尋
+
+    # 移除的欄位：
+    # - content_preview: 不再需要，使用 ai_summary 替代
+    # - raw_data: 不再需要，資料庫結構化儲存
 
 class ArticlePageResult(BaseModel):
     page_id: str
@@ -37,9 +49,43 @@ class ArticlePageResult(BaseModel):
     tinkering_index: int
 
 class ReadingListItem(BaseModel):
-    page_id: str                          # Notion Page ID
+    article_id: UUID                      # 文章 UUID（更新自 page_id）
     title: str                            # 文章標題
     url: HttpUrl                          # 文章 URL
-    source_category: str                  # 分類（來自 Source_Category 欄位）
-    added_at: Optional[datetime] = None   # 新增時間（來自 Added_At 欄位）
+    category: str                         # 分類（重新命名自 source_category）
+    status: str                           # 閱讀狀態（Unread, Read, Archived）
     rating: Optional[int] = None          # 評分（1–5，未評分為 None）
+    added_at: datetime                    # 新增時間
+    updated_at: datetime                  # 更新時間
+
+class BatchResult(BaseModel):
+    """批次操作結果"""
+
+    inserted_count: int = Field(description="成功插入的記錄數")
+    updated_count: int = Field(description="成功更新的記錄數")
+    failed_count: int = Field(description="失敗的記錄數")
+    failed_articles: List[dict] = Field(
+        default_factory=list,
+        description="失敗的文章資訊（包含錯誤原因）"
+    )
+
+    @property
+    def total_processed(self) -> int:
+        """總處理數量"""
+        return self.inserted_count + self.updated_count + self.failed_count
+
+    @property
+    def success_rate(self) -> float:
+        """成功率（0-1）"""
+        if self.total_processed == 0:
+            return 1.0
+        return (self.inserted_count + self.updated_count) / self.total_processed
+
+class Subscription(BaseModel):
+    """使用者訂閱資訊"""
+
+    feed_id: UUID
+    name: str
+    url: HttpUrl
+    category: str
+    subscribed_at: datetime
