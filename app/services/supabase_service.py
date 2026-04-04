@@ -638,7 +638,10 @@ class SupabaseService:
             self._handle_database_error(e, {"operation": "get_active_feeds"})
     
     async def insert_articles(self, articles: List[dict]) -> 'BatchResult':
-        """批次插入或更新文章
+        """批次插入或更新文章（使用 UPSERT 邏輯）
+        
+        使用 INSERT ... ON CONFLICT (url) DO UPDATE 實作 UPSERT，
+        確保相同 URL 的文章不會重複插入。個別文章失敗時繼續處理其他文章。
         
         Args:
             articles: 文章資料字典列表
@@ -649,8 +652,9 @@ class SupabaseService:
         Raises:
             SupabaseServiceError: 當資料庫操作失敗時
             
-        Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9, 
-                   15.1, 15.2, 15.3, 15.4, 16.1, 16.2, 16.3, 16.4, 13.1, 13.2
+        Validates: Requirements 4.2, 4.3, 4.4, 4.6, 4.8, 5.1, 5.2, 5.3, 5.4, 5.5, 
+                   5.6, 5.7, 5.8, 5.9, 15.1, 15.2, 15.3, 15.4, 16.1, 16.2, 16.3, 
+                   16.4, 13.1, 13.2
         """
         from app.schemas.article import BatchResult
         
@@ -658,19 +662,20 @@ class SupabaseService:
             logger.info("Empty articles list, returning zero counts")
             return BatchResult(inserted_count=0, updated_count=0, failed_count=0)
         
-        logger.info(f"Starting batch insert of {len(articles)} articles")
+        logger.info(f"Starting batch insert of {len(articles)} articles with UPSERT logic")
         
         result = BatchResult(inserted_count=0, updated_count=0, failed_count=0)
         
-        # 分批處理（每批 100 筆）
+        # 分批處理（每批 100 筆）- Requirement 4.2
         batch_size = 100
         for i in range(0, len(articles), batch_size):
             batch = articles[i:i + batch_size]
             logger.info(f"Processing batch {i // batch_size + 1}, articles {i + 1} to {min(i + batch_size, len(articles))}")
             
+            # 個別處理每篇文章以支援部分失敗 - Requirement 4.8
             for article in batch:
                 try:
-                    # 驗證資料
+                    # 驗證資料 - Requirement 4.6
                     self._validate_article_data(article)
                     
                     # 準備插入資料
@@ -687,22 +692,30 @@ class SupabaseService:
                     # 移除 None 值以避免覆蓋預設值
                     article_data = {k: v for k, v in article_data.items() if v is not None}
                     
-                    # 先查詢是否存在
+                    # 先檢查文章是否存在以追蹤 inserted vs updated
+                    # 這是為了統計目的，實際的 UPSERT 邏輯在下面
                     existing = self.client.table('articles').select('id').eq('url', article['url']).execute()
+                    is_update = bool(existing.data and len(existing.data) > 0)
                     
-                    if existing.data and len(existing.data) > 0:
-                        # 更新現有記錄
-                        article_id = existing.data[0]['id']
-                        self.client.table('articles').update(article_data).eq('id', article_id).execute()
+                    # 使用 UPSERT 邏輯：INSERT ... ON CONFLICT (url) DO UPDATE
+                    # Supabase Python client 使用 upsert() 方法實作 - Requirement 4.3, 4.4
+                    # on_conflict 參數指定衝突時的行為
+                    self.client.table('articles').upsert(
+                        article_data,
+                        on_conflict='url',  # 當 URL 衝突時更新
+                        returning='minimal'  # 減少返回資料以提升效能
+                    ).execute()
+                    
+                    # 追蹤插入或更新 - Requirement 4.6
+                    if is_update:
                         result.updated_count += 1
-                        logger.debug(f"Updated article: {article['url']}")
+                        logger.debug(f"Updated article via UPSERT: {article['url']}")
                     else:
-                        # 插入新記錄
-                        self.client.table('articles').insert(article_data).execute()
                         result.inserted_count += 1
-                        logger.debug(f"Inserted article: {article['url']}")
+                        logger.debug(f"Inserted article via UPSERT: {article['url']}")
                         
                 except Exception as e:
+                    # 個別文章失敗時繼續處理其他文章 - Requirement 4.8
                     result.failed_count += 1
                     error_info = {
                         "article": {
@@ -717,6 +730,7 @@ class SupabaseService:
                         f"Failed to insert/update article: {article.get('url', 'unknown')}",
                         extra=error_info
                     )
+                    # 繼續處理下一篇文章，不中斷批次處理
         
         logger.info(
             f"Batch insert completed: {result.inserted_count} inserted, "
@@ -1311,4 +1325,95 @@ class SupabaseService:
             self._handle_database_error(e, {
                 "discord_id": discord_id,
                 "operation": "get_user_subscriptions"
+            })
+    
+    async def check_article_exists(self, url: str) -> bool:
+        """檢查文章 URL 是否已存在於資料庫
+        
+        Args:
+            url: 文章 URL
+            
+        Returns:
+            True 如果文章存在，False 如果不存在
+            
+        Raises:
+            SupabaseServiceError: 當資料庫查詢失敗時
+            ValueError: 當 URL 格式無效時
+            
+        Validates: Requirements 2.2, 2.3
+        """
+        logger.debug(f"Checking if article exists: {url}")
+        
+        try:
+            # 驗證 URL 格式
+            validated_url = self._validate_url(url)
+            
+            # 查詢 articles 表檢查 URL 是否存在
+            # 使用 SELECT id 進行高效查詢（只需要知道是否存在）
+            response = self.client.table('articles')\
+                .select('id')\
+                .eq('url', validated_url)\
+                .execute()
+            
+            # 檢查是否有返回資料
+            exists = bool(response.data and len(response.data) > 0)
+            
+            logger.debug(f"Article {'exists' if exists else 'does not exist'}: {url}")
+            return exists
+            
+        except (ValueError, SupabaseServiceError):
+            # 重新拋出驗證錯誤和已包裝的錯誤
+            raise
+        except Exception as e:
+            logger.error(f"Failed to check article existence: {e}", exc_info=True)
+            self._handle_database_error(e, {
+                "url": url,
+                "operation": "check_article_exists"
+            })
+    
+    async def get_unanalyzed_articles(self, limit: int = 100) -> List[dict]:
+        """查詢尚未分析的文章（ai_summary 或 tinkering_index 為 NULL）
+        
+        此方法用於識別需要重新處理的文章，因為 LLM 分析失敗。
+        查詢 ai_summary IS NULL 或 tinkering_index IS NULL 的文章。
+        
+        Args:
+            limit: 返回的最大文章數量（預設 100）
+            
+        Returns:
+            文章字典列表，包含 id, url, title, feed_id
+            
+        Raises:
+            SupabaseServiceError: 當資料庫查詢失敗時
+            
+        Validates: Requirements 13.1, 13.2, 13.7
+        """
+        logger.info(f"Fetching unanalyzed articles with limit {limit}")
+        
+        try:
+            # 查詢 ai_summary IS NULL 或 tinkering_index IS NULL 的文章
+            # 使用 .or_() 來組合條件
+            response = self.client.table('articles')\
+                .select('id, url, title, feed_id')\
+                .or_('ai_summary.is.null,tinkering_index.is.null')\
+                .limit(limit)\
+                .execute()
+            
+            if not response.data:
+                logger.info("No unanalyzed articles found")
+                return []
+            
+            # 返回文章列表
+            articles = response.data
+            logger.info(f"Retrieved {len(articles)} unanalyzed articles")
+            return articles
+            
+        except SupabaseServiceError:
+            # 重新拋出已包裝的錯誤
+            raise
+        except Exception as e:
+            logger.error(f"Failed to fetch unanalyzed articles: {e}", exc_info=True)
+            self._handle_database_error(e, {
+                "limit": limit,
+                "operation": "get_unanalyzed_articles"
             })

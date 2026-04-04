@@ -58,7 +58,7 @@ class FilterSelect(discord.ui.Select):
     def __init__(self, articles: List[ArticleSchema]):
         self.articles = articles
 
-        category_counts = Counter(a.source_category for a in articles)
+        category_counts = Counter(a.category for a in articles)
         top_categories = [cat for cat, _ in category_counts.most_common(24)]
 
         options = [discord.SelectOption(label="📋 顯示全部", value="__all__")]
@@ -73,7 +73,7 @@ class FilterSelect(discord.ui.Select):
             if selected == "__all__":
                 filtered = self.articles
             else:
-                filtered = [a for a in self.articles if a.source_category == selected]
+                filtered = [a for a in self.articles if a.category == selected]
 
             if not filtered:
                 await interaction.response.send_message("⚠️ 此分類目前沒有文章。", ephemeral=True)
@@ -83,7 +83,7 @@ class FilterSelect(discord.ui.Select):
             for article in filtered:
                 lines.append(f"**{article.title}**")
                 lines.append(f"🔗 {article.url}")
-                lines.append(f"📂 {article.source_category}")
+                lines.append(f"📂 {article.category}")
                 lines.append("")
             content = "\n".join(lines).strip()
 

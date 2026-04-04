@@ -12,6 +12,7 @@ class AIAnalysis(BaseModel):
     is_hardcore: bool = Field(description="Whether the article is recommended or discarded")
     reason: str = Field(description="A one-sentence explanation of why it was recommended or discarded")
     actionable_takeaway: Optional[str] = Field(default="", description="The actionable value extracted (can be empty if discarded)")
+    tinkering_index: int = Field(description="Tinkering index (1-5) indicating technical complexity")
 
 class ArticleSchema(BaseModel):
     """文章資料模型（更新以匹配 Supabase 結構）"""

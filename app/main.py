@@ -11,12 +11,13 @@ import logging
 import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, BackgroundTasks
+from fastapi.responses import JSONResponse
 import uvicorn
 
 from app.core.config import settings
 from app.core.exceptions import ConfigurationError
 from app.bot.client import bot
-from app.tasks.scheduler import scheduler, setup_scheduler
+from app.tasks.scheduler import scheduler, setup_scheduler, get_scheduler_health
 
 # Configure logging for the entire app
 logging.basicConfig(
@@ -101,6 +102,25 @@ async def health_check():
         "bot_ready": bot_ready,
         "scheduler_running": scheduler.running
     }
+
+@app.get("/health/scheduler")
+async def scheduler_health_check():
+    """
+    Scheduler-specific health check endpoint.
+    
+    Returns:
+        - 200: Scheduler is healthy
+        - 503: Scheduler is unhealthy (not run in 12 hours or >50% failure rate)
+    
+    Validates: Requirements 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7
+    """
+    health_data = await get_scheduler_health()
+    status_code = health_data.pop("status_code")
+    
+    return JSONResponse(
+        content=health_data,
+        status_code=status_code
+    )
 
 if __name__ == "__main__":
     # Local testing entry point

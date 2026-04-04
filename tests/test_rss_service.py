@@ -103,7 +103,7 @@ class TestProcessSingleFeed:
 
     @pytest.mark.asyncio
     async def test_article_has_correct_source_metadata(self):
-        """_process_single_feed populates source_category and source_name correctly."""
+        """_process_single_feed populates category and feed_name correctly."""
         service = RSSService(days_to_fetch=7)
         source = make_source(name="MyFeed", category="DevOps")
 
@@ -118,12 +118,12 @@ class TestProcessSingleFeed:
              patch("app.services.rss_service.feedparser.parse", return_value=mock_feed):
             result = await service._process_single_feed(source, AsyncMock())
 
-        assert result[0].source_name == "MyFeed"
-        assert result[0].source_category == "DevOps"
+        assert result[0].feed_name == "MyFeed"
+        assert result[0].category == "DevOps"
 
     @pytest.mark.asyncio
     async def test_content_preview_truncated_to_800_chars(self):
-        """_process_single_feed truncates content_preview to 800 characters."""
+        """_process_single_feed no longer includes content_preview (removed in schema update)."""
         service = RSSService(days_to_fetch=7)
         source = make_source()
 
@@ -139,7 +139,111 @@ class TestProcessSingleFeed:
              patch("app.services.rss_service.feedparser.parse", return_value=mock_feed):
             result = await service._process_single_feed(source, AsyncMock())
 
-        assert len(result[0].content_preview) <= 800
+        # content_preview field was removed in schema update, so just verify article was created
+        assert len(result) == 1
+        assert result[0].title == "Article"
+
+    @pytest.mark.asyncio
+    async def test_filters_old_articles_and_logs_count(self):
+        """_process_single_feed filters articles older than days_to_fetch and logs filtered count.
+        
+        Validates: Requirements 11.1, 11.4, 11.7
+        """
+        service = RSSService(days_to_fetch=7)
+        source = make_source()
+
+        # Create articles with different ages
+        recent_struct = (datetime.now(timezone.utc) - timedelta(days=2)).timetuple()[:6] + (0, 0, 0)
+        old_struct_1 = (datetime.now(timezone.utc) - timedelta(days=10)).timetuple()[:6] + (0, 0, 0)
+        old_struct_2 = (datetime.now(timezone.utc) - timedelta(days=15)).timetuple()[:6] + (0, 0, 0)
+
+        mock_feed = MagicMock()
+        mock_feed.entries = [
+            {"title": "Recent", "link": "https://example.com/1", "summary": "content",
+             "published": "recent", "published_parsed": recent_struct},
+            {"title": "Old1", "link": "https://example.com/2", "summary": "content",
+             "published": "old", "published_parsed": old_struct_1},
+            {"title": "Old2", "link": "https://example.com/3", "summary": "content",
+             "published": "old", "published_parsed": old_struct_2},
+        ]
+
+        mock_client = AsyncMock()
+
+        with patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")), \
+             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed), \
+             patch("app.services.rss_service.logger") as mock_logger:
+            result = await service._process_single_feed(source, mock_client)
+
+        # Should only return the recent article
+        assert len(result) == 1
+        assert result[0].title == "Recent"
+        
+        # Should log the filtered count
+        mock_logger.info.assert_called()
+        log_message = mock_logger.info.call_args[0][0]
+        assert "filtered 2 articles" in log_message
+        assert "older than 7 days" in log_message
+
+    @pytest.mark.asyncio
+    async def test_respects_configurable_time_window(self):
+        """_process_single_feed respects the configurable days_to_fetch parameter.
+        
+        Validates: Requirements 11.5, 11.6
+        """
+        # Test with 3 days window
+        service = RSSService(days_to_fetch=3)
+        source = make_source()
+
+        # Create articles at different ages
+        day_2_struct = (datetime.now(timezone.utc) - timedelta(days=2)).timetuple()[:6] + (0, 0, 0)
+        day_5_struct = (datetime.now(timezone.utc) - timedelta(days=5)).timetuple()[:6] + (0, 0, 0)
+
+        mock_feed = MagicMock()
+        mock_feed.entries = [
+            {"title": "Within3Days", "link": "https://example.com/1", "summary": "content",
+             "published": "recent", "published_parsed": day_2_struct},
+            {"title": "Beyond3Days", "link": "https://example.com/2", "summary": "content",
+             "published": "old", "published_parsed": day_5_struct},
+        ]
+
+        mock_client = AsyncMock()
+
+        with patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")), \
+             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed):
+            result = await service._process_single_feed(source, mock_client)
+
+        # Should only return article within 3 days
+        assert len(result) == 1
+        assert result[0].title == "Within3Days"
+
+    @pytest.mark.asyncio
+    async def test_uses_current_time_when_published_at_missing(self):
+        """_process_single_feed uses current time when published_at is not available.
+        
+        Validates: Requirements 11.2, 11.3
+        """
+        service = RSSService(days_to_fetch=7)
+        source = make_source()
+
+        # Entry without published date
+        mock_feed = MagicMock()
+        mock_feed.entries = [
+            {"title": "NoDate", "link": "https://example.com/1", "summary": "content"},
+        ]
+
+        mock_client = AsyncMock()
+
+        with patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")), \
+             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed):
+            before = datetime.now(timezone.utc)
+            result = await service._process_single_feed(source, mock_client)
+            after = datetime.now(timezone.utc)
+
+        # Should return the article (since current time is within 7 days)
+        assert len(result) == 1
+        assert result[0].title == "NoDate"
+        # Published date should be recent
+        assert before <= result[0].published_at <= after
 
 
 # ---------------------------------------------------------------------------

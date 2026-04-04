@@ -2,6 +2,7 @@ import json
 import logging
 from typing import List, Optional
 import asyncio
+import time
 
 from openai import AsyncOpenAI
 from app.core.config import settings
@@ -14,19 +15,93 @@ logger = logging.getLogger(__name__)
 EVAL_MODEL = "llama-3.1-8b-instant"  
 SUMMARIZE_MODEL = "llama-3.3-70b-versatile"
 
+# Retry configuration
+MAX_RETRIES = 2
+RETRY_DELAYS = [2, 4]  # seconds
+API_TIMEOUT = 30  # seconds
+
 class LLMService:
     def __init__(self):
         self.client = AsyncOpenAI(
             base_url="https://api.groq.com/openai/v1",
             api_key=settings.groq_api_key,
+            timeout=API_TIMEOUT,
         )
+    
+    async def _call_api_with_retry(self, api_call_func, context: str):
+        """
+        Call API with exponential backoff retry logic.
+        
+        Args:
+            api_call_func: Async function that makes the API call
+            context: Description of the API call for logging
+            
+        Returns:
+            API response
+            
+        Raises:
+            Exception: If all retries fail
+        """
+        last_exception = None
+        
+        for attempt in range(MAX_RETRIES + 1):  # 0, 1, 2 (total 3 attempts: initial + 2 retries)
+            try:
+                if attempt > 0:
+                    logger.info(f"Retry attempt {attempt}/{MAX_RETRIES} for {context}")
+                
+                response = await api_call_func()
+                return response
+                
+            except Exception as e:
+                last_exception = e
+                
+                # Check if this is the last attempt
+                if attempt >= MAX_RETRIES:
+                    logger.error(
+                        f"All retry attempts exhausted for {context}. "
+                        f"Final error: {str(e)}"
+                    )
+                    raise
+                
+                # Check for Retry-After header (for rate limiting)
+                retry_after = None
+                if hasattr(e, 'response') and hasattr(e.response, 'headers'):
+                    retry_after = e.response.headers.get('Retry-After')
+                
+                if retry_after:
+                    try:
+                        delay = float(retry_after)
+                        logger.warning(
+                            f"Rate limited for {context}. "
+                            f"Retry-After header indicates {delay}s delay. "
+                            f"Attempt {attempt + 1}/{MAX_RETRIES + 1}"
+                        )
+                    except (ValueError, TypeError):
+                        # If Retry-After is not a valid number, use exponential backoff
+                        delay = RETRY_DELAYS[attempt]
+                        logger.warning(
+                            f"API error for {context}: {str(e)}. "
+                            f"Retrying in {delay}s. Attempt {attempt + 1}/{MAX_RETRIES + 1}"
+                        )
+                else:
+                    # Use exponential backoff delay
+                    delay = RETRY_DELAYS[attempt]
+                    logger.warning(
+                        f"API error for {context}: {str(e)}. "
+                        f"Retrying in {delay}s. Attempt {attempt + 1}/{MAX_RETRIES + 1}"
+                    )
+                
+                await asyncio.sleep(delay)
+        
+        # This should never be reached, but just in case
+        raise last_exception if last_exception else Exception("Unknown error in retry logic")
         
     async def evaluate_article(self, article: ArticleSchema) -> AIAnalysis:
         """Evaluate if an article is hardcore using a fast LLM."""
         logger.debug(f"Evaluating article: {article.title}")
         
         system_prompt = (
-            "你是一個熱愛動手實作的硬核全端開發者，負責審查技術文章。\n"
+            "你是一個熱愛動手實作的硬核全端開發者,負責審查技術文章。\n"
             "你的任務是過濾掉無用的行銷廢話，只留下有價值的硬核技術資訊。\n"
             "請根據以下標準評估文章：\n"
             "1. 過濾行銷：是否包含具體程式碼、GitHub 連結或架構探討？純公告請淘汰。\n"
@@ -43,18 +118,25 @@ class LLMService:
         
         user_prompt = (
             f"文章標題：{article.title}\n"
-            f"文章內容：{article.content_preview[:800]}"
+            f"文章分類：{article.category}"
         )
         
         try:
-            response = await self.client.chat.completions.create(
-                model=EVAL_MODEL,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                response_format={"type": "json_object"},
-                temperature=0.1
+            # Use retry wrapper for API call
+            async def make_api_call():
+                return await self.client.chat.completions.create(
+                    model=EVAL_MODEL,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    response_format={"type": "json_object"},
+                    temperature=0.1
+                )
+            
+            response = await self._call_api_with_retry(
+                make_api_call,
+                context=f"evaluate_article('{article.title}')"
             )
             
             content = response.choices[0].message.content
@@ -77,26 +159,188 @@ class LLMService:
                 tinkering_index=0
             )
 
+    async def generate_summary(self, article: ArticleSchema) -> Optional[str]:
+        """
+        Generate ai_summary for a single article using a powerful LLM.
+        
+        Args:
+            article: Article to generate summary for
+            
+        Returns:
+            Generated summary string, or None on failure
+        """
+        logger.debug(f"Generating summary for article: {article.title}")
+        
+        system_prompt = (
+            "你是一位資深技術分析師，請以繁體中文針對以下文章提供簡潔的技術摘要。\n"
+            "摘要必須包含：\n"
+            "1. 核心技術概念：說明文章涉及的核心技術原理。\n"
+            "2. 應用場景：描述此技術可應用的實際場景。\n"
+            "3. 建議下一步：提供具體可行的下一步行動建議。\n\n"
+            "請直接輸出摘要內容，不要加上多餘的前言或結語。摘要應簡潔明瞭，不超過 300 字。"
+        )
+        
+        user_prompt = (
+            f"文章標題：{article.title}\n"
+            f"文章分類：{article.category}"
+        )
+        
+        # Add ai_analysis info if available
+        if article.ai_analysis:
+            user_prompt += (
+                f"\n\nAI 初步評估：\n"
+                f"  推薦原因：{article.ai_analysis.reason}\n"
+                f"  行動價值：{article.ai_analysis.actionable_takeaway}\n"
+                f"  折騰指數：{article.ai_analysis.tinkering_index} / 5"
+            )
+        
+        try:
+            # Use retry wrapper for API call
+            async def make_api_call():
+                return await self.client.chat.completions.create(
+                    model=SUMMARIZE_MODEL,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    temperature=0.7,
+                    max_tokens=500
+                )
+            
+            response = await self._call_api_with_retry(
+                make_api_call,
+                context=f"generate_summary('{article.title}')"
+            )
+            
+            content = response.choices[0].message.content
+            if not content or not content.strip():
+                logger.warning(f"Empty summary generated for article '{article.title}'")
+                return None
+            
+            return content.strip()
+            
+        except Exception as e:
+            logger.error(
+                f"Failed to generate summary for article '{article.title}' (URL: {article.url}). "
+                f"Error: {str(e)}"
+            )
+            return None
+
     async def evaluate_batch(self, set_of_articles: List[ArticleSchema]) -> List[ArticleSchema]:
-        """Concurrently evaluate a list of articles."""
+        """
+        Concurrently evaluate a list of articles with improved error handling.
+        
+        For each article:
+        - Call evaluate_tinkering_index() if tinkering_index is NULL
+        - Call generate_summary() if ai_summary is NULL
+        - On failure, set respective fields to NULL and continue
+        
+        Returns:
+            Articles with populated ai_analysis fields (or NULL on failure)
+        """
         logger.info(f"Evaluating {len(set_of_articles)} articles.")
 
         # Semaphore limits true concurrency to avoid hitting Groq rate limits.
-        # The coroutine is created *inside* sem_task so it only starts executing
-        # once the semaphore slot is acquired (not at list-comprehension time).
-        semaphore = asyncio.Semaphore(5)
+        # Free tier: 30 RPM, so we use 2 concurrent requests with delays
+        semaphore = asyncio.Semaphore(2)
+        
+        tinkering_failed_count = 0
+        tinkering_success_count = 0
+        summary_failed_count = 0
+        summary_success_count = 0
 
-        async def sem_task(article: ArticleSchema) -> ArticleSchema:
+        async def process_article(article: ArticleSchema) -> ArticleSchema:
+            nonlocal tinkering_failed_count, tinkering_success_count
+            nonlocal summary_failed_count, summary_success_count
+            
             async with semaphore:
-                article.ai_analysis = await self.evaluate_article(article)
+                # Add delay to respect rate limits
+                # Free tier: 30 RPM = 2 seconds per request minimum
+                # With 2 concurrent, we need 4 seconds delay to stay under 30 RPM
+                # (60 seconds / 30 requests) × 2 concurrent = 4 seconds
+                await asyncio.sleep(4)
+                
+                # Process tinkering_index if it's NULL
+                if article.tinkering_index is None:
+                    try:
+                        # Attempt to evaluate the article
+                        article.ai_analysis = await self.evaluate_article(article)
+                        
+                        # Extract tinkering_index from ai_analysis
+                        if article.ai_analysis and hasattr(article.ai_analysis, 'tinkering_index'):
+                            article.tinkering_index = article.ai_analysis.tinkering_index
+                        
+                        tinkering_success_count += 1
+                        
+                    except Exception as e:
+                        # On API failure, set tinkering_index to NULL and log error
+                        logger.error(
+                            f"Failed to evaluate tinkering_index for article '{article.title}' (URL: {article.url}). "
+                            f"Error: {str(e)}"
+                        )
+                        
+                        article.tinkering_index = None
+                        article.ai_analysis = None
+                        tinkering_failed_count += 1
+                
+                # Process ai_summary if it's NULL
+                if article.ai_summary is None:
+                    try:
+                        # Attempt to generate summary
+                        summary = await self.generate_summary(article)
+                        article.ai_summary = summary
+                        
+                        if summary is not None:
+                            summary_success_count += 1
+                        else:
+                            summary_failed_count += 1
+                        
+                    except Exception as e:
+                        # On API failure, set ai_summary to NULL and log error
+                        logger.error(
+                            f"Failed to generate summary for article '{article.title}' (URL: {article.url}). "
+                            f"Error: {str(e)}"
+                        )
+                        
+                        article.ai_summary = None
+                        summary_failed_count += 1
+                
                 return article
 
-        evaluated = await asyncio.gather(*(sem_task(a) for a in set_of_articles))
+        # Process all articles (successful and failed)
+        evaluated = await asyncio.gather(*(process_article(a) for a in set_of_articles))
         
-        # Filter for hardcore only
-        hardcore_articles = [a for a in evaluated if getattr(a.ai_analysis, "is_hardcore", False)]
-        logger.info(f"Retained {len(hardcore_articles)} hardcore articles out of {len(set_of_articles)}.")
-        return hardcore_articles
+        # Log warning if more than 30% of articles failed
+        total_articles = len(set_of_articles)
+        if total_articles > 0:
+            tinkering_total = tinkering_success_count + tinkering_failed_count
+            summary_total = summary_success_count + summary_failed_count
+            
+            if tinkering_total > 0:
+                tinkering_failure_rate = tinkering_failed_count / tinkering_total
+                if tinkering_failure_rate > 0.3:
+                    logger.warning(
+                        f"High tinkering_index failure rate: {tinkering_failed_count}/{tinkering_total} "
+                        f"({tinkering_failure_rate:.1%}) failed. This may indicate API issues."
+                    )
+            
+            if summary_total > 0:
+                summary_failure_rate = summary_failed_count / summary_total
+                if summary_failure_rate > 0.3:
+                    logger.warning(
+                        f"High ai_summary failure rate: {summary_failed_count}/{summary_total} "
+                        f"({summary_failure_rate:.1%}) failed. This may indicate API issues."
+                    )
+        
+        logger.info(
+            f"Batch evaluation complete: "
+            f"tinkering_index ({tinkering_success_count} successful, {tinkering_failed_count} failed), "
+            f"ai_summary ({summary_success_count} successful, {summary_failed_count} failed) "
+            f"out of {total_articles} articles."
+        )
+        
+        # Return all articles (both successful and failed)
+        return evaluated
         
     async def generate_deep_dive(self, article: ArticleSchema) -> str:
         """Generate a deep-dive technical analysis for a single article in Traditional Chinese."""
@@ -112,11 +356,11 @@ class LLMService:
             "請直接輸出分析內容，不要加上多餘的前言或結語。"
         )
 
-        # Build user prompt; use only title if content_preview is empty
-        if article.content_preview:
-            content_section = f"文章內容預覽：{article.content_preview}\n"
-        else:
-            content_section = ""
+        # Build user prompt with available fields
+        user_prompt = (
+            f"文章標題：{article.title}\n"
+            f"文章分類：{article.category}\n"
+        )
 
         ai_section = ""
         if article.ai_analysis:
@@ -126,23 +370,24 @@ class LLMService:
                 f"  行動價值：{article.ai_analysis.actionable_takeaway}\n"
                 f"  折騰指數：{article.ai_analysis.tinkering_index} / 5\n"
             )
-
-        user_prompt = (
-            f"文章標題：{article.title}\n"
-            f"文章分類：{article.source_category}\n"
-            f"{content_section}"
-            f"{ai_section}"
-        )
+            user_prompt += ai_section
 
         try:
-            response = await self.client.chat.completions.create(
-                model=SUMMARIZE_MODEL,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                temperature=0.7,
-                max_tokens=600
+            # Use retry wrapper for API call
+            async def make_api_call():
+                return await self.client.chat.completions.create(
+                    model=SUMMARIZE_MODEL,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    temperature=0.7,
+                    max_tokens=600
+                )
+            
+            response = await self._call_api_with_retry(
+                make_api_call,
+                context=f"generate_deep_dive('{article.title}')"
             )
 
             content = response.choices[0].message.content
@@ -167,7 +412,7 @@ class LLMService:
         draft = "請根據以下精選文章，幫我撰寫一份 Markdown 格式的「每週極客資訊報表」。\n\n"
         for a in top_articles:
             draft += f"---\n"
-            draft += f"🏷️ 分類：{a.source_category}\n"
+            draft += f"🏷️ 分類：{a.category}\n"
             draft += f"📌 標題：{a.title}\n"
             draft += f"🔗 連結：{a.url}\n"
             draft += f"💡 推薦原因：{a.ai_analysis.reason}\n"
@@ -188,15 +433,22 @@ class LLMService:
         
         logger.info("Generating final weekly newsletter.")
         try:
-            response = await self.client.chat.completions.create(
-                model=SUMMARIZE_MODEL,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": draft}
-                ],
-                temperature=0.7,
-                # Discord has a 4k character limit per message, 3500 is a safe target
-                max_tokens=2000 
+            # Use retry wrapper for API call
+            async def make_api_call():
+                return await self.client.chat.completions.create(
+                    model=SUMMARIZE_MODEL,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": draft}
+                    ],
+                    temperature=0.7,
+                    # Discord has a 4k character limit per message, 3500 is a safe target
+                    max_tokens=2000 
+                )
+            
+            response = await self._call_api_with_retry(
+                make_api_call,
+                context="generate_weekly_newsletter"
             )
             
             final_text = response.choices[0].message.content
@@ -239,14 +491,21 @@ class LLMService:
         )
 
         try:
-            response = await self.client.chat.completions.create(
-                model=SUMMARIZE_MODEL,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                temperature=0.7,
-                max_tokens=800
+            # Use retry wrapper for API call
+            async def make_api_call():
+                return await self.client.chat.completions.create(
+                    model=SUMMARIZE_MODEL,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    temperature=0.7,
+                    max_tokens=800
+                )
+            
+            response = await self._call_api_with_retry(
+                make_api_call,
+                context="generate_reading_recommendation"
             )
 
             content = response.choices[0].message.content

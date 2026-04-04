@@ -39,13 +39,30 @@ class NewsCommands(commands.Cog):
             if not feeds:
                 await interaction.followup.send("⚠️ 目前資料庫中沒有任何啟用的 RSS 訂閱源！")
                 return
+            
+            # Build feed_id_map for RSS service
+            feed_id_map = {}
+            try:
+                response = supabase.client.table('feeds')\
+                    .select('id, url')\
+                    .eq('is_active', True)\
+                    .execute()
                 
-            # 2. Scrape Articles
-            rss = RSSService(days_to_fetch=7)
-            all_articles = await rss.fetch_all_feeds(feeds)
+                if response.data:
+                    for feed in response.data:
+                        feed_id_map[feed['url']] = feed['id']
+                    logger.info(f"Built feed_id_map with {len(feed_id_map)} entries")
+            except Exception as e:
+                logger.error(f"Failed to build feed_id_map: {e}", exc_info=True)
+                
+            # 2. Scrape Articles (with deduplication)
+            rss = RSSService(days_to_fetch=settings.rss_fetch_days)
+            
+            # Use fetch_new_articles to avoid re-processing existing articles
+            all_articles = await rss.fetch_new_articles(feeds, supabase)
             
             if not all_articles:
-                await interaction.followup.send("📭 最近 7 天內沒有任何新文章。")
+                await interaction.followup.send("📭 最近 7 天內沒有任何新文章（或所有文章都已處理過）。")
                 return
                 
             # 3. Evaluate Hardcore level
@@ -59,17 +76,51 @@ class NewsCommands(commands.Cog):
                 "hardcore_count": len(hardcore_articles),
             }
 
-            # TODO: Implement article insertion into database
-            # This requires mapping feed names to feed_ids
-            logger.warning("Article insertion to database not yet implemented")
+            # 4. Insert articles into database
+            try:
+                articles_to_insert = []
+                for article in hardcore_articles:
+                    article_dict = {
+                        'title': article.title,
+                        'url': str(article.url),
+                        'feed_id': str(article.feed_id),
+                        'published_at': article.published_at.isoformat() if article.published_at else None,
+                        'tinkering_index': article.tinkering_index,
+                        'ai_summary': article.ai_summary,
+                        'embedding': article.embedding
+                    }
+                    articles_to_insert.append(article_dict)
+                
+                if articles_to_insert:
+                    batch_result = await supabase.insert_articles(articles_to_insert)
+                    logger.info(
+                        f"Article insertion complete: {batch_result.inserted_count} inserted, "
+                        f"{batch_result.updated_count} updated, {batch_result.failed_count} failed"
+                    )
+                    stats['inserted'] = batch_result.inserted_count
+                    stats['updated'] = batch_result.updated_count
+                    stats['failed'] = batch_result.failed_count
+                else:
+                    logger.warning("No articles to insert")
+                    stats['inserted'] = 0
+                    stats['updated'] = 0
+                    stats['failed'] = 0
+                    
+            except Exception as e:
+                logger.error(f"Failed to insert articles into database: {e}", exc_info=True)
+                stats['inserted'] = 0
+                stats['updated'] = 0
+                stats['failed'] = len(hardcore_articles)
 
-            # 4. Build notification message
+            # 5. Build notification message (with 2000 char limit)
             lines = [
                 "📰 **本週科技新聞精選**",
                 "",
                 f"📊 本週統計：",
                 f"  • 總共抓取：{stats.get('total_fetched', 0)} 篇文章",
                 f"  • 精選推薦：{stats.get('hardcore_count', 0)} 篇",
+                f"  • 新增資料庫：{stats.get('inserted', 0)} 篇",
+                f"  • 更新資料庫：{stats.get('updated', 0)} 篇",
                 "",
                 "🔥 **推薦文章：**",
                 ""
@@ -79,20 +130,46 @@ class NewsCommands(commands.Cog):
             from collections import defaultdict
             by_category = defaultdict(list)
             for article in hardcore_articles:
-                by_category[article.source_category].append(article)
+                by_category[article.category].append(article)
             
-            # Format articles by category
+            # Format articles by category with character limit check
+            DISCORD_CHAR_LIMIT = 2000
+            RESERVED_CHARS = 100  # Reserve space for truncation message
+            
             for category, articles in sorted(by_category.items()):
-                lines.append(f"**{category}**")
+                category_line = f"**{category}**"
+                # Check if adding this would exceed limit
+                test_content = "\n".join(lines + [category_line])
+                if len(test_content) > DISCORD_CHAR_LIMIT - RESERVED_CHARS:
+                    lines.append("\n_...更多文章請使用下方按鈕查看_")
+                    break
+                    
+                lines.append(category_line)
+                
                 for article in articles[:10]:  # Limit to 10 per category
-                    tinkering = "🔥" * (article.ai_analysis.tinkering_index if article.ai_analysis else 0)
-                    lines.append(f"  {tinkering} {article.title}")
-                    lines.append(f"    🔗 {article.url}")
-                lines.append("")
+                    tinkering = "🔥" * (article.tinkering_index if article.tinkering_index else 0)
+                    article_lines = [
+                        f"  {tinkering} {article.title}",
+                        f"    🔗 {article.url}"
+                    ]
+                    
+                    # Check if adding this article would exceed limit
+                    test_content = "\n".join(lines + article_lines)
+                    if len(test_content) > DISCORD_CHAR_LIMIT - RESERVED_CHARS:
+                        lines.append("\n_...更多文章請使用下方按鈕查看_")
+                        break
+                    
+                    lines.extend(article_lines)
+                else:
+                    # Only add empty line if we didn't break
+                    lines.append("")
+                    continue
+                # If we broke from inner loop, break from outer loop too
+                break
             
             notification = "\n".join(lines)
 
-            # 5. Send results back to Discord with interactive buttons
+            # 6. Send results back to Discord with interactive buttons
             from app.bot.cogs.interactions import ReadLaterView, FilterView, DeepDiveView  # Local import to prevent circular deps
 
             combined_view = FilterView(articles=hardcore_articles)

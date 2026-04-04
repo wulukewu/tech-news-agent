@@ -12,12 +12,13 @@ from app.core.exceptions import LLMServiceError
 
 
 def make_article(title="Test Article", url="https://example.com/article", tinkering_index=3):
+    from uuid import uuid4
     return ArticleSchema(
         title=title,
         url=url,
-        content_preview="Some technical content preview",
-        source_category="AI",
-        source_name="TestSource",
+        feed_id=uuid4(),
+        feed_name="TestSource",
+        category="AI",
     )
 
 
@@ -102,13 +103,129 @@ class TestEvaluateArticle:
 
 
 # ---------------------------------------------------------------------------
+# generate_summary
+# ---------------------------------------------------------------------------
+
+class TestGenerateSummary:
+    @pytest.mark.asyncio
+    async def test_returns_string_on_success(self):
+        """generate_summary returns a non-empty string when LLM responds."""
+        service = LLMService.__new__(LLMService)
+        mock_response = MagicMock()
+        mock_response.choices[0].message.content = "這是一篇關於 AI 的技術摘要"
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        service.client = mock_client
+
+        result = await service.generate_summary(make_article())
+
+        assert isinstance(result, str)
+        assert result == "這是一篇關於 AI 的技術摘要"
+
+    @pytest.mark.asyncio
+    async def test_returns_none_on_empty_response(self):
+        """generate_summary returns None when LLM returns empty content."""
+        service = LLMService.__new__(LLMService)
+        mock_response = MagicMock()
+        mock_response.choices[0].message.content = ""
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        service.client = mock_client
+
+        result = await service.generate_summary(make_article())
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_returns_none_on_exception(self):
+        """generate_summary returns None when LLM call raises."""
+        service = LLMService.__new__(LLMService)
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(side_effect=Exception("API error"))
+        service.client = mock_client
+
+        result = await service.generate_summary(make_article())
+
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_uses_summarize_model(self):
+        """generate_summary uses SUMMARIZE_MODEL (llama-3.3-70b-versatile)."""
+        from app.services.llm_service import SUMMARIZE_MODEL
+
+        service = LLMService.__new__(LLMService)
+        captured = {}
+
+        async def fake_create(**kwargs):
+            captured["model"] = kwargs["model"]
+            mock_response = MagicMock()
+            mock_response.choices[0].message.content = "摘要"
+            return mock_response
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = fake_create
+        service.client = mock_client
+
+        await service.generate_summary(make_article())
+
+        assert captured["model"] == SUMMARIZE_MODEL
+        assert captured["model"] == "llama-3.3-70b-versatile"
+
+    @pytest.mark.asyncio
+    async def test_prompt_includes_title_and_category(self):
+        """generate_summary includes title and category in user prompt."""
+        service = LLMService.__new__(LLMService)
+        captured = {}
+
+        async def fake_create(**kwargs):
+            captured["user"] = kwargs["messages"][1]["content"]
+            mock_response = MagicMock()
+            mock_response.choices[0].message.content = "摘要"
+            return mock_response
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = fake_create
+        service.client = mock_client
+
+        article = make_article(title="My Title")
+        article.category = "DevOps"
+        await service.generate_summary(article)
+
+        assert "My Title" in captured["user"]
+        assert "DevOps" in captured["user"]
+
+    @pytest.mark.asyncio
+    async def test_includes_ai_analysis_when_available(self):
+        """generate_summary includes ai_analysis info in prompt when available."""
+        service = LLMService.__new__(LLMService)
+        captured = {}
+
+        async def fake_create(**kwargs):
+            captured["user"] = kwargs["messages"][1]["content"]
+            mock_response = MagicMock()
+            mock_response.choices[0].message.content = "摘要"
+            return mock_response
+
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = fake_create
+        service.client = mock_client
+
+        article = make_hardcore_article(title="Test Article", tinkering_index=4)
+        await service.generate_summary(article)
+
+        assert "AI 初步評估" in captured["user"]
+        assert "折騰指數" in captured["user"]
+        assert "4 / 5" in captured["user"]
+
+
+# ---------------------------------------------------------------------------
 # evaluate_batch — semaphore fix verification
 # ---------------------------------------------------------------------------
 
 class TestEvaluateBatch:
     @pytest.mark.asyncio
-    async def test_filters_non_hardcore_articles(self):
-        """evaluate_batch returns only articles where is_hardcore is True."""
+    async def test_returns_all_articles_including_non_hardcore(self):
+        """evaluate_batch returns ALL articles (both hardcore and non-hardcore)."""
         service = LLMService.__new__(LLMService)
 
         call_count = 0
@@ -121,16 +238,239 @@ class TestEvaluateBatch:
                 is_hardcore=(call_count == 1),
                 reason="reason",
                 actionable_takeaway="",
-                tinkering_index=1,
+                tinkering_index=call_count,
             )
 
+        async def fake_generate_summary(article):
+            return f"Summary for {article.title}"
+
         service.evaluate_article = fake_evaluate
+        service.generate_summary = fake_generate_summary
 
         articles = [make_article(title=f"Article {i}") for i in range(3)]
         result = await service.evaluate_batch(articles)
 
-        assert len(result) == 1
+        # Should return all 3 articles, not just the hardcore one
+        assert len(result) == 3
         assert result[0].ai_analysis.is_hardcore is True
+        assert result[1].ai_analysis.is_hardcore is False
+        assert result[2].ai_analysis.is_hardcore is False
+        # All should have summaries
+        assert all(a.ai_summary is not None for a in result)
+
+    @pytest.mark.asyncio
+    async def test_sets_null_on_api_failure(self):
+        """evaluate_batch sets tinkering_index and ai_summary to NULL on API failure."""
+        service = LLMService.__new__(LLMService)
+
+        call_count = 0
+
+        async def fake_evaluate(article):
+            nonlocal call_count
+            call_count += 1
+            # First article succeeds, second fails
+            if call_count == 2:
+                raise Exception("API error")
+            return AIAnalysis(
+                is_hardcore=True,
+                reason="reason",
+                actionable_takeaway="",
+                tinkering_index=3,
+            )
+
+        summary_call_count = 0
+
+        async def fake_generate_summary(article):
+            nonlocal summary_call_count
+            summary_call_count += 1
+            # Summary generation also fails for first article
+            if summary_call_count == 1:
+                raise Exception("Summary API error")
+            return "Test summary"
+
+        service.evaluate_article = fake_evaluate
+        service.generate_summary = fake_generate_summary
+
+        articles = [make_article(title=f"Article {i}") for i in range(2)]
+        result = await service.evaluate_batch(articles)
+
+        # Both articles should be returned
+        assert len(result) == 2
+        
+        # First article should have analysis but no summary (summary failed)
+        assert result[0].ai_analysis is not None
+        assert result[0].tinkering_index == 3
+        assert result[0].ai_summary is None
+        
+        # Second article should have NULL tinkering_index (evaluation failed) but has summary
+        assert result[1].ai_analysis is None
+        assert result[1].tinkering_index is None
+        assert result[1].ai_summary == "Test summary"
+
+    @pytest.mark.asyncio
+    async def test_logs_warning_when_30_percent_fail(self, caplog):
+        """evaluate_batch logs warning when more than 30% of articles fail."""
+        import logging
+        caplog.set_level(logging.WARNING)
+        
+        service = LLMService.__new__(LLMService)
+
+        call_count = 0
+
+        async def fake_evaluate(article):
+            nonlocal call_count
+            call_count += 1
+            # Fail 4 out of 10 articles (40%)
+            if call_count <= 4:
+                raise Exception("API error")
+            return AIAnalysis(
+                is_hardcore=True,
+                reason="reason",
+                actionable_takeaway="",
+                tinkering_index=3,
+            )
+
+        async def fake_generate_summary(article):
+            return "Test summary"
+
+        service.evaluate_article = fake_evaluate
+        service.generate_summary = fake_generate_summary
+
+        articles = [make_article(title=f"Article {i}") for i in range(10)]
+        result = await service.evaluate_batch(articles)
+
+        # All articles should be returned
+        assert len(result) == 10
+        
+        # Check that warning was logged for tinkering_index failures
+        assert any("High tinkering_index failure rate" in record.message for record in caplog.records)
+        assert any("4/10" in record.message for record in caplog.records)
+
+    @pytest.mark.asyncio
+    async def test_logs_error_with_article_title_and_url_on_failure(self, caplog):
+        """evaluate_batch logs error with article title and URL when API fails (Requirement 8.1)."""
+        import logging
+        caplog.set_level(logging.ERROR)
+        
+        service = LLMService.__new__(LLMService)
+
+        async def fake_evaluate(article):
+            raise Exception("API connection timeout")
+
+        async def fake_generate_summary(article):
+            return "Test summary"
+
+        service.evaluate_article = fake_evaluate
+        service.generate_summary = fake_generate_summary
+
+        article = make_article(title="Test Article Title", url="https://example.com/test-article")
+        result = await service.evaluate_batch([article])
+
+        # Article should be returned with NULL tinkering_index
+        assert len(result) == 1
+        assert result[0].tinkering_index is None
+        
+        # Check that error was logged with article title and URL
+        error_logs = [record for record in caplog.records if record.levelname == "ERROR"]
+        assert len(error_logs) > 0
+        
+        # Verify the error log contains both title and URL
+        error_message = error_logs[0].message
+        assert "Test Article Title" in error_message
+        assert "https://example.com/test-article" in error_message
+        assert "Failed to evaluate tinkering_index" in error_message
+
+    @pytest.mark.asyncio
+    async def test_logs_success_and_failure_counts(self, caplog):
+        """evaluate_batch logs counts of successful and failed articles (Requirements 3.8, 8.7)."""
+        import logging
+        caplog.set_level(logging.INFO)
+        
+        service = LLMService.__new__(LLMService)
+
+        call_count = 0
+
+        async def fake_evaluate(article):
+            nonlocal call_count
+            call_count += 1
+            # Fail 2 out of 5 articles
+            if call_count in [2, 4]:
+                raise Exception("API error")
+            return AIAnalysis(
+                is_hardcore=True,
+                reason="reason",
+                actionable_takeaway="",
+                tinkering_index=3,
+            )
+
+        summary_call_count = 0
+
+        async def fake_generate_summary(article):
+            nonlocal summary_call_count
+            summary_call_count += 1
+            # Fail 1 out of 5 summaries
+            if summary_call_count == 3:
+                raise Exception("Summary API error")
+            return "Test summary"
+
+        service.evaluate_article = fake_evaluate
+        service.generate_summary = fake_generate_summary
+
+        articles = [make_article(title=f"Article {i}") for i in range(5)]
+        result = await service.evaluate_batch(articles)
+
+        # All articles should be returned
+        assert len(result) == 5
+        
+        # Check that completion log contains success and failure counts
+        info_logs = [record for record in caplog.records if record.levelname == "INFO"]
+        completion_log = [log for log in info_logs if "Batch evaluation complete" in log.message]
+        
+        assert len(completion_log) > 0
+        log_message = completion_log[0].message
+        
+        # Verify counts are logged
+        assert "3 successful" in log_message  # 3 successful tinkering_index evaluations
+        assert "2 failed" in log_message      # 2 failed tinkering_index evaluations
+        assert "4 successful" in log_message  # 4 successful summaries
+        assert "1 failed" in log_message      # 1 failed summary
+
+    @pytest.mark.asyncio
+    async def test_continues_processing_after_failure(self):
+        """evaluate_batch continues processing remaining articles after a failure."""
+        service = LLMService.__new__(LLMService)
+
+        call_count = 0
+        evaluated_titles = []
+
+        async def fake_evaluate(article):
+            nonlocal call_count
+            call_count += 1
+            evaluated_titles.append(article.title)
+            
+            # Fail the second article
+            if call_count == 2:
+                raise Exception("API error")
+            
+            return AIAnalysis(
+                is_hardcore=True,
+                reason="reason",
+                actionable_takeaway="",
+                tinkering_index=3,
+            )
+
+        async def fake_generate_summary(article):
+            return "Test summary"
+
+        service.evaluate_article = fake_evaluate
+        service.generate_summary = fake_generate_summary
+
+        articles = [make_article(title=f"Article {i}") for i in range(5)]
+        result = await service.evaluate_batch(articles)
+
+        # All 5 articles should have been attempted
+        assert len(evaluated_titles) == 5
+        assert len(result) == 5
 
     @pytest.mark.asyncio
     async def test_semaphore_limits_concurrency(self):
@@ -148,7 +488,11 @@ class TestEvaluateBatch:
             active -= 1
             return AIAnalysis(is_hardcore=True, reason="r", actionable_takeaway="", tinkering_index=1)
 
+        async def fake_generate_summary(article):
+            return "Test summary"
+
         service.evaluate_article = fake_evaluate
+        service.generate_summary = fake_generate_summary
 
         articles = [make_article(title=f"Article {i}") for i in range(10)]
         await service.evaluate_batch(articles)
@@ -176,11 +520,123 @@ class TestEvaluateBatch:
             evaluated_titles.append(article.title)
             return AIAnalysis(is_hardcore=True, reason="r", actionable_takeaway="", tinkering_index=1)
 
+        async def fake_generate_summary(article):
+            return "Test summary"
+
         service.evaluate_article = fake_evaluate
+        service.generate_summary = fake_generate_summary
+        
         articles = [make_article(title=f"Article {i}") for i in range(5)]
         await service.evaluate_batch(articles)
 
         assert sorted(evaluated_titles) == sorted(a.title for a in articles)
+
+    @pytest.mark.asyncio
+    async def test_only_processes_null_tinkering_index(self):
+        """evaluate_batch only processes tinkering_index when it's NULL."""
+        service = LLMService.__new__(LLMService)
+        
+        evaluate_called = []
+        summary_called = []
+
+        async def fake_evaluate(article):
+            evaluate_called.append(article.title)
+            return AIAnalysis(is_hardcore=True, reason="r", actionable_takeaway="", tinkering_index=3)
+
+        async def fake_generate_summary(article):
+            summary_called.append(article.title)
+            return "Test summary"
+
+        service.evaluate_article = fake_evaluate
+        service.generate_summary = fake_generate_summary
+
+        # Create articles with different states
+        article1 = make_article(title="Article 1")  # Both NULL
+        article2 = make_article(title="Article 2")
+        article2.tinkering_index = 4  # tinkering_index already set
+        
+        articles = [article1, article2]
+        result = await service.evaluate_batch(articles)
+
+        # evaluate_article should only be called for article1
+        assert "Article 1" in evaluate_called
+        assert "Article 2" not in evaluate_called
+        
+        # generate_summary should be called for both
+        assert "Article 1" in summary_called
+        assert "Article 2" in summary_called
+
+    @pytest.mark.asyncio
+    async def test_only_processes_null_ai_summary(self):
+        """evaluate_batch only processes ai_summary when it's NULL."""
+        service = LLMService.__new__(LLMService)
+        
+        evaluate_called = []
+        summary_called = []
+
+        async def fake_evaluate(article):
+            evaluate_called.append(article.title)
+            return AIAnalysis(is_hardcore=True, reason="r", actionable_takeaway="", tinkering_index=3)
+
+        async def fake_generate_summary(article):
+            summary_called.append(article.title)
+            return "Test summary"
+
+        service.evaluate_article = fake_evaluate
+        service.generate_summary = fake_generate_summary
+
+        # Create articles with different states
+        article1 = make_article(title="Article 1")  # Both NULL
+        article2 = make_article(title="Article 2")
+        article2.ai_summary = "Existing summary"  # ai_summary already set
+        
+        articles = [article1, article2]
+        result = await service.evaluate_batch(articles)
+
+        # evaluate_article should be called for both
+        assert "Article 1" in evaluate_called
+        assert "Article 2" in evaluate_called
+        
+        # generate_summary should only be called for article1
+        assert "Article 1" in summary_called
+        assert "Article 2" not in summary_called
+        
+        # article2 should keep its existing summary
+        assert result[1].ai_summary == "Existing summary"
+
+    @pytest.mark.asyncio
+    async def test_skips_processing_when_both_fields_exist(self):
+        """evaluate_batch skips processing when both tinkering_index and ai_summary exist."""
+        service = LLMService.__new__(LLMService)
+        
+        evaluate_called = []
+        summary_called = []
+
+        async def fake_evaluate(article):
+            evaluate_called.append(article.title)
+            return AIAnalysis(is_hardcore=True, reason="r", actionable_takeaway="", tinkering_index=3)
+
+        async def fake_generate_summary(article):
+            summary_called.append(article.title)
+            return "Test summary"
+
+        service.evaluate_article = fake_evaluate
+        service.generate_summary = fake_generate_summary
+
+        # Create article with both fields already set
+        article = make_article(title="Complete Article")
+        article.tinkering_index = 4
+        article.ai_summary = "Existing summary"
+        
+        result = await service.evaluate_batch([article])
+
+        # Neither method should be called
+        assert len(evaluate_called) == 0
+        assert len(summary_called) == 0
+        
+        # Article should keep its existing values
+        assert result[0].tinkering_index == 4
+        assert result[0].ai_summary == "Existing summary"
 
 
 # ---------------------------------------------------------------------------
@@ -257,13 +713,14 @@ class TestGenerateWeeklyNewsletter:
 # generate_deep_dive
 # ---------------------------------------------------------------------------
 
-def make_article_with_analysis(title="Deep Dive Article", content_preview="Some content", source_category="AI"):
+def make_article_with_analysis(title="Deep Dive Article", category="AI"):
+    from uuid import uuid4
     article = ArticleSchema(
         title=title,
         url="https://example.com/deep-dive",
-        content_preview=content_preview,
-        source_category=source_category,
-        source_name="TestSource",
+        feed_id=uuid4(),
+        feed_name="TestSource",
+        category=category,
     )
     article.ai_analysis = AIAnalysis(
         is_hardcore=True,
@@ -354,8 +811,8 @@ class TestGenerateDeepDive:
         assert "繁體中文" in captured["system"]
 
     @pytest.mark.asyncio
-    async def test_prompt_includes_title_and_content_preview(self):
-        """generate_deep_dive includes title and content_preview in user prompt."""
+    async def test_prompt_includes_title_and_category(self):
+        """generate_deep_dive includes title and category in user prompt."""
         service = LLMService.__new__(LLMService)
         captured = {}
 
@@ -369,15 +826,15 @@ class TestGenerateDeepDive:
         mock_client.chat.completions.create = fake_create
         service.client = mock_client
 
-        article = make_article_with_analysis(title="My Title", content_preview="My preview content")
+        article = make_article_with_analysis(title="My Title", category="DevOps")
         await service.generate_deep_dive(article)
 
         assert "My Title" in captured["user"]
-        assert "My preview content" in captured["user"]
+        assert "DevOps" in captured["user"]
 
     @pytest.mark.asyncio
-    async def test_empty_content_preview_uses_only_title(self):
-        """generate_deep_dive still generates when content_preview is empty, using only title."""
+    async def test_handles_article_without_content_preview(self):
+        """generate_deep_dive still generates when article has no content_preview field."""
         service = LLMService.__new__(LLMService)
         captured = {}
 
@@ -391,11 +848,10 @@ class TestGenerateDeepDive:
         mock_client.chat.completions.create = fake_create
         service.client = mock_client
 
-        article = make_article_with_analysis(title="Only Title", content_preview="")
+        article = make_article_with_analysis(title="Only Title")
         await service.generate_deep_dive(article)
 
         assert "Only Title" in captured["user"]
-        assert "content_preview" not in captured["user"].lower() or "Only Title" in captured["user"]
         # Ensure the API was still called (no early return)
         assert captured["user"] != ""
 
@@ -450,16 +906,16 @@ from pydantic import HttpUrl
 
 def _make_article_strategy():
     """Strategy to generate random ArticleSchema instances."""
+    from uuid import uuid4
     return st.builds(
         ArticleSchema,
         title=st.text(min_size=1, max_size=100),
         url=st.just("https://example.com/article"),
-        content_preview=st.text(max_size=200),  # includes empty string
-        source_category=st.text(min_size=1, max_size=50),
-        source_name=st.text(min_size=1, max_size=50),
-        published_date=st.none(),
+        feed_id=st.just(uuid4()),
+        feed_name=st.text(min_size=1, max_size=50),
+        category=st.text(min_size=1, max_size=50),
+        published_at=st.none(),
         ai_analysis=st.none(),
-        raw_data=st.none(),
     )
 
 
@@ -489,30 +945,6 @@ class TestGenerateDeepDiveProperty:
         asyncio.get_event_loop().run_until_complete(service.generate_deep_dive(article))
 
         assert article.title in captured["user"]
-
-    @given(article=_make_article_strategy())
-    @settings(max_examples=5)
-    def test_prompt_contains_content_preview_when_non_empty(self, article):
-        """Property 6: user prompt contains content_preview when it is non-empty."""
-        import asyncio
-
-        service = LLMService.__new__(LLMService)
-        captured = {}
-
-        async def fake_create(**kwargs):
-            captured["user"] = kwargs["messages"][1]["content"]
-            mock_response = MagicMock()
-            mock_response.choices[0].message.content = "分析"
-            return mock_response
-
-        mock_client = MagicMock()
-        mock_client.chat.completions.create = fake_create
-        service.client = mock_client
-
-        asyncio.get_event_loop().run_until_complete(service.generate_deep_dive(article))
-
-        if article.content_preview:
-            assert article.content_preview in captured["user"]
 
 
 # ---------------------------------------------------------------------------
