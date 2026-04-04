@@ -10,14 +10,20 @@ if sys.platform == "darwin":
 import logging
 import asyncio
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, BackgroundTasks
+from fastapi import FastAPI, BackgroundTasks, Request
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 import uvicorn
 
 from app.core.config import settings
 from app.core.exceptions import ConfigurationError
 from app.bot.client import bot
 from app.tasks.scheduler import scheduler, setup_scheduler, get_scheduler_health
+from app.api import auth, feeds
+from app.api import articles
 
 # Configure logging for the entire app
 logging.basicConfig(
@@ -89,19 +95,92 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Configure CORS Middleware
+cors_origins = settings.cors_origins.split(",") if settings.cors_origins else ["http://localhost:3000"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
+    expose_headers=["Set-Cookie"]
+)
+
+# Configure Rate Limiting
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Security Headers Middleware
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Add security headers to all responses."""
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    return response
+
+# Register API routers
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(feeds.router, prefix="/api", tags=["feeds"])
+app.include_router(articles.router, prefix="/api/articles", tags=["articles"])
+
 @app.get("/")
 async def root():
     return {"status": "ok", "message": "Tech News Agent is running."}
 
 @app.get("/health")
 async def health_check():
-    """Health check endpoint useful for Docker/Render deployments."""
+    """
+    Health check endpoint useful for Docker/Render deployments.
+    Includes OAuth2 and JWT configuration validation.
+    
+    Validates: Requirements 20.1, 20.2, 20.3, 20.4, 20.5, 20.6, 20.7
+    """
     bot_ready = bot.is_ready() if settings.discord_token else False
-    return {
+    
+    # Initialize health status
+    health_status = {
         "status": "healthy",
-        "bot_ready": bot_ready,
-        "scheduler_running": scheduler.running
+        "services": {
+            "bot": "healthy" if bot_ready else "degraded",
+            "scheduler": "healthy" if scheduler.running else "degraded",
+            "database": "healthy",
+            "oauth": "healthy",
+            "jwt": "healthy"
+        }
     }
+    
+    # Check OAuth2 configuration
+    if not all([
+        settings.discord_client_id,
+        settings.discord_client_secret,
+        settings.discord_redirect_uri
+    ]):
+        health_status["services"]["oauth"] = "unhealthy"
+        health_status["status"] = "degraded"
+    
+    # Check JWT configuration
+    if not settings.jwt_secret or len(settings.jwt_secret) < 32:
+        health_status["services"]["jwt"] = "unhealthy"
+        health_status["status"] = "degraded"
+    
+    # Check database connectivity (basic check)
+    try:
+        from app.services.supabase_service import SupabaseService
+        # Connection validation happens in __init__
+        _ = SupabaseService()
+    except Exception:
+        health_status["services"]["database"] = "unhealthy"
+        health_status["status"] = "degraded"
+    
+    # Determine overall status code
+    status_code = 200
+    if health_status["status"] == "unhealthy":
+        status_code = 503
+    
+    return JSONResponse(content=health_status, status_code=status_code)
 
 @app.get("/health/scheduler")
 async def scheduler_health_check():

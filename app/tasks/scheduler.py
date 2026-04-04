@@ -28,6 +28,29 @@ _scheduler_health = {
 _last_feed_urls = set()
 
 
+async def cleanup_token_blacklist():
+    """
+    定期清理過期的 Token 黑名單項目
+    
+    此任務每小時執行一次，移除已過期的 Token 以避免記憶體無限增長。
+    
+    Validates: Requirements 13.6, 14.3
+    """
+    try:
+        from app.api.auth import get_token_blacklist
+        
+        logger.info("Starting token blacklist cleanup...")
+        blacklist = get_token_blacklist()
+        
+        # 執行清理
+        await blacklist.cleanup_expired()
+        
+        logger.info("Token blacklist cleanup completed successfully")
+        
+    except Exception as e:
+        logger.error(f"Token blacklist cleanup failed: {e}", exc_info=True)
+
+
 async def background_fetch_job():
     """
     Background job that orchestrates the pipeline:
@@ -400,12 +423,25 @@ def setup_scheduler():
         replace_existing=True
     )
     
+    # Register token blacklist cleanup job (runs every hour)
+    scheduler.add_job(
+        cleanup_token_blacklist,
+        trigger=CronTrigger(hour='*', timezone=scheduler_tz),  # Every hour
+        id='token_blacklist_cleanup',
+        name='Token Blacklist Cleanup',
+        replace_existing=True
+    )
+    
     # Log the configured schedule
     logger.info(
         f"Scheduler configured successfully: "
         f"CRON='{cron_expression}', "
         f"Timezone='{scheduler_tz}', "
         f"Job='background_fetch_job'"
+    )
+    logger.info(
+        f"Token blacklist cleanup job registered: "
+        f"Runs every hour in timezone '{scheduler_tz}'"
     )
 
 

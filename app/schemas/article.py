@@ -91,3 +91,22 @@ class Subscription(BaseModel):
     url: HttpUrl
     category: str
     subscribed_at: datetime
+
+class ArticleResponse(BaseModel):
+    """文章回應（用於 API）"""
+    id: UUID = Field(..., description="文章 UUID")
+    title: str = Field(..., description="文章標題")
+    url: HttpUrl = Field(..., description="文章 URL")
+    published_at: Optional[datetime] = Field(None, description="發布時間")
+    tinkering_index: int = Field(..., ge=1, le=5, description="技術複雜度（1-5）")
+    ai_summary: Optional[str] = Field(None, description="AI 摘要")
+    feed_name: str = Field(..., description="來源名稱")
+    category: str = Field(..., description="分類")
+
+class ArticleListResponse(BaseModel):
+    """文章列表回應（含分頁）"""
+    articles: List[ArticleResponse] = Field(..., description="文章列表")
+    page: int = Field(..., ge=1, description="當前頁碼")
+    page_size: int = Field(..., ge=1, le=100, description="每頁文章數")
+    total_count: int = Field(..., ge=0, description="總文章數")
+    has_next_page: bool = Field(..., description="是否有下一頁")
