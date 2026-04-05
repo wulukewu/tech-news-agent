@@ -29,7 +29,7 @@ export function FeedCard({ feed, onToggle }: FeedCardProps) {
     <Card
       className={cn(
         'transition-all cursor-pointer hover:shadow-md',
-        feed.isSubscribed && 'border-primary',
+        feed.is_subscribed && 'border-primary',
       )}
     >
       <CardHeader>
@@ -41,7 +41,7 @@ export function FeedCard({ feed, onToggle }: FeedCardProps) {
             </Badge>
           </div>
           <Switch
-            checked={feed.isSubscribed}
+            checked={feed.is_subscribed}
             onCheckedChange={handleToggle}
             disabled={isToggling}
             aria-label={`Toggle subscription for ${feed.name}`}

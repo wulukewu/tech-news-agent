@@ -8,7 +8,7 @@ describe('FeedCard', () => {
     name: 'Tech Blog',
     url: 'https://example.com/feed',
     category: 'Technology',
-    isSubscribed: false,
+    is_subscribed: false,
   };
 
   it('should display feed information', () => {
@@ -32,7 +32,7 @@ describe('FeedCard', () => {
   });
 
   it('should apply different styles for subscribed feeds', () => {
-    const subscribedFeed = { ...mockFeed, isSubscribed: true };
+    const subscribedFeed = { ...mockFeed, is_subscribed: true };
     const { container } = render(
       <FeedCard feed={subscribedFeed} onToggle={jest.fn()} />,
     );
@@ -42,9 +42,7 @@ describe('FeedCard', () => {
   });
 
   it('should disable toggle while toggling', async () => {
-    const onToggle = jest.fn(
-      () => new Promise((resolve) => setTimeout(resolve, 100)),
-    );
+    const onToggle = jest.fn().mockResolvedValue(undefined);
     render(<FeedCard feed={mockFeed} onToggle={onToggle} />);
 
     const toggle = screen.getByRole('switch');

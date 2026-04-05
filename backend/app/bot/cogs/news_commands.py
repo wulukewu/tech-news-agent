@@ -104,7 +104,7 @@ class NewsCommands(commands.Cog):
             seven_days_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
             
             response = supabase.client.table('articles')\
-                .select('id, title, url, category, tinkering_index, ai_summary, published_at, feed_id')\
+                .select('id, title, url, tinkering_index, ai_summary, published_at, feed_id, feeds(category)')\
                 .in_('feed_id', feed_ids)\
                 .gte('published_at', seven_days_ago)\
                 .not_.is_('tinkering_index', 'null')\
@@ -125,11 +125,14 @@ class NewsCommands(commands.Cog):
                 # Find the feed name from subscriptions
                 feed_name = next((sub.name for sub in subscriptions if str(sub.feed_id) == row['feed_id']), 'Unknown')
                 
+                # Extract category from nested feeds object
+                category = row.get('feeds', {}).get('category', 'Unknown') if isinstance(row.get('feeds'), dict) else 'Unknown'
+                
                 article = ArticleSchema(
                     id=UUID(row['id']),
                     title=row['title'],
                     url=row['url'],
-                    category=row['category'],
+                    category=category,
                     tinkering_index=row['tinkering_index'],
                     ai_summary=row['ai_summary'],
                     published_at=datetime.fromisoformat(row['published_at']) if row['published_at'] else None,
