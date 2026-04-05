@@ -7,6 +7,7 @@ API requests and responses.
 
 from pydantic import BaseModel, Field, HttpUrl, ConfigDict
 from uuid import UUID
+from typing import List
 
 
 class FeedResponse(BaseModel):
@@ -66,6 +67,48 @@ class SubscriptionToggleResponse(BaseModel):
             "example": {
                 "feed_id": "123e4567-e89b-12d3-a456-426614174000",
                 "is_subscribed": True
+            }
+        }
+    )
+
+
+class BatchSubscribeRequest(BaseModel):
+    """
+    Request model for batch subscription operation
+    
+    Used by POST /api/subscriptions/batch endpoint.
+    """
+    feed_ids: List[UUID] = Field(..., description="List of feed UUIDs to subscribe to")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "feed_ids": [
+                    "123e4567-e89b-12d3-a456-426614174000",
+                    "223e4567-e89b-12d3-a456-426614174001",
+                    "323e4567-e89b-12d3-a456-426614174002"
+                ]
+            }
+        }
+    )
+
+
+class BatchSubscribeResponse(BaseModel):
+    """
+    Response model for batch subscription operation
+    
+    Returns counts of successful and failed subscriptions, along with error details.
+    """
+    subscribed_count: int = Field(..., description="Number of successful subscriptions")
+    failed_count: int = Field(..., description="Number of failed subscriptions")
+    errors: List[str] = Field(default_factory=list, description="List of error messages for failed subscriptions")
+
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "subscribed_count": 2,
+                "failed_count": 1,
+                "errors": ["Feed 323e4567-e89b-12d3-a456-426614174002 not found or inactive"]
             }
         }
     )

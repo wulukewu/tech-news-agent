@@ -11,10 +11,13 @@ import logging
 
 from app.api.auth import get_current_user
 from app.services.supabase_service import SupabaseService
+from app.services.subscription_service import SubscriptionService
 from app.schemas.feed import (
     FeedResponse,
     SubscriptionToggleRequest,
-    SubscriptionToggleResponse
+    SubscriptionToggleResponse,
+    BatchSubscribeRequest,
+    BatchSubscribeResponse
 )
 
 logger = logging.getLogger(__name__)
@@ -158,6 +161,59 @@ async def toggle_subscription(
     except Exception as e:
         logger.error(
             f"Failed to toggle subscription for user {current_user['user_id']}, feed {request.feed_id}: {str(e)}",
+            exc_info=True
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Database operation failed"
+        )
+
+
+@router.post("/subscriptions/batch", response_model=BatchSubscribeResponse)
+async def batch_subscribe(
+    request: BatchSubscribeRequest,
+    current_user: Dict[str, Any] = Depends(get_current_user)
+):
+    """
+    Subscribe to multiple feeds at once
+    
+    Subscribes the user to all provided feeds. Handles partial failures gracefully,
+    continuing to process remaining feeds even if some fail. Returns detailed
+    success and failure counts.
+    
+    Args:
+        request: Request containing list of feed_ids to subscribe to
+        current_user: Current authenticated user (injected by dependency)
+        
+    Returns:
+        BatchSubscribeResponse: Counts of successful and failed subscriptions with error details
+        
+    Raises:
+        HTTPException: 422 when request body is invalid (handled by Pydantic)
+        HTTPException: 500 when database connection fails completely
+        
+    Requirements: 2.6, 2.7
+    """
+    try:
+        supabase = SupabaseService()
+        subscription_service = SubscriptionService(supabase.client)
+        
+        # Get user UUID
+        user_uuid = await supabase.get_or_create_user(current_user["discord_id"])
+        
+        # Perform batch subscription
+        result = await subscription_service.batch_subscribe(user_uuid, request.feed_ids)
+        
+        logger.info(
+            f"Batch subscription for user {current_user['user_id']}: "
+            f"{result.subscribed_count} succeeded, {result.failed_count} failed"
+        )
+        
+        return result
+        
+    except Exception as e:
+        logger.error(
+            f"Failed batch subscription for user {current_user['user_id']}: {str(e)}",
             exc_info=True
         )
         raise HTTPException(

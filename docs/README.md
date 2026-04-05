@@ -44,6 +44,7 @@
 - [清理機制指南](./testing/cleanup-mechanism.md) - 測試資料清理
 - [SQL 整合測試](./testing/sql-integration-tests.md) - SQL 初始化測試
 - [測試資料隔離](./testing/test-data-isolation.md) - 測試資料隔離機制
+- [Property 24 測試](./testing/property-24-tests.md) - Onboarding UI 條件顯示測試
 
 ### 🛠️ 開發記錄
 
@@ -52,6 +53,10 @@
 - [測試分析](./development/TEST_ANALYSIS.md) - 測試覆蓋率分析
 - [規格完成總結](./development/SPEC_COMPLETION_SUMMARY.md) - 規格實作記錄
 - [Auth Schema 修復](./development/BUGFIX_AUTH_SCHEMA.md) - 認證架構修復記錄
+- [資料庫遷移指南](./development/MIGRATIONS.md) - 資料庫遷移完整說明
+- [Analytics Service](./development/ANALYTICS_SERVICE.md) - Analytics 服務實作文件
+- [Onboarding Service](./development/ONBOARDING_SERVICE.md) - Onboarding 服務實作文件
+- [EmptyState Component](./development/EMPTY_STATE_COMPONENT.md) - EmptyState 元件文件
 
 ### 🌍 多語言文件
 
@@ -89,14 +94,20 @@ docs/
 │   ├── IMPLEMENTATION_SUMMARY.md
 │   ├── TEST_ANALYSIS.md
 │   ├── SPEC_COMPLETION_SUMMARY.md
-│   └── BUGFIX_AUTH_SCHEMA.md
+│   ├── BUGFIX_AUTH_SCHEMA.md
+│   ├── MIGRATIONS.md
+│   ├── ANALYTICS_SERVICE.md
+│   ├── ONBOARDING_SERVICE.md
+│   ├── EMPTY_STATE_COMPONENT.md
+│   └── USER_PREFERENCES_MIGRATION.md
 │
 └── testing/                           # 測試相關
     ├── supabase-migration-testing.md
     ├── test-fixtures.md
     ├── cleanup-mechanism.md
     ├── sql-integration-tests.md
-    └── test-data-isolation.md
+    ├── test-data-isolation.md
+    └── property-24-tests.md
 ```
 
 ---

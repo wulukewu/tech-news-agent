@@ -245,14 +245,19 @@ HYPOTHESIS_PROFILE=ci pytest tests/test_database_properties.py -v
 - [Test Fixtures 指南](./testing/test-fixtures.md) - Fixture 使用與範例
 - [清理機制指南](./testing/cleanup-mechanism.md) - 測試資料清理
 - [SQL 整合測試指南](./testing/sql-integration-tests.md) - SQL 初始化測試
+- [Property 24 測試](./testing/property-24-tests.md) - Onboarding UI 條件顯示測試
 
-**開發記錄：**
+### 🛠️ 開發記錄
 
 - [CI 優化記錄](./development/CI_OPTIMIZATION.md) - CI/CD 優化歷程
 - [實作總結](./development/IMPLEMENTATION_SUMMARY.md) - 功能實作總結
 - [測試分析](./development/TEST_ANALYSIS.md) - 測試覆蓋率分析
 - [規格完成總結](./development/SPEC_COMPLETION_SUMMARY.md) - 規格實作記錄
 - [Auth Schema 修復](./development/BUGFIX_AUTH_SCHEMA.md) - 認證架構修復記錄
+- [資料庫遷移指南](./development/MIGRATIONS.md) - 資料庫遷移完整說明
+- [Analytics Service](./development/ANALYTICS_SERVICE.md) - Analytics 服務實作文件
+- [Onboarding Service](./development/ONBOARDING_SERVICE.md) - Onboarding 服務實作文件
+- [EmptyState Component](./development/EMPTY_STATE_COMPONENT.md) - EmptyState 元件文件
 
 ### 手動端對端測試
 

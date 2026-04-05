@@ -20,6 +20,12 @@ export interface Feed {
   category: string;
   /** Whether the current user is subscribed to this feed */
   is_subscribed: boolean;
+  /** Whether this feed is recommended for new users */
+  is_recommended?: boolean;
+  /** Priority for recommendation sorting (higher = more recommended) */
+  recommendation_priority?: number;
+  /** Description of the feed */
+  description?: string;
 }
 
 /**
