@@ -59,39 +59,20 @@ The project uses Supabase (PostgreSQL) as the primary database with pgvector sup
 
 ## How to Run
 
-### Method 1: Using Docker Compose (Recommended)
+### Method 1: Using Docker (Recommended for NAS or Servers)
 
-#### 🔧 Development Environment (with Hot Reloading)
+1. Copy and configure environment variables:
 
-```bash
-# Quick start
-make dev
+   ```bash
+   cp .env.example .env
+   ```
 
-# Or using docker-compose directly
-docker-compose up -d
+   Edit `.env` and fill in your tokens and IDs (see Environment Variables below).
 
-# View logs
-make logs-dev
-```
-
-#### 🚀 Production Environment
-
-```bash
-# Quick start
-make prod
-
-# Or using docker-compose directly
-docker-compose -f docker-compose.prod.yml up -d
-
-# View logs
-make logs-prod
-```
-
-**📚 詳細說明:**
-
-- [環境變數設定指南](./docs/setup/ENV_SETUP_GUIDE.md) - 環境變數完整說明
-- [快速開始指南](./docs/QUICKSTART.md) - 快速上手
-- [Docker 完整指南](./docs/docker/DOCKER_GUIDE.md) - 詳細文件
+2. Start services:
+   ```bash
+   docker compose up -d
+   ```
 
 ### Method 2: Local Python Execution
 
@@ -298,30 +279,14 @@ HYPOTHESIS_PROFILE=ci pytest tests/test_database_properties.py -v
 
 ### Documentation
 
-📚 **[完整文件索引](./docs/README.md)** - 所有文件的導航頁面
-
-**快速連結：**
+For detailed testing documentation, see:
 
 - [User Guide](./docs/USER_GUIDE.md) - Complete user guide for Discord commands
 - [Developer Guide](./docs/DEVELOPER_GUIDE.md) - Architecture and development guide
-- [Quick Start](./docs/QUICKSTART.md) - Get started quickly
-- [Environment Setup](./docs/setup/ENV_SETUP_GUIDE.md) - Environment variables guide
-- [Docker Guide](./docs/docker/DOCKER_GUIDE.md) - Docker deployment guide
-- [Deployment Checklist](./docs/deployment/DEPLOYMENT_CHECKLIST.md) - Pre-deployment checklist
-
-**中文文件：**
-
-- [中文版 README](./docs/README_zh.md) - Traditional Chinese documentation
-- [Docker 中文指南](./docs/README_DOCKER.md) - Docker setup in Chinese
-
-**Testing:**
-
 - [Supabase Testing Guide](./docs/testing/supabase-migration-testing.md) - Complete testing guide
 - [Test Fixtures Guide](./docs/testing/test-fixtures.md) - Fixture usage and examples
-
-**Migration Script:**
-
-- [Docker Compose Migration](./docs/migrate-to-docker-compose.sh) - Script to migrate to Docker Compose
+- [Cleanup Mechanism Guide](./docs/testing/cleanup-mechanism.md) - Test data cleanup
+- [SQL Integration Tests Guide](./docs/testing/sql-integration-tests.md) - SQL initialization tests
 
 ### Manual End-to-End Test
 
