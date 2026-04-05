@@ -8,7 +8,6 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 30 # Fail fast if tests hang
 
     env:
       # Dummy values so Pydantic Settings can initialise during tests.
@@ -41,7 +40,13 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-      - name: Run tests
+      - name: Run fast tests (all branches)
         env:
           HYPOTHESIS_PROFILE: ci
-        run: pytest --tb=short -q -n auto
+        run: pytest --tb=short -q -n auto --timeout=300 --ignore-glob="*property*.py" --ignore=tests/integration/
+
+      - name: Run full tests (main/PR only)
+        if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+        env:
+          HYPOTHESIS_PROFILE: ci
+        run: pytest --tb=short -q -n auto --timeout=600
