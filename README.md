@@ -1,60 +1,98 @@
 # Tech News Agent
 
-An automated technical information curation assistant combining FastAPI, Discord Bot, and Groq LLM. It automatically reads RSS sources from Supabase, scrapes and scores technical articles weekly, stores them in a PostgreSQL database, and sends notifications to Discord.
+An automated technical information curation system combining FastAPI backend, Next.js web interface, Discord Bot, and Groq LLM. It automatically fetches RSS feeds, analyzes articles with AI, and delivers personalized tech news through both web dashboard and Discord DMs.
 
-## Core Features
+## 🌟 Core Features
 
-- **Manual Scheduler Trigger**: Trigger article fetching on-demand via Discord, Web UI, or API
-- **Multi-tenant Architecture**: Each Discord user has independent subscriptions and reading lists
-- **Personal Subscriptions**: Subscribe to your own RSS feeds with `/add_feed`
-- **Instant Article Access**: `/news_now` reads from database (no RSS fetching delay)
-- **Automated Scraping**: Background scheduler fetches RSS feeds and analyzes articles every Friday at 17:00
-- **AI-Powered Scoring**: Evaluates technical value and "tinkering index" using Groq (Llama 3.1 8B)
-- **PostgreSQL Storage**: All data stored in Supabase (PostgreSQL) with pgvector support for semantic search
-- **Reading List Management**: View, rate (1-5 stars), and manage your reading list directly from Discord with pagination support
-- **Smart Recommendations**: Get AI-generated reading recommendations based on your highly-rated articles (4+ stars)
-- **Interactive Discord UI**: Filter articles by category, get deep-dive analysis, and manage reading status
-- **Persistent Interactive UI**: All buttons and menus work even after bot restarts, ensuring seamless user experience
+### 📱 Multi-Platform Access
+
+- **Web Dashboard**: Modern Next.js interface with dark mode support
+- **Discord Bot**: Interactive commands and DM notifications
+- **REST API**: Full-featured API for programmatic access
+
+### 🤖 AI-Powered Intelligence
+
+- **Smart Scoring**: Evaluates technical depth using Groq (Llama 3.1 8B)
+- **AI Summaries**: Generates concise summaries with Llama 3.3 70B
+- **Personalized Recommendations**: Learns from your ratings to suggest relevant content
+- **Deep Dive Analysis**: On-demand detailed technical breakdowns
+
+### 👥 Multi-Tenant Architecture
+
+- **Personal Subscriptions**: Each user manages their own RSS feeds
+- **Private Reading Lists**: Rate and organize articles independently
+- **Custom Notifications**: Control when and how you receive updates
+- **Data Isolation**: Complete privacy between users
+
+### ⚡ Flexible Scheduling
+
+- **Automated Fetching**: Configurable background scheduler (default: every 6 hours)
+- **Manual Triggers**: Instant article refresh via web, Discord, or API
+- **Smart Notifications**: DM delivery 10 minutes after article processing
+
+### 🗄️ Robust Data Layer
+
+- **Supabase/PostgreSQL**: Reliable data storage with pgvector support
+- **Semantic Search Ready**: Vector embeddings for future AI-powered search
+- **Efficient Indexing**: Optimized queries with proper database indexes
 
 ---
 
-## Prerequisites
+## 🚀 Quick Start
 
-### 1. Supabase Database Setup
+### Prerequisites
 
-The project uses Supabase (PostgreSQL) as the primary database with pgvector support for semantic search.
+1. **Supabase Account** - [Sign up at supabase.com](https://supabase.com)
+2. **Discord Bot** (optional) - [Create at Discord Developer Portal](https://discord.com/developers/applications)
+3. **Groq API Key** - [Get from Groq Cloud](https://console.groq.com)
 
-**Setup Steps:**
+### Installation
 
-1. Create a Supabase project at [supabase.com](https://supabase.com)
-2. Run the initialization script in the SQL Editor:
-   ```bash
-   # The script is located at scripts/init_supabase.sql
-   ```
-3. Run the seed script to populate default RSS feeds:
-   ```bash
-   python scripts/seed_feeds.py
-   ```
-4. Get your Supabase URL and API key from Project Settings > API
+#### Option 1: Docker Compose (Recommended)
 
-**Database Schema:**
+```bash
+# 1. Clone the repository
+git clone https://github.com/yourusername/tech-news-agent.git
+cd tech-news-agent
 
-- `users` - Discord users with multi-tenant support
-- `feeds` - RSS feed sources with categories
-- `user_subscriptions` - User feed subscriptions
-- `articles` - Scraped articles with AI summaries and embeddings
-- `reading_list` - User reading lists with ratings and status
+# 2. Set up environment variables
+cp .env.example .env
+# Edit .env with your credentials
 
-### 2. Discord Bot Setup
+# 3. Initialize database
+# Run backend/scripts/init_supabase.sql in Supabase SQL Editor
 
-- Create a Bot at the Discord Developer Portal
-- Enable Message Content Intent
-- Obtain the Token and invite the Bot to your server
-- Obtain the target Channel ID
+# 4. Start services
+docker compose up -d
 
-### 3. API Key
+# 5. Access the application
+# Web: http://localhost:3000
+# API: http://localhost:8000
+# API Docs: http://localhost:8000/docs
+```
 
-- Obtain an API Key from Groq Cloud
+#### Option 2: Local Development
+
+```bash
+# Backend
+cd backend
+pip install -r requirements.txt
+python -m app.main
+
+# Frontend (in another terminal)
+cd frontend
+npm install
+npm run dev
+```
+
+### First Steps
+
+1. **Web Interface**: Visit http://localhost:3000 and sign in with Discord OAuth
+2. **Subscribe to Feeds**: Add your favorite RSS feeds from the dashboard
+3. **Trigger Fetch**: Click "Fetch New Articles" to get your first batch
+4. **Explore**: Browse articles, save to reading list, and rate content
+
+For detailed setup instructions, see [Quick Start Guide](./docs/QUICKSTART.md).
 
 ---
 
@@ -111,152 +149,220 @@ make logs-prod
 
 ---
 
-## Environment Variables
+## ⚙️ Environment Variables
 
-| Variable             | Required | Description                                   |
-| -------------------- | -------- | --------------------------------------------- |
-| `SUPABASE_URL`       | ✅       | Supabase project URL                          |
-| `SUPABASE_KEY`       | ✅       | Supabase API key (anon/service_role)          |
-| `DISCORD_TOKEN`      | ✅       | Discord bot token                             |
-| `DISCORD_CHANNEL_ID` | ✅       | Discord channel ID for weekly notifications   |
-| `GROQ_API_KEY`       | ✅       | Groq Cloud API key                            |
-| `TIMEZONE`           | ⚪       | Timezone for scheduler (default: Asia/Taipei) |
+### Required Variables
+
+```bash
+# Supabase Configuration
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your-service-role-key
+
+# Groq AI Configuration
+GROQ_API_KEY=your-groq-api-key
+
+# JWT Authentication (generate with: openssl rand -hex 32)
+JWT_SECRET_KEY=your-secret-key-here
+JWT_ALGORITHM=HS256
+JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+# Discord OAuth (for web login)
+DISCORD_CLIENT_ID=your-client-id
+DISCORD_CLIENT_SECRET=your-client-secret
+DISCORD_REDIRECT_URI=http://localhost:3000/auth/callback
+
+# Frontend Configuration
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+### Optional Variables
+
+```bash
+# Discord Bot (optional - for Discord integration)
+DISCORD_TOKEN=your-bot-token
+DISCORD_CHANNEL_ID=your-channel-id  # For channel notifications
+
+# Scheduler Configuration
+SCHEDULER_CRON=0 */6 * * *          # Every 6 hours
+DM_NOTIFICATION_CRON=10 */6 * * *   # 10 minutes after fetch
+SCHEDULER_TIMEZONE=Asia/Taipei
+
+# Application Settings
+TIMEZONE=Asia/Taipei
+RSS_FETCH_DAYS=7                    # Fetch articles from last N days
+BATCH_SIZE=50                       # Articles per batch
+BATCH_SPLIT_THRESHOLD=100           # When to split batches
+
+# Development
+LOG_LEVEL=INFO                      # DEBUG, INFO, WARNING, ERROR
+```
+
+For detailed configuration guide, see [Environment Setup Guide](./docs/setup/ENV_SETUP_GUIDE.md).
 
 ---
 
-## Discord Commands
+## 💬 Discord Bot Commands
 
-### `/trigger_fetch`
+### Scheduler Management
 
-Manually trigger the article fetching scheduler immediately.
+#### `/trigger_fetch`
 
-**What it does:**
-
-- Triggers the background fetch job to run immediately
-- Fetches new articles from all active RSS feeds
-- Analyzes articles with AI
-- Updates the database with new content
-
-**Example:**
+Manually trigger article fetching immediately.
 
 ```
 /trigger_fetch
 ```
 
-**Note:** The job runs in the background and may take several minutes to complete. Use `/scheduler_status` to check progress.
+#### `/scheduler_status`
 
-### `/scheduler_status`
-
-Check the current status of the article fetching scheduler.
-
-**What it shows:**
-
-- Last execution time
-- Number of articles processed
-- Success rate
-- Health status
-- Any issues detected
-
-**Example:**
+Check scheduler execution status and health.
 
 ```
 /scheduler_status
 ```
 
-### `/add_feed`
+### Feed Management
 
-Subscribe to an RSS feed for personalized news.
+#### `/add_feed`
 
-**Parameters:**
-
-- `name`: Feed name (e.g., "Hacker News")
-- `url`: RSS/Atom feed URL (must be http:// or https://)
-- `category`: Feed category (e.g., "Tech News", "AI")
-
-**Example:**
+Subscribe to an RSS/Atom feed.
 
 ```
 /add_feed name:Hacker News url:https://news.ycombinator.com/rss category:Tech News
 ```
 
-**Features:**
+#### `/list_feeds`
 
-- Automatic user registration on first use
-- Duplicate subscription handling (won't create duplicates)
-- URL format validation
+View all your subscribed feeds.
 
-### `/list_feeds`
+```
+/list_feeds
+```
 
-View all your subscribed RSS feeds.
+#### `/unsubscribe_feed`
 
-**Features:**
-
-- Shows feed name, URL, and category
-- Ordered by subscription date (newest first)
-- Ephemeral response (only you can see it)
-
-### `/unsubscribe_feed`
-
-Unsubscribe from an RSS feed.
-
-**Parameters:**
-
-- `feed_name`: Name of the feed to unsubscribe from
-
-**Example:**
+Unsubscribe from a feed.
 
 ```
 /unsubscribe_feed feed_name:Hacker News
 ```
 
-### `/news_now`
+### Article Discovery
 
-View the latest technical articles from your subscribed feeds.
+#### `/news_now`
 
-**What it does:**
+View latest articles from your subscribed feeds with interactive filters and deep-dive analysis.
 
-1. Queries articles from feeds you've subscribed to
-2. Filters articles from the past 7 days
-3. Shows only AI-analyzed articles (with tinkering_index)
-4. Orders by technical depth (tinkering_index descending)
-5. Limits to top 20 articles
-
-**Interactive Elements:**
-
-- **📋 Filter Menu**: Select a category to filter articles instantly
-- **📖 Deep Dive Buttons**: Get detailed AI-generated technical analysis (up to 5 articles)
-- **⭐ Read Later Buttons**: Save articles to your reading list (up to 10 articles)
-
-**Note:** Articles are fetched by the background scheduler, not in real-time. If you have no subscriptions, you'll be prompted to subscribe first.
-
-### `/reading_list view`
-
-View and manage your reading list directly in Discord.
+```
+/news_now
+```
 
 **Features:**
 
-- **Pagination**: Browse articles 5 at a time with Previous/Next buttons
-- **Mark as Read**: Click ✅ button to mark any article as read
-- **Rate Articles**: Use dropdown menus to rate articles 1-5 stars (⭐)
-- **Ephemeral**: Only you can see your reading list (private responses)
+- 📋 Category filter dropdown
+- 📖 Deep dive analysis buttons (up to 5 articles)
+- ⭐ Read later buttons (up to 10 articles)
 
-**Display Format:**
-Each article shows:
+### Reading List
 
-- Title and URL
-- Category
-- Current rating (or "未評分" if unrated)
+#### `/reading_list view`
 
-### `/reading_list recommend`
+Browse your reading list with pagination.
 
-Get AI-generated reading recommendations based on your highly-rated articles (4+ stars).
+```
+/reading_list view
+```
 
-**How it works:**
+**Features:**
 
-1. Fetches all articles you've rated 4 or 5 stars
-2. Analyzes titles and categories
-3. Generates a personalized recommendation summary in Traditional Chinese
-4. Suggests what to read next based on your interests
+- 5 articles per page
+- ✅ Mark as read buttons
+- ⭐ Rating dropdowns (1-5 stars)
+- Previous/Next navigation
+
+#### `/reading_list recommend`
+
+Get AI-generated recommendations based on your highly-rated articles (4+ stars).
+
+```
+/reading_list recommend
+```
+
+### Notification Settings
+
+#### `/notifications`
+
+Toggle DM notifications on/off.
+
+```
+/notifications enabled:開啟通知
+/notifications enabled:關閉通知
+```
+
+#### `/notification_status`
+
+Check your current notification settings.
+
+```
+/notification_status
+```
+
+For complete command documentation, see [User Guide](./docs/USER_GUIDE.md).
+
+## 🌐 Web API Endpoints
+
+### Authentication
+
+```http
+POST /api/auth/discord/login
+POST /api/auth/discord/callback
+GET  /api/auth/me
+```
+
+### Articles
+
+```http
+GET  /api/articles              # List articles
+GET  /api/articles/{id}         # Get article details
+POST /api/articles/{id}/analyze # Deep dive analysis
+```
+
+### Feeds
+
+```http
+GET    /api/feeds               # List all feeds
+POST   /api/feeds               # Create feed
+GET    /api/feeds/subscriptions # User's subscriptions
+POST   /api/feeds/subscribe     # Subscribe to feed
+DELETE /api/feeds/unsubscribe   # Unsubscribe from feed
+```
+
+### Reading List
+
+```http
+GET    /api/reading-list        # Get reading list
+POST   /api/reading-list        # Add to reading list
+PATCH  /api/reading-list/{id}   # Update status/rating
+DELETE /api/reading-list/{id}   # Remove from list
+GET    /api/reading-list/recommend # Get recommendations
+```
+
+### Scheduler
+
+```http
+POST /api/scheduler/trigger     # Trigger manual fetch
+GET  /api/scheduler/status      # Get scheduler status
+```
+
+### Health Checks
+
+```http
+GET /                           # Basic health check
+GET /health                     # Detailed health status
+GET /health/scheduler           # Scheduler health
+```
+
+For complete API documentation, visit `/docs` (Swagger UI) or `/redoc` (ReDoc) when running the backend.
 
 ---
 
@@ -292,80 +398,84 @@ All interactive elements persist across bot restarts, meaning buttons and menus 
 
 ---
 
-## Testing
+## 🧪 Testing
 
-### Supabase Database Tests
-
-The Supabase database infrastructure has comprehensive test coverage with property-based testing.
-
-**Run all Supabase tests:**
+### Backend Tests
 
 ```bash
-pytest tests/test_database_properties.py tests/test_config.py tests/test_seed_feeds.py tests/test_sql_init_integration.py -v
+cd backend
+
+# Run all tests
+pytest -v
+
+# Run specific test suites
+pytest tests/test_database_properties.py -v  # Property-based tests (17 properties)
+pytest tests/test_config.py -v              # Configuration tests
+pytest tests/test_sql_init_integration.py -v # SQL initialization tests
+
+# Run with coverage
+pytest --cov=app --cov-report=html
+
+# Adjust Hypothesis test intensity
+HYPOTHESIS_PROFILE=dev pytest tests/test_database_properties.py -v  # Fast (10 examples)
+HYPOTHESIS_PROFILE=ci pytest tests/test_database_properties.py -v   # CI (100 examples)
 ```
 
-**Test categories:**
-
-- **Configuration tests** (`test_config.py`): Verify Supabase config fields
-- **SQL initialization tests** (`test_sql_init_integration.py`): Verify database schema creation
-- **Seed script tests** (`test_seed_feeds.py`): Verify RSS feed seeding
-- **Property-based tests** (`test_database_properties.py`): 17 correctness properties using Hypothesis
-
-**Property-based tests validate:**
-
-- CASCADE DELETE behavior (users, feeds, articles)
-- UNIQUE constraints (discord_id, URLs, subscriptions)
-- NOT NULL constraints (required fields)
-- CHECK constraints (status values, rating ranges)
-- Timestamp auto-population
-- Database triggers (updated_at)
-- Seed script behavior
-
-**Adjust test speed:**
+### Frontend Tests
 
 ```bash
-# Fast (10 examples per property)
-HYPOTHESIS_PROFILE=dev pytest tests/test_database_properties.py -v
+cd frontend
 
-# Default (20 examples per property)
-pytest tests/test_database_properties.py -v
+# Unit tests
+npm test                    # Run once
+npm run test:watch          # Watch mode
+npm run test:coverage       # With coverage
 
-# CI/Production (100 examples per property)
-HYPOTHESIS_PROFILE=ci pytest tests/test_database_properties.py -v
+# E2E tests
+npm run test:e2e           # Headless
+npm run test:e2e:ui        # Interactive UI
 ```
 
-### Documentation
+### Test Coverage
 
-📚 **[完整文件索引](./docs/README.md)** - 所有文件的導航頁面
+- **Backend**: 17 property-based tests + unit tests + integration tests
+- **Frontend**: Jest unit tests + Playwright E2E tests
+- **Database**: Comprehensive schema validation with Hypothesis
 
-**快速連結：**
+For detailed testing documentation, see [Testing Guide](./docs/testing/supabase-migration-testing.md).
 
-- [User Guide](./docs/USER_GUIDE.md) - Complete user guide for Discord commands
-- [Developer Guide](./docs/DEVELOPER_GUIDE.md) - Architecture and development guide
-- [Quick Start](./docs/QUICKSTART.md) - Get started quickly
-- [Environment Setup](./docs/setup/ENV_SETUP_GUIDE.md) - Environment variables guide
-- [Docker Guide](./docs/docker/DOCKER_GUIDE.md) - Docker deployment guide
-- [Deployment Checklist](./docs/deployment/DEPLOYMENT_CHECKLIST.md) - Pre-deployment checklist
+## 📚 Documentation
 
-**中文文件：**
+### Getting Started
 
-- [中文版 README](./docs/README_zh.md) - Traditional Chinese documentation
-- [Docker 中文指南](./docs/README_DOCKER.md) - Docker setup in Chinese
+- **[Quick Start Guide](./docs/QUICKSTART.md)** - Get up and running in minutes
+- **[Environment Setup](./docs/setup/ENV_SETUP_GUIDE.md)** - Complete environment variable reference
+- **[Docker Guide](./docs/docker/DOCKER_GUIDE.md)** - Docker deployment instructions
 
-**Testing:**
+### User Guides
 
-- [Supabase Testing Guide](./docs/testing/supabase-migration-testing.md) - Complete testing guide
-- [Test Fixtures Guide](./docs/testing/test-fixtures.md) - Fixture usage and examples
+- **[Web Dashboard Guide](./docs/USER_GUIDE.md)** - Using the web interface
+- **[Discord Bot Commands](./docs/USER_GUIDE.md#discord-commands)** - Complete command reference
+- **[Manual Scheduler Trigger](./docs/MANUAL_SCHEDULER_TRIGGER.md)** - On-demand article fetching
 
-**Development Records:**
+### Developer Resources
 
-- [CI Optimization](./docs/development/CI_OPTIMIZATION.md) - CI/CD optimization history
-- [Implementation Summary](./docs/development/IMPLEMENTATION_SUMMARY.md) - Feature implementation summary
-- [Test Analysis](./docs/development/TEST_ANALYSIS.md) - Test coverage analysis
+- **[Developer Guide](./docs/DEVELOPER_GUIDE.md)** - Architecture and API reference
+- **[Project Overview](./docs/PROJECT_OVERVIEW.md)** - Comprehensive system documentation
+- **[Testing Guide](./docs/testing/supabase-migration-testing.md)** - Testing strategies and tools
 
-**Migration Script:**
+### Deployment
 
-- [Docker Compose Migration](./docs/migrate-to-docker-compose.sh) - Script to migrate to Docker Compose
+- **[Deployment Guide](./docs/deployment/DEPLOYMENT.md)** - Production deployment steps
+- **[Deployment Checklist](./docs/deployment/DEPLOYMENT_CHECKLIST.md)** - Pre-deployment verification
+- **[Public Bot Setup](./docs/PUBLIC_BOT_SETUP.md)** - Making your bot public
+
+### 中文文件
+
+- **[中文版 README](./docs/README_zh.md)** - 繁體中文說明
+- **[Docker 中文指南](./docs/README_DOCKER.md)** - Docker 設定說明
+
+📖 **[Complete Documentation Index](./docs/README.md)** - Browse all documentation
 
 ### Manual End-to-End Test
 
@@ -386,182 +496,229 @@ HYPOTHESIS_PROFILE=ci pytest tests/test_database_properties.py -v
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
-```text
+```
 tech-news-agent/
+├── backend/                    # FastAPI backend + Discord bot
+│   ├── app/
+│   │   ├── api/               # REST API endpoints
+│   │   │   ├── auth.py        # Authentication routes
+│   │   │   ├── articles.py    # Article management
+│   │   │   ├── feeds.py       # Feed subscriptions
+│   │   │   ├── reading_list.py # Reading list operations
+│   │   │   └── scheduler.py   # Manual scheduler triggers
+│   │   ├── bot/               # Discord bot
+│   │   │   ├── cogs/          # Command groups
+│   │   │   │   ├── admin_commands.py      # Admin utilities
+│   │   │   ├── interactions.py    # Interactive UI components
+│   │   │   │   ├── news_commands.py       # /news_now command
+│   │   │   │   ├── reading_list.py        # Reading list commands
+│   │   │   │   └── subscription_commands.py # Feed management
+│   │   │   └── client.py      # Bot client setup
+│   │   ├── core/              # Core configuration
+│   │   │   ├── config.py      # Environment settings
+│   │   │   └── exceptions.py  # Custom exceptions
+│   │   ├── schemas/           # Pydantic models
+│   │   │   └── article.py     # Data schemas
+│   │   ├── services/          # Business logic
+│   │   │   ├── llm_service.py      # Groq LLM integration
+│   │   │   ├── supabase_service.py # Database operations
+│   │   │   └── rss_service.py      # RSS fetching
+│   │   ├── tasks/             # Background jobs
+│   │   │   └── scheduler.py   # APScheduler tasks
+│   │   └── main.py            # Application entry point
+│   ├── scripts/               # Database scripts
+│   │   ├── init_supabase.sql  # Schema initialization
+│   │   └── seed_feeds.py      # Default feeds
+│   ├── tests/                 # Backend tests
+│   │   ├── test_database_properties.py  # Property tests
+│   │   ├── test_config.py               # Config tests
+│   │   └── ...
+│   ├── Dockerfile             # Production image
+│   ├── Dockerfile.dev         # Development image
+│   └── requirements.txt       # Python dependencies
+│
+├── frontend/                  # Next.js web interface
+│   ├── app/                   # App router pages
+│   │   ├── (auth)/           # Auth pages
+│   │   │   ├── login/        # Login page
+│   │   │   └── auth/callback/ # OAuth callback
+│   │   ├── dashboard/        # Main dashboard
+│   │   ├── reading-list/     # Reading list page
+│   │   └── layout.tsx        # Root layout
+│   ├── components/           # React components
+│   │   ├── ui/              # shadcn/ui components
+│   │   ├── ArticleCard.tsx  # Article display
+│   │   ├── FeedManager.tsx  # Feed management
+│   │   └── ...
+│   ├── lib/                 # Utilities
+│   │   ├── api/            # API client
+│   │   │   ├── articles.ts
+│   │   │   ├── feeds.ts
+│   │   │   └── scheduler.ts
+│   │   └── utils.ts        # Helper functions
+│   ├── hooks/              # Custom React hooks
+│   ├── contexts/           # React contexts
+│   ├── __tests__/          # Unit tests
+│   ├── e2e/                # E2E tests
+│   ├── Dockerfile          # Production image
+│   ├── Dockerfile.dev      # Development image
+│   └── package.json        # Node dependencies
+│
+├── docs/                   # Documentation
+│   ├── setup/             # Setup guides
+│   ├── docker/            # Docker documentation
+│   ├── deployment/        # Deployment guides
+│   ├── testing/           # Testing documentation
+│   └── development/       # Development notes
+│
 ├── .github/
 │   └── workflows/
-│       └── ci.yml           # GitHub Actions CI configuration
-├── .hypothesis/             # Hypothesis property-based testing cache
-├── .kiro/
-│   └── specs/               # Feature specifications and design documents
-├── app/
-│   ├── bot/
-│   │   ├── cogs/
-│   │   │   ├── interactions.py     # Interactive UI components (buttons, menus, views)
-│   │   │   ├── news_commands.py    # /news_now command
-│   │   │   └── reading_list.py     # /reading_list command group
-│   │   └── client.py        # Discord bot client with persistent view registration
-│   ├── core/
-│   │   ├── config.py        # Environment variable settings (Pydantic BaseSettings)
-│   │   └── exceptions.py    # Custom exception classes
-│   ├── schemas/
-│   │   └── article.py       # Pydantic models (ArticleSchema, ReadingListItem, etc.)
-│   ├── services/
-│   │   ├── llm_service.py   # Groq LLM integration (scoring, summaries, recommendations)
-│   │   ├── supabase_service.py # Supabase database service
-│   │   └── rss_service.py   # RSS feed fetching and parsing
-│   ├── tasks/
-│   │   └── scheduler.py     # APScheduler weekly automation
-│   └── main.py              # FastAPI entry point and lifecycle management
-├── docs/                    # Documentation
-│   └── testing/             # Testing documentation
-│       ├── supabase-migration-testing.md  # Supabase testing guide
-│       ├── test-fixtures.md               # Test fixtures guide
-│       ├── cleanup-mechanism.md           # Cleanup mechanism guide
-│       └── sql-integration-tests.md       # SQL integration tests guide
-├── logs/                    # Application logs directory
-├── scripts/                 # Database and utility scripts
-│   ├── init_supabase.sql    # Supabase database initialization script
-│   └── seed_feeds.py        # RSS feed seeding script
-├── tests/                   # Unit, property-based, and integration tests
-│   ├── conftest.py          # Pytest fixtures and configuration
-│   ├── test_config.py       # Supabase configuration tests
-│   ├── test_database_properties.py  # Property-based tests (17 properties)
-│   ├── test_seed_feeds.py   # Seed script tests
-│   ├── test_sql_init_integration.py # SQL initialization tests
-│   └── ...                  # Other tests
-├── .env.example             # Example environment variables
-├── .gitignore
-├── docker-compose.yml       # Docker Compose configuration
-├── Dockerfile               # Docker image definition
-├── pytest.ini               # Pytest configuration
-├── README.md                # English documentation
-├── README_zh.md             # Chinese documentation
-├── requirements.txt         # Production dependencies
-└── requirements-dev.txt     # Development dependencies
+│       └── ci.yml         # GitHub Actions CI
+│
+├── docker-compose.yml     # Development compose
+├── docker-compose.prod.yml # Production compose
+├── .env.example           # Environment template
+├── Makefile              # Development shortcuts
+└── README.md             # This file
 ```
 
 ---
 
-## Feature Highlights
+## 🎯 Key Features
 
-### 🎯 Manual Scheduler Control
+### Web Dashboard
 
-- Trigger article fetching on-demand via Discord commands
-- Check scheduler status and health
-- Web UI button for instant article refresh
-- REST API endpoints for programmatic access
+- **Modern UI**: Built with Next.js 14, React 18, and Tailwind CSS
+- **Dark Mode**: Seamless theme switching with next-themes
+- **Real-time Updates**: React Query for efficient data fetching
+- **Responsive Design**: Works perfectly on desktop and mobile
+- **Discord OAuth**: Secure authentication integration
 
-### 🎯 Multi-tenant Architecture
+### Discord Bot
 
-- Each user has independent subscriptions and reading lists
-- Automatic user registration on first command
-- Complete data isolation between users
-- Shared article pool for efficiency
+- **Slash Commands**: Intuitive command interface
+- **DM Notifications**: Personal article digests delivered to your inbox
+- **Interactive UI**: Buttons, menus, and pagination
+- **Persistent Components**: Works even after bot restarts
+- **Multi-server Support**: Can be invited to any Discord server
 
-### 📰 Personal Subscription Management
+### Backend API
 
-- Subscribe to any RSS/Atom feed
-- View and manage your subscriptions
-- Unsubscribe anytime
-- URL validation and duplicate handling
+- **FastAPI**: High-performance async Python framework
+- **RESTful Design**: Clean, documented API endpoints
+- **JWT Authentication**: Secure token-based auth
+- **Background Tasks**: APScheduler for automated jobs
+- **Health Checks**: Monitor system status
 
-### 🚀 Instant Article Access
+### AI Integration
 
-- `/news_now` reads from database (< 3 seconds response)
-- No waiting for RSS fetching
-- Articles pre-analyzed by background scheduler
-- Filtered by your subscriptions
+- **Groq LLM**: Fast, cost-effective AI processing
+- **Dual Models**:
+  - Llama 3.1 8B for quick scoring
+  - Llama 3.3 70B for detailed analysis
+- **Smart Caching**: Articles analyzed once, served many times
+- **Rate Limiting**: Automatic API quota management
 
-### 🎯 Smart Article Curation
+## 🏗️ Architecture
 
-- AI evaluates each article's technical depth and "tinkering index"
-- Only the most valuable content makes it to your digest
-- Automatic categorization by topic
-- Personalized based on your subscriptions
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Next.js Web   │────▶│  FastAPI Backend│────▶│    Supabase     │
+│   Dashboard     │     │   + Discord Bot │     │   PostgreSQL    │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+        │                       │                         │
+        │                       │                         │
+        ▼                       ▼                         ▼
+  Discord OAuth          Groq LLM API            pgvector Search
+  React Query            APScheduler             Multi-tenant Data
+```
 
-### 📚 Comprehensive Reading Management
+### Tech Stack
 
-- Rate articles to build your preference profile
-- Get personalized recommendations based on your ratings
-- Track reading status in Supabase
-- Pagination support for large reading lists
+**Frontend**
 
-### 🗄️ PostgreSQL + pgvector
+- Next.js 14 (App Router)
+- React 18
+- TypeScript
+- Tailwind CSS + shadcn/ui
+- React Query (TanStack Query)
+- Playwright (E2E testing)
 
-- All data stored in Supabase (PostgreSQL)
-- pgvector support for future semantic search features
-- Efficient indexing with HNSW algorithm
-- Multi-tenant data isolation
+**Backend**
 
-### ⚡ Interactive Discord Experience
+- Python 3.11+
+- FastAPI 0.111.0+
+- discord.py 2.4.0+
+- APScheduler 3.10.4+
+- pytest + Hypothesis (testing)
 
-- Filter articles by category instantly
-- Get deep-dive analysis on demand
-- Manage your reading list without leaving Discord
-- All interactions work even after bot restarts
+**Infrastructure**
 
-### 🤖 Powered by AI
+- Supabase (PostgreSQL + pgvector)
+- Docker + Docker Compose
+- Groq Cloud (Llama models)
 
-- **Groq Llama 3.1 8B**: Fast article evaluation and scoring
-- **Groq Llama 3.3 70B**: High-quality summaries and recommendations
-- Traditional Chinese output for all AI-generated content
+## 📊 Database Schema
 
----
-
-## Tips & Best Practices
-
-1. **Subscribe to quality feeds**: Choose RSS sources with high technical depth
-2. **Use consistent categories**: Use the same category names across feeds for better filtering
-3. **Rate articles regularly**: Build up your rating history for better recommendations
-4. **Use Deep Dive sparingly**: Each deep dive costs API tokens, use it for articles you're genuinely interested in
-5. **Customize the schedule**: Edit `scheduler.py` to change the weekly scraping time (default: Friday 17:00)
-6. **Manage subscriptions**: Regularly review your subscriptions with `/list_feeds`
-7. **Keep reading list clean**: Mark articles as read or archived to maintain organization
-
----
-
-## Troubleshooting
-
-**Bot doesn't respond to commands:**
-
-- Check that the bot has proper permissions in your Discord server
-- Verify `DISCORD_TOKEN` is correct
-- Check bot logs for errors
-- Ensure commands are synced (happens automatically on startup)
-
-**No articles shown in /news_now:**
-
-- Check that you've subscribed to feeds with `/add_feed`
-- Wait for the background scheduler to run (Friday 17:00)
-- Verify feeds are active in the database
-- Check that articles have been analyzed (tinkering_index IS NOT NULL)
-
-**Buttons don't work after bot restart:**
-
-- This is expected for old messages created before persistent views were implemented
-- New messages created after the bot restart will have working buttons
-
-**Database connection errors:**
-
-- Verify `SUPABASE_URL` and `SUPABASE_KEY` are set correctly
-- Check that your Supabase project is active
-- Ensure database schema is initialized (run `scripts/init_supabase.sql`)
-
-**Reading list shows no articles:**
-
-- Check that articles in reading_list table have status = 'Unread'
-- Verify you've added articles to your reading list
-
-**Recommendations not working:**
-
-- You need at least one article rated 4 or 5 stars
-- Check `GROQ_API_KEY` is valid and has quota remaining
+```sql
+users                    feeds                   articles
+├── id (UUID)           ├── id (UUID)           ├── id (UUID)
+├── discord_id          ├── name                ├── feed_id (FK)
+├── dm_notifications    ├── url                 ├── title
+└── created_at          ├── category            ├── url
+                        ├── is_active           ├── published_at
+user_subscriptions      └── created_at          ├── tinkering_index
+├── id (UUID)                                   ├── ai_summary
+├── user_id (FK)        reading_list            ├── embedding (vector)
+├── feed_id (FK)        ├── id (UUID)           └── created_at
+└── subscribed_at       ├── user_id (FK)
+                        ├── article_id (FK)
+                        ├── status
+                        ├── rating
+                        └── updated_at
+```
 
 ---
 
-## License
+## 🤝 Contributing
 
-MIT
+We welcome contributions! Here's how you can help:
+
+1. **Fork the repository**
+2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
+3. **Make your changes** and add tests
+4. **Run tests**: `pytest` (backend) and `npm test` (frontend)
+5. **Commit**: `git commit -m 'Add amazing feature'`
+6. **Push**: `git push origin feature/amazing-feature`
+7. **Open a Pull Request**
+
+### Development Guidelines
+
+- Follow existing code style (Black for Python, ESLint for TypeScript)
+- Write tests for new features
+- Update documentation as needed
+- Keep commits atomic and well-described
+
+## 📝 License
+
+MIT License - see [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Supabase](https://supabase.com) - Database and authentication
+- [Groq](https://groq.com) - Fast LLM inference
+- [Discord](https://discord.com) - Bot platform and OAuth
+- [Vercel](https://vercel.com) - Next.js framework
+- [shadcn/ui](https://ui.shadcn.com) - UI components
+
+## 📞 Support
+
+- 📖 [Documentation](./docs/README.md)
+- 🐛 [Issue Tracker](https://github.com/yourusername/tech-news-agent/issues)
+- 💬 [Discussions](https://github.com/yourusername/tech-news-agent/discussions)
+
+---
+
+**Built with ❤️ for the tech community**
