@@ -35,6 +35,9 @@ def supabase_url() -> str:
     url = os.getenv("SUPABASE_URL")
     if not url:
         pytest.skip("SUPABASE_URL not set - skipping integration tests")
+    # Skip if using dummy URL (CI environment without real database)
+    if "dummy" in url.lower():
+        pytest.skip("Using dummy SUPABASE_URL - skipping integration tests")
     return url
 
 
@@ -44,6 +47,9 @@ def supabase_key() -> str:
     key = os.getenv("SUPABASE_KEY")
     if not key:
         pytest.skip("SUPABASE_KEY not set - skipping integration tests")
+    # Skip if using dummy key (CI environment without real database)
+    if "dummy" in key.lower():
+        pytest.skip("Using dummy SUPABASE_KEY - skipping integration tests")
     return key
 
 
