@@ -19,7 +19,9 @@ from app.schemas.reading_list import (
     AddToReadingListRequest,
     ReadingListResponse,
     ReadingListItemResponse,
-    MessageResponse
+    MessageResponse,
+    UpdateStatusRequest,
+    UpdateRatingRequest
 )
 
 logger = logging.getLogger(__name__)
@@ -406,6 +408,220 @@ async def remove_from_reading_list(
         # 未預期的錯誤
         logger.error(
             f"Unexpected error removing from reading list: {e}",
+            exc_info=True,
+            extra={
+                "discord_id": current_user.get("discord_id"),
+                "article_id": str(article_id)
+            }
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred"
+        )
+
+
+@router.patch("/reading-list/{article_id}/status", response_model=MessageResponse)
+async def update_reading_list_status(
+    article_id: UUID,
+    request: UpdateStatusRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    更新閱讀清單項目狀態
+    
+    Args:
+        article_id: 文章 UUID
+        request: 包含新狀態的請求
+        current_user: 當前使用者資訊（從 JWT token 提取）
+    
+    Returns:
+        MessageResponse: 成功訊息和更新後的狀態
+    
+    Raises:
+        HTTPException: 400 當狀態值無效時
+        HTTPException: 404 當閱讀清單項目不存在時
+        HTTPException: 500 當資料庫操作失敗時
+    
+    Validates: Requirements 5.1, 5.2, 13.2
+    """
+    try:
+        supabase = SupabaseService()
+        discord_id = current_user["discord_id"]
+        
+        logger.info(
+            f"Updating reading list status",
+            extra={
+                "discord_id": discord_id,
+                "article_id": str(article_id),
+                "new_status": request.status
+            }
+        )
+        
+        # 取得使用者 UUID
+        user_uuid = await supabase.get_or_create_user(discord_id)
+        
+        # 更新狀態
+        response = supabase.client.table('reading_list')\
+            .update({'status': request.status, 'updated_at': 'now()'})\
+            .eq('user_id', str(user_uuid))\
+            .eq('article_id', str(article_id))\
+            .execute()
+        
+        if not response.data or len(response.data) == 0:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Reading list entry not found for article: {article_id}"
+            )
+        
+        logger.info(
+            f"Successfully updated reading list status",
+            extra={
+                "discord_id": discord_id,
+                "article_id": str(article_id),
+                "new_status": request.status
+            }
+        )
+        
+        return MessageResponse(
+            message="Status updated successfully",
+            article_id=article_id,
+            status=request.status
+        )
+        
+    except HTTPException:
+        raise
+    except ValueError as e:
+        logger.warning(
+            f"Validation error: {e}",
+            extra={"article_id": str(article_id), "status": request.status}
+        )
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        )
+    except SupabaseServiceError as e:
+        logger.error(
+            f"Database error updating status: {e}",
+            exc_info=True,
+            extra={
+                "discord_id": current_user.get("discord_id"),
+                "article_id": str(article_id)
+            }
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to update status"
+        )
+    except Exception as e:
+        logger.error(
+            f"Unexpected error updating status: {e}",
+            exc_info=True,
+            extra={
+                "discord_id": current_user.get("discord_id"),
+                "article_id": str(article_id)
+            }
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred"
+        )
+
+
+@router.patch("/reading-list/{article_id}/rating", response_model=MessageResponse)
+async def update_reading_list_rating(
+    article_id: UUID,
+    request: UpdateRatingRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    更新閱讀清單項目評分
+    
+    Args:
+        article_id: 文章 UUID
+        request: 包含新評分的請求
+        current_user: 當前使用者資訊（從 JWT token 提取）
+    
+    Returns:
+        MessageResponse: 成功訊息和更新後的評分
+    
+    Raises:
+        HTTPException: 400 當評分值無效時
+        HTTPException: 404 當閱讀清單項目不存在時
+        HTTPException: 500 當資料庫操作失敗時
+    
+    Validates: Requirements 6.1, 13.1
+    """
+    try:
+        supabase = SupabaseService()
+        discord_id = current_user["discord_id"]
+        
+        logger.info(
+            f"Updating reading list rating",
+            extra={
+                "discord_id": discord_id,
+                "article_id": str(article_id),
+                "new_rating": request.rating
+            }
+        )
+        
+        # 取得使用者 UUID
+        user_uuid = await supabase.get_or_create_user(discord_id)
+        
+        # 更新評分
+        response = supabase.client.table('reading_list')\
+            .update({'rating': request.rating, 'updated_at': 'now()'})\
+            .eq('user_id', str(user_uuid))\
+            .eq('article_id', str(article_id))\
+            .execute()
+        
+        if not response.data or len(response.data) == 0:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Reading list entry not found for article: {article_id}"
+            )
+        
+        logger.info(
+            f"Successfully updated reading list rating",
+            extra={
+                "discord_id": discord_id,
+                "article_id": str(article_id),
+                "new_rating": request.rating
+            }
+        )
+        
+        return MessageResponse(
+            message="Rating updated successfully",
+            article_id=article_id,
+            rating=request.rating
+        )
+        
+    except HTTPException:
+        raise
+    except ValueError as e:
+        logger.warning(
+            f"Validation error: {e}",
+            extra={"article_id": str(article_id), "rating": request.rating}
+        )
+        raise HTTPException(
+            status_code=400,
+            detail=str(e)
+        )
+    except SupabaseServiceError as e:
+        logger.error(
+            f"Database error updating rating: {e}",
+            exc_info=True,
+            extra={
+                "discord_id": current_user.get("discord_id"),
+                "article_id": str(article_id)
+            }
+        )
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to update rating"
+        )
+    except Exception as e:
+        logger.error(
+            f"Unexpected error updating rating: {e}",
             exc_info=True,
             extra={
                 "discord_id": current_user.get("discord_id"),

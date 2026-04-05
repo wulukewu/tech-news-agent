@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { BookmarkPlus, Star } from 'lucide-react';
+import { BookmarkPlus, BookmarkCheck, Star, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Article } from '@/types/article';
+import { useAddToReadingList } from '@/lib/hooks/useReadingList';
 
 interface ArticleCardProps {
   article: Article;
@@ -15,20 +16,16 @@ interface ArticleCardProps {
 
 export function ArticleCard({ article }: ArticleCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
+  const addToReadingList = useAddToReadingList();
 
   const handleAddToReadingList = async () => {
-    setIsAdding(true);
     try {
-      // TODO: Implement API call when reading list endpoint is ready
-      // await addToReadingList(article.id);
-      console.log('Add to reading list:', article.id);
-      // toast.success('Added to reading list');
+      await addToReadingList.mutateAsync(article.id);
+      setIsAdded(true);
     } catch (error) {
-      // toast.error('Failed to add to reading list');
+      // Error handling is done in the hook with toast
       console.error('Failed to add to reading list:', error);
-    } finally {
-      setIsAdding(false);
     }
   };
 
@@ -84,10 +81,18 @@ export function ArticleCard({ article }: ArticleCardProps) {
                 size="sm"
                 variant="outline"
                 onClick={handleAddToReadingList}
-                disabled={isAdding}
-                aria-label="Add to reading list"
+                disabled={addToReadingList.isPending || isAdded}
+                aria-label={
+                  isAdded ? 'Added to reading list' : 'Add to reading list'
+                }
               >
-                <BookmarkPlus className="h-4 w-4" />
+                {addToReadingList.isPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : isAdded ? (
+                  <BookmarkCheck className="h-4 w-4" />
+                ) : (
+                  <BookmarkPlus className="h-4 w-4" />
+                )}
               </Button>
             </div>
           </div>

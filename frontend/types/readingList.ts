@@ -6,21 +6,23 @@
  * - 13.3: EACH article SHALL include a "Mark as Read" button and rating selector (1-5 stars)
  */
 
-import { Article } from './article';
-
 /**
  * Status of a reading list item
  */
 export type ReadingListStatus = 'Unread' | 'Read' | 'Archived';
 
 /**
- * Reading list item representing an article saved to the user's reading list
+ * Reading list item with flat structure matching backend API response
  */
 export interface ReadingListItem {
-  /** Unique identifier for the reading list item */
-  id: string;
-  /** The article associated with this reading list item */
-  article: Article;
+  /** Article ID (UUID) */
+  articleId: string;
+  /** Article title */
+  title: string;
+  /** Article URL */
+  url: string;
+  /** Category name */
+  category: string;
   /** Current status of the reading list item */
   status: ReadingListStatus;
   /** User rating for the article (1-5 stars), or null if not rated */
@@ -48,11 +50,25 @@ export interface ReadingListResponse {
 }
 
 /**
- * Request payload for updating a reading list item
+ * Request payload for adding an article to reading list
  */
-export interface UpdateReadingListRequest {
-  /** New status for the reading list item (optional) */
-  status?: ReadingListStatus;
-  /** New rating for the article (1-5 stars, optional) */
-  rating?: number;
+export interface AddToReadingListRequest {
+  /** Article ID to add */
+  articleId: string;
+}
+
+/**
+ * Request payload for updating reading list item status
+ */
+export interface UpdateStatusRequest {
+  /** New status for the reading list item */
+  status: ReadingListStatus;
+}
+
+/**
+ * Request payload for updating reading list item rating
+ */
+export interface UpdateRatingRequest {
+  /** New rating for the article (1-5 stars), or null to clear */
+  rating: number | null;
 }
