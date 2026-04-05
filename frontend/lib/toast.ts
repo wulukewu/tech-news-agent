@@ -1,10 +1,14 @@
 import { toast as sonnerToast } from 'sonner';
 
 export const toast = {
-  success: (message: string) => {
+  success: (
+    message: string,
+    options?: { description?: string; duration?: number },
+  ) => {
     sonnerToast.success(message, {
-      duration: 3000,
+      duration: options?.duration || 3000,
       position: 'top-right',
+      description: options?.description,
     });
   },
 
@@ -19,9 +23,21 @@ export const toast = {
     });
   },
 
-  loading: (message: string) => {
+  info: (
+    message: string,
+    options?: { description?: string; duration?: number },
+  ) => {
+    sonnerToast.info(message, {
+      duration: options?.duration || 3000,
+      position: 'top-right',
+      description: options?.description,
+    });
+  },
+
+  loading: (message: string, options?: { description?: string }) => {
     return sonnerToast.loading(message, {
       position: 'top-right',
+      description: options?.description,
     });
   },
 
@@ -34,5 +50,9 @@ export const toast = {
     },
   ) => {
     return sonnerToast.promise(promise, messages);
+  },
+
+  dismiss: (toastId?: string | number) => {
+    sonnerToast.dismiss(toastId);
   },
 };

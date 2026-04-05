@@ -7,7 +7,7 @@ import {
   removeFromReadingList,
 } from '@/lib/api/readingList';
 import type { ReadingListStatus } from '@/types/readingList';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 /**
  * Hook to fetch reading list with pagination and filtering
