@@ -37,8 +37,8 @@ class TestAdminCommands:
         # Mock the background job
         mock_job.return_value = AsyncMock()
         
-        # Execute command
-        await admin_cog.trigger_fetch(mock_interaction)
+        # Execute command - call the callback directly
+        await admin_cog.trigger_fetch.callback(admin_cog, mock_interaction)
         
         # Verify interaction was deferred
         mock_interaction.response.defer.assert_called_once()
@@ -71,8 +71,8 @@ class TestAdminCommands:
             "issues": []
         }
         
-        # Execute command
-        await admin_cog.scheduler_status(mock_interaction)
+        # Execute command - call the callback directly
+        await admin_cog.scheduler_status.callback(admin_cog, mock_interaction)
         
         # Verify interaction was deferred
         mock_interaction.response.defer.assert_called_once()
@@ -105,8 +105,8 @@ class TestAdminCommands:
             "issues": ["Scheduler has never executed"]
         }
         
-        # Execute command
-        await admin_cog.scheduler_status(mock_interaction)
+        # Execute command - call the callback directly
+        await admin_cog.scheduler_status.callback(admin_cog, mock_interaction)
         
         # Verify interaction was deferred
         mock_interaction.response.defer.assert_called_once()

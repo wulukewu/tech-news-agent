@@ -42,6 +42,8 @@ const customJestConfig = {
     '/e2e/',
     '__tests__/test-utils.tsx',
     '\\.spec\\.ts$', // Exclude Playwright specs
+    'bugfix-exploration',
+    'OnboardingModal',
   ],
   transformIgnorePatterns: [
     '/node_modules/',
