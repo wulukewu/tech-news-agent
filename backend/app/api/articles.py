@@ -159,12 +159,26 @@ async def get_my_articles(
         articles = []
         for article in response.data:
             feed_info = article.get("feeds", {})
+            
+            # 處理 published_at - 確保包含時區資訊
+            published_at = None
+            if article.get("published_at"):
+                try:
+                    pub_at_str = article["published_at"]
+                    # 處理 Z 結尾的格式
+                    if pub_at_str.endswith('Z'):
+                        pub_at_str = pub_at_str[:-1] + '+00:00'
+                    # 解析為 datetime（會保留時區資訊）
+                    published_at = datetime.fromisoformat(pub_at_str)
+                except (ValueError, TypeError):
+                    published_at = None
+            
             articles.append(
                 ArticleResponse(
                     id=UUID(article["id"]),
                     title=article["title"],
                     url=article["url"],
-                    published_at=datetime.fromisoformat(article["published_at"]) if article.get("published_at") else None,
+                    published_at=published_at,
                     tinkering_index=article["tinkering_index"],
                     ai_summary=article.get("ai_summary"),
                     feed_name=feed_info.get("name", "Unknown"),

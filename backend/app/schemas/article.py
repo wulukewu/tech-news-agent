@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, HttpUrl
+from pydantic import BaseModel, Field, HttpUrl, ConfigDict, field_serializer
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 from uuid import UUID
@@ -98,16 +98,31 @@ class ArticleResponse(BaseModel):
     id: UUID = Field(..., description="文章 UUID")
     title: str = Field(..., description="文章標題")
     url: HttpUrl = Field(..., description="文章 URL")
-    published_at: Optional[datetime] = Field(None, description="發布時間")
-    tinkering_index: int = Field(..., ge=1, le=5, description="技術複雜度（1-5）")
-    ai_summary: Optional[str] = Field(None, description="AI 摘要")
-    feed_name: str = Field(..., description="來源名稱")
+    published_at: Optional[datetime] = Field(None, description="發布時間", serialization_alias="publishedAt")
+    tinkering_index: int = Field(..., ge=1, le=5, description="技術複雜度（1-5）", serialization_alias="tinkeringIndex")
+    ai_summary: Optional[str] = Field(None, description="AI 摘要", serialization_alias="aiSummary")
+    feed_name: str = Field(..., description="來源名稱", serialization_alias="feedName")
     category: str = Field(..., description="分類")
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        by_alias=True
+    )
+    
+    @field_serializer('published_at')
+    def serialize_published_at(self, value: Optional[datetime], _info) -> Optional[str]:
+        """確保 published_at 序列化為 ISO 8601 格式"""
+        return value.isoformat() if value else None
 
 class ArticleListResponse(BaseModel):
     """文章列表回應（含分頁）"""
     articles: List[ArticleResponse] = Field(..., description="文章列表")
     page: int = Field(..., ge=1, description="當前頁碼")
-    page_size: int = Field(..., ge=1, le=100, description="每頁文章數")
-    total_count: int = Field(..., ge=0, description="總文章數")
-    has_next_page: bool = Field(..., description="是否有下一頁")
+    page_size: int = Field(..., ge=1, le=100, description="每頁文章數", serialization_alias="pageSize")
+    total_count: int = Field(..., ge=0, description="總文章數", serialization_alias="totalCount")
+    has_next_page: bool = Field(..., description="是否有下一頁", serialization_alias="hasNextPage")
+    
+    model_config = ConfigDict(
+        populate_by_name=True,
+        by_alias=True
+    )
