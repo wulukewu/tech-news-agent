@@ -41,6 +41,7 @@ const customJestConfig = {
     '/.next/',
     '/e2e/',
     '__tests__/test-utils.tsx',
+    '\\.spec\\.ts$', // Exclude Playwright specs
   ],
   transformIgnorePatterns: [
     '/node_modules/',

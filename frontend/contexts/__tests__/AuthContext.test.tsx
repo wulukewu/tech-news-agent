@@ -4,6 +4,14 @@ import * as authApi from '@/lib/api/auth';
 
 jest.mock('@/lib/api/auth');
 
+// Mock next/navigation
+jest.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+  }),
+}));
+
 describe('AuthContext', () => {
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <AuthProvider>{children}</AuthProvider>
@@ -11,14 +19,24 @@ describe('AuthContext', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Default mock to prevent unhandled promises
+    (authApi.checkAuthStatus as jest.Mock).mockRejectedValue(
+      new Error('Not authenticated'),
+    );
   });
 
-  it('should initialize with unauthenticated state', () => {
+  it('should initialize with unauthenticated state', async () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
+
+    expect(result.current.loading).toBe(true);
+
+    // Wait for initial auth check to complete
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
 
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.user).toBeNull();
-    expect(result.current.loading).toBe(true); // Initially loading
   });
 
   it('should set authenticated state after successful checkAuth', async () => {
@@ -33,10 +51,11 @@ describe('AuthContext', () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
 
     await waitFor(() => {
-      expect(result.current.isAuthenticated).toBe(true);
-      expect(result.current.user).toEqual(mockUser);
       expect(result.current.loading).toBe(false);
     });
+
+    expect(result.current.isAuthenticated).toBe(true);
+    expect(result.current.user).toEqual(mockUser);
   });
 
   it('should handle checkAuth failure', async () => {
@@ -47,10 +66,11 @@ describe('AuthContext', () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
 
     await waitFor(() => {
-      expect(result.current.isAuthenticated).toBe(false);
-      expect(result.current.user).toBeNull();
       expect(result.current.loading).toBe(false);
     });
+
+    expect(result.current.isAuthenticated).toBe(false);
+    expect(result.current.user).toBeNull();
   });
 
   it('should clear state on logout', async () => {
@@ -101,8 +121,13 @@ describe('AuthContext', () => {
     expect(result.current.isAuthenticated).toBe(false);
   });
 
-  it('should handle login redirect', () => {
+  it('should handle login redirect', async () => {
     const { result } = renderHook(() => useAuth(), { wrapper });
+
+    // Wait for initial load
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
 
     act(() => {
       result.current.login();
