@@ -83,7 +83,7 @@ jobs:
 
       - name: Run unit tests
         working-directory: frontend
-        run: npm test -- --passWithNoTests --testPathIgnorePatterns="bugfix-exploration|OnboardingModal"
+        run: npm test -- --passWithNoTests
 
       - name: Build
         working-directory: frontend

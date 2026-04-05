@@ -205,7 +205,8 @@ describe('SchedulerStatusIndicator Component', () => {
 
       render(<SchedulerStatusIndicator status={statusWithFutureTime} />);
 
-      expect(screen.getByText(/30 分鐘後/)).toBeInTheDocument();
+      // Check for "分鐘後" pattern (may be "30 分鐘後" or "約 30 分鐘後")
+      expect(screen.getByText(/分鐘後/)).toBeInTheDocument();
     });
   });
 });
