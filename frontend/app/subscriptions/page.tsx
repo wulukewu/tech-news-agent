@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from '@/lib/toast';
 
 export default function SubscriptionsPage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
@@ -21,7 +22,7 @@ export default function SubscriptionsPage() {
   const [feeds, setFeeds] = useState<Feed[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [toggling, setToggling] = useState<string | null>(null);
+  const [toggling, setToggling] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -51,7 +52,7 @@ export default function SubscriptionsPage() {
 
   const handleToggle = async (feedId: string) => {
     try {
-      setToggling(feedId);
+      setToggling((prev) => new Set(prev).add(feedId));
       const result = await toggleSubscription(feedId);
 
       // Update local state
@@ -64,9 +65,88 @@ export default function SubscriptionsPage() {
       );
     } catch (err) {
       console.error('Failed to toggle subscription:', err);
-      setError('訂閱操作失敗');
+      toast.error('訂閱操作失敗');
     } finally {
-      setToggling(null);
+      setToggling((prev) => {
+        const next = new Set(prev);
+        next.delete(feedId);
+        return next;
+      });
+    }
+  };
+
+  const handleCategoryToggle = async (category: string, subscribe: boolean) => {
+    const categoryFeeds = feeds.filter((f) => f.category === category);
+    const feedsToToggle = categoryFeeds.filter(
+      (f) => f.is_subscribed !== subscribe,
+    );
+
+    if (feedsToToggle.length === 0) return;
+
+    try {
+      setToggling((prev) => {
+        const next = new Set(prev);
+        feedsToToggle.forEach((f) => next.add(f.id));
+        return next;
+      });
+
+      // Toggle all feeds in parallel
+      await Promise.all(
+        feedsToToggle.map((feed) => toggleSubscription(feed.id)),
+      );
+
+      // Update local state
+      setFeeds(
+        feeds.map((feed) =>
+          feed.category === category
+            ? { ...feed, is_subscribed: subscribe }
+            : feed,
+        ),
+      );
+
+      toast.success(
+        `已${subscribe ? '訂閱' : '取消訂閱'} ${feedsToToggle.length} 個來源`,
+      );
+    } catch (err) {
+      console.error('Failed to toggle category:', err);
+      toast.error('批量操作失敗');
+    } finally {
+      setToggling((prev) => {
+        const next = new Set(prev);
+        feedsToToggle.forEach((f) => next.delete(f.id));
+        return next;
+      });
+    }
+  };
+
+  const handleToggleAll = async (subscribe: boolean) => {
+    const feedsToToggle = feeds.filter((f) => f.is_subscribed !== subscribe);
+
+    if (feedsToToggle.length === 0) return;
+
+    try {
+      setToggling((prev) => {
+        const next = new Set(prev);
+        feedsToToggle.forEach((f) => next.add(f.id));
+        return next;
+      });
+
+      // Toggle all feeds in parallel
+      await Promise.all(
+        feedsToToggle.map((feed) => toggleSubscription(feed.id)),
+      );
+
+      // Update local state
+      setFeeds(feeds.map((feed) => ({ ...feed, is_subscribed: subscribe })));
+
+      toast.success(
+        `已${subscribe ? '訂閱' : '取消訂閱'} ${feedsToToggle.length} 個來源`,
+      );
+    } catch (err) {
+      console.error('Failed to toggle all:', err);
+      toast.error('批量操作失敗');
+    } finally {
+      setToggling(new Set());
     }
   };
 
@@ -97,6 +177,10 @@ export default function SubscriptionsPage() {
     {} as Record<string, Feed[]>,
   );
 
+  const totalSubscribed = feeds.filter((f) => f.is_subscribed).length;
+  const allSubscribed = totalSubscribed === feeds.length;
+  const noneSubscribed = totalSubscribed === 0;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4">
       <div className="max-w-4xl mx-auto py-8">
@@ -108,10 +192,31 @@ export default function SubscriptionsPage() {
           >
             ← 返回 Dashboard
           </Button>
-          <h1 className="text-3xl font-bold">訂閱管理</h1>
-          <p className="text-muted-foreground mt-2">
-            選擇您想要訂閱的 RSS 來源
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">訂閱管理</h1>
+              <p className="text-muted-foreground mt-2">
+                選擇您想要訂閱的 RSS 來源 ({totalSubscribed} / {feeds.length}{' '}
+                已訂閱)
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => handleToggleAll(true)}
+                disabled={allSubscribed || toggling.size > 0}
+              >
+                全部訂閱
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => handleToggleAll(false)}
+                disabled={noneSubscribed || toggling.size > 0}
+              >
+                全部取消
+              </Button>
+            </div>
+          </div>
         </div>
 
         {error && (
@@ -121,43 +226,76 @@ export default function SubscriptionsPage() {
         )}
 
         <div className="space-y-6">
-          {Object.entries(feedsByCategory).map(([category, categoryFeeds]) => (
-            <Card key={category}>
-              <CardHeader>
-                <CardTitle>{category}</CardTitle>
-                <CardDescription>
-                  {categoryFeeds.filter((f) => f.is_subscribed).length} /{' '}
-                  {categoryFeeds.length} 已訂閱
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {categoryFeeds.map((feed) => (
-                    <div
-                      key={feed.id}
-                      className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <Checkbox
-                        id={feed.id}
-                        checked={feed.is_subscribed}
-                        onCheckedChange={() => handleToggle(feed.id)}
-                        disabled={toggling === feed.id}
-                      />
-                      <label
-                        htmlFor={feed.id}
-                        className="flex-1 cursor-pointer"
-                      >
-                        <div className="font-medium">{feed.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {feed.url}
-                        </div>
-                      </label>
+          {Object.entries(feedsByCategory).map(([category, categoryFeeds]) => {
+            const subscribedCount = categoryFeeds.filter(
+              (f) => f.is_subscribed,
+            ).length;
+            const allCategorySubscribed =
+              subscribedCount === categoryFeeds.length;
+            const noneCategorySubscribed = subscribedCount === 0;
+
+            return (
+              <Card key={category}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>{category}</CardTitle>
+                      <CardDescription>
+                        {subscribedCount} / {categoryFeeds.length} 已訂閱
+                      </CardDescription>
                     </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleCategoryToggle(category, true)}
+                        disabled={allCategorySubscribed || toggling.size > 0}
+                      >
+                        全選
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleCategoryToggle(category, false)}
+                        disabled={noneCategorySubscribed || toggling.size > 0}
+                      >
+                        全不選
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {categoryFeeds.map((feed) => (
+                      <div
+                        key={feed.id}
+                        className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                      >
+                        <Checkbox
+                          id={feed.id}
+                          checked={feed.is_subscribed}
+                          onCheckedChange={() => handleToggle(feed.id)}
+                          disabled={toggling.has(feed.id)}
+                        />
+                        <label
+                          htmlFor={feed.id}
+                          className="flex-1 cursor-pointer"
+                        >
+                          <div className="font-medium">{feed.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {feed.url}
+                          </div>
+                        </label>
+                        {toggling.has(feed.id) && (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
     </div>

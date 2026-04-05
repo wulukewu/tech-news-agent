@@ -1,0 +1,69 @@
+"""
+Reading List API Schemas
+
+Pydantic schemas for reading list API requests and responses.
+"""
+
+from pydantic import BaseModel, Field, HttpUrl, validator
+from typing import Optional, List
+from datetime import datetime
+from uuid import UUID
+
+
+class AddToReadingListRequest(BaseModel):
+    """加入文章到閱讀清單請求"""
+    article_id: UUID = Field(..., description="文章 UUID")
+
+
+class UpdateRatingRequest(BaseModel):
+    """更新評分請求"""
+    rating: int = Field(..., ge=1, le=5, description="評分（1-5）")
+
+    @validator('rating')
+    def validate_rating(cls, v):
+        if not isinstance(v, int):
+            raise ValueError("Rating must be an integer")
+        if not (1 <= v <= 5):
+            raise ValueError("Rating must be between 1 and 5")
+        return v
+
+
+class UpdateStatusRequest(BaseModel):
+    """更新閱讀狀態請求"""
+    status: str = Field(..., description="閱讀狀態")
+
+    @validator('status')
+    def validate_status(cls, v):
+        allowed = {'Unread', 'Read', 'Archived'}
+        if v not in allowed:
+            raise ValueError(f"Status must be one of {', '.join(sorted(allowed))}")
+        return v
+
+
+class ReadingListItemResponse(BaseModel):
+    """閱讀清單項目回應"""
+    article_id: UUID = Field(..., description="文章 UUID")
+    title: str = Field(..., description="文章標題")
+    url: HttpUrl = Field(..., description="文章 URL")
+    category: str = Field(..., description="分類")
+    status: str = Field(..., description="閱讀狀態")
+    rating: Optional[int] = Field(None, description="評分（1-5）")
+    added_at: datetime = Field(..., description="加入時間")
+    updated_at: datetime = Field(..., description="更新時間")
+
+
+class ReadingListResponse(BaseModel):
+    """閱讀清單回應（含分頁）"""
+    items: List[ReadingListItemResponse] = Field(..., description="閱讀清單項目")
+    page: int = Field(..., ge=1, description="當前頁碼")
+    page_size: int = Field(..., ge=1, le=100, description="每頁項目數")
+    total_count: int = Field(..., ge=0, description="總項目數")
+    has_next_page: bool = Field(..., description="是否有下一頁")
+
+
+class MessageResponse(BaseModel):
+    """通用訊息回應"""
+    message: str = Field(..., description="回應訊息")
+    article_id: Optional[UUID] = Field(None, description="文章 UUID")
+    rating: Optional[int] = Field(None, description="評分")
+    status: Optional[str] = Field(None, description="狀態")

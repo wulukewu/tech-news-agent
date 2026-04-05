@@ -52,6 +52,8 @@ CREATE TABLE articles (
     published_at TIMESTAMPTZ,
     tinkering_index INTEGER,
     ai_summary TEXT,
+    deep_summary TEXT,
+    deep_summary_generated_at TIMESTAMPTZ,
     embedding VECTOR(1536),
     created_at TIMESTAMPTZ DEFAULT now()
 );
@@ -60,6 +62,7 @@ CREATE TABLE articles (
 CREATE INDEX idx_articles_feed_id ON articles(feed_id);
 CREATE INDEX idx_articles_published_at ON articles(published_at);
 CREATE INDEX idx_articles_embedding ON articles USING hnsw (embedding vector_cosine_ops);
+CREATE INDEX idx_articles_deep_summary ON articles(id) WHERE deep_summary IS NOT NULL;
 
 -- Create reading_list table
 -- User's personal reading list and interaction records

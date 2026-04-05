@@ -1734,3 +1734,300 @@ class SupabaseService:
                 "limit": limit,
                 "operation": "get_unanalyzed_articles"
             })
+    
+    async def update_notification_settings(self, discord_id: str, enabled: bool) -> None:
+        """更新使用者的 DM 通知設定
+        
+        Args:
+            discord_id: Discord 使用者 ID
+            enabled: 是否啟用 DM 通知
+            
+        Raises:
+            SupabaseServiceError: 當資料庫操作失敗時
+        """
+        logger.info(
+            f"Database operation: update_notification_settings",
+            extra={
+                "operation_type": "UPDATE",
+                "table": "users",
+                "discord_id": discord_id,
+                "enabled": enabled
+            }
+        )
+        
+        try:
+            # 取得或建立使用者
+            user_uuid = await self.get_or_create_user(discord_id)
+            
+            # 更新通知設定
+            response = self.client.table('users')\
+                .update({'dm_notifications_enabled': enabled})\
+                .eq('id', str(user_uuid))\
+                .execute()
+            
+            if not response.data or len(response.data) == 0:
+                raise SupabaseServiceError(
+                    f"Failed to update notification settings for user {discord_id}",
+                    context={
+                        "discord_id": discord_id,
+                        "enabled": enabled,
+                        "operation": "update_notification_settings"
+                    }
+                )
+            
+            logger.info(
+                f"Database operation completed: update_notification_settings",
+                extra={
+                    "operation_type": "UPDATE",
+                    "table": "users",
+                    "affected_records": 1,
+                    "enabled": enabled
+                }
+            )
+            
+        except SupabaseServiceError:
+            raise
+        except Exception as e:
+            logger.error(
+                f"Failed to update notification settings: {e}",
+                exc_info=True,
+                extra={
+                    "operation_type": "UPDATE",
+                    "table": "users",
+                    "discord_id": discord_id,
+                    "enabled": enabled,
+                    "error_type": type(e).__name__
+                }
+            )
+            self._handle_database_error(e, {
+                "discord_id": discord_id,
+                "enabled": enabled,
+                "operation": "update_notification_settings"
+            })
+    
+    async def get_notification_settings(self, discord_id: str) -> bool:
+        """查詢使用者的 DM 通知設定
+        
+        Args:
+            discord_id: Discord 使用者 ID
+            
+        Returns:
+            是否啟用 DM 通知（預設 True）
+            
+        Raises:
+            SupabaseServiceError: 當資料庫查詢失敗時
+        """
+        logger.info(
+            f"Database operation: get_notification_settings",
+            extra={
+                "operation_type": "SELECT",
+                "table": "users",
+                "discord_id": discord_id
+            }
+        )
+        
+        try:
+            # 取得或建立使用者
+            user_uuid = await self.get_or_create_user(discord_id)
+            
+            # 查詢通知設定
+            response = self.client.table('users')\
+                .select('dm_notifications_enabled')\
+                .eq('id', str(user_uuid))\
+                .execute()
+            
+            if not response.data or len(response.data) == 0:
+                # 使用者不存在，返回預設值
+                logger.warning(f"User {discord_id} not found, returning default notification setting")
+                return True
+            
+            enabled = response.data[0].get('dm_notifications_enabled', True)
+            
+            logger.info(
+                f"Database operation completed: get_notification_settings",
+                extra={
+                    "operation_type": "SELECT",
+                    "table": "users",
+                    "affected_records": 1,
+                    "enabled": enabled
+                }
+            )
+            
+            return enabled
+            
+        except SupabaseServiceError:
+            raise
+        except Exception as e:
+            logger.error(
+                f"Failed to get notification settings: {e}",
+                exc_info=True,
+                extra={
+                    "operation_type": "SELECT",
+                    "table": "users",
+                    "discord_id": discord_id,
+                    "error_type": type(e).__name__
+                }
+            )
+            self._handle_database_error(e, {
+                "discord_id": discord_id,
+                "operation": "get_notification_settings"
+            })
+    
+    async def get_users_with_dm_enabled(self) -> List[str]:
+        """查詢所有啟用 DM 通知的使用者
+        
+        Returns:
+            Discord ID 列表
+            
+        Raises:
+            SupabaseServiceError: 當資料庫查詢失敗時
+        """
+        logger.info("Fetching users with DM notifications enabled")
+        
+        try:
+            response = self.client.table('users')\
+                .select('discord_id')\
+                .eq('dm_notifications_enabled', True)\
+                .execute()
+            
+            if not response.data:
+                logger.info("No users with DM notifications enabled")
+                return []
+            
+            discord_ids = [user['discord_id'] for user in response.data]
+            logger.info(f"Retrieved {len(discord_ids)} users with DM notifications enabled")
+            return discord_ids
+            
+        except SupabaseServiceError:
+            raise
+        except Exception as e:
+            logger.error(f"Failed to fetch users with DM enabled: {e}", exc_info=True)
+            self._handle_database_error(e, {
+                "operation": "get_users_with_dm_enabled"
+            })
+
+    
+    async def get_user_articles(
+        self,
+        discord_id: str,
+        days: int = 7,
+        limit: int = 20
+    ) -> List['ArticleSchema']:
+        """查詢使用者訂閱的文章
+        
+        Args:
+            discord_id: Discord 使用者 ID
+            days: 查詢最近幾天的文章
+            limit: 返回的最大文章數量
+            
+        Returns:
+            文章列表，按 tinkering_index 降序排列
+            
+        Raises:
+            SupabaseServiceError: 當資料庫查詢失敗時
+        """
+        from app.schemas.article import ArticleSchema
+        from datetime import datetime, timezone, timedelta
+        
+        logger.info(
+            f"Database operation: get_user_articles",
+            extra={
+                "operation_type": "SELECT",
+                "table": "articles",
+                "discord_id": discord_id,
+                "days": days,
+                "limit": limit
+            }
+        )
+        
+        try:
+            # 取得使用者 UUID
+            user_uuid = await self.get_or_create_user(discord_id)
+            
+            # 計算時間範圍
+            cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
+            
+            # 查詢使用者訂閱的 feeds
+            subscriptions_response = self.client.table('user_subscriptions')\
+                .select('feed_id')\
+                .eq('user_id', str(user_uuid))\
+                .execute()
+            
+            if not subscriptions_response.data:
+                logger.info(f"User {discord_id} has no subscriptions")
+                return []
+            
+            # 提取 feed IDs
+            feed_ids = [sub['feed_id'] for sub in subscriptions_response.data]
+            
+            # 查詢文章
+            response = self.client.table('articles')\
+                .select('id, title, url, published_at, tinkering_index, ai_summary, feed_id, feeds(category)')\
+                .in_('feed_id', feed_ids)\
+                .gte('published_at', cutoff_date.isoformat())\
+                .not_.is_('tinkering_index', 'null')\
+                .order('tinkering_index', desc=True)\
+                .limit(limit)\
+                .execute()
+            
+            if not response.data:
+                logger.info(f"No articles found for user {discord_id}")
+                return []
+            
+            # 轉換為 ArticleSchema 物件
+            articles = []
+            for article_data in response.data:
+                try:
+                    # 從 JOIN 結果中提取 feed 資訊
+                    feed_data = article_data.get('feeds')
+                    if not feed_data:
+                        logger.warning(f"Feed data missing for article: {article_data}")
+                        continue
+                    
+                    article = ArticleSchema(
+                        title=article_data['title'],
+                        url=article_data['url'],
+                        feed_id=article_data['feed_id'],
+                        feed_name='',  # 不需要
+                        category=feed_data.get('category', '其他'),
+                        published_at=datetime.fromisoformat(article_data['published_at'].replace('Z', '+00:00')) if article_data.get('published_at') else None,
+                        tinkering_index=article_data.get('tinkering_index'),
+                        ai_summary=article_data.get('ai_summary')
+                    )
+                    articles.append(article)
+                except Exception as e:
+                    logger.warning(f"Failed to parse article: {article_data}, error: {e}")
+                    continue
+            
+            logger.info(
+                f"Database operation completed: get_user_articles",
+                extra={
+                    "operation_type": "SELECT",
+                    "table": "articles",
+                    "affected_records": len(articles)
+                }
+            )
+            
+            return articles
+            
+        except SupabaseServiceError:
+            raise
+        except Exception as e:
+            logger.error(
+                f"Failed to fetch user articles: {e}",
+                exc_info=True,
+                extra={
+                    "operation_type": "SELECT",
+                    "table": "articles",
+                    "discord_id": discord_id,
+                    "days": days,
+                    "limit": limit,
+                    "error_type": type(e).__name__
+                }
+            )
+            self._handle_database_error(e, {
+                "discord_id": discord_id,
+                "days": days,
+                "limit": limit,
+                "operation": "get_user_articles"
+            })

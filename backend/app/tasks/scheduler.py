@@ -51,6 +51,49 @@ async def cleanup_token_blacklist():
         logger.error(f"Token blacklist cleanup failed: {e}", exc_info=True)
 
 
+async def send_dm_notifications():
+    """
+    發送 DM 通知給所有啟用通知的使用者
+    
+    此任務會：
+    1. 查詢所有啟用 DM 通知的使用者
+    2. 為每個使用者查詢其訂閱的最新文章
+    3. 發送個人化的文章摘要 DM
+    
+    Validates: Requirements 18.1, 18.2, 18.3, 18.4
+    """
+    logger.info("Starting DM notification job")
+    
+    try:
+        # 取得 Discord bot 實例
+        from app.bot.client import bot
+        
+        # 確保 bot 已連線
+        if not bot.is_ready():
+            logger.warning("Bot is not ready, skipping DM notifications")
+            return
+        
+        # 建立 DM 通知服務
+        from app.services.dm_notification_service import DMNotificationService
+        dm_service = DMNotificationService(bot)
+        
+        # 發送每週摘要給所有使用者
+        stats = await dm_service.send_weekly_digest_to_all_users()
+        
+        logger.info(
+            f"DM notification job completed: "
+            f"Total users: {stats['total_users']}, "
+            f"Successful: {stats['successful']}, "
+            f"Failed: {stats['failed']}"
+        )
+        
+    except Exception as e:
+        logger.critical(
+            f"Unexpected error during DM notification job: {e}",
+            exc_info=True
+        )
+
+
 async def background_fetch_job():
     """
     Background job that orchestrates the pipeline:
@@ -422,6 +465,27 @@ def setup_scheduler():
         name='Background Article Fetch and Analysis',
         replace_existing=True
     )
+    
+    # Register DM notification job (runs after background fetch, with 10 minute delay)
+    # This ensures articles are analyzed before sending notifications
+    dm_cron = settings.dm_notification_cron or "10 */6 * * *"  # 10 minutes after fetch job
+    try:
+        dm_trigger = CronTrigger.from_crontab(dm_cron, timezone=scheduler_tz)
+        scheduler.add_job(
+            send_dm_notifications,
+            trigger=dm_trigger,
+            id='dm_notifications',
+            name='Send DM Notifications to Users',
+            replace_existing=True
+        )
+        logger.info(
+            f"DM notification job registered: "
+            f"CRON='{dm_cron}', "
+            f"Timezone='{scheduler_tz}'"
+        )
+    except (ValueError, TypeError) as e:
+        logger.warning(f"Invalid DM notification CRON expression '{dm_cron}': {e}")
+        logger.warning("DM notifications will not be scheduled")
     
     # Register token blacklist cleanup job (runs every hour)
     scheduler.add_job(

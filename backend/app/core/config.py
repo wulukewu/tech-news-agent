@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     
     # Discord Configuration
     discord_token: str
-    discord_channel_id: int
+    discord_channel_id: Optional[int] = None  # 改為選填，因為改用 DM 通知
     
     # Discord OAuth2 Configuration
     discord_client_id: Optional[str] = None
@@ -27,6 +27,9 @@ class Settings(BaseSettings):
     # Scheduler Configuration
     scheduler_cron: str = "0 */6 * * *"  # Every 6 hours by default
     scheduler_timezone: str | None = None  # Defaults to timezone if not set
+    
+    # DM Notification Configuration
+    dm_notification_cron: str | None = "10 */6 * * *"  # 10 minutes after fetch job
     
     # Batch Processing Configuration
     batch_size: int = 50  # Maximum articles per batch

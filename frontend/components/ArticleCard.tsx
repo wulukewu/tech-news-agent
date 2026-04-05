@@ -33,7 +33,18 @@ export function ArticleCard({ article }: ArticleCardProps) {
   };
 
   const formattedDate = article.publishedAt
-    ? formatDistanceToNow(new Date(article.publishedAt), { addSuffix: true })
+    ? (() => {
+        const date = new Date(article.publishedAt);
+        const now = new Date();
+        const diffInMinutes = Math.floor(
+          (now.getTime() - date.getTime()) / 60000,
+        );
+
+        if (diffInMinutes < 60) {
+          return `${diffInMinutes} minutes ago`;
+        }
+        return formatDistanceToNow(date, { addSuffix: true });
+      })()
     : 'Unknown date';
 
   const shouldShowReadMore =
@@ -55,8 +66,12 @@ export function ArticleCard({ article }: ArticleCardProps) {
               </a>
               <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-muted-foreground">
                 <Badge variant="secondary">{article.category}</Badge>
-                <span aria-hidden="true">•</span>
-                <span className="truncate">{article.feedName}</span>
+                {article.feedName && (
+                  <>
+                    <span aria-hidden="true">•</span>
+                    <span className="truncate">{article.feedName}</span>
+                  </>
+                )}
                 <span aria-hidden="true">•</span>
                 <time dateTime={article.publishedAt || undefined}>
                   {formattedDate}
