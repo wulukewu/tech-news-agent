@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '@/__tests__/test-utils';
 import { ArticleCard } from '../ArticleCard';
 import type { Article } from '@/types/article';
 

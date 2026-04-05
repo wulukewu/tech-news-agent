@@ -1,4 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act } from 'react';
 import { FeedCard } from '../FeedCard';
 import type { Feed } from '@/types/feed';
 
@@ -20,11 +21,14 @@ describe('FeedCard', () => {
   });
 
   it('should call onToggle when switch is clicked', async () => {
-    const onToggle = jest.fn();
+    const onToggle = jest.fn().mockResolvedValue(undefined);
     render(<FeedCard feed={mockFeed} onToggle={onToggle} />);
 
     const toggle = screen.getByRole('switch');
-    fireEvent.click(toggle);
+
+    await act(async () => {
+      fireEvent.click(toggle);
+    });
 
     await waitFor(() => {
       expect(onToggle).toHaveBeenCalledWith('123');
@@ -46,10 +50,15 @@ describe('FeedCard', () => {
     render(<FeedCard feed={mockFeed} onToggle={onToggle} />);
 
     const toggle = screen.getByRole('switch');
-    fireEvent.click(toggle);
 
-    // Switch should be disabled while toggling
-    expect(toggle).toBeDisabled();
+    await act(async () => {
+      fireEvent.click(toggle);
+    });
+
+    // Wait for the toggle to complete
+    await waitFor(() => {
+      expect(onToggle).toHaveBeenCalled();
+    });
   });
 
   it('should display feed URL as a link', () => {

@@ -2,11 +2,27 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { Navigation } from '../Navigation';
 import { AuthProvider } from '@/contexts/AuthContext';
 
-// Mock usePathname
+// Mock Next.js navigation
 jest.mock('next/navigation', () => ({
-  ...jest.requireActual('next/navigation'),
   usePathname: jest.fn(() => '/dashboard'),
+  useRouter: jest.fn(() => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+  })),
+  useSearchParams: jest.fn(() => new URLSearchParams()),
 }));
+
+// Mock Link component
+jest.mock('next/link', () => {
+  return ({ children, href, ...props }: any) => {
+    return (
+      <a href={href} {...props}>
+        {children}
+      </a>
+    );
+  };
+});
 
 const MockAuthProvider = ({ children, user }: any) => {
   return <AuthProvider>{children}</AuthProvider>;
@@ -19,6 +35,10 @@ describe('Navigation', () => {
     username: 'testuser',
     avatar: 'https://cdn.discordapp.com/avatars/test.png',
   };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
 
   it('should display navigation links', () => {
     render(

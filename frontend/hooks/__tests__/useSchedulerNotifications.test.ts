@@ -1,9 +1,9 @@
 import { renderHook } from '@testing-library/react';
-import { toast } from 'sonner';
 import { useSchedulerNotifications } from '../useSchedulerNotifications';
+import { toast } from '@/lib/toast';
 
-// Mock sonner toast
-jest.mock('sonner', () => ({
+// Mock the toast wrapper
+jest.mock('@/lib/toast', () => ({
   toast: {
     loading: jest.fn(() => 'toast-id-123'),
     dismiss: jest.fn(),

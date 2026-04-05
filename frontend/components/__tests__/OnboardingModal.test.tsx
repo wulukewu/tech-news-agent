@@ -1,10 +1,7 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@/__tests__/test-utils';
 import { OnboardingModal } from '../OnboardingModal';
 import { toast } from 'sonner';
-
-// Mock fetch
-global.fetch = jest.fn();
 
 // Mock sonner toast
 jest.mock('sonner', () => ({
@@ -14,13 +11,17 @@ jest.mock('sonner', () => ({
   },
 }));
 
+// Mock fetch globally
+const mockFetch = jest.fn();
+global.fetch = mockFetch as any;
+
 describe('OnboardingModal', () => {
   const mockOnClose = jest.fn();
   const mockOnComplete = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
-    (global.fetch as jest.Mock).mockClear();
+    mockFetch.mockClear();
   });
 
   it('should render welcome step initially', () => {
@@ -84,7 +85,7 @@ describe('OnboardingModal', () => {
       total_count: 1,
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockFeeds,
     });
@@ -106,7 +107,7 @@ describe('OnboardingModal', () => {
   });
 
   it('should call onClose when "稍後再說" is clicked', async () => {
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({}),
     });
@@ -186,7 +187,7 @@ describe('OnboardingModal', () => {
       total_count: 2,
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockFeeds,
     });
@@ -242,7 +243,7 @@ describe('OnboardingModal', () => {
       total_count: 1,
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockFeeds,
     });
@@ -306,7 +307,7 @@ describe('OnboardingModal', () => {
       total_count: 1,
     };
 
-    (global.fetch as jest.Mock)
+    mockFetch
       .mockResolvedValueOnce({
         ok: true,
         json: async () => mockFeeds,
@@ -397,7 +398,7 @@ describe('OnboardingModal', () => {
       total_count: 1,
     };
 
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
+    mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => mockFeeds,
     });
