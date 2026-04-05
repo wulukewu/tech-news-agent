@@ -4,14 +4,16 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
 
-  // Enable hot reloading in Docker
-  webpackDevMiddleware: (config) => {
-    config.watchOptions = {
-      poll: 1000,
-      aggregateTimeout: 300,
-    };
-    return config;
-  },
+  // Enable hot reloading in Docker (dev only)
+  ...(process.env.NODE_ENV !== 'production' && {
+    webpackDevMiddleware: (config) => {
+      config.watchOptions = {
+        poll: 1000,
+        aggregateTimeout: 300,
+      };
+      return config;
+    },
+  }),
 
   // Environment variables
   env: {
@@ -30,9 +32,9 @@ const nextConfig = {
   },
 
   // Experimental features for better performance
-  experimental: {
-    optimizeCss: true,
-  },
+  // experimental: {
+  //   optimizeCss: true, // Requires 'critters' package
+  // },
 
   // Security headers
   async headers() {
