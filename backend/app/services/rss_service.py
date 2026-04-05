@@ -25,21 +25,41 @@ class RSSService:
         self.days_to_fetch = days_to_fetch
         
     def _parse_date(self, entry) -> datetime:
-        """Attempt to parse date from various feed formats securely."""
-        date_str = entry.get("published") or entry.get("updated") or entry.get("pubDate")
-        if not date_str:
-            return datetime.now(timezone.utc)
-            
+        """Attempt to parse date from various feed formats securely.
+        
+        Priority order:
+        1. published_parsed / updated_parsed (feedparser struct_time)
+        2. Manual parsing of published / updated / pubDate strings using dateutil
+        3. Fallback to current time (with warning log)
+        """
         try:
-            # feedparser usually parses standard dates into `published_parsed` struct_time
+            # Priority 1: Use feedparser's parsed struct_time
             parsed_struct = entry.get("published_parsed") or entry.get("updated_parsed")
             if parsed_struct:
                 return datetime(*parsed_struct[:6]).replace(tzinfo=timezone.utc)
-            # If manual fallback is needed, one could add dateutil.parser here
-            logger.debug(f"Failed to parse time struct for {date_str}, falling back to current time.")
+            
+            # Priority 2: Try manual parsing of date strings
+            date_str = entry.get("published") or entry.get("updated") or entry.get("pubDate")
+            if date_str:
+                try:
+                    from dateutil import parser as dateutil_parser
+                    parsed_date = dateutil_parser.parse(date_str)
+                    # Ensure timezone-aware datetime
+                    if parsed_date.tzinfo is None:
+                        parsed_date = parsed_date.replace(tzinfo=timezone.utc)
+                    else:
+                        parsed_date = parsed_date.astimezone(timezone.utc)
+                    logger.debug(f"Successfully parsed date string '{date_str}' to {parsed_date}")
+                    return parsed_date
+                except (ValueError, TypeError, ImportError) as e:
+                    logger.warning(f"Failed to parse date string '{date_str}': {e}")
+            
+            # Priority 3: Fallback to current time
+            logger.warning(f"No valid date found in entry, using current time. Entry keys: {list(entry.keys())}")
             return datetime.now(timezone.utc)
+            
         except Exception as e:
-            logger.warning(f"Error parsing date {date_str}: {e}")
+            logger.error(f"Unexpected error in _parse_date: {e}", exc_info=True)
             return datetime.now(timezone.utc)
 
     @retry(

@@ -45,7 +45,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
         }
         return formatDistanceToNow(date, { addSuffix: true });
       })()
-    : 'Unknown date';
+    : 'Recently added';
 
   const shouldShowReadMore =
     article.aiSummary && article.aiSummary.length > 200;
