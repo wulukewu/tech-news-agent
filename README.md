@@ -4,6 +4,7 @@ An automated technical information curation assistant combining FastAPI, Discord
 
 ## Core Features
 
+- **Manual Scheduler Trigger**: Trigger article fetching on-demand via Discord, Web UI, or API
 - **Multi-tenant Architecture**: Each Discord user has independent subscriptions and reading lists
 - **Personal Subscriptions**: Subscribe to your own RSS feeds with `/add_feed`
 - **Instant Article Access**: `/news_now` reads from database (no RSS fetching delay)
@@ -124,6 +125,43 @@ make logs-prod
 ---
 
 ## Discord Commands
+
+### `/trigger_fetch`
+
+Manually trigger the article fetching scheduler immediately.
+
+**What it does:**
+
+- Triggers the background fetch job to run immediately
+- Fetches new articles from all active RSS feeds
+- Analyzes articles with AI
+- Updates the database with new content
+
+**Example:**
+
+```
+/trigger_fetch
+```
+
+**Note:** The job runs in the background and may take several minutes to complete. Use `/scheduler_status` to check progress.
+
+### `/scheduler_status`
+
+Check the current status of the article fetching scheduler.
+
+**What it shows:**
+
+- Last execution time
+- Number of articles processed
+- Success rate
+- Health status
+- Any issues detected
+
+**Example:**
+
+```
+/scheduler_status
+```
 
 ### `/add_feed`
 
@@ -319,6 +357,12 @@ HYPOTHESIS_PROFILE=ci pytest tests/test_database_properties.py -v
 - [Supabase Testing Guide](./docs/testing/supabase-migration-testing.md) - Complete testing guide
 - [Test Fixtures Guide](./docs/testing/test-fixtures.md) - Fixture usage and examples
 
+**Development Records:**
+
+- [CI Optimization](./docs/development/CI_OPTIMIZATION.md) - CI/CD optimization history
+- [Implementation Summary](./docs/development/IMPLEMENTATION_SUMMARY.md) - Feature implementation summary
+- [Test Analysis](./docs/development/TEST_ANALYSIS.md) - Test coverage analysis
+
 **Migration Script:**
 
 - [Docker Compose Migration](./docs/migrate-to-docker-compose.sh) - Script to migrate to Docker Compose
@@ -402,6 +446,13 @@ tech-news-agent/
 ---
 
 ## Feature Highlights
+
+### 🎯 Manual Scheduler Control
+
+- Trigger article fetching on-demand via Discord commands
+- Check scheduler status and health
+- Web UI button for instant article refresh
+- REST API endpoints for programmatic access
 
 ### 🎯 Multi-tenant Architecture
 

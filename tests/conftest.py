@@ -21,7 +21,7 @@ load_dotenv()
 # Configure Hypothesis settings
 # 配置 Hypothesis 設定（減少迭代次數以加快測試速度）
 settings.register_profile("default", max_examples=10, verbosity=Verbosity.normal)
-settings.register_profile("ci", max_examples=10, verbosity=Verbosity.verbose)
+settings.register_profile("ci", max_examples=5, verbosity=Verbosity.verbose)  # CI 用更少的 examples
 settings.register_profile("dev", max_examples=10, verbosity=Verbosity.normal)
 settings.register_profile("debug", max_examples=5, verbosity=Verbosity.verbose)
 

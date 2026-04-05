@@ -226,14 +226,33 @@ pytest tests/test_database_properties.py -v
 HYPOTHESIS_PROFILE=ci pytest tests/test_database_properties.py -v
 ```
 
-### 測試文件
+### 文件
 
-詳細的測試文件請參考：
+📚 **[完整文件索引](./README.md)** - 所有文件的導航頁面
 
-- [Supabase 測試指南](./docs/testing/supabase-migration-testing.md) - 完整測試指南
-- [Test Fixtures 指南](./docs/testing/test-fixtures.md) - Fixture 使用與範例
-- [清理機制指南](./docs/testing/cleanup-mechanism.md) - 測試資料清理
-- [SQL 整合測試指南](./docs/testing/sql-integration-tests.md) - SQL 初始化測試
+**快速連結：**
+
+- [使用者指南](./USER_GUIDE.md) - Discord 指令完整說明
+- [開發者指南](./DEVELOPER_GUIDE.md) - 架構與開發指南
+- [快速開始](./QUICKSTART.md) - 快速上手
+- [環境變數設定](./setup/ENV_SETUP_GUIDE.md) - 環境變數完整說明
+- [Docker 指南](./docker/DOCKER_GUIDE.md) - Docker 部署指南
+- [部署檢查清單](./deployment/DEPLOYMENT_CHECKLIST.md) - 部署前檢查項目
+
+**測試文件：**
+
+- [Supabase 測試指南](./testing/supabase-migration-testing.md) - 完整測試指南
+- [Test Fixtures 指南](./testing/test-fixtures.md) - Fixture 使用與範例
+- [清理機制指南](./testing/cleanup-mechanism.md) - 測試資料清理
+- [SQL 整合測試指南](./testing/sql-integration-tests.md) - SQL 初始化測試
+
+**開發記錄：**
+
+- [CI 優化記錄](./development/CI_OPTIMIZATION.md) - CI/CD 優化歷程
+- [實作總結](./development/IMPLEMENTATION_SUMMARY.md) - 功能實作總結
+- [測試分析](./development/TEST_ANALYSIS.md) - 測試覆蓋率分析
+- [規格完成總結](./development/SPEC_COMPLETION_SUMMARY.md) - 規格實作記錄
+- [Auth Schema 修復](./development/BUGFIX_AUTH_SCHEMA.md) - 認證架構修復記錄
 
 ### 手動端對端測試
 
@@ -284,6 +303,15 @@ tech-news-agent/
 │   │   └── scheduler.py     # APScheduler 週報自動化
 │   └── main.py              # FastAPI 進入點與生命週期管理
 ├── docs/                    # 文件
+│   ├── setup/               # 設定相關文件
+│   ├── docker/              # Docker 相關文件
+│   ├── deployment/          # 部署相關文件
+│   ├── development/         # 開發記錄
+│   │   ├── CI_OPTIMIZATION.md
+│   │   ├── IMPLEMENTATION_SUMMARY.md
+│   │   ├── TEST_ANALYSIS.md
+│   │   ├── SPEC_COMPLETION_SUMMARY.md
+│   │   └── BUGFIX_AUTH_SCHEMA.md
 │   └── testing/             # 測試文件
 │       ├── supabase-migration-testing.md  # Supabase 測試指南
 │       ├── test-fixtures.md               # Test fixtures 指南

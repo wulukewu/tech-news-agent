@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ArticleCard } from '@/components/ArticleCard';
 import { ArticleListSkeleton } from '@/components/LoadingSkeleton';
+import { TriggerSchedulerButton } from '@/components/TriggerSchedulerButton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useInfiniteScroll } from '@/lib/hooks/useInfiniteScroll';
@@ -131,12 +132,15 @@ export default function DashboardPage() {
         <header className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <h1 className="text-3xl font-bold">Your Articles</h1>
-            <Button
-              variant="outline"
-              onClick={() => router.push('/subscriptions')}
-            >
-              管理訂閱
-            </Button>
+            <div className="flex gap-2">
+              <TriggerSchedulerButton />
+              <Button
+                variant="outline"
+                onClick={() => router.push('/subscriptions')}
+              >
+                管理訂閱
+              </Button>
+            </div>
           </div>
 
           {/* Category Filter */}

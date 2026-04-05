@@ -26,6 +26,7 @@ class TechNewsBot(commands.Bot):
         await self.load_extension("app.bot.cogs.reading_list")
         await self.load_extension("app.bot.cogs.subscription_commands")
         await self.load_extension("app.bot.cogs.notification_settings")
+        await self.load_extension("app.bot.cogs.admin_commands")
         
         # Register persistent views that survive bot restarts
         logger.info("Registering persistent views...")

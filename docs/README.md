@@ -24,6 +24,7 @@
 
 - [部署指南](./deployment/DEPLOYMENT.md) - 完整部署流程
 - [部署檢查清單](./deployment/DEPLOYMENT_CHECKLIST.md) - 部署前檢查項目
+- [手動觸發部署檢查清單](./deployment/DEPLOYMENT_CHECKLIST_MANUAL_TRIGGER.md) - 手動觸發功能部署檢查
 
 ### 📖 使用者與開發者指南
 
@@ -43,6 +44,14 @@
 - [清理機制指南](./testing/cleanup-mechanism.md) - 測試資料清理
 - [SQL 整合測試](./testing/sql-integration-tests.md) - SQL 初始化測試
 - [測試資料隔離](./testing/test-data-isolation.md) - 測試資料隔離機制
+
+### 🛠️ 開發記錄
+
+- [CI 優化記錄](./development/CI_OPTIMIZATION.md) - CI/CD 優化歷程
+- [實作總結](./development/IMPLEMENTATION_SUMMARY.md) - 功能實作總結
+- [測試分析](./development/TEST_ANALYSIS.md) - 測試覆蓋率分析
+- [規格完成總結](./development/SPEC_COMPLETION_SUMMARY.md) - 規格實作記錄
+- [Auth Schema 修復](./development/BUGFIX_AUTH_SCHEMA.md) - 認證架構修復記錄
 
 ### 🌍 多語言文件
 
@@ -72,7 +81,15 @@ docs/
 │
 ├── deployment/                        # 部署相關
 │   ├── DEPLOYMENT.md
-│   └── DEPLOYMENT_CHECKLIST.md
+│   ├── DEPLOYMENT_CHECKLIST.md
+│   └── DEPLOYMENT_CHECKLIST_MANUAL_TRIGGER.md
+│
+├── development/                       # 開發記錄
+│   ├── CI_OPTIMIZATION.md
+│   ├── IMPLEMENTATION_SUMMARY.md
+│   ├── TEST_ANALYSIS.md
+│   ├── SPEC_COMPLETION_SUMMARY.md
+│   └── BUGFIX_AUTH_SCHEMA.md
 │
 └── testing/                           # 測試相關
     ├── supabase-migration-testing.md

@@ -22,7 +22,7 @@ from app.core.config import settings
 from app.core.exceptions import ConfigurationError
 from app.bot.client import bot
 from app.tasks.scheduler import scheduler, setup_scheduler, get_scheduler_health
-from app.api import auth, feeds, articles, reading_list
+from app.api import auth, feeds, articles, reading_list, scheduler as scheduler_api
 
 # Configure logging for the entire app
 logging.basicConfig(
@@ -125,6 +125,7 @@ app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 app.include_router(feeds.router, prefix="/api", tags=["feeds"])
 app.include_router(articles.router, prefix="/api/articles", tags=["articles"])
 app.include_router(reading_list.router, prefix="/api", tags=["reading-list"])
+app.include_router(scheduler_api.router, prefix="/api", tags=["scheduler"])
 
 @app.get("/")
 async def root():
