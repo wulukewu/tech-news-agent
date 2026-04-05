@@ -31,6 +31,9 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
 
+  // Disable font optimization if network issues during build
+  optimizeFonts: false,
+
   // Experimental features for better performance
   // experimental: {
   //   optimizeCss: true, // Requires 'critters' package
