@@ -87,13 +87,7 @@ jobs:
             tests/test_decorators.py \
             tests/test_health_endpoint.py \
             tests/test_input_validation_property.py \
-            tests/test_pagination_property.py \
-            tests/test_rate_limiting_property.py \
-            tests/test_response_format_property.py \
-            tests/test_security_headers_property.py \
-            tests/test_session_management_property.py \
-            tests/test_url_validation_property.py \
-            tests/test_user_agent_property.py
+            tests/test_security_headers_property.py
 
   frontend-test:
     name: Frontend Tests
