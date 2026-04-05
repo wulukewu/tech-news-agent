@@ -30,23 +30,26 @@ jobs:
       - name: Cache Hypothesis database
         uses: actions/cache@v4
         with:
-          path: .hypothesis
-          key: hypothesis-${{ runner.os }}-${{ hashFiles('tests/**/*.py') }}
+          path: backend/.hypothesis
+          key: hypothesis-${{ runner.os }}-${{ hashFiles('backend/tests/**/*.py') }}
           restore-keys: |
             hypothesis-${{ runner.os }}-
 
       - name: Install dependencies
+        working-directory: backend
         run: |
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
       - name: Run fast tests (all branches)
+        working-directory: backend
         env:
           HYPOTHESIS_PROFILE: ci
         run: pytest --tb=short -q -n auto --timeout=300 --ignore-glob="*property*.py" --ignore=tests/integration/
 
       - name: Run full tests (main/PR only)
         if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+        working-directory: backend
         env:
           HYPOTHESIS_PROFILE: ci
         run: pytest --tb=short -q -n auto --timeout=600
