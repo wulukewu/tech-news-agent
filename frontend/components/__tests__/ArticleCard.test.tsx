@@ -37,9 +37,11 @@ describe('ArticleCard', () => {
   it('should display tinkering index as stars', () => {
     render(<ArticleCard article={mockArticle} />);
 
-    // Should have 5 star icons (4 filled, 1 empty)
-    const stars = screen.getAllByTestId(/star-icon/i);
-    expect(stars).toHaveLength(5);
+    // Should have aria-label for tinkering index
+    const tinkeringBadge = screen.getByLabelText(
+      /tinkering index: 4 out of 5/i,
+    );
+    expect(tinkeringBadge).toBeInTheDocument();
   });
 
   it('should expand AI summary when "Read more" is clicked', () => {
@@ -77,7 +79,9 @@ describe('ArticleCard', () => {
   it('should display "Add to Reading List" button', () => {
     render(<ArticleCard article={mockArticle} />);
 
-    const addButton = screen.getByRole('button', { name: /bookmark/i });
+    const addButton = screen.getByRole('button', {
+      name: /add to reading list/i,
+    });
     expect(addButton).toBeInTheDocument();
   });
 
@@ -88,6 +92,6 @@ describe('ArticleCard', () => {
     };
     render(<ArticleCard article={articleWithoutDate} />);
 
-    expect(screen.getByText(/unknown date/i)).toBeInTheDocument();
+    expect(screen.getByText(/recently added/i)).toBeInTheDocument();
   });
 });

@@ -1,6 +1,6 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '@/__tests__/test-utils';
 import { Navigation } from '../Navigation';
-import { AuthProvider } from '@/contexts/AuthContext';
+import * as AuthHooks from '@/lib/hooks/useAuth';
 
 // Mock Next.js navigation
 jest.mock('next/navigation', () => ({
@@ -15,18 +15,19 @@ jest.mock('next/navigation', () => ({
 
 // Mock Link component
 jest.mock('next/link', () => {
-  return ({ children, href, ...props }: any) => {
+  const MockLink = ({ children, href, ...props }: any) => {
     return (
       <a href={href} {...props}>
         {children}
       </a>
     );
   };
+  MockLink.displayName = 'MockLink';
+  return MockLink;
 });
 
-const MockAuthProvider = ({ children, user }: any) => {
-  return <AuthProvider>{children}</AuthProvider>;
-};
+// Mock useAuth hook
+jest.mock('@/lib/hooks/useAuth');
 
 describe('Navigation', () => {
   const mockUser = {
@@ -36,16 +37,19 @@ describe('Navigation', () => {
     avatar: 'https://cdn.discordapp.com/avatars/test.png',
   };
 
+  const mockLogout = jest.fn();
+
   beforeEach(() => {
     jest.clearAllMocks();
+    (AuthHooks.useAuth as jest.Mock).mockReturnValue({
+      user: mockUser,
+      logout: mockLogout,
+      isLoading: false,
+    });
   });
 
   it('should display navigation links', () => {
-    render(
-      <MockAuthProvider user={mockUser}>
-        <Navigation />
-      </MockAuthProvider>,
-    );
+    render(<Navigation />);
 
     expect(screen.getByText('Dashboard')).toBeInTheDocument();
     expect(screen.getByText('Subscriptions')).toBeInTheDocument();
@@ -56,42 +60,26 @@ describe('Navigation', () => {
     const { usePathname } = require('next/navigation');
     usePathname.mockReturnValue('/subscriptions');
 
-    render(
-      <MockAuthProvider user={mockUser}>
-        <Navigation />
-      </MockAuthProvider>,
-    );
+    render(<Navigation />);
 
     const subscriptionsLink = screen.getByText('Subscriptions').closest('a');
     expect(subscriptionsLink).toHaveClass('bg-primary');
   });
 
   it('should display logout button', () => {
-    render(
-      <MockAuthProvider user={mockUser}>
-        <Navigation />
-      </MockAuthProvider>,
-    );
+    render(<Navigation />);
 
     expect(screen.getByRole('button', { name: /logout/i })).toBeInTheDocument();
   });
 
   it('should display application name', () => {
-    render(
-      <MockAuthProvider user={mockUser}>
-        <Navigation />
-      </MockAuthProvider>,
-    );
+    render(<Navigation />);
 
     expect(screen.getByText('Tech News Agent')).toBeInTheDocument();
   });
 
   it('should have mobile menu toggle on small screens', () => {
-    render(
-      <MockAuthProvider user={mockUser}>
-        <Navigation />
-      </MockAuthProvider>,
-    );
+    render(<Navigation />);
 
     // Mobile menu button should exist (hidden on desktop)
     const menuButton = screen.getByRole('button', { name: /menu/i });
@@ -99,11 +87,7 @@ describe('Navigation', () => {
   });
 
   it('should toggle mobile menu when clicked', () => {
-    render(
-      <MockAuthProvider user={mockUser}>
-        <Navigation />
-      </MockAuthProvider>,
-    );
+    render(<Navigation />);
 
     const menuButton = screen.getByRole('button', { name: /menu/i });
 

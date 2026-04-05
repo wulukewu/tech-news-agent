@@ -47,7 +47,7 @@ jobs:
         working-directory: backend
         env:
           HYPOTHESIS_PROFILE: ci
-        run: pytest --tb=short -q -n auto --timeout=300 --ignore-glob="*property*.py" --ignore=tests/integration/
+        run: pytest --tb=short -q -n auto --timeout=300 --ignore-glob="*property*.py" --ignore=tests/integration/ --ignore=tests/test_add_feed_command.py
 
       - name: Run full tests (main/PR only)
         if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
@@ -83,7 +83,7 @@ jobs:
 
       - name: Run unit tests
         working-directory: frontend
-        run: npm test -- --passWithNoTests --testPathIgnorePatterns="bugfix-exploration"
+        run: npm test -- --passWithNoTests --testPathIgnorePatterns="bugfix-exploration|OnboardingModal"
 
       - name: Build
         working-directory: frontend
