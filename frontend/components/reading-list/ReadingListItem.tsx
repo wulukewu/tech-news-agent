@@ -1,6 +1,14 @@
 'use client';
 
-import { Check, Archive, Trash2, Loader2, ExternalLink } from 'lucide-react';
+import {
+  Check,
+  Archive,
+  Trash2,
+  Loader2,
+  ExternalLink,
+  RotateCcw,
+  ArchiveRestore,
+} from 'lucide-react';
 import { formatDistanceToNow, format, isAfter, subDays } from 'date-fns';
 import { cn } from '@/lib/utils';
 import type {
@@ -165,7 +173,7 @@ export function ReadingListItem({
 
         {/* Action buttons */}
         <div className="flex items-center gap-2">
-          {/* Mark as Read (only show if Unread) */}
+          {/* Status change buttons - show different buttons based on current status */}
           {item.status === 'Unread' && (
             <button
               onClick={() => handleStatusChange('Read')}
@@ -190,28 +198,78 @@ export function ReadingListItem({
             </button>
           )}
 
-          {/* Archive */}
-          <button
-            onClick={() => handleStatusChange('Archived')}
-            disabled={isLoading}
-            aria-label="Archive"
-            className={cn(
-              'inline-flex items-center gap-2 px-3 py-2 rounded-md',
-              'bg-secondary text-secondary-foreground',
-              'hover:bg-secondary/80 transition-colors',
-              'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
-              'disabled:opacity-50 disabled:cursor-not-allowed',
-              'text-sm font-medium',
-              'motion-reduce:transition-none',
-            )}
-          >
-            {loadingAction === 'status' ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Archive className="h-4 w-4" />
-            )}
-            <span className="hidden sm:inline">Archive</span>
-          </button>
+          {item.status === 'Read' && (
+            <button
+              onClick={() => handleStatusChange('Unread')}
+              disabled={isLoading}
+              aria-label="Mark as unread"
+              className={cn(
+                'inline-flex items-center gap-2 px-3 py-2 rounded-md',
+                'bg-primary text-primary-foreground',
+                'hover:bg-primary/90 transition-colors',
+                'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
+                'disabled:opacity-50 disabled:cursor-not-allowed',
+                'text-sm font-medium',
+                'motion-reduce:transition-none',
+              )}
+            >
+              {loadingAction === 'status' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RotateCcw className="h-4 w-4" />
+              )}
+              <span className="hidden sm:inline">Mark as Unread</span>
+            </button>
+          )}
+
+          {item.status === 'Archived' && (
+            <button
+              onClick={() => handleStatusChange('Unread')}
+              disabled={isLoading}
+              aria-label="Unarchive"
+              className={cn(
+                'inline-flex items-center gap-2 px-3 py-2 rounded-md',
+                'bg-primary text-primary-foreground',
+                'hover:bg-primary/90 transition-colors',
+                'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
+                'disabled:opacity-50 disabled:cursor-not-allowed',
+                'text-sm font-medium',
+                'motion-reduce:transition-none',
+              )}
+            >
+              {loadingAction === 'status' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <ArchiveRestore className="h-4 w-4" />
+              )}
+              <span className="hidden sm:inline">Unarchive</span>
+            </button>
+          )}
+
+          {/* Archive button - only show if not already archived */}
+          {item.status !== 'Archived' && (
+            <button
+              onClick={() => handleStatusChange('Archived')}
+              disabled={isLoading}
+              aria-label="Archive"
+              className={cn(
+                'inline-flex items-center gap-2 px-3 py-2 rounded-md',
+                'bg-secondary text-secondary-foreground',
+                'hover:bg-secondary/80 transition-colors',
+                'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
+                'disabled:opacity-50 disabled:cursor-not-allowed',
+                'text-sm font-medium',
+                'motion-reduce:transition-none',
+              )}
+            >
+              {loadingAction === 'status' ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Archive className="h-4 w-4" />
+              )}
+              <span className="hidden sm:inline">Archive</span>
+            </button>
+          )}
 
           {/* Remove */}
           <button
