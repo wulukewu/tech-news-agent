@@ -121,6 +121,20 @@ class DMNotificationService:
             # 發送 DM
             try:
                 await user.send(embed=embed)
+                
+                # 記錄已發送的文章（防止重複發送）
+                try:
+                    article_ids = [str(article.id) for article in articles if article.id]
+                    if article_ids:
+                        await supabase.record_sent_articles(discord_id, article_ids)
+                        logger.info(f"Recorded {len(article_ids)} sent articles for user {discord_id}")
+                except Exception as record_error:
+                    # 記錄失敗不應該影響 DM 發送成功的狀態
+                    logger.error(
+                        f"Failed to record sent articles for user {discord_id}: {record_error}",
+                        exc_info=True
+                    )
+                
                 logger.info(f"Successfully sent digest DM to user {discord_id}")
                 return True
             except discord.Forbidden:

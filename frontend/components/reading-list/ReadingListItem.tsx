@@ -30,6 +30,10 @@ export function ReadingListItem({
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
 
   const handleStatusChange = async (status: ReadingListStatus) => {
+    if (!item.articleId) {
+      console.error('Cannot update status: article_id is undefined');
+      return;
+    }
     setLoadingAction('status');
     try {
       await onStatusChange(item.articleId, status);
@@ -39,6 +43,10 @@ export function ReadingListItem({
   };
 
   const handleRemove = async () => {
+    if (!item.articleId) {
+      console.error('Cannot remove article: article_id is undefined');
+      return;
+    }
     setLoadingAction('remove');
     try {
       await onRemove(item.articleId);
@@ -48,6 +56,10 @@ export function ReadingListItem({
   };
 
   const handleRatingChange = async (rating: number | null) => {
+    if (!item.articleId) {
+      console.error('Cannot update rating: article_id is undefined');
+      return;
+    }
     setLoadingAction('rating');
     try {
       await onRatingChange(item.articleId, rating);

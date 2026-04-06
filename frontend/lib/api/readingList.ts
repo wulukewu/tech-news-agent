@@ -27,6 +27,9 @@ export async function fetchReadingList(
 export async function addToReadingList(
   articleId: string,
 ): Promise<{ message: string; articleId: string }> {
+  if (!articleId || articleId === 'undefined') {
+    throw new Error('Invalid article_id: must be a valid UUID');
+  }
   return apiClient.post('/api/reading-list', { article_id: articleId });
 }
 
@@ -38,6 +41,9 @@ export async function updateReadingListStatus(
   articleId: string,
   status: ReadingListStatus,
 ): Promise<{ message: string; status: string }> {
+  if (!articleId || articleId === 'undefined') {
+    throw new Error('Invalid article_id: must be a valid UUID');
+  }
   return apiClient.patch(`/api/reading-list/${articleId}/status`, { status });
 }
 
@@ -49,6 +55,9 @@ export async function updateReadingListRating(
   articleId: string,
   rating: number | null,
 ): Promise<{ message: string; rating: number | null }> {
+  if (!articleId || articleId === 'undefined') {
+    throw new Error('Invalid article_id: must be a valid UUID');
+  }
   return apiClient.patch(`/api/reading-list/${articleId}/rating`, { rating });
 }
 
@@ -59,5 +68,8 @@ export async function updateReadingListRating(
 export async function removeFromReadingList(
   articleId: string,
 ): Promise<{ message: string }> {
+  if (!articleId || articleId === 'undefined') {
+    throw new Error('Invalid article_id: must be a valid UUID');
+  }
   return apiClient.delete(`/api/reading-list/${articleId}`);
 }

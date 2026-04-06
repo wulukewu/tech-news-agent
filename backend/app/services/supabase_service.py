@@ -1906,6 +1906,88 @@ class SupabaseService:
                 "operation": "get_users_with_dm_enabled"
             })
 
+    async def record_sent_articles(
+        self,
+        discord_id: str,
+        article_ids: List[str]
+    ) -> None:
+        """記錄已發送給使用者的文章
+        
+        將文章記錄到 dm_sent_articles 表格，用於追蹤哪些文章已經透過 DM 通知發送給使用者。
+        使用 UPSERT 邏輯避免重複記錄。
+        
+        Args:
+            discord_id: Discord 使用者 ID
+            article_ids: 已發送的文章 ID 列表
+            
+        Raises:
+            SupabaseServiceError: 當資料庫操作失敗時
+            
+        Validates: Requirements 2.2
+        """
+        from uuid import UUID
+        
+        if not article_ids:
+            logger.debug(f"No articles to record for user {discord_id}")
+            return
+        
+        logger.info(
+            f"Recording {len(article_ids)} sent articles for user {discord_id}",
+            extra={
+                "operation_type": "INSERT",
+                "table": "dm_sent_articles",
+                "discord_id": discord_id,
+                "article_count": len(article_ids)
+            }
+        )
+        
+        try:
+            # 取得使用者 UUID
+            user_uuid = await self.get_or_create_user(discord_id)
+            
+            # 準備記錄資料
+            records = [
+                {
+                    'user_id': str(user_uuid),
+                    'article_id': str(article_id)
+                }
+                for article_id in article_ids
+            ]
+            
+            # 使用 UPSERT 避免重複記錄（如果同一文章被多次發送）
+            self.client.table('dm_sent_articles')\
+                .upsert(records, on_conflict='user_id,article_id')\
+                .execute()
+            
+            logger.info(
+                f"Successfully recorded {len(article_ids)} sent articles for user {discord_id}",
+                extra={
+                    "operation_type": "INSERT",
+                    "table": "dm_sent_articles",
+                    "affected_records": len(article_ids)
+                }
+            )
+            
+        except SupabaseServiceError:
+            # 重新拋出已經包裝的錯誤
+            raise
+        except Exception as e:
+            logger.error(
+                f"Failed to record sent articles for user {discord_id}: {e}",
+                exc_info=True,
+                extra={
+                    "operation_type": "INSERT",
+                    "table": "dm_sent_articles",
+                    "discord_id": discord_id,
+                    "article_count": len(article_ids),
+                    "error_type": type(e).__name__
+                }
+            )
+            self._handle_database_error(e, {
+                "discord_id": discord_id,
+                "article_count": len(article_ids),
+                "operation": "record_sent_articles"
+            })
     
     async def get_user_articles(
         self,
@@ -1960,15 +2042,29 @@ class SupabaseService:
             # 提取 feed IDs
             feed_ids = [sub['feed_id'] for sub in subscriptions_response.data]
             
-            # 查詢文章
-            response = self.client.table('articles')\
+            # 查詢已發送給使用者的文章 IDs（用於排除重複）
+            sent_articles_response = self.client.table('dm_sent_articles')\
+                .select('article_id')\
+                .eq('user_id', str(user_uuid))\
+                .execute()
+            
+            # 提取已發送的文章 IDs
+            sent_article_ids = [record['article_id'] for record in sent_articles_response.data] if sent_articles_response.data else []
+            
+            # 查詢文章，排除已發送的文章
+            query = self.client.table('articles')\
                 .select('id, title, url, published_at, tinkering_index, ai_summary, feed_id, feeds(category)')\
                 .in_('feed_id', feed_ids)\
                 .gte('published_at', cutoff_date.isoformat())\
                 .not_.is_('tinkering_index', 'null')\
                 .order('tinkering_index', desc=True)\
-                .limit(limit)\
-                .execute()
+                .limit(limit)
+            
+            # 如果有已發送的文章，排除它們
+            if sent_article_ids:
+                query = query.not_.in_('id', sent_article_ids)
+            
+            response = query.execute()
             
             if not response.data:
                 logger.info(f"No articles found for user {discord_id}")
@@ -1985,6 +2081,7 @@ class SupabaseService:
                         continue
                     
                     article = ArticleSchema(
+                        id=article_data['id'],  # Include article ID
                         title=article_data['title'],
                         url=article_data['url'],
                         feed_id=article_data['feed_id'],

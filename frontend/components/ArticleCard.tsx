@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { Article } from '@/types/article';
 import { useAddToReadingList } from '@/lib/hooks/useReadingList';
+import { toast } from '@/lib/toast';
 
 interface ArticleCardProps {
   article: Article;
@@ -20,6 +21,11 @@ export function ArticleCard({ article }: ArticleCardProps) {
   const addToReadingList = useAddToReadingList();
 
   const handleAddToReadingList = async () => {
+    if (!article.id) {
+      console.error('Cannot add to reading list: article.id is undefined');
+      toast.error('Unable to add article: Invalid article data');
+      return;
+    }
     try {
       await addToReadingList.mutateAsync(article.id);
       setIsAdded(true);

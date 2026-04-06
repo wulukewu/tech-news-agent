@@ -17,12 +17,14 @@ class AddToReadingListRequest(BaseModel):
 
 class UpdateRatingRequest(BaseModel):
     """更新評分請求"""
-    rating: int = Field(..., ge=1, le=5, description="評分（1-5）")
+    rating: Optional[int] = Field(None, ge=1, le=5, description="評分（1-5）或 null 清除評分")
 
     @validator('rating')
     def validate_rating(cls, v):
+        if v is None:
+            return v  # Allow null to clear rating
         if not isinstance(v, int):
-            raise ValueError("Rating must be an integer")
+            raise ValueError("Rating must be an integer or null")
         if not (1 <= v <= 5):
             raise ValueError("Rating must be between 1 and 5")
         return v

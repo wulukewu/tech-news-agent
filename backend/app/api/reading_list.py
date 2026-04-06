@@ -560,7 +560,7 @@ async def update_reading_list_rating(
             extra={
                 "discord_id": discord_id,
                 "article_id": str(article_id),
-                "new_rating": request.rating
+                "new_rating": request.rating if request.rating is not None else "null"
             }
         )
         
@@ -585,7 +585,7 @@ async def update_reading_list_rating(
             extra={
                 "discord_id": discord_id,
                 "article_id": str(article_id),
-                "new_rating": request.rating
+                "new_rating": request.rating if request.rating is not None else "null"
             }
         )
         
