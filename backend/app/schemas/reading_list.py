@@ -44,28 +44,37 @@ class UpdateStatusRequest(BaseModel):
 
 class ReadingListItemResponse(BaseModel):
     """閱讀清單項目回應"""
-    article_id: UUID = Field(..., description="文章 UUID")
+    article_id: UUID = Field(..., description="文章 UUID", alias="articleId")
     title: str = Field(..., description="文章標題")
     url: HttpUrl = Field(..., description="文章 URL")
     category: str = Field(..., description="分類")
     status: str = Field(..., description="閱讀狀態")
     rating: Optional[int] = Field(None, description="評分（1-5）")
-    added_at: datetime = Field(..., description="加入時間")
-    updated_at: datetime = Field(..., description="更新時間")
+    added_at: datetime = Field(..., description="加入時間", alias="addedAt")
+    updated_at: datetime = Field(..., description="更新時間", alias="updatedAt")
+    
+    class Config:
+        populate_by_name = True
 
 
 class ReadingListResponse(BaseModel):
     """閱讀清單回應（含分頁）"""
     items: List[ReadingListItemResponse] = Field(..., description="閱讀清單項目")
     page: int = Field(..., ge=1, description="當前頁碼")
-    page_size: int = Field(..., ge=1, le=100, description="每頁項目數")
-    total_count: int = Field(..., ge=0, description="總項目數")
-    has_next_page: bool = Field(..., description="是否有下一頁")
+    page_size: int = Field(..., ge=1, le=100, description="每頁項目數", alias="pageSize")
+    total_count: int = Field(..., ge=0, description="總項目數", alias="totalCount")
+    has_next_page: bool = Field(..., description="是否有下一頁", alias="hasNextPage")
+    
+    class Config:
+        populate_by_name = True
 
 
 class MessageResponse(BaseModel):
     """通用訊息回應"""
     message: str = Field(..., description="回應訊息")
-    article_id: Optional[UUID] = Field(None, description="文章 UUID")
+    article_id: Optional[UUID] = Field(None, description="文章 UUID", alias="articleId")
     rating: Optional[int] = Field(None, description="評分")
     status: Optional[str] = Field(None, description="狀態")
+    
+    class Config:
+        populate_by_name = True
