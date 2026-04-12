@@ -7,6 +7,7 @@ from discord.ext import commands
 from app.bot.utils.decorators import ensure_user_registered
 from app.core.exceptions import SupabaseServiceError
 from app.core.logger import get_logger
+from app.services.llm_service import LLMService
 from app.services.supabase_service import SupabaseService
 
 logger = get_logger(__name__)
@@ -15,16 +16,23 @@ logger = get_logger(__name__)
 class NewsCommands(commands.Cog):
     """News commands cog with service layer dependency injection."""
 
-    def __init__(self, bot: commands.Bot, supabase_service: SupabaseService = None):
+    def __init__(
+        self,
+        bot: commands.Bot,
+        supabase_service: SupabaseService = None,
+        llm_service: LLMService = None,
+    ):
         """
         Initialize NewsCommands cog with service dependencies.
 
         Args:
             bot: Discord bot instance
             supabase_service: Optional SupabaseService instance for dependency injection
+            llm_service: Optional LLMService instance for dependency injection
         """
         self.bot = bot
         self.supabase_service = supabase_service or SupabaseService()
+        self.llm_service = llm_service or LLMService()
 
     @app_commands.command(name="news_now", description="查看你訂閱的最新技術文章")
     async def news_now(self, interaction: discord.Interaction):
@@ -150,13 +158,15 @@ class NewsCommands(commands.Cog):
             for article in articles[:5]:
                 from app.bot.cogs.interactions import DeepDiveButton
 
-                combined_view.add_item(DeepDiveButton(article))
+                combined_view.add_item(DeepDiveButton(article, self.llm_service))
 
             # Add Read Later buttons (top 10 articles)
             for article in articles[:10]:
                 from app.bot.cogs.interactions import ReadLaterButton
 
-                combined_view.add_item(ReadLaterButton(article.id, article.title))
+                combined_view.add_item(
+                    ReadLaterButton(article.id, article.title, self.supabase_service)
+                )
 
             await interaction.followup.send(content=notification, view=combined_view)
             logger.info(
@@ -197,4 +207,5 @@ class NewsCommands(commands.Cog):
 async def setup(bot: commands.Bot):
     """Setup function with service layer dependency injection."""
     supabase_service = SupabaseService()
-    await bot.add_cog(NewsCommands(bot, supabase_service))
+    llm_service = LLMService()
+    await bot.add_cog(NewsCommands(bot, supabase_service, llm_service))

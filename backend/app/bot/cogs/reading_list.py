@@ -11,7 +11,12 @@ from app.services.supabase_service import SupabaseService
 
 logger = get_logger(__name__)
 
-PAGE_SIZE = 5
+# Discord UI has a maximum of 5 rows (0-4)
+# Row 0: Pagination buttons
+# Row 1: MarkAsReadButtons (max 5)
+# Rows 2-4: RatingSelects (max 3, each takes full row)
+# Therefore, max items per page is 3
+PAGE_SIZE = 3
 
 
 class MarkAsReadButton(discord.ui.Button):
@@ -234,16 +239,19 @@ class PaginationView(discord.ui.View):
         self.add_item(PrevPageButton(self))
         self.add_item(NextPageButton(self))
 
-        # Row 1: MarkAsReadButtons (up to 5 buttons, each width=1, total ≤ 5)
-        # Rows 2–5 (one per article): RatingSelect (width=5, must be alone on its row)
-        # Discord row width limit is 5 units; Select = 5, Button = 1.
+        # Discord has a maximum of 5 rows (0-4)
+        # Row 0: Pagination buttons
+        # Row 1: MarkAsReadButtons (up to 5 buttons, each width=1)
+        # Rows 2-4: RatingSelect (width=5, must be alone on its row, max 3 selects)
         page_items = self._current_page_items()
-        for item in page_items:
+
+        # Add MarkAsReadButtons to row 1 (max 5 buttons)
+        for item in page_items[:5]:
             self.add_item(MarkAsReadButton(item, row=1, supabase_service=self.supabase_service))
-        for i, item in enumerate(page_items):
-            self.add_item(
-                RatingSelect(item, row=i + 2, supabase_service=self.supabase_service)
-            )  # rows 2–6 (max 5 items → rows 2–6)
+
+        # Add RatingSelects to rows 2-4 (max 3 selects due to 5-row limit)
+        for i, item in enumerate(page_items[:3]):
+            self.add_item(RatingSelect(item, row=i + 2, supabase_service=self.supabase_service))
 
     def _current_page_items(self) -> list[ReadingListItem]:
         start = self.page * self.page_size

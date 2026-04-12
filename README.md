@@ -677,6 +677,54 @@ user_subscriptions      └── created_at          ├── tinkering_index
 
 ---
 
+## 🔧 Troubleshooting
+
+### Discord Bot Issues
+
+If you encounter errors with Discord bot commands after setup or refactoring:
+
+#### `/news_now` or `/reading_list` Commands Failing
+
+**Symptoms:**
+
+- Bot crashes with database errors
+- "Could not find table" errors in logs
+
+**Solution:**
+
+```bash
+# 1. Verify bot health
+cd backend
+python3 scripts/verify_bot_health.py
+
+# 2. Apply missing migrations if needed
+python3 scripts/apply_missing_migration.py
+```
+
+### Common Issues
+
+**Database Connection Errors:**
+
+- Verify `SUPABASE_URL` and `SUPABASE_KEY` in `.env`
+- Check Supabase project is active
+- Ensure database tables are created (run migrations)
+
+**Discord Bot Not Responding:**
+
+- Verify `DISCORD_BOT_TOKEN` is correct
+- Check bot has proper permissions in Discord server
+- Ensure bot is invited with correct OAuth scopes
+
+**Articles Not Fetching:**
+
+- Check scheduler is running: `docker-compose logs -f backend`
+- Verify RSS feeds are valid and accessible
+- Check Groq API key is valid and has credits
+
+For more help, see the [full documentation](./docs/README.md) or [open an issue](https://github.com/yourusername/tech-news-agent/issues).
+
+---
+
 ## 🤝 Contributing
 
 We welcome contributions! Here's how you can help:

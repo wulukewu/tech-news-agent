@@ -2097,18 +2097,32 @@ class SupabaseService:
             ]
 
             # 使用 UPSERT 避免重複記錄（如果同一文章被多次發送）
-            self.client.table("dm_sent_articles").upsert(
-                records, on_conflict="user_id,article_id"
-            ).execute()
+            # Note: This will fail gracefully if dm_sent_articles table doesn't exist
+            try:
+                self.client.table("dm_sent_articles").upsert(
+                    records, on_conflict="user_id,article_id"
+                ).execute()
 
-            logger.info(
-                f"Successfully recorded {len(article_ids)} sent articles for user {discord_id}",
-                extra={
-                    "operation_type": "INSERT",
-                    "table": "dm_sent_articles",
-                    "affected_records": len(article_ids),
-                },
-            )
+                logger.info(
+                    f"Successfully recorded {len(article_ids)} sent articles for user {discord_id}",
+                    extra={
+                        "operation_type": "INSERT",
+                        "table": "dm_sent_articles",
+                        "affected_records": len(article_ids),
+                    },
+                )
+            except Exception as table_error:
+                # If dm_sent_articles table doesn't exist, log warning but don't crash
+                logger.warning(
+                    f"Could not record sent articles (table may not exist): {table_error}",
+                    extra={
+                        "operation_type": "INSERT",
+                        "table": "dm_sent_articles",
+                        "discord_id": discord_id,
+                        "article_count": len(article_ids),
+                    },
+                )
+                # Don't raise error - allow the notification to continue
 
         except SupabaseServiceError:
             # 重新拋出已經包裝的錯誤
@@ -2125,14 +2139,9 @@ class SupabaseService:
                     "error_type": type(e).__name__,
                 },
             )
-            self._handle_database_error(
-                e,
-                {
-                    "discord_id": discord_id,
-                    "article_count": len(article_ids),
-                    "operation": "record_sent_articles",
-                },
-            )
+            # Don't crash the notification system if recording fails
+            # This is a non-critical operation
+            logger.warning(f"Continuing without recording sent articles for user {discord_id}")
 
     async def get_user_articles(
         self, discord_id: str, days: int = 7, limit: int = 20
@@ -2188,19 +2197,31 @@ class SupabaseService:
             feed_ids = [sub["feed_id"] for sub in subscriptions_response.data]
 
             # 查詢已發送給使用者的文章 IDs（用於排除重複）
-            sent_articles_response = (
-                self.client.table("dm_sent_articles")
-                .select("article_id")
-                .eq("user_id", str(user_uuid))
-                .execute()
-            )
-
-            # 提取已發送的文章 IDs
-            sent_article_ids = (
-                [record["article_id"] for record in sent_articles_response.data]
-                if sent_articles_response.data
-                else []
-            )
+            # Note: dm_sent_articles table may not exist yet, handle gracefully
+            sent_article_ids = []
+            try:
+                sent_articles_response = (
+                    self.client.table("dm_sent_articles")
+                    .select("article_id")
+                    .eq("user_id", str(user_uuid))
+                    .execute()
+                )
+                # 提取已發送的文章 IDs
+                sent_article_ids = (
+                    [record["article_id"] for record in sent_articles_response.data]
+                    if sent_articles_response.data
+                    else []
+                )
+            except Exception as e:
+                # If dm_sent_articles table doesn't exist, log warning and continue
+                logger.warning(
+                    f"Could not query dm_sent_articles table (may not exist yet): {e}",
+                    extra={
+                        "operation_type": "SELECT",
+                        "table": "dm_sent_articles",
+                        "user_uuid": str(user_uuid),
+                    },
+                )
 
             # 查詢文章，排除已發送的文章
             query = (
