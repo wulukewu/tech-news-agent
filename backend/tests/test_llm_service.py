@@ -2,17 +2,20 @@
 Unit tests for LLMService
 Covers: evaluate_article, evaluate_batch (semaphore fix), generate_weekly_newsletter
 """
-import pytest
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
 
-from app.schemas.article import ArticleSchema, AIAnalysis
-from app.services.llm_service import LLMService
+import asyncio
+from unittest.mock import AsyncMock, MagicMock
+
+import pytest
+
 from app.core.exceptions import LLMServiceError
+from app.schemas.article import AIAnalysis, ArticleSchema
+from app.services.llm_service import LLMService
 
 
 def make_article(title="Test Article", url="https://example.com/article", tinkering_index=3):
     from uuid import uuid4
+
     return ArticleSchema(
         title=title,
         url=url,
@@ -36,6 +39,7 @@ def make_hardcore_article(title="Hardcore Article", tinkering_index=4):
 # ---------------------------------------------------------------------------
 # evaluate_article
 # ---------------------------------------------------------------------------
+
 
 class TestEvaluateArticle:
     @pytest.mark.asyncio
@@ -105,6 +109,7 @@ class TestEvaluateArticle:
 # ---------------------------------------------------------------------------
 # generate_summary
 # ---------------------------------------------------------------------------
+
 
 class TestGenerateSummary:
     @pytest.mark.asyncio
@@ -222,6 +227,7 @@ class TestGenerateSummary:
 # evaluate_batch — semaphore fix verification
 # ---------------------------------------------------------------------------
 
+
 class TestEvaluateBatch:
     @pytest.mark.asyncio
     async def test_returns_all_articles_including_non_hardcore(self):
@@ -296,12 +302,12 @@ class TestEvaluateBatch:
 
         # Both articles should be returned
         assert len(result) == 2
-        
+
         # First article should have analysis but no summary (summary failed)
         assert result[0].ai_analysis is not None
         assert result[0].tinkering_index == 3
         assert result[0].ai_summary is None
-        
+
         # Second article should have NULL tinkering_index (evaluation failed) but has summary
         assert result[1].ai_analysis is None
         assert result[1].tinkering_index is None
@@ -311,8 +317,9 @@ class TestEvaluateBatch:
     async def test_logs_warning_when_30_percent_fail(self, caplog):
         """evaluate_batch logs warning when more than 30% of articles fail."""
         import logging
+
         caplog.set_level(logging.WARNING)
-        
+
         service = LLMService.__new__(LLMService)
 
         call_count = 0
@@ -341,17 +348,20 @@ class TestEvaluateBatch:
 
         # All articles should be returned
         assert len(result) == 10
-        
+
         # Check that warning was logged for tinkering_index failures
-        assert any("High tinkering_index failure rate" in record.message for record in caplog.records)
+        assert any(
+            "High tinkering_index failure rate" in record.message for record in caplog.records
+        )
         assert any("4/10" in record.message for record in caplog.records)
 
     @pytest.mark.asyncio
     async def test_logs_error_with_article_title_and_url_on_failure(self, caplog):
         """evaluate_batch logs error with article title and URL when API fails (Requirement 8.1)."""
         import logging
+
         caplog.set_level(logging.ERROR)
-        
+
         service = LLMService.__new__(LLMService)
 
         async def fake_evaluate(article):
@@ -369,11 +379,11 @@ class TestEvaluateBatch:
         # Article should be returned with NULL tinkering_index
         assert len(result) == 1
         assert result[0].tinkering_index is None
-        
+
         # Check that error was logged with article title and URL
         error_logs = [record for record in caplog.records if record.levelname == "ERROR"]
         assert len(error_logs) > 0
-        
+
         # Verify the error log contains both title and URL
         error_message = error_logs[0].message
         assert "Test Article Title" in error_message
@@ -384,8 +394,9 @@ class TestEvaluateBatch:
     async def test_logs_success_and_failure_counts(self, caplog):
         """evaluate_batch logs counts of successful and failed articles (Requirements 3.8, 8.7)."""
         import logging
+
         caplog.set_level(logging.INFO)
-        
+
         service = LLMService.__new__(LLMService)
 
         call_count = 0
@@ -421,19 +432,19 @@ class TestEvaluateBatch:
 
         # All articles should be returned
         assert len(result) == 5
-        
+
         # Check that completion log contains success and failure counts
         info_logs = [record for record in caplog.records if record.levelname == "INFO"]
         completion_log = [log for log in info_logs if "Batch evaluation complete" in log.message]
-        
+
         assert len(completion_log) > 0
         log_message = completion_log[0].message
-        
+
         # Verify counts are logged
         assert "3 successful" in log_message  # 3 successful tinkering_index evaluations
-        assert "2 failed" in log_message      # 2 failed tinkering_index evaluations
+        assert "2 failed" in log_message  # 2 failed tinkering_index evaluations
         assert "4 successful" in log_message  # 4 successful summaries
-        assert "1 failed" in log_message      # 1 failed summary
+        assert "1 failed" in log_message  # 1 failed summary
 
     @pytest.mark.asyncio
     async def test_continues_processing_after_failure(self):
@@ -447,11 +458,11 @@ class TestEvaluateBatch:
             nonlocal call_count
             call_count += 1
             evaluated_titles.append(article.title)
-            
+
             # Fail the second article
             if call_count == 2:
                 raise Exception("API error")
-            
+
             return AIAnalysis(
                 is_hardcore=True,
                 reason="reason",
@@ -486,7 +497,9 @@ class TestEvaluateBatch:
             max_active = max(max_active, active)
             await asyncio.sleep(0)  # yield to event loop
             active -= 1
-            return AIAnalysis(is_hardcore=True, reason="r", actionable_takeaway="", tinkering_index=1)
+            return AIAnalysis(
+                is_hardcore=True, reason="r", actionable_takeaway="", tinkering_index=1
+            )
 
         async def fake_generate_summary(article):
             return "Test summary"
@@ -518,14 +531,16 @@ class TestEvaluateBatch:
 
         async def fake_evaluate(article):
             evaluated_titles.append(article.title)
-            return AIAnalysis(is_hardcore=True, reason="r", actionable_takeaway="", tinkering_index=1)
+            return AIAnalysis(
+                is_hardcore=True, reason="r", actionable_takeaway="", tinkering_index=1
+            )
 
         async def fake_generate_summary(article):
             return "Test summary"
 
         service.evaluate_article = fake_evaluate
         service.generate_summary = fake_generate_summary
-        
+
         articles = [make_article(title=f"Article {i}") for i in range(5)]
         await service.evaluate_batch(articles)
 
@@ -535,13 +550,15 @@ class TestEvaluateBatch:
     async def test_only_processes_null_tinkering_index(self):
         """evaluate_batch only processes tinkering_index when it's NULL."""
         service = LLMService.__new__(LLMService)
-        
+
         evaluate_called = []
         summary_called = []
 
         async def fake_evaluate(article):
             evaluate_called.append(article.title)
-            return AIAnalysis(is_hardcore=True, reason="r", actionable_takeaway="", tinkering_index=3)
+            return AIAnalysis(
+                is_hardcore=True, reason="r", actionable_takeaway="", tinkering_index=3
+            )
 
         async def fake_generate_summary(article):
             summary_called.append(article.title)
@@ -554,14 +571,14 @@ class TestEvaluateBatch:
         article1 = make_article(title="Article 1")  # Both NULL
         article2 = make_article(title="Article 2")
         article2.tinkering_index = 4  # tinkering_index already set
-        
+
         articles = [article1, article2]
         result = await service.evaluate_batch(articles)
 
         # evaluate_article should only be called for article1
         assert "Article 1" in evaluate_called
         assert "Article 2" not in evaluate_called
-        
+
         # generate_summary should be called for both
         assert "Article 1" in summary_called
         assert "Article 2" in summary_called
@@ -570,13 +587,15 @@ class TestEvaluateBatch:
     async def test_only_processes_null_ai_summary(self):
         """evaluate_batch only processes ai_summary when it's NULL."""
         service = LLMService.__new__(LLMService)
-        
+
         evaluate_called = []
         summary_called = []
 
         async def fake_evaluate(article):
             evaluate_called.append(article.title)
-            return AIAnalysis(is_hardcore=True, reason="r", actionable_takeaway="", tinkering_index=3)
+            return AIAnalysis(
+                is_hardcore=True, reason="r", actionable_takeaway="", tinkering_index=3
+            )
 
         async def fake_generate_summary(article):
             summary_called.append(article.title)
@@ -589,18 +608,18 @@ class TestEvaluateBatch:
         article1 = make_article(title="Article 1")  # Both NULL
         article2 = make_article(title="Article 2")
         article2.ai_summary = "Existing summary"  # ai_summary already set
-        
+
         articles = [article1, article2]
         result = await service.evaluate_batch(articles)
 
         # evaluate_article should be called for both
         assert "Article 1" in evaluate_called
         assert "Article 2" in evaluate_called
-        
+
         # generate_summary should only be called for article1
         assert "Article 1" in summary_called
         assert "Article 2" not in summary_called
-        
+
         # article2 should keep its existing summary
         assert result[1].ai_summary == "Existing summary"
 
@@ -608,13 +627,15 @@ class TestEvaluateBatch:
     async def test_skips_processing_when_both_fields_exist(self):
         """evaluate_batch skips processing when both tinkering_index and ai_summary exist."""
         service = LLMService.__new__(LLMService)
-        
+
         evaluate_called = []
         summary_called = []
 
         async def fake_evaluate(article):
             evaluate_called.append(article.title)
-            return AIAnalysis(is_hardcore=True, reason="r", actionable_takeaway="", tinkering_index=3)
+            return AIAnalysis(
+                is_hardcore=True, reason="r", actionable_takeaway="", tinkering_index=3
+            )
 
         async def fake_generate_summary(article):
             summary_called.append(article.title)
@@ -627,13 +648,13 @@ class TestEvaluateBatch:
         article = make_article(title="Complete Article")
         article.tinkering_index = 4
         article.ai_summary = "Existing summary"
-        
+
         result = await service.evaluate_batch([article])
 
         # Neither method should be called
         assert len(evaluate_called) == 0
         assert len(summary_called) == 0
-        
+
         # Article should keep its existing values
         assert result[0].tinkering_index == 4
         assert result[0].ai_summary == "Existing summary"
@@ -642,6 +663,7 @@ class TestEvaluateBatch:
 # ---------------------------------------------------------------------------
 # generate_weekly_newsletter
 # ---------------------------------------------------------------------------
+
 
 class TestGenerateWeeklyNewsletter:
     @pytest.mark.asyncio
@@ -699,7 +721,9 @@ class TestGenerateWeeklyNewsletter:
         mock_client.chat.completions.create = fake_create
         service.client = mock_client
 
-        articles = [make_hardcore_article(title=f"Article {i}", tinkering_index=i) for i in range(1, 6)]
+        articles = [
+            make_hardcore_article(title=f"Article {i}", tinkering_index=i) for i in range(1, 6)
+        ]
         await service.generate_weekly_newsletter(articles)
 
         # The first article mentioned in the draft should be the one with highest tinkering_index
@@ -713,8 +737,10 @@ class TestGenerateWeeklyNewsletter:
 # generate_deep_dive
 # ---------------------------------------------------------------------------
 
+
 def make_article_with_analysis(title="Deep Dive Article", category="AI"):
     from uuid import uuid4
+
     article = ArticleSchema(
         title=title,
         url="https://example.com/deep-dive",
@@ -901,12 +927,12 @@ class TestGenerateDeepDive:
 
 from hypothesis import given, settings
 from hypothesis import strategies as st
-from pydantic import HttpUrl
 
 
 def _make_article_strategy():
     """Strategy to generate random ArticleSchema instances."""
     from uuid import uuid4
+
     return st.builds(
         ArticleSchema,
         title=st.text(min_size=1, max_size=100),
@@ -950,6 +976,7 @@ class TestGenerateDeepDiveProperty:
 # ---------------------------------------------------------------------------
 # generate_reading_recommendation
 # ---------------------------------------------------------------------------
+
 
 class TestGenerateReadingRecommendation:
     @pytest.mark.asyncio

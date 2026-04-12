@@ -45,7 +45,7 @@ export function StatusFilterTabs({
           className={cn(
             'flex gap-4 border-b border-border',
             'overflow-x-auto scrollbar-hide',
-            'md:overflow-x-visible',
+            'md:overflow-x-visible'
           )}
         >
           {tabs.map((tab) => (
@@ -62,7 +62,7 @@ export function StatusFilterTabs({
                 'after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5',
                 'after:transition-colors',
                 'data-[state=active]:after:bg-primary',
-                'motion-reduce:transition-none',
+                'motion-reduce:transition-none'
               )}
               aria-selected={currentValue === tab.value}
             >
@@ -76,7 +76,7 @@ export function StatusFilterTabs({
                       'text-xs font-medium',
                       currentValue === tab.value
                         ? 'bg-primary/10 text-primary'
-                        : 'bg-muted text-muted-foreground',
+                        : 'bg-muted text-muted-foreground'
                     )}
                   >
                     {tab.count}

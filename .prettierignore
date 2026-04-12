@@ -1,0 +1,45 @@
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Build outputs
+.next
+out
+dist
+build
+
+# Coverage
+coverage
+.nyc_output
+htmlcov
+
+# Cache
+.cache
+.parcel-cache
+
+# Misc
+.DS_Store
+*.log
+.env
+.env.local
+.env.production.local
+.env.development.local
+.env.test.local
+
+# Lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+.Python
+venv
+.venv
+
+# Git
+.git
+.gitignore

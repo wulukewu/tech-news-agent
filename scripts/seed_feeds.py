@@ -19,26 +19,26 @@ from supabase import create_client, Client
 
 def main():
     """Main function to seed feeds into Supabase database."""
-    
+
     # Load environment variables from .env file
     load_dotenv()
-    
+
     # Validate required environment variables
     supabase_url = os.getenv('SUPABASE_URL')
     supabase_key = os.getenv('SUPABASE_KEY')
-    
+
     if not supabase_url:
         raise ValueError(
             "Error: Missing required environment variable: SUPABASE_URL\n"
             "Please copy .env.example to .env and fill in the values"
         )
-    
+
     if not supabase_key:
         raise ValueError(
             "Error: Missing required environment variable: SUPABASE_KEY\n"
             "Please copy .env.example to .env and fill in the values"
         )
-    
+
     # Create Supabase client connection
     try:
         supabase: Client = create_client(supabase_url, supabase_key)
@@ -52,7 +52,7 @@ def main():
             f"3. Network connection is available\n"
             f"Details: {str(e)}"
         )
-    
+
     # Define default RSS feeds data structure
     default_feeds = [
         # 前端開發類別
@@ -131,14 +131,14 @@ def main():
             "is_active": True
         }
     ]
-    
+
     print("Supabase client initialized successfully")
     print(f"Ready to seed {len(default_feeds)} feeds...")
-    
+
     # Insert feeds with error handling
     inserted_count = 0
     skipped_count = 0
-    
+
     for feed in default_feeds:
         try:
             # Attempt to insert the feed
@@ -147,13 +147,13 @@ def main():
             print(f"✓ Inserted: {feed['name']}")
         except Exception as e:
             error_message = str(e).lower()
-            
+
             # Handle duplicate URL error
             if 'duplicate' in error_message or 'unique' in error_message:
                 skipped_count += 1
                 print(f"⊘ Skipped (duplicate URL): {feed['name']} - {feed['url']}")
                 continue
-            
+
             # Handle connection errors
             elif 'connection' in error_message or 'network' in error_message or 'timeout' in error_message:
                 raise ConnectionError(
@@ -162,14 +162,14 @@ def main():
                     f"If the problem persists, check Supabase status at status.supabase.com\n"
                     f"Details: {str(e)}"
                 )
-            
+
             # Re-raise other unexpected errors
             else:
                 raise Exception(
                     f"Error: Unexpected error while inserting feed '{feed['name']}'\n"
                     f"Details: {str(e)}"
                 )
-    
+
     # Print summary
     print("\n" + "="*50)
     print(f"Seeding completed!")

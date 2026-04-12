@@ -34,7 +34,7 @@ routine_name                    | routine_type | data_type
 update_reading_list_updated_at  | FUNCTION     | trigger
 ```
 
-✅ 如果返回一行記錄，表示函式存在  
+✅ 如果返回一行記錄，表示函式存在
 ❌ 如果返回空結果，需要執行遷移腳本
 
 ---
@@ -61,7 +61,7 @@ trigger_name                          | event_manipulation | event_object_table 
 trigger_update_reading_list_updated_at| UPDATE             | reading_list       | BEFORE        | EXECUTE FUNCTION update_reading_list_updated_at()
 ```
 
-✅ 如果返回一行記錄，表示觸發器存在且配置正確  
+✅ 如果返回一行記錄，表示觸發器存在且配置正確
 ❌ 如果返回空結果，需要執行遷移腳本
 
 ---
@@ -103,7 +103,7 @@ id                                   | added_at                    | updated_at
 xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx | 2024-01-15 10:00:00.123456 | 2024-01-15 10:00:00.123456
 ```
 
-✅ `added_at` 和 `updated_at` 應該幾乎相同（差異 < 1 秒）  
+✅ `added_at` 和 `updated_at` 應該幾乎相同（差異 < 1 秒）
 記下返回的 `id`，在後續步驟中使用
 
 #### 3.3 等待並更新記錄

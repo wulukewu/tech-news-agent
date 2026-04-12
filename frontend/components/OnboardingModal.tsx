@@ -52,11 +52,7 @@ interface OnboardingModalState {
   groupedFeeds: Record<string, RecommendedFeed[]>;
 }
 
-export function OnboardingModal({
-  isOpen,
-  onClose,
-  onComplete,
-}: OnboardingModalProps) {
+export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModalProps) {
   const [state, setState] = useState<OnboardingModalState>({
     currentStep: 'welcome',
     selectedFeeds: [],
@@ -85,9 +81,7 @@ export function OnboardingModal({
       const data = await response.json();
 
       // Pre-select 3-5 popular feeds (highest priority)
-      const topFeeds = data.feeds
-        .slice(0, 5)
-        .map((feed: RecommendedFeed) => feed.id);
+      const topFeeds = data.feeds.slice(0, 5).map((feed: RecommendedFeed) => feed.id);
 
       setState((prev) => ({
         ...prev,
@@ -220,9 +214,7 @@ export function OnboardingModal({
               <div className="flex items-center justify-center mb-4">
                 <Sparkles className="h-12 w-12 text-primary" />
               </div>
-              <DialogTitle className="text-2xl text-center">
-                歡迎使用技術新聞訂閱工具！
-              </DialogTitle>
+              <DialogTitle className="text-2xl text-center">歡迎使用技術新聞訂閱工具！</DialogTitle>
               <DialogDescription className="text-center text-base mt-4">
                 這個平台幫助你：
               </DialogDescription>
@@ -242,11 +234,7 @@ export function OnboardingModal({
               </div>
             </div>
             <DialogFooter className="flex-col sm:flex-row gap-2">
-              <Button
-                variant="outline"
-                onClick={handleSkip}
-                className="w-full sm:w-auto"
-              >
+              <Button variant="outline" onClick={handleSkip} className="w-full sm:w-auto">
                 稍後再說
               </Button>
               <Button onClick={handleStart} className="w-full sm:w-auto">
@@ -260,16 +248,12 @@ export function OnboardingModal({
           <>
             <DialogHeader>
               <DialogTitle>選擇你感興趣的來源</DialogTitle>
-              <DialogDescription>
-                我們已為你預選了一些熱門來源，你可以調整選擇
-              </DialogDescription>
+              <DialogDescription>我們已為你預選了一些熱門來源，你可以調整選擇</DialogDescription>
             </DialogHeader>
             <div className="max-h-[400px] overflow-y-auto space-y-4 my-4">
               {Object.entries(state.groupedFeeds).map(([category, feeds]) => (
                 <div key={category} className="space-y-2">
-                  <h3 className="font-semibold text-sm text-muted-foreground">
-                    {category}
-                  </h3>
+                  <h3 className="font-semibold text-sm text-muted-foreground">{category}</h3>
                   <div className="space-y-2">
                     {feeds.map((feed) => (
                       <div
@@ -291,9 +275,7 @@ export function OnboardingModal({
                             {feed.name}
                           </Label>
                           {feed.description && (
-                            <p className="text-xs text-muted-foreground">
-                              {feed.description}
-                            </p>
+                            <p className="text-xs text-muted-foreground">{feed.description}</p>
                           )}
                         </div>
                       </div>
@@ -303,11 +285,7 @@ export function OnboardingModal({
               ))}
             </div>
             <DialogFooter className="flex-col sm:flex-row gap-2">
-              <Button
-                variant="outline"
-                onClick={handleSkip}
-                className="w-full sm:w-auto"
-              >
+              <Button variant="outline" onClick={handleSkip} className="w-full sm:w-auto">
                 稍後再說
               </Button>
               <Button
@@ -334,9 +312,7 @@ export function OnboardingModal({
               <div className="flex items-center justify-center mb-4">
                 <CheckCircle2 className="h-16 w-16 text-green-500" />
               </div>
-              <DialogTitle className="text-2xl text-center">
-                設定完成！
-              </DialogTitle>
+              <DialogTitle className="text-2xl text-center">設定完成！</DialogTitle>
               <DialogDescription className="text-center text-base mt-4">
                 已成功訂閱 {state.selectedFeeds.length} 個來源
                 <br />

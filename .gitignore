@@ -55,4 +55,10 @@ logs/
 *.log
 
 .kiro/
+
+# Hypothesis (property-based testing cache)
 .hypothesis/
+backend/.hypothesis/
+
+# Playwright test reports
+frontend/playwright-report/

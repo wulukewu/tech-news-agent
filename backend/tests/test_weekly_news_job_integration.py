@@ -3,16 +3,18 @@ Integration tests for weekly_news_job with article page creation.
 Tests complete flow, single article failure handling, and Discord notification.
 Requirements: 2.1, 2.4, 3.1, 4.1
 """
-import pytest
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from app.schemas.article import ArticleSchema, AIAnalysis, ArticlePageResult
-from app.core.exceptions import NotionServiceError
+import pytest
 
+from app.core.exceptions import NotionServiceError
+from app.schemas.article import AIAnalysis, ArticleSchema
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def make_hardcore_article(title="Article", tinkering_index=3, category="AI"):
     article = ArticleSchema(
@@ -46,8 +48,7 @@ def make_mock_services(
 
     if create_page_results is None:
         create_page_results = [
-            (f"page-id-{i}", f"https://notion.so/page-{i}")
-            for i in range(len(hardcore_articles))
+            (f"page-id-{i}", f"https://notion.so/page-{i}") for i in range(len(hardcore_articles))
         ]
 
     if create_page_raises_for is None:
@@ -95,6 +96,7 @@ def make_mock_services(
 # Test: Complete flow with all articles succeeding
 # ---------------------------------------------------------------------------
 
+
 class TestCompleteFlow:
     @pytest.mark.asyncio
     async def test_complete_flow_all_articles_succeed(self):
@@ -113,12 +115,14 @@ class TestCompleteFlow:
             hardcore_articles=hardcore_articles
         )
 
-        with patch("app.tasks.scheduler.NotionService", return_value=mock_notion), \
-             patch("app.tasks.scheduler.RSSService", return_value=mock_rss), \
-             patch("app.tasks.scheduler.LLMService", return_value=mock_llm), \
-             patch("app.tasks.scheduler.bot", mock_bot), \
-             patch("app.tasks.scheduler.MarkReadView", return_value=mock_view), \
-             patch("app.tasks.scheduler.settings") as mock_settings:
+        with (
+            patch("app.tasks.scheduler.NotionService", return_value=mock_notion),
+            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
+            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks.scheduler.bot", mock_bot),
+            patch("app.tasks.scheduler.MarkReadView", return_value=mock_view),
+            patch("app.tasks.scheduler.settings") as mock_settings,
+        ):
             mock_settings.discord_channel_id = 123456789
             mock_settings.timezone = "Asia/Taipei"
             mock_settings.notion_weekly_digests_db_id = "some-db-id"
@@ -147,19 +151,22 @@ class TestCompleteFlow:
 
         mock_notion, mock_rss, mock_llm, mock_channel, mock_bot, mock_view = make_mock_services(
             hardcore_articles=hardcore_articles,
-            create_page_results=[("page-123", "https://notion.so/test-page-123")]
+            create_page_results=[("page-123", "https://notion.so/test-page-123")],
         )
 
         # Use real build_article_list_notification
         from app.services.notion_service import NotionService
+
         mock_notion.build_article_list_notification = NotionService.build_article_list_notification
 
-        with patch("app.tasks.scheduler.NotionService", return_value=mock_notion), \
-             patch("app.tasks.scheduler.RSSService", return_value=mock_rss), \
-             patch("app.tasks.scheduler.LLMService", return_value=mock_llm), \
-             patch("app.tasks.scheduler.bot", mock_bot), \
-             patch("app.tasks.scheduler.MarkReadView", return_value=mock_view), \
-             patch("app.tasks.scheduler.settings") as mock_settings:
+        with (
+            patch("app.tasks.scheduler.NotionService", return_value=mock_notion),
+            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
+            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks.scheduler.bot", mock_bot),
+            patch("app.tasks.scheduler.MarkReadView", return_value=mock_view),
+            patch("app.tasks.scheduler.settings") as mock_settings,
+        ):
             mock_settings.discord_channel_id = 123456789
             mock_settings.timezone = "Asia/Taipei"
             mock_settings.notion_weekly_digests_db_id = "some-db-id"
@@ -189,12 +196,14 @@ class TestCompleteFlow:
             hardcore_articles=hardcore_articles
         )
 
-        with patch("app.tasks.scheduler.NotionService", return_value=mock_notion), \
-             patch("app.tasks.scheduler.RSSService", return_value=mock_rss), \
-             patch("app.tasks.scheduler.LLMService", return_value=mock_llm), \
-             patch("app.tasks.scheduler.bot", mock_bot), \
-             patch("app.tasks.scheduler.MarkReadView", return_value=mock_view) as mock_view_class, \
-             patch("app.tasks.scheduler.settings") as mock_settings:
+        with (
+            patch("app.tasks.scheduler.NotionService", return_value=mock_notion),
+            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
+            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks.scheduler.bot", mock_bot),
+            patch("app.tasks.scheduler.MarkReadView", return_value=mock_view) as mock_view_class,
+            patch("app.tasks.scheduler.settings") as mock_settings,
+        ):
             mock_settings.discord_channel_id = 123456789
             mock_settings.timezone = "Asia/Taipei"
             mock_settings.notion_weekly_digests_db_id = "some-db-id"
@@ -217,6 +226,7 @@ class TestCompleteFlow:
 # Test: Single article failure doesn't affect others
 # ---------------------------------------------------------------------------
 
+
 class TestSingleArticleFailure:
     @pytest.mark.asyncio
     async def test_single_article_failure_does_not_affect_others(self):
@@ -232,16 +242,17 @@ class TestSingleArticleFailure:
         ]
 
         mock_notion, mock_rss, mock_llm, mock_channel, mock_bot, mock_view = make_mock_services(
-            hardcore_articles=hardcore_articles,
-            create_page_raises_for={1}  # Article 2 fails
+            hardcore_articles=hardcore_articles, create_page_raises_for={1}  # Article 2 fails
         )
 
-        with patch("app.tasks.scheduler.NotionService", return_value=mock_notion), \
-             patch("app.tasks.scheduler.RSSService", return_value=mock_rss), \
-             patch("app.tasks.scheduler.LLMService", return_value=mock_llm), \
-             patch("app.tasks.scheduler.bot", mock_bot), \
-             patch("app.tasks.scheduler.MarkReadView", return_value=mock_view), \
-             patch("app.tasks.scheduler.settings") as mock_settings:
+        with (
+            patch("app.tasks.scheduler.NotionService", return_value=mock_notion),
+            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
+            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks.scheduler.bot", mock_bot),
+            patch("app.tasks.scheduler.MarkReadView", return_value=mock_view),
+            patch("app.tasks.scheduler.settings") as mock_settings,
+        ):
             mock_settings.discord_channel_id = 123456789
             mock_settings.timezone = "Asia/Taipei"
             mock_settings.notion_weekly_digests_db_id = "some-db-id"
@@ -263,6 +274,7 @@ class TestSingleArticleFailure:
         Requirements: 2.4
         """
         import logging
+
         from app.tasks.scheduler import weekly_news_job
 
         hardcore_articles = [
@@ -271,17 +283,18 @@ class TestSingleArticleFailure:
         ]
 
         mock_notion, mock_rss, mock_llm, mock_channel, mock_bot, mock_view = make_mock_services(
-            hardcore_articles=hardcore_articles,
-            create_page_raises_for={1}
+            hardcore_articles=hardcore_articles, create_page_raises_for={1}
         )
 
-        with patch("app.tasks.scheduler.NotionService", return_value=mock_notion), \
-             patch("app.tasks.scheduler.RSSService", return_value=mock_rss), \
-             patch("app.tasks.scheduler.LLMService", return_value=mock_llm), \
-             patch("app.tasks.scheduler.bot", mock_bot), \
-             patch("app.tasks.scheduler.MarkReadView", return_value=mock_view), \
-             patch("app.tasks.scheduler.settings") as mock_settings, \
-             caplog.at_level(logging.ERROR, logger="app.tasks.scheduler"):
+        with (
+            patch("app.tasks.scheduler.NotionService", return_value=mock_notion),
+            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
+            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks.scheduler.bot", mock_bot),
+            patch("app.tasks.scheduler.MarkReadView", return_value=mock_view),
+            patch("app.tasks.scheduler.settings") as mock_settings,
+            caplog.at_level(logging.ERROR, logger="app.tasks.scheduler"),
+        ):
             mock_settings.discord_channel_id = 123456789
             mock_settings.timezone = "Asia/Taipei"
             mock_settings.notion_weekly_digests_db_id = "some-db-id"
@@ -289,13 +302,17 @@ class TestSingleArticleFailure:
             await weekly_news_job()
 
         # Verify error was logged
-        assert any("Failed to create page for 'Failing Article'" in record.message
-                   for record in caplog.records if record.levelno >= logging.ERROR)
+        assert any(
+            "Failed to create page for 'Failing Article'" in record.message
+            for record in caplog.records
+            if record.levelno >= logging.ERROR
+        )
 
 
 # ---------------------------------------------------------------------------
 # Test: All articles fail - skip Discord notification
 # ---------------------------------------------------------------------------
+
 
 class TestAllArticlesFailure:
     @pytest.mark.asyncio
@@ -313,15 +330,17 @@ class TestAllArticlesFailure:
 
         mock_notion, mock_rss, mock_llm, mock_channel, mock_bot, mock_view = make_mock_services(
             hardcore_articles=hardcore_articles,
-            create_page_raises_for={0, 1, 2}  # All articles fail
+            create_page_raises_for={0, 1, 2},  # All articles fail
         )
 
-        with patch("app.tasks.scheduler.NotionService", return_value=mock_notion), \
-             patch("app.tasks.scheduler.RSSService", return_value=mock_rss), \
-             patch("app.tasks.scheduler.LLMService", return_value=mock_llm), \
-             patch("app.tasks.scheduler.bot", mock_bot), \
-             patch("app.tasks.scheduler.MarkReadView", return_value=mock_view), \
-             patch("app.tasks.scheduler.settings") as mock_settings:
+        with (
+            patch("app.tasks.scheduler.NotionService", return_value=mock_notion),
+            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
+            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks.scheduler.bot", mock_bot),
+            patch("app.tasks.scheduler.MarkReadView", return_value=mock_view),
+            patch("app.tasks.scheduler.settings") as mock_settings,
+        ):
             mock_settings.discord_channel_id = 123456789
             mock_settings.timezone = "Asia/Taipei"
             mock_settings.notion_weekly_digests_db_id = "some-db-id"
@@ -340,6 +359,7 @@ class TestAllArticlesFailure:
         Requirements: 2.4
         """
         import logging
+
         from app.tasks.scheduler import weekly_news_job
 
         hardcore_articles = [
@@ -348,17 +368,18 @@ class TestAllArticlesFailure:
         ]
 
         mock_notion, mock_rss, mock_llm, mock_channel, mock_bot, mock_view = make_mock_services(
-            hardcore_articles=hardcore_articles,
-            create_page_raises_for={0, 1}
+            hardcore_articles=hardcore_articles, create_page_raises_for={0, 1}
         )
 
-        with patch("app.tasks.scheduler.NotionService", return_value=mock_notion), \
-             patch("app.tasks.scheduler.RSSService", return_value=mock_rss), \
-             patch("app.tasks.scheduler.LLMService", return_value=mock_llm), \
-             patch("app.tasks.scheduler.bot", mock_bot), \
-             patch("app.tasks.scheduler.MarkReadView", return_value=mock_view), \
-             patch("app.tasks.scheduler.settings") as mock_settings, \
-             caplog.at_level(logging.ERROR, logger="app.tasks.scheduler"):
+        with (
+            patch("app.tasks.scheduler.NotionService", return_value=mock_notion),
+            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
+            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks.scheduler.bot", mock_bot),
+            patch("app.tasks.scheduler.MarkReadView", return_value=mock_view),
+            patch("app.tasks.scheduler.settings") as mock_settings,
+            caplog.at_level(logging.ERROR, logger="app.tasks.scheduler"),
+        ):
             mock_settings.discord_channel_id = 123456789
             mock_settings.timezone = "Asia/Taipei"
             mock_settings.notion_weekly_digests_db_id = "some-db-id"
@@ -366,13 +387,17 @@ class TestAllArticlesFailure:
             await weekly_news_job()
 
         # Verify error was logged
-        assert any("All article pages failed to create" in record.message
-                   for record in caplog.records if record.levelno >= logging.ERROR)
+        assert any(
+            "All article pages failed to create" in record.message
+            for record in caplog.records
+            if record.levelno >= logging.ERROR
+        )
 
 
 # ---------------------------------------------------------------------------
 # Test: MarkReadView button limit (25 buttons max)
 # ---------------------------------------------------------------------------
+
 
 class TestMarkReadViewButtonLimit:
     @pytest.mark.asyncio
@@ -383,22 +408,21 @@ class TestMarkReadViewButtonLimit:
         from app.tasks.scheduler import weekly_news_job
 
         # Create 30 articles
-        hardcore_articles = [
-            make_hardcore_article(f"Article {i}", 5, "AI")
-            for i in range(30)
-        ]
+        hardcore_articles = [make_hardcore_article(f"Article {i}", 5, "AI") for i in range(30)]
 
         mock_notion, mock_rss, mock_llm, mock_channel, mock_bot, mock_view = make_mock_services(
             hardcore_articles=hardcore_articles,
-            create_page_results=[(f"page-{i}", f"https://notion.so/page-{i}") for i in range(30)]
+            create_page_results=[(f"page-{i}", f"https://notion.so/page-{i}") for i in range(30)],
         )
 
-        with patch("app.tasks.scheduler.NotionService", return_value=mock_notion), \
-             patch("app.tasks.scheduler.RSSService", return_value=mock_rss), \
-             patch("app.tasks.scheduler.LLMService", return_value=mock_llm), \
-             patch("app.tasks.scheduler.bot", mock_bot), \
-             patch("app.tasks.scheduler.MarkReadView", return_value=mock_view) as mock_view_class, \
-             patch("app.tasks.scheduler.settings") as mock_settings:
+        with (
+            patch("app.tasks.scheduler.NotionService", return_value=mock_notion),
+            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
+            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks.scheduler.bot", mock_bot),
+            patch("app.tasks.scheduler.MarkReadView", return_value=mock_view) as mock_view_class,
+            patch("app.tasks.scheduler.settings") as mock_settings,
+        ):
             mock_settings.discord_channel_id = 123456789
             mock_settings.timezone = "Asia/Taipei"
             mock_settings.notion_weekly_digests_db_id = "some-db-id"

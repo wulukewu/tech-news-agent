@@ -120,9 +120,7 @@ export function EmptyState({
   return (
     <Card className="border-dashed">
       <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-        {displayIcon && (
-          <div className="mb-4 text-muted-foreground">{displayIcon}</div>
-        )}
+        {displayIcon && <div className="mb-4 text-muted-foreground">{displayIcon}</div>}
 
         <h3 className="text-lg font-semibold mb-2">{title}</h3>
         <p className="text-muted-foreground mb-6 max-w-md">{description}</p>
@@ -133,15 +131,11 @@ export function EmptyState({
             {schedulerStatus.lastExecutionTime && (
               <p>
                 上次執行時間：
-                {new Date(schedulerStatus.lastExecutionTime).toLocaleString(
-                  'zh-TW',
-                )}
+                {new Date(schedulerStatus.lastExecutionTime).toLocaleString('zh-TW')}
               </p>
             )}
             {schedulerStatus.estimatedTimeUntilArticles && (
-              <p className="mt-1">
-                預計 {schedulerStatus.estimatedTimeUntilArticles} 後會有新文章
-              </p>
+              <p className="mt-1">預計 {schedulerStatus.estimatedTimeUntilArticles} 後會有新文章</p>
             )}
           </div>
         )}

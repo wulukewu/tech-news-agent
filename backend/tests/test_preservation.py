@@ -9,16 +9,17 @@ Validates: Requirements 3.1, 3.2, 3.3, 3.4, 3.5, 3.6
 
 import os
 import sys
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch, call
-
-from hypothesis import given, settings as h_settings
+from hypothesis import given
+from hypothesis import settings as h_settings
 from hypothesis import strategies as st
-
 
 # ---------------------------------------------------------------------------
 # Preservation 1: NotionService.add_to_read_later() calls pages.create correctly
 # ---------------------------------------------------------------------------
+
 
 class TestPreservation1AddToReadLater:
     """
@@ -30,8 +31,8 @@ class TestPreservation1AddToReadLater:
     @pytest.mark.asyncio
     async def test_add_to_read_later_calls_pages_create_once(self):
         """pages.create is called exactly once when add_to_read_later() is invoked."""
-        from app.services.notion_service import NotionService
         from app.schemas.article import ArticleSchema
+        from app.services.notion_service import NotionService
 
         article = ArticleSchema(
             title="Test Article",
@@ -54,8 +55,8 @@ class TestPreservation1AddToReadLater:
     @pytest.mark.asyncio
     async def test_add_to_read_later_parent_is_read_later_db(self):
         """pages.create is called with parent pointing to read_later_db_id."""
-        from app.services.notion_service import NotionService
         from app.schemas.article import ArticleSchema
+        from app.services.notion_service import NotionService
 
         article = ArticleSchema(
             title="Test Article",
@@ -76,9 +77,11 @@ class TestPreservation1AddToReadLater:
         _, kwargs = mock_client.pages.create.call_args
         assert kwargs["parent"] == {"database_id": read_later_db_id}
 
+
 # ---------------------------------------------------------------------------
 # Preservation 2: macOS SSL patch executes correctly on darwin
 # ---------------------------------------------------------------------------
+
 
 class TestPreservation2SSLPatchOnMacOS:
     """
@@ -107,14 +110,15 @@ class TestPreservation2SSLPatchOnMacOS:
                     pass
 
         # On darwin the SSL env var should be set
-        assert os.environ.get("SSL_CERT_FILE") == "/mock/cacert.pem", (
-            "SSL_CERT_FILE was not set on darwin — macOS SSL patch is broken."
-        )
+        assert (
+            os.environ.get("SSL_CERT_FILE") == "/mock/cacert.pem"
+        ), "SSL_CERT_FILE was not set on darwin — macOS SSL patch is broken."
 
 
 # ---------------------------------------------------------------------------
 # Preservation 3: ReadLaterButton.callback calls notion.add_to_read_later()
 # ---------------------------------------------------------------------------
+
 
 class TestPreservation3ReadLaterButtonCallback:
     """
@@ -165,6 +169,7 @@ class TestPreservation3ReadLaterButtonCallback:
 # Preservation 4: get_active_feeds() returns [] when results is empty
 # ---------------------------------------------------------------------------
 
+
 class TestPreservation4GetActiveFeedsEmpty:
     """
     Preservation: get_active_feeds() returns an empty list (not an exception)
@@ -191,6 +196,7 @@ class TestPreservation4GetActiveFeedsEmpty:
 # Preservation 5 (PBT): add_to_read_later() parent is always read_later_db_id
 # ---------------------------------------------------------------------------
 
+
 class TestPreservation5PBTAddToReadLater:
     """
     Property-based test: for any valid ArticleSchema, pages.create is always
@@ -208,8 +214,8 @@ class TestPreservation5PBTAddToReadLater:
     @h_settings(max_examples=5)
     async def test_parent_always_read_later_db_id(self, title, url, source_category):
         """pages.create parent is always {"database_id": read_later_db_id} for any article."""
-        from app.services.notion_service import NotionService
         from app.schemas.article import ArticleSchema
+        from app.services.notion_service import NotionService
 
         article = ArticleSchema(
             title=title,
@@ -238,6 +244,7 @@ class TestPreservation5PBTAddToReadLater:
 # Preservation 6 (PBT): Short drafts are sent unmodified
 # ---------------------------------------------------------------------------
 
+
 class TestPreservation6DiscordShortDraft:
     """
     Property 2: Preservation - Discord notification is always ≤ 2000 chars and
@@ -255,7 +262,7 @@ class TestPreservation6DiscordShortDraft:
         Req 5.1, 5.2: /news_now sends a notification ≤ 2000 chars with a view attached.
         """
         from app.bot.cogs.news_commands import NewsCommands
-        from app.schemas.article import ArticleSchema, AIAnalysis
+        from app.schemas.article import AIAnalysis, ArticleSchema
 
         article = ArticleSchema(
             title="Test Article",
@@ -283,8 +290,12 @@ class TestPreservation6DiscordShortDraft:
 
         mock_notion = MagicMock()
         mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
-        mock_notion.create_article_page = AsyncMock(return_value=("page-id", "https://notion.so/page"))
-        mock_notion.build_article_list_notification = MagicMock(return_value="本週技術週報已發布\n\n本週統計：抓取 1 篇，精選 1 篇\n\n精選文章：\n1. [AI] Test Article\n   https://notion.so/page")
+        mock_notion.create_article_page = AsyncMock(
+            return_value=("page-id", "https://notion.so/page")
+        )
+        mock_notion.build_article_list_notification = MagicMock(
+            return_value="本週技術週報已發布\n\n本週統計：抓取 1 篇，精選 1 篇\n\n精選文章：\n1. [AI] Test Article\n   https://notion.so/page"
+        )
 
         mock_rss = MagicMock()
         mock_rss.fetch_all_feeds = AsyncMock(return_value=[article])
@@ -302,23 +313,27 @@ class TestPreservation6DiscordShortDraft:
         mock_mark_read_view = MagicMock()
         mock_mark_read_view.children = []
 
-        with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
-             patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
-             patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
-             patch("app.bot.cogs.news_commands.settings") as mock_settings, \
-             patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
-             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view), \
-             patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view), \
-             patch("app.bot.cogs.interactions.MarkReadView", return_value=mock_mark_read_view):
+        with (
+            patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion),
+            patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss),
+            patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm),
+            patch("app.bot.cogs.news_commands.settings") as mock_settings,
+            patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view),
+            patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view),
+            patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view),
+            patch("app.bot.cogs.interactions.MarkReadView", return_value=mock_mark_read_view),
+        ):
             mock_settings.notion_weekly_digests_db_id = "test-db-id"
             await cog.news_now.callback(cog, mock_interaction)
 
         mock_interaction.followup.send.assert_called_once()
         call_kwargs = mock_interaction.followup.send.call_args
-        content_sent = call_kwargs.kwargs.get("content", call_kwargs.args[0] if call_kwargs.args else "")
-        assert len(content_sent) <= 2000, (
-            f"Req 5.2: notification exceeds 2000 chars (len={len(content_sent)})"
+        content_sent = call_kwargs.kwargs.get(
+            "content", call_kwargs.args[0] if call_kwargs.args else ""
         )
+        assert (
+            len(content_sent) <= 2000
+        ), f"Req 5.2: notification exceeds 2000 chars (len={len(content_sent)})"
         # view must always be attached
         view_sent = call_kwargs.kwargs.get("view")
         assert view_sent is not None, "Req 5.5: view not attached to followup.send"
@@ -328,9 +343,11 @@ class TestPreservation6DiscordShortDraft:
 # Helpers for combined_view property tests
 # ---------------------------------------------------------------------------
 
+
 def article_strategy():
     """Hypothesis strategy that generates valid ArticleSchema instances."""
     from app.schemas.article import ArticleSchema
+
     return st.builds(
         ArticleSchema,
         title=st.text(min_size=1, max_size=80),
@@ -346,7 +363,8 @@ def article_strategy():
 
 def build_combined_view_fixed(articles):
     """Replicate the FIXED combined_view assembly logic (MAX_READ_LATER = 15)."""
-    from app.bot.cogs.interactions import FilterView, DeepDiveView, ReadLaterView
+    from app.bot.cogs.interactions import DeepDiveView, FilterView, ReadLaterView
+
     combined_view = FilterView(articles=articles)
     for item in DeepDiveView(articles=articles[:5]).children:
         combined_view.add_item(item)
@@ -360,6 +378,7 @@ def build_combined_view_fixed(articles):
 # ---------------------------------------------------------------------------
 # Preservation 7 (PBT): FilterSelect always present and first
 # ---------------------------------------------------------------------------
+
 
 class TestPreservation7FilterSelectAlwaysFirst:
     """
@@ -378,17 +397,16 @@ class TestPreservation7FilterSelectAlwaysFirst:
         combined_view = build_combined_view_fixed(articles)
 
         types = [type(c) for c in combined_view.children]
-        assert FilterSelect in types, (
-            f"FilterSelect not found in combined_view.children: {types}"
-        )
-        assert isinstance(combined_view.children[0], FilterSelect), (
-            f"First element is {type(combined_view.children[0])}, expected FilterSelect"
-        )
+        assert FilterSelect in types, f"FilterSelect not found in combined_view.children: {types}"
+        assert isinstance(
+            combined_view.children[0], FilterSelect
+        ), f"First element is {type(combined_view.children[0])}, expected FilterSelect"
 
 
 # ---------------------------------------------------------------------------
 # Preservation 8 (PBT): DeepDiveButton count = min(5, len(articles))
 # ---------------------------------------------------------------------------
+
 
 class TestPreservation8DeepDiveButtonCount:
     """
@@ -408,14 +426,15 @@ class TestPreservation8DeepDiveButtonCount:
 
         count = sum(1 for c in combined_view.children if isinstance(c, DeepDiveButton))
         expected = min(5, len(articles))
-        assert count == expected, (
-            f"Expected {expected} DeepDiveButton(s) for {len(articles)} articles, got {count}"
-        )
+        assert (
+            count == expected
+        ), f"Expected {expected} DeepDiveButton(s) for {len(articles)} articles, got {count}"
 
 
 # ---------------------------------------------------------------------------
 # Preservation 9 (PBT): ReadLaterButton count = min(len(articles), 15)
 # ---------------------------------------------------------------------------
+
 
 class TestPreservation9ReadLaterButtonCount:
     """
@@ -435,6 +454,6 @@ class TestPreservation9ReadLaterButtonCount:
 
         count = sum(1 for c in combined_view.children if isinstance(c, ReadLaterButton))
         expected = min(len(articles), 15)
-        assert count == expected, (
-            f"Expected {expected} ReadLaterButton(s) for {len(articles)} articles, got {count}"
-        )
+        assert (
+            count == expected
+        ), f"Expected {expected} ReadLaterButton(s) for {len(articles)} articles, got {count}"

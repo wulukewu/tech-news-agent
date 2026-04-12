@@ -1,0 +1,33 @@
+{
+  "timestamp": "2026-04-11T23:39:11.942747",
+  "task": "17.1 - Performance Baseline Establishment",
+  "measurements_completed": [
+    "API Performance",
+    "Bundle Size"
+  ],
+  "baseline_files": {
+    "api": "scripts/performance/baselines/api_baseline_20260411_233834.json",
+    "bundle": "scripts/performance/baselines/bundle_baseline_2026-04-11T15-37-35-117Z.json"
+  },
+  "performance_metrics": {
+    "api": {
+      "source": "mock_simulation",
+      "overall_mean_response_time_ms": 142.62391556287992,
+      "overall_median_response_time_ms": 135.112650511709,
+      "average_success_rate_percent": 94.0,
+      "endpoints_measured": 6,
+      "fastest_endpoint": "/health",
+      "slowest_endpoint": "/api/v1/recommendations"
+    },
+    "bundle": {
+      "source": "existing_build",
+      "total_size_mb": 1.75,
+      "js_chunks_count": 58,
+      "js_chunks_size_mb": 1.72,
+      "css_assets_count": 1,
+      "css_assets_size_mb": 0.03,
+      "largest_chunk": ".next/server/chunks/163.js",
+      "largest_chunk_size_mb": 0.43
+    }
+  }
+}

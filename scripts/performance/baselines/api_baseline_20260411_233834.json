@@ -1,0 +1,92 @@
+{
+  "timestamp": "2026-04-11T23:38:34.556710",
+  "source": "mock_simulation",
+  "endpoints": [
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "mean_response_time": 5.005006689409289,
+      "median_response_time": 5.027414470649577,
+      "p95_response_time": 7.940478258452375,
+      "p99_response_time": 8.476050934671054,
+      "min_response_time": 1.396297553487988,
+      "max_response_time": 8.476050934671054,
+      "success_rate": 94.0,
+      "total_requests": 50,
+      "timestamp": "2026-04-11T23:38:34.556170"
+    },
+    {
+      "endpoint": "/api/v1/feeds",
+      "method": "GET",
+      "mean_response_time": 150.12516723523223,
+      "median_response_time": 150.68536176623945,
+      "p95_response_time": 223.51195646130938,
+      "p99_response_time": 236.90127336677637,
+      "min_response_time": 59.907438837199706,
+      "max_response_time": 236.90127336677637,
+      "success_rate": 94.0,
+      "total_requests": 50,
+      "timestamp": "2026-04-11T23:38:34.556360"
+    },
+    {
+      "endpoint": "/api/v1/articles",
+      "method": "GET",
+      "mean_response_time": 200.18775085284835,
+      "median_response_time": 201.02804264935915,
+      "p95_response_time": 310.26793469196406,
+      "p99_response_time": 330.3519100501646,
+      "min_response_time": 64.86115825579955,
+      "max_response_time": 330.3519100501646,
+      "success_rate": 94.0,
+      "total_requests": 50,
+      "timestamp": "2026-04-11T23:38:34.556471"
+    },
+    {
+      "endpoint": "/api/v1/recommendations",
+      "method": "GET",
+      "mean_response_time": 300.25033447046445,
+      "median_response_time": 301.3707235324789,
+      "p95_response_time": 447.02391292261876,
+      "p99_response_time": 473.80254673355273,
+      "min_response_time": 119.81487767439941,
+      "max_response_time": 473.80254673355273,
+      "success_rate": 94.0,
+      "total_requests": 50,
+      "timestamp": "2026-04-11T23:38:34.556579"
+    },
+    {
+      "endpoint": "/api/v1/reading-list",
+      "method": "GET",
+      "mean_response_time": 120.10013378818579,
+      "median_response_time": 120.54828941299155,
+      "p95_response_time": 178.80956516904752,
+      "p99_response_time": 189.5210186934211,
+      "min_response_time": 47.92595106975976,
+      "max_response_time": 189.5210186934211,
+      "success_rate": 94.0,
+      "total_requests": 50,
+      "timestamp": "2026-04-11T23:38:34.556634"
+    },
+    {
+      "endpoint": "/api/v1/analytics/events",
+      "method": "POST",
+      "mean_response_time": 80.07510034113933,
+      "median_response_time": 80.41121705974365,
+      "p95_response_time": 124.10717387678562,
+      "p99_response_time": 132.14076402006583,
+      "min_response_time": 25.944463302319818,
+      "max_response_time": 132.14076402006583,
+      "success_rate": 94.0,
+      "total_requests": 50,
+      "timestamp": "2026-04-11T23:38:34.556685"
+    }
+  ],
+  "summary": {
+    "overall_mean_response_time": 142.62391556287992,
+    "overall_median_response_time": 135.112650511709,
+    "fastest_endpoint": "/health",
+    "slowest_endpoint": "/api/v1/recommendations",
+    "average_success_rate": 94.0,
+    "total_endpoints_measured": 6
+  }
+}

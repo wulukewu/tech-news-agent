@@ -23,12 +23,7 @@ export function TriggerSchedulerButton() {
   };
 
   return (
-    <Button
-      variant="outline"
-      onClick={handleTrigger}
-      disabled={isTriggering}
-      className="gap-2"
-    >
+    <Button variant="outline" onClick={handleTrigger} disabled={isTriggering} className="gap-2">
       <RefreshCw className={`h-4 w-4 ${isTriggering ? 'animate-spin' : ''}`} />
       {isTriggering ? '抓取中...' : '立即抓取新文章'}
     </Button>

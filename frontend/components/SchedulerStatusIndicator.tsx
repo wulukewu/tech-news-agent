@@ -116,8 +116,7 @@ export function SchedulerStatusIndicator({
                 <CheckCircle className="w-4 h-4" />
                 <span>
                   上次執行：{formatRelativeTime(lastExecutionTime)}
-                  {lastExecutionArticleCount > 0 &&
-                    ` (抓取 ${lastExecutionArticleCount} 篇文章)`}
+                  {lastExecutionArticleCount > 0 && ` (抓取 ${lastExecutionArticleCount} 篇文章)`}
                 </span>
               </div>
             )}

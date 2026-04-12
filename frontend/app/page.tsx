@@ -26,13 +26,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 /**
  * Discord Icon Component
@@ -118,12 +112,8 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="space-y-1 text-center">
-          <CardTitle className="text-3xl font-bold tracking-tight">
-            Tech News Agent
-          </CardTitle>
-          <CardDescription className="text-base">
-            技術資訊訂閱與管理平台
-          </CardDescription>
+          <CardTitle className="text-3xl font-bold tracking-tight">Tech News Agent</CardTitle>
+          <CardDescription className="text-base">技術資訊訂閱與管理平台</CardDescription>
           <CardDescription className="pt-2">
             使用 Discord 帳號登入以管理您的技術資訊訂閱
           </CardDescription>

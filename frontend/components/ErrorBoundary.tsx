@@ -15,10 +15,7 @@ interface ErrorBoundaryState {
   error: Error | null;
 }
 
-export class ErrorBoundary extends React.Component<
-  ErrorBoundaryProps,
-  ErrorBoundaryState
-> {
+export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false, error: null };
@@ -51,10 +48,7 @@ export class ErrorBoundary extends React.Component<
               <p className="text-muted-foreground">
                 {this.state.error?.message || 'An unexpected error occurred'}
               </p>
-              <Button
-                onClick={() => window.location.reload()}
-                className="w-full"
-              >
+              <Button onClick={() => window.location.reload()} className="w-full">
                 Reload Page
               </Button>
             </CardContent>

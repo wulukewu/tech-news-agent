@@ -31,11 +31,13 @@ export default function DashboardPage() {
     const loadCategories = async () => {
       try {
         const cats = await fetchCategories();
-        setCategories(cats);
+        setCategories(cats || []);
         // Initially select all categories
-        setSelectedCategories(cats);
+        setSelectedCategories(cats || []);
       } catch (error) {
         console.error('Failed to load categories:', error);
+        setCategories([]);
+        setSelectedCategories([]);
       } finally {
         setLoadingCategories(false);
       }
@@ -55,20 +57,22 @@ export default function DashboardPage() {
       const data = await fetchMyArticles(
         pageNum,
         20,
-        selectedCategories.length > 0 ? selectedCategories : undefined,
+        selectedCategories.length > 0 ? selectedCategories : undefined
       );
 
       if (append) {
-        setArticles((prev) => [...prev, ...data.articles]);
+        setArticles((prev) => [...prev, ...(data?.articles || [])]);
       } else {
-        setArticles(data.articles);
+        setArticles(data?.articles || []);
       }
 
-      setHasNextPage(data.hasNextPage);
+      setHasNextPage(data?.hasNextPage || false);
       setPage(pageNum);
     } catch (error) {
       toast.error('Failed to load articles');
       console.error('Failed to load articles:', error);
+      setArticles([]);
+      setHasNextPage(false);
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -134,10 +138,7 @@ export default function DashboardPage() {
             <h1 className="text-3xl font-bold">Your Articles</h1>
             <div className="flex gap-2">
               <TriggerSchedulerButton />
-              <Button
-                variant="outline"
-                onClick={() => router.push('/subscriptions')}
-              >
+              <Button variant="outline" onClick={() => router.push('/subscriptions')}>
                 管理訂閱
               </Button>
             </div>
@@ -166,7 +167,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex flex-wrap gap-2">
-              {categories.map((category) => {
+              {categories?.map((category) => {
                 const isSelected = selectedCategories.includes(category);
                 return (
                   <Badge
@@ -183,7 +184,7 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        {articles.length === 0 ? (
+        {articles?.length === 0 ? (
           <section className="flex flex-col items-center justify-center min-h-[60vh] text-center">
             <h2 className="text-2xl font-bold mb-2">No articles found</h2>
             <p className="text-muted-foreground mb-6">
@@ -195,27 +196,18 @@ export default function DashboardPage() {
         ) : (
           <>
             <section className="space-y-4" aria-label="Article list">
-              {articles.map((article) => (
-                <ArticleCard key={article.id} article={article} />
-              ))}
+              {articles?.map((article) => <ArticleCard key={article.id} article={article} />)}
             </section>
 
             {loadingMore && (
-              <div
-                className="flex justify-center py-8"
-                role="status"
-                aria-live="polite"
-              >
+              <div className="flex justify-center py-8" role="status" aria-live="polite">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
                 <span className="sr-only">Loading more articles...</span>
               </div>
             )}
 
-            {!hasNextPage && articles.length > 0 && (
-              <div
-                className="text-center py-8 text-muted-foreground"
-                role="status"
-              >
+            {!hasNextPage && articles?.length > 0 && (
+              <div className="text-center py-8 text-muted-foreground" role="status">
                 No more articles
               </div>
             )}

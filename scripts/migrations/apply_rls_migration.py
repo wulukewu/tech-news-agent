@@ -17,30 +17,30 @@ sys.path.insert(0, str(project_root))
 
 def apply_rls_migration():
     """Apply RLS policies to reading_list table."""
-    
+
     # Load environment variables
     load_dotenv()
-    
+
     supabase_url = os.getenv('SUPABASE_URL')
     supabase_key = os.getenv('SUPABASE_KEY')
-    
+
     if not supabase_url or not supabase_key:
         print("❌ Error: SUPABASE_URL and SUPABASE_KEY must be set in .env")
         sys.exit(1)
-    
+
     try:
         # Create Supabase client
         supabase: Client = create_client(supabase_url, supabase_key)
         print("✅ Connected to Supabase")
-        
+
         # Read the migration SQL file
         migration_file = Path(__file__).parent / "001_enable_rls_reading_list.sql"
         with open(migration_file, 'r') as f:
             migration_sql = f.read()
-        
+
         print("\n📝 Applying RLS migration...")
         print("=" * 60)
-        
+
         # Execute the migration
         # Note: Supabase Python client doesn't support raw SQL execution directly
         # This needs to be run in Supabase Dashboard > SQL Editor
@@ -53,7 +53,7 @@ def apply_rls_migration():
         print("=" * 60)
         print(migration_sql)
         print("=" * 60)
-        
+
         # Verify RLS is enabled (this will work after manual execution)
         print("\n🔍 Verifying RLS status...")
         try:
@@ -63,12 +63,12 @@ def apply_rls_migration():
         except Exception as e:
             print(f"⚠️  Cannot verify RLS status automatically: {e}")
             print("Please verify manually in Supabase Dashboard")
-        
+
         print("\n✅ Migration script prepared successfully")
         print("\nNext steps:")
         print("1. Execute the SQL in Supabase Dashboard")
         print("2. Run: python3 scripts/migrations/verify_rls.py")
-        
+
     except Exception as e:
         print(f"❌ Error: {e}")
         sys.exit(1)

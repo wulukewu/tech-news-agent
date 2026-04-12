@@ -1,0 +1,39 @@
+{
+  "timestamp": "2026-04-12T01:04:56.670681",
+  "comparisons": {
+    "api": {
+      "metric": "API Response Time",
+      "baseline_value": 142.62391556287992,
+      "current_value": 0.6057181766179079,
+      "improvement_percent": 99.57530392134632,
+      "improved": true,
+      "unit": "ms"
+    },
+    "bundle": {
+      "metric": "Bundle Size",
+      "baseline_value": 1.75,
+      "current_value": 1.75,
+      "improvement_percent": 0.0,
+      "improved": false,
+      "unit": "MB"
+    },
+    "component": {
+      "metric": "Component Render Time",
+      "baseline_value": 0.7078402333333278,
+      "current_value": 0.709369433333336,
+      "improvement_percent": -0.21603745139026467,
+      "improved": false,
+      "unit": "ms"
+    }
+  },
+  "summary": {
+    "improvements": [
+      "API: +99.6%"
+    ],
+    "regressions": [],
+    "no_change": [
+      "Bundle Size: +0.0%",
+      "Component Performance: -0.2%"
+    ]
+  }
+}

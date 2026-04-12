@@ -3,10 +3,11 @@
 import logging
 from functools import wraps
 from uuid import UUID
+
 import discord
 
-from app.services.supabase_service import SupabaseService
 from app.core.exceptions import SupabaseServiceError
+from app.services.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
 
@@ -47,8 +48,8 @@ async def ensure_user_registered(interaction: discord.Interaction) -> UUID:
             extra={
                 "discord_id": discord_id,
                 "discord_username": str(interaction.user),
-                "error_context": e.context if hasattr(e, 'context') else {}
-            }
+                "error_context": e.context if hasattr(e, "context") else {},
+            },
         )
         # Re-raise to allow caller to handle
         raise
@@ -56,16 +57,12 @@ async def ensure_user_registered(interaction: discord.Interaction) -> UUID:
     except Exception as e:
         # Catch any unexpected errors and wrap them
         logger.error(
-            f"Unexpected error during user registration for {discord_id}: {e}",
-            exc_info=True
+            f"Unexpected error during user registration for {discord_id}: {e}", exc_info=True
         )
         raise SupabaseServiceError(
             "無法註冊使用者，請稍後再試。",
             original_error=e,
-            context={
-                "discord_id": discord_id,
-                "operation": "ensure_user_registered"
-            }
+            context={"discord_id": discord_id, "operation": "ensure_user_registered"},
         )
 
 
@@ -95,6 +92,7 @@ def require_user_registration(func):
             # user_uuid is automatically provided
             pass
     """
+
     @wraps(func)
     async def wrapper(self, interaction: discord.Interaction, *args, **kwargs):
         try:
@@ -102,7 +100,6 @@ def require_user_registration(func):
             return await func(self, interaction, user_uuid, *args, **kwargs)
         except Exception as e:
             logger.error(f"User registration failed: {e}")
-            await interaction.response.send_message(
-                "❌ 無法註冊使用者，請稍後再試。", ephemeral=True
-            )
+            await interaction.response.send_message("❌ 無法註冊使用者，請稍後再試。", ephemeral=True)
+
     return wrapper

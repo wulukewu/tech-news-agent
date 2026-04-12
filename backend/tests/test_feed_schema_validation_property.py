@@ -7,17 +7,14 @@ Property 17: Pydantic Schema Validation
 Tests that Pydantic models correctly validate and reject invalid data.
 """
 
-import pytest
-from hypothesis import given, strategies as st, settings
-from pydantic import ValidationError
 from uuid import UUID, uuid4
 
-from app.schemas.feed import (
-    FeedResponse,
-    SubscriptionToggleRequest,
-    SubscriptionToggleResponse
-)
+import pytest
+from hypothesis import given, settings
+from hypothesis import strategies as st
+from pydantic import ValidationError
 
+from app.schemas.feed import FeedResponse, SubscriptionToggleRequest, SubscriptionToggleResponse
 
 # Strategies for generating test data
 valid_uuids = st.uuids()
@@ -35,7 +32,7 @@ class TestFeedResponseValidation:
         name=valid_names,
         url=valid_urls,
         category=valid_categories,
-        is_subscribed=valid_booleans
+        is_subscribed=valid_booleans,
     )
     @settings(max_examples=100)
     def test_valid_feed_response_accepts_valid_data(
@@ -46,17 +43,13 @@ class TestFeedResponseValidation:
         **Validates: Requirements 17.1, 17.8**
         """
         feed = FeedResponse(
-            id=feed_id,
-            name=name,
-            url=url,
-            category=category,
-            is_subscribed=is_subscribed
+            id=feed_id, name=name, url=url, category=category, is_subscribed=is_subscribed
         )
-        
+
         assert feed.id == feed_id
         assert feed.name == name
         # HttpUrl normalizes and encodes URLs, so just verify it's a valid URL
-        assert str(feed.url).startswith('http')
+        assert str(feed.url).startswith("http")
         assert feed.category == category
         assert feed.is_subscribed == is_subscribed
 
@@ -71,28 +64,20 @@ class TestFeedResponseValidation:
                 name="Test Feed",
                 url="https://example.com/feed",
                 category="Tech",
-                is_subscribed=True
+                is_subscribed=True,
             )
         assert "id" in str(exc_info.value)
 
         # Missing name
         with pytest.raises(ValidationError) as exc_info:
             FeedResponse(
-                id=uuid4(),
-                url="https://example.com/feed",
-                category="Tech",
-                is_subscribed=True
+                id=uuid4(), url="https://example.com/feed", category="Tech", is_subscribed=True
             )
         assert "name" in str(exc_info.value)
 
         # Missing url
         with pytest.raises(ValidationError) as exc_info:
-            FeedResponse(
-                id=uuid4(),
-                name="Test Feed",
-                category="Tech",
-                is_subscribed=True
-            )
+            FeedResponse(id=uuid4(), name="Test Feed", category="Tech", is_subscribed=True)
         assert "url" in str(exc_info.value)
 
     @given(invalid_url=st.text().filter(lambda x: not x.startswith("http")))
@@ -104,11 +89,7 @@ class TestFeedResponseValidation:
         """
         with pytest.raises(ValidationError) as exc_info:
             FeedResponse(
-                id=uuid4(),
-                name="Test Feed",
-                url=invalid_url,
-                category="Tech",
-                is_subscribed=True
+                id=uuid4(), name="Test Feed", url=invalid_url, category="Tech", is_subscribed=True
             )
         assert "url" in str(exc_info.value).lower()
 
@@ -132,7 +113,7 @@ class TestFeedResponseValidation:
                 name="Test Feed",
                 url="https://example.com/feed",
                 category="Tech",
-                is_subscribed=True
+                is_subscribed=True,
             )
         assert "id" in str(exc_info.value).lower()
 
@@ -140,7 +121,7 @@ class TestFeedResponseValidation:
         """
         Property 17: FeedResponse should reject invalid boolean values.
         **Validates: Requirements 17.1, 17.8**
-        
+
         Note: Pydantic is lenient with boolean conversion, accepting many string values.
         This test verifies that truly invalid types (like lists or dicts) are rejected.
         """
@@ -151,10 +132,10 @@ class TestFeedResponseValidation:
                 name="Test Feed",
                 url="https://example.com/feed",
                 category="Tech",
-                is_subscribed=["not", "a", "bool"]
+                is_subscribed=["not", "a", "bool"],
             )
         assert "is_subscribed" in str(exc_info.value).lower()
-        
+
         # Test with a dict (definitely not a boolean)
         with pytest.raises(ValidationError) as exc_info:
             FeedResponse(
@@ -162,7 +143,7 @@ class TestFeedResponseValidation:
                 name="Test Feed",
                 url="https://example.com/feed",
                 category="Tech",
-                is_subscribed={"not": "a bool"}
+                is_subscribed={"not": "a bool"},
             )
         assert "is_subscribed" in str(exc_info.value).lower()
 
@@ -211,23 +192,15 @@ class TestSubscriptionToggleRequestValidation:
 class TestSubscriptionToggleResponseValidation:
     """Test SubscriptionToggleResponse schema validation"""
 
-    @given(
-        feed_id=valid_uuids,
-        is_subscribed=valid_booleans
-    )
+    @given(feed_id=valid_uuids, is_subscribed=valid_booleans)
     @settings(max_examples=100)
-    def test_valid_subscription_toggle_response_accepts_valid_data(
-        self, feed_id, is_subscribed
-    ):
+    def test_valid_subscription_toggle_response_accepts_valid_data(self, feed_id, is_subscribed):
         """
         Property 17: For any valid data, SubscriptionToggleResponse should accept it.
         **Validates: Requirements 17.3, 17.8**
         """
-        response = SubscriptionToggleResponse(
-            feed_id=feed_id,
-            is_subscribed=is_subscribed
-        )
-        
+        response = SubscriptionToggleResponse(feed_id=feed_id, is_subscribed=is_subscribed)
+
         assert response.feed_id == feed_id
         assert response.is_subscribed == is_subscribed
 
@@ -257,11 +230,7 @@ class TestSchemaIntegrity:
         """
         # Empty name should be accepted (validation is minimal)
         feed = FeedResponse(
-            id=uuid4(),
-            name="",
-            url="https://example.com/feed",
-            category="",
-            is_subscribed=False
+            id=uuid4(), name="", url="https://example.com/feed", category="", is_subscribed=False
         )
         assert feed.name == ""
         assert feed.category == ""
@@ -273,15 +242,15 @@ class TestSchemaIntegrity:
         """
         long_name = "A" * 10000
         long_category = "B" * 10000
-        
+
         feed = FeedResponse(
             id=uuid4(),
             name=long_name,
             url="https://example.com/feed",
             category=long_category,
-            is_subscribed=True
+            is_subscribed=True,
         )
-        
+
         assert len(feed.name) == 10000
         assert len(feed.category) == 10000
 
@@ -295,9 +264,9 @@ class TestSchemaIntegrity:
             name="Test Feed",
             url="https://example.com/feed",
             category="Tech",
-            is_subscribed=True
+            is_subscribed=True,
         )
-        
+
         json_data = feed.model_dump_json()
         assert isinstance(json_data, str)
         assert "Test Feed" in json_data
@@ -310,6 +279,6 @@ class TestSchemaIntegrity:
         """
         feed_id = uuid4()
         json_data = f'{{"feed_id": "{feed_id}"}}'
-        
+
         request = SubscriptionToggleRequest.model_validate_json(json_data)
         assert request.feed_id == feed_id

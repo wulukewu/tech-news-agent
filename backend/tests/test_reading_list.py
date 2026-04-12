@@ -2,23 +2,23 @@
 Property-based tests for the Interactive Reading List feature.
 Uses Hypothesis to verify correctness properties defined in design.md.
 """
+
 import asyncio
-from datetime import datetime
-from typing import List, Optional
+from typing import Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
+from app.bot.cogs.reading_list import MarkAsReadButton, PaginationView, RatingSelect
 from app.schemas.article import ReadingListItem
-from app.bot.cogs.reading_list import PaginationView, MarkAsReadButton, RatingSelect
 from app.services.notion_service import NotionService
-
 
 # ---------------------------------------------------------------------------
 # Shared strategies
 # ---------------------------------------------------------------------------
+
 
 def reading_list_item_strategy(
     status: Optional[str] = None,
@@ -26,7 +26,11 @@ def reading_list_item_strategy(
     null_rating: bool = False,
 ):
     """Build a strategy that generates ReadingListItem instances."""
-    page_id_st = st.text(min_size=1, max_size=36, alphabet=st.characters(whitelist_categories=("Lu", "Ll", "Nd"), whitelist_characters="-"))
+    page_id_st = st.text(
+        min_size=1,
+        max_size=36,
+        alphabet=st.characters(whitelist_categories=("Lu", "Ll", "Nd"), whitelist_characters="-"),
+    )
     title_st = st.text(min_size=1, max_size=50)
     url_st = st.just("https://example.com/article")
     category_st = st.text(min_size=1, max_size=20)
@@ -52,8 +56,9 @@ def reading_list_item_strategy(
     return _build()
 
 
-def make_notion_page(page_id: str, title: str, url: str, category: str,
-                     status: str, rating: Optional[int]) -> dict:
+def make_notion_page(
+    page_id: str, title: str, url: str, category: str, status: str, rating: Optional[int]
+) -> dict:
     """Build a minimal Notion page dict that _parse_reading_list_item can consume."""
     rating_prop = {"number": rating} if rating is not None else {"number": None}
     return {
@@ -75,6 +80,7 @@ def make_notion_page(page_id: str, title: str, url: str, category: str,
 # Validates: Requirements 1.1, 5.3
 # ---------------------------------------------------------------------------
 
+
 @given(
     unread_items=st.lists(
         st.tuples(
@@ -83,7 +89,8 @@ def make_notion_page(page_id: str, title: str, url: str, category: str,
             st.just("https://example.com/article"),
             st.text(min_size=1, max_size=20),
         ),
-        min_size=0, max_size=10,
+        min_size=0,
+        max_size=10,
     ),
     read_items=st.lists(
         st.tuples(
@@ -92,7 +99,8 @@ def make_notion_page(page_id: str, title: str, url: str, category: str,
             st.just("https://example.com/article"),
             st.text(min_size=1, max_size=20),
         ),
-        min_size=0, max_size=10,
+        min_size=0,
+        max_size=10,
     ),
 )
 @settings(max_examples=5)
@@ -142,10 +150,11 @@ def test_p1_get_reading_list_only_returns_unread(unread_items, read_items):
 # Validates: Requirements 1.2
 # ---------------------------------------------------------------------------
 
+
 def _current_page_items(items: list, page: int, page_size: int = 5) -> list:
     """Helper: replicate PaginationView._current_page_items logic without Discord UI."""
     start = page * page_size
-    return items[start: start + page_size]
+    return items[start : start + page_size]
 
 
 @given(
@@ -159,7 +168,8 @@ def _current_page_items(items: list, page: int, page_size: int = 5) -> list:
             added_at=st.none(),
             rating=st.none(),
         ),
-        min_size=0, max_size=30,
+        min_size=0,
+        max_size=30,
     )
 )
 @settings(max_examples=5)
@@ -172,9 +182,9 @@ def test_p2_pagination_never_exceeds_5_items(items):
     total_pages = max(1, (len(items) + page_size - 1) // page_size)
     for page_num in range(total_pages):
         page_items = _current_page_items(items, page_num, page_size)
-        assert len(page_items) <= page_size, (
-            f"Page {page_num} has {len(page_items)} items, expected <= {page_size}"
-        )
+        assert (
+            len(page_items) <= page_size
+        ), f"Page {page_num} has {len(page_items)} items, expected <= {page_size}"
 
 
 # ---------------------------------------------------------------------------
@@ -182,6 +192,7 @@ def test_p2_pagination_never_exceeds_5_items(items):
 # Feature: interactive-reading-list, Property 3: 每篇文章都有標記已讀按鈕
 # Validates: Requirements 2.1
 # ---------------------------------------------------------------------------
+
 
 @given(
     items=st.lists(
@@ -194,7 +205,8 @@ def test_p2_pagination_never_exceeds_5_items(items):
             added_at=st.none(),
             rating=st.none(),
         ),
-        min_size=1, max_size=20,
+        min_size=1,
+        max_size=20,
     )
 )
 @settings(max_examples=5)
@@ -204,15 +216,12 @@ def test_p3_every_item_has_mark_as_read_button(items):
 
     # Create MarkAsReadButton for each page item and verify page_id matches
     buttons = [MarkAsReadButton(item, row=1) for item in page_items]
-    button_page_ids = {
-        btn.custom_id.replace("mark_read_", "")
-        for btn in buttons
-    }
+    button_page_ids = {btn.custom_id.replace("mark_read_", "") for btn in buttons}
 
     for item in page_items:
-        assert item.page_id in button_page_ids, (
-            f"No MarkAsReadButton found for page_id={item.page_id!r}"
-        )
+        assert (
+            item.page_id in button_page_ids
+        ), f"No MarkAsReadButton found for page_id={item.page_id!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -221,13 +230,15 @@ def test_p3_every_item_has_mark_as_read_button(items):
 # Validates: Requirements 2.2, 2.5, 5.4
 # ---------------------------------------------------------------------------
 
+
 @given(
     items=st.lists(
         st.tuples(
             st.text(min_size=1, max_size=36),
             st.text(min_size=1, max_size=50),
         ),
-        min_size=1, max_size=10,
+        min_size=1,
+        max_size=10,
     ),
     target_index=st.integers(min_value=0, max_value=9),
 )
@@ -258,7 +269,9 @@ def test_p4_mark_as_read_roundtrip(items, target_index):
             # get_reading_list returns only Unread pages
             async def fake_query(**kwargs):
                 pages = [
-                    make_notion_page(pid, title, "https://example.com/article", "cat", db[pid], None)
+                    make_notion_page(
+                        pid, title, "https://example.com/article", "cat", db[pid], None
+                    )
                     for pid, title in items
                     if db[pid] == "Unread"
                 ]
@@ -273,9 +286,9 @@ def test_p4_mark_as_read_roundtrip(items, target_index):
 
     remaining = asyncio.get_event_loop().run_until_complete(_run())
     returned_ids = {item.page_id for item in remaining}
-    assert target_id not in returned_ids, (
-        f"page_id={target_id!r} should not appear in get_reading_list() after mark_as_read"
-    )
+    assert (
+        target_id not in returned_ids
+    ), f"page_id={target_id!r} should not appear in get_reading_list() after mark_as_read"
 
 
 # ---------------------------------------------------------------------------
@@ -283,6 +296,7 @@ def test_p4_mark_as_read_roundtrip(items, target_index):
 # Feature: interactive-reading-list, Property 5: 每篇文章都有包含 1–5 選項的評分選單
 # Validates: Requirements 3.1
 # ---------------------------------------------------------------------------
+
 
 @given(
     items=st.lists(
@@ -295,7 +309,8 @@ def test_p4_mark_as_read_roundtrip(items, target_index):
             added_at=st.none(),
             rating=st.none(),
         ),
-        min_size=1, max_size=20,
+        min_size=1,
+        max_size=20,
     )
 )
 @settings(max_examples=5)
@@ -308,9 +323,9 @@ def test_p5_every_item_has_rating_select_with_1_to_5(items):
     for item in page_items:
         select = RatingSelect(item, row=2)
         option_values = {opt.value for opt in select.options}
-        assert option_values == expected_values, (
-            f"RatingSelect for {item.page_id!r} has options {option_values}, expected {expected_values}"
-        )
+        assert (
+            option_values == expected_values
+        ), f"RatingSelect for {item.page_id!r} has options {option_values}, expected {expected_values}"
 
 
 # ---------------------------------------------------------------------------
@@ -319,13 +334,15 @@ def test_p5_every_item_has_rating_select_with_1_to_5(items):
 # Validates: Requirements 3.2, 3.5, 5.5
 # ---------------------------------------------------------------------------
 
+
 @given(
     items=st.lists(
         st.tuples(
             st.text(min_size=1, max_size=36),
             st.text(min_size=1, max_size=50),
         ),
-        min_size=1, max_size=10,
+        min_size=1,
+        max_size=10,
     ),
     target_index=st.integers(min_value=0, max_value=9),
     rating=st.integers(min_value=1, max_value=5),
@@ -357,7 +374,9 @@ def test_p6_rate_article_roundtrip(items, target_index, rating):
             # get_reading_list returns all items with current ratings
             async def fake_query(**kwargs):
                 pages = [
-                    make_notion_page(pid, title, "https://example.com/article", "cat", "Unread", ratings_db[pid])
+                    make_notion_page(
+                        pid, title, "https://example.com/article", "cat", "Unread", ratings_db[pid]
+                    )
                     for pid, title in items
                 ]
                 return {"results": pages}
@@ -373,9 +392,9 @@ def test_p6_rate_article_roundtrip(items, target_index, rating):
     item_map = {item.page_id: item for item in all_items}
 
     assert target_id in item_map, f"Article {target_id!r} not found after rating"
-    assert item_map[target_id].rating == rating, (
-        f"Expected rating={rating}, got {item_map[target_id].rating}"
-    )
+    assert (
+        item_map[target_id].rating == rating
+    ), f"Expected rating={rating}, got {item_map[target_id].rating}"
 
 
 # ---------------------------------------------------------------------------
@@ -384,6 +403,7 @@ def test_p6_rate_article_roundtrip(items, target_index, rating):
 # Validates: Requirements 4.1, 5.6
 # ---------------------------------------------------------------------------
 
+
 @given(
     items=st.lists(
         st.tuples(
@@ -391,7 +411,8 @@ def test_p6_rate_article_roundtrip(items, target_index, rating):
             st.text(min_size=1, max_size=50),
             st.one_of(st.none(), st.integers(min_value=1, max_value=5)),
         ),
-        min_size=0, max_size=15,
+        min_size=0,
+        max_size=15,
     ),
     threshold=st.integers(min_value=1, max_value=5),
 )
@@ -417,12 +438,12 @@ def test_p7_get_highly_rated_articles_only_above_threshold(items, threshold):
     result = asyncio.get_event_loop().run_until_complete(_run())
 
     for item in result:
-        assert item.rating is not None, (
-            f"Article {item.page_id!r} has rating=None but was returned by get_highly_rated_articles"
-        )
-        assert item.rating >= threshold, (
-            f"Article {item.page_id!r} has rating={item.rating} < threshold={threshold}"
-        )
+        assert (
+            item.rating is not None
+        ), f"Article {item.page_id!r} has rating=None but was returned by get_highly_rated_articles"
+        assert (
+            item.rating >= threshold
+        ), f"Article {item.page_id!r} has rating={item.rating} < threshold={threshold}"
 
 
 # ---------------------------------------------------------------------------
@@ -431,13 +452,15 @@ def test_p7_get_highly_rated_articles_only_above_threshold(items, threshold):
 # Validates: Requirements 5.2
 # ---------------------------------------------------------------------------
 
+
 @given(
     items=st.lists(
         st.tuples(
             st.text(min_size=1, max_size=36),
             st.text(min_size=1, max_size=50),
         ),
-        min_size=1, max_size=10,
+        min_size=1,
+        max_size=10,
     )
 )
 @settings(max_examples=5)
@@ -461,9 +484,9 @@ def test_p8_unrated_articles_have_none_rating(items):
     result = asyncio.get_event_loop().run_until_complete(_run())
 
     for item in result:
-        assert item.rating is None, (
-            f"Article {item.page_id!r} should have rating=None but got {item.rating}"
-        )
+        assert (
+            item.rating is None
+        ), f"Article {item.page_id!r} should have rating=None but got {item.rating}"
 
 
 # ---------------------------------------------------------------------------
@@ -471,7 +494,7 @@ def test_p8_unrated_articles_have_none_rating(items):
 # ---------------------------------------------------------------------------
 
 from app.bot.cogs.reading_list import ReadingListGroup
-from app.core.exceptions import NotionServiceError, LLMServiceError
+from app.core.exceptions import LLMServiceError, NotionServiceError
 
 
 def make_item(page_id="page-001", title="Test Article", rating=None):
@@ -497,6 +520,7 @@ def make_interaction():
 # Task 7.1 — Unread 清單為空時回覆正確訊息
 # ---------------------------------------------------------------------------
 
+
 class TestViewEmptyList:
     @pytest.mark.asyncio
     async def test_empty_reading_list_replies_correct_message(self):
@@ -517,6 +541,7 @@ class TestViewEmptyList:
 # ---------------------------------------------------------------------------
 # Task 7.2 — Notion 錯誤時不顯示部分資料
 # ---------------------------------------------------------------------------
+
 
 class TestViewNotionError:
     @pytest.mark.asyncio
@@ -543,6 +568,7 @@ class TestViewNotionError:
 # Task 7.3 — 標記已讀失敗時按鈕狀態不變
 # ---------------------------------------------------------------------------
 
+
 class TestMarkAsReadButtonFailure:
     @pytest.mark.asyncio
     async def test_mark_as_read_failure_button_state_unchanged(self):
@@ -563,6 +589,7 @@ class TestMarkAsReadButtonFailure:
 # ---------------------------------------------------------------------------
 # Task 7.4 — 高評分文章為 0 時回覆正確訊息
 # ---------------------------------------------------------------------------
+
 
 class TestRecommendNoHighRatedArticles:
     @pytest.mark.asyncio
@@ -585,6 +612,7 @@ class TestRecommendNoHighRatedArticles:
 # Task 7.5 — LLM 錯誤時回覆正確訊息
 # ---------------------------------------------------------------------------
 
+
 class TestRecommendLLMError:
     @pytest.mark.asyncio
     async def test_llm_error_replies_correct_message(self):
@@ -592,10 +620,14 @@ class TestRecommendLLMError:
         group = ReadingListGroup()
         interaction = make_interaction()
 
-        with patch("app.bot.cogs.reading_list.NotionService") as MockNotion, \
-             patch("app.bot.cogs.reading_list.LLMService") as MockLLM:
+        with (
+            patch("app.bot.cogs.reading_list.NotionService") as MockNotion,
+            patch("app.bot.cogs.reading_list.LLMService") as MockLLM,
+        ):
             notion_instance = MockNotion.return_value
-            notion_instance.get_highly_rated_articles = AsyncMock(return_value=[make_item(rating=5)])
+            notion_instance.get_highly_rated_articles = AsyncMock(
+                return_value=[make_item(rating=5)]
+            )
             llm_instance = MockLLM.return_value
             llm_instance.generate_reading_recommendation = AsyncMock(
                 side_effect=LLMServiceError("LLM unavailable")
@@ -610,6 +642,7 @@ class TestRecommendLLMError:
 # ---------------------------------------------------------------------------
 # Task 7.6 — 多頁清單時顯示分頁按鈕
 # ---------------------------------------------------------------------------
+
 
 class TestPaginationViewButtons:
     def test_more_than_5_items_has_prev_and_next_buttons(self):
@@ -626,6 +659,7 @@ class TestPaginationViewButtons:
 # ---------------------------------------------------------------------------
 # Task 7.7 — 評分成功時 ephemeral 訊息包含星數
 # ---------------------------------------------------------------------------
+
 
 class TestRatingSelectSuccess:
     @pytest.mark.asyncio
@@ -650,6 +684,7 @@ class TestRatingSelectSuccess:
 # ---------------------------------------------------------------------------
 # Task 7.8 — /reading_list view 回覆為 ephemeral
 # ---------------------------------------------------------------------------
+
 
 class TestViewEphemeral:
     @pytest.mark.asyncio

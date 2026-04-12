@@ -4,10 +4,10 @@
 包含 create_access_token, decode_token, set_token_cookie 的單元測試
 """
 
-import pytest
-import os
 from datetime import datetime, timedelta
 from uuid import uuid4
+
+import pytest
 from fastapi import Response
 from jose import JWTError
 from jose.exceptions import ExpiredSignatureError
@@ -21,13 +21,13 @@ def setup_jwt_secret():
     """設置測試用的 JWT_SECRET"""
     # 保存原始值
     original_secret = settings.jwt_secret
-    
+
     # 設置測試用的 secret
     test_secret = "test_jwt_secret_at_least_32_characters_long_for_testing"
     settings.jwt_secret = test_secret
-    
+
     yield
-    
+
     # 恢復原始值
     settings.jwt_secret = original_secret
 
@@ -199,7 +199,7 @@ class TestTokenRoundTrip:
     def test_multiple_tokens_are_unique(self):
         """測試多次生成的 Token 是唯一的（因為 iat 不同）"""
         import time
-        
+
         user_id = uuid4()
         discord_id = "456456456"
 

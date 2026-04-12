@@ -7,27 +7,34 @@ API requests and responses.
 Requirements: 2.1, 2.2, 4.1, 12.1, 12.4
 """
 
-from pydantic import BaseModel, Field, ConfigDict
+from typing import Optional
 from uuid import UUID
-from typing import Optional, Dict, List
-from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class RecommendedFeed(BaseModel):
     """
     Recommended feed response model
-    
+
     Represents a feed with recommendation metadata.
     Used by GET /api/feeds/recommended endpoint.
     """
+
     id: UUID = Field(..., description="Feed UUID")
     name: str = Field(..., description="Feed name")
     url: str = Field(..., description="Feed RSS URL")
     category: str = Field(..., description="Feed category (AI, Web Development, Security, etc.)")
-    description: Optional[str] = Field(None, description="User-facing description of the feed content")
+    description: Optional[str] = Field(
+        None, description="User-facing description of the feed content"
+    )
     is_recommended: bool = Field(..., description="Whether this feed is recommended for new users")
-    recommendation_priority: int = Field(..., description="Priority for ordering (higher = more important)")
-    is_subscribed: bool = Field(default=False, description="Whether the current user is subscribed to this feed")
+    recommendation_priority: int = Field(
+        ..., description="Priority for ordering (higher = more important)"
+    )
+    is_subscribed: bool = Field(
+        default=False, description="Whether the current user is subscribed to this feed"
+    )
 
     model_config = ConfigDict(
         from_attributes=True,
@@ -40,22 +47,24 @@ class RecommendedFeed(BaseModel):
                 "description": "最熱門的科技新聞和討論",
                 "is_recommended": True,
                 "recommendation_priority": 100,
-                "is_subscribed": False
+                "is_subscribed": False,
             }
-        }
+        },
     )
 
 
 class RecommendedFeedsResponse(BaseModel):
     """
     Response model for recommended feeds endpoint
-    
+
     Returns both a flat list and grouped by category.
     """
-    feeds: List[RecommendedFeed] = Field(..., description="All recommended feeds sorted by priority")
-    grouped_by_category: Dict[str, List[RecommendedFeed]] = Field(
-        ..., 
-        description="Feeds grouped by category, each group sorted by priority"
+
+    feeds: list[RecommendedFeed] = Field(
+        ..., description="All recommended feeds sorted by priority"
+    )
+    grouped_by_category: dict[str, list[RecommendedFeed]] = Field(
+        ..., description="Feeds grouped by category, each group sorted by priority"
     )
     total_count: int = Field(..., description="Total number of recommended feeds")
 
@@ -71,15 +80,11 @@ class RecommendedFeedsResponse(BaseModel):
                         "description": "最熱門的科技新聞和討論",
                         "is_recommended": True,
                         "recommendation_priority": 100,
-                        "is_subscribed": False
+                        "is_subscribed": False,
                     }
                 ],
-                "grouped_by_category": {
-                    "AI": [],
-                    "Web Development": [],
-                    "Security": []
-                },
-                "total_count": 20
+                "grouped_by_category": {"AI": [], "Web Development": [], "Security": []},
+                "total_count": 20,
             }
         }
     )
@@ -88,34 +93,31 @@ class RecommendedFeedsResponse(BaseModel):
 class UpdateRecommendationStatusRequest(BaseModel):
     """
     Request model for updating feed recommendation status
-    
+
     Used by admin endpoints to manage recommended feeds.
     """
+
     is_recommended: bool = Field(..., description="Whether the feed should be recommended")
     recommendation_priority: int = Field(
-        default=0, 
-        ge=0,
-        description="Priority for ordering (0-1000, higher = more important)"
+        default=0, ge=0, description="Priority for ordering (0-1000, higher = more important)"
     )
 
     model_config = ConfigDict(
-        json_schema_extra={
-            "example": {
-                "is_recommended": True,
-                "recommendation_priority": 100
-            }
-        }
+        json_schema_extra={"example": {"is_recommended": True, "recommendation_priority": 100}}
     )
 
 
 class FeedsByCategoryResponse(BaseModel):
     """
     Response model for feeds grouped by category
-    
+
     Used by subscription page to display feeds in collapsible sections.
     """
+
     category: str = Field(..., description="Category name")
-    feeds: List[RecommendedFeed] = Field(..., description="Feeds in this category sorted by priority")
+    feeds: list[RecommendedFeed] = Field(
+        ..., description="Feeds in this category sorted by priority"
+    )
     feed_count: int = Field(..., description="Number of feeds in this category")
 
     model_config = ConfigDict(
@@ -131,10 +133,10 @@ class FeedsByCategoryResponse(BaseModel):
                         "description": "OpenAI 官方部落格",
                         "is_recommended": True,
                         "recommendation_priority": 95,
-                        "is_subscribed": False
+                        "is_subscribed": False,
                     }
                 ],
-                "feed_count": 5
+                "feed_count": 5,
             }
         }
     )

@@ -3,13 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 /**
  * Single tooltip step configuration
@@ -126,14 +120,8 @@ export function TooltipTour({
 
       // Keep tooltip within viewport
       const padding = 16;
-      top = Math.max(
-        padding,
-        Math.min(top, window.innerHeight - tooltipHeight - padding),
-      );
-      left = Math.max(
-        padding,
-        Math.min(left, window.innerWidth - tooltipWidth - padding),
-      );
+      top = Math.max(padding, Math.min(top, window.innerHeight - tooltipHeight - padding));
+      left = Math.max(padding, Math.min(left, window.innerWidth - tooltipWidth - padding));
 
       setTooltipPosition({ top, left });
     };
@@ -176,7 +164,9 @@ export function TooltipTour({
           className="fixed inset-0 pointer-events-none z-[9998]"
           style={{
             background: `radial-gradient(
-              circle at ${targetRect.left + targetRect.width / 2}px ${targetRect.top + targetRect.height / 2}px,
+              circle at ${targetRect.left + targetRect.width / 2}px ${
+                targetRect.top + targetRect.height / 2
+              }px,
               transparent ${Math.max(targetRect.width, targetRect.height) / 2 + 10}px,
               rgba(0, 0, 0, 0.7) ${Math.max(targetRect.width, targetRect.height) / 2 + 50}px
             )`,
@@ -214,17 +204,10 @@ export function TooltipTour({
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              {currentStep.description}
-            </p>
+            <p className="text-sm text-muted-foreground">{currentStep.description}</p>
 
             <div className="flex items-center justify-between gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={previousStep}
-                disabled={isFirstStep}
-              >
+              <Button variant="ghost" size="sm" onClick={previousStep} disabled={isFirstStep}>
                 上一步
               </Button>
 
@@ -233,9 +216,7 @@ export function TooltipTour({
                   <div
                     key={index}
                     className={`h-1.5 w-1.5 rounded-full transition-colors ${
-                      index === currentStepIndex
-                        ? 'bg-primary'
-                        : 'bg-muted-foreground/30'
+                      index === currentStepIndex ? 'bg-primary' : 'bg-muted-foreground/30'
                     }`}
                   />
                 ))}

@@ -151,11 +151,7 @@ export function LegacyActionExample() {
     <EmptyState
       title="舊版 API 範例"
       description="這個範例展示向後相容的 action prop 用法。"
-      action={
-        <button className="px-4 py-2 bg-blue-500 text-white rounded">
-          自訂動作按鈕
-        </button>
-      }
+      action={<button className="px-4 py-2 bg-blue-500 text-white rounded">自訂動作按鈕</button>}
     />
   );
 }

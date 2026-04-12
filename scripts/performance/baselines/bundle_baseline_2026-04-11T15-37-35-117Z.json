@@ -1,0 +1,123 @@
+{
+  "timestamp": "2026-04-11T15:37:35.117Z",
+  "source": "existing_build",
+  "pages": {},
+  "chunks": {
+    "static": {
+      ".next/static/chunks/117-01b1c34b7bf4cea8.js": 124164,
+      ".next/static/chunks/2-7269a04e19d589a1.js": 81780,
+      ".next/static/chunks/274-5dae84bac948369b.js": 34543,
+      ".next/static/chunks/333-8e67392e46ded563.js": 17579,
+      ".next/static/chunks/429-97d1a8329a64206b.js": 10721,
+      ".next/static/chunks/444-9ad7ff484160c5ad.js": 14472,
+      ".next/static/chunks/518-cf0cb8862c48a5e8.js": 18732,
+      ".next/static/chunks/57-cd0d45ae1afc3d67.js": 5648,
+      ".next/static/chunks/577.7f03df08313e1643.js": 879,
+      ".next/static/chunks/645-6ed4f90ec62cbdef.js": 37346,
+      ".next/static/chunks/733-531825faa9abb5c7.js": 22057,
+      ".next/static/chunks/74-aedcd0658013b394.js": 26761,
+      ".next/static/chunks/app/_not-found/page-691b3e996eac4405.js": 1745,
+      ".next/static/chunks/app/auth/callback/page-5c8b1c72c0648eea.js": 7894,
+      ".next/static/chunks/app/dashboard/page-5106e0309ad64554.js": 10334,
+      ".next/static/chunks/app/layout-f1d765aa31f609a6.js": 10064,
+      ".next/static/chunks/app/page-bedbf6af182342e0.js": 8222,
+      ".next/static/chunks/app/reading-list/page-02817006706b59d2.js": 13595,
+      ".next/static/chunks/app/subscriptions/page-b7091d99d3291afe.js": 11116,
+      ".next/static/chunks/fd9d1056-ffeb08e0443cf568.js": 172834,
+      ".next/static/chunks/framework-f66176bb897dc684.js": 139978,
+      ".next/static/chunks/main-6efba60364949faa.js": 115763,
+      ".next/static/chunks/main-app-3aa17b0fff18bb12.js": 461,
+      ".next/static/chunks/pages/_app-72b849fbd24ac258.js": 280,
+      ".next/static/chunks/pages/_error-7ba65e1336b92748.js": 247,
+      ".next/static/chunks/polyfills-42372ed130431b0a.js": 112594,
+      ".next/static/chunks/webpack-45cefc36011a0dd8.js": 3765,
+      ".next/static/sOAiJUAERknyyoAP2MsRX/_buildManifest.js": 224,
+      ".next/static/sOAiJUAERknyyoAP2MsRX/_ssgManifest.js": 77
+    },
+    "server": {
+      ".next/server/app/_not-found/page.js": 3200,
+      ".next/server/app/_not-found/page_client-reference-manifest.js": 8169,
+      ".next/server/app/api/health/route.js": 39688,
+      ".next/server/app/auth/callback/page.js": 5738,
+      ".next/server/app/auth/callback/page_client-reference-manifest.js": 8327,
+      ".next/server/app/dashboard/page.js": 10134,
+      ".next/server/app/dashboard/page_client-reference-manifest.js": 8497,
+      ".next/server/app/page.js": 6423,
+      ".next/server/app/page_client-reference-manifest.js": 8077,
+      ".next/server/app/reading-list/page.js": 46989,
+      ".next/server/app/reading-list/page_client-reference-manifest.js": 8550,
+      ".next/server/app/subscriptions/page.js": 21155,
+      ".next/server/app/subscriptions/page_client-reference-manifest.js": 8419,
+      ".next/server/chunks/163.js": 455380,
+      ".next/server/chunks/20.js": 21256,
+      ".next/server/chunks/276.js": 58051,
+      ".next/server/chunks/547.js": 4548,
+      ".next/server/chunks/682.js": 33144,
+      ".next/server/chunks/768.js": 24194,
+      ".next/server/chunks/833.js": 602,
+      ".next/server/interception-route-rewrite-manifest.js": 48,
+      ".next/server/middleware-build-manifest.js": 888,
+      ".next/server/middleware-react-loadable-manifest.js": 356,
+      ".next/server/next-font-manifest.js": 106,
+      ".next/server/pages/_app.js": 3291,
+      ".next/server/pages/_document.js": 378,
+      ".next/server/pages/_error.js": 8357,
+      ".next/server/server-reference-manifest.js": 123,
+      ".next/server/webpack-runtime.js": 1469
+    }
+  },
+  "assets": {
+    "static": {
+      ".next/static/css/cdb64bf0e7778690.css": 32987
+    }
+  },
+  "totalSize": 1834796,
+  "buildManifest": {
+    "polyfillFiles": [
+      "static/chunks/polyfills-42372ed130431b0a.js"
+    ],
+    "devFiles": [],
+    "ampDevFiles": [],
+    "lowPriorityFiles": [
+      "static/sOAiJUAERknyyoAP2MsRX/_buildManifest.js",
+      "static/sOAiJUAERknyyoAP2MsRX/_ssgManifest.js"
+    ],
+    "rootMainFiles": [
+      "static/chunks/webpack-45cefc36011a0dd8.js",
+      "static/chunks/fd9d1056-ffeb08e0443cf568.js",
+      "static/chunks/117-01b1c34b7bf4cea8.js",
+      "static/chunks/main-app-3aa17b0fff18bb12.js"
+    ],
+    "pages": {
+      "/_app": [
+        "static/chunks/webpack-45cefc36011a0dd8.js",
+        "static/chunks/framework-f66176bb897dc684.js",
+        "static/chunks/main-6efba60364949faa.js",
+        "static/chunks/pages/_app-72b849fbd24ac258.js"
+      ],
+      "/_error": [
+        "static/chunks/webpack-45cefc36011a0dd8.js",
+        "static/chunks/framework-f66176bb897dc684.js",
+        "static/chunks/main-6efba60364949faa.js",
+        "static/chunks/pages/_error-7ba65e1336b92748.js"
+      ]
+    },
+    "ampFirstPages": []
+  },
+  "summary": {
+    "totalBundleSize": 1834796,
+    "totalBundleSizeMB": "1.75",
+    "jsChunksCount": 58,
+    "jsChunksSize": 1799432,
+    "cssAssetsCount": 1,
+    "cssAssetsSize": 32987,
+    "htmlPagesCount": 0,
+    "htmlPagesSize": 0,
+    "largestChunk": ".next/server/chunks/163.js",
+    "largestChunkSize": 455380,
+    "jsChunksSizeMB": "1.72",
+    "cssAssetsSizeMB": "0.03",
+    "htmlPagesSizeMB": "0.00",
+    "largestChunkSizeMB": "0.43"
+  }
+}

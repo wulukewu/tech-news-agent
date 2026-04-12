@@ -2,13 +2,13 @@
 Property-based tests and unit tests for build_article_list_notification.
 Tests Discord message length and content requirements.
 """
-import pytest
-from hypothesis import given, settings as h_settings
+
+from hypothesis import given
+from hypothesis import settings as h_settings
 from hypothesis import strategies as st
 
 from app.schemas.article import ArticlePageResult
 from app.services.notion_service import NotionService
-
 
 # ---------------------------------------------------------------------------
 # Hypothesis strategies
@@ -23,15 +23,18 @@ article_page_result_strategy = st.builds(
     tinkering_index=st.integers(min_value=0, max_value=5),
 )
 
-stats_strategy = st.fixed_dictionaries({
-    "total_fetched": st.integers(min_value=0, max_value=1000),
-    "hardcore_count": st.integers(min_value=0, max_value=500),
-})
+stats_strategy = st.fixed_dictionaries(
+    {
+        "total_fetched": st.integers(min_value=0, max_value=1000),
+        "hardcore_count": st.integers(min_value=0, max_value=500),
+    }
+)
 
 
 # ---------------------------------------------------------------------------
 # Property 11: Discord 通知訊息長度不超過 2000 字元（任意文章數量）
 # ---------------------------------------------------------------------------
+
 
 # Feature: notion-article-pages-refactor, Property 11: Discord 通知訊息長度不超過 2000 字元（任意文章數量）
 @given(
@@ -52,10 +55,10 @@ def test_article_list_notification_length(article_pages, stats):
     )
 
 
-
 # ---------------------------------------------------------------------------
 # Unit tests for build_article_list_notification
 # ---------------------------------------------------------------------------
+
 
 def test_build_article_list_notification_normal_mode():
     """Test normal mode with few articles (should not truncate)."""
@@ -90,10 +93,10 @@ def test_build_article_list_notification_normal_mode():
     assert "https://notion.so/article1" in message
     assert "2. [DevOps] Kubernetes 1.30 新功能解析" in message
     assert "https://notion.so/article2" in message
-    
+
     # Should not be truncated
     assert "...（共" not in message
-    
+
     # Check length
     assert len(message) <= 2000
 
@@ -112,7 +115,7 @@ def test_build_article_list_notification_truncation_mode():
                 tinkering_index=3,
             )
         )
-    
+
     stats = {
         "total_fetched": 100,
         "hardcore_count": 50,
@@ -124,10 +127,10 @@ def test_build_article_list_notification_truncation_mode():
     assert "本週技術週報已發布" in message
     assert "本週統計：抓取 100 篇，精選 50 篇" in message
     assert "精選文章：" in message
-    
+
     # Should be truncated
     assert "...（共 50 篇，查看 Notion 資料庫以瀏覽完整列表）" in message
-    
+
     # Check length
     assert len(message) <= 2000
 
@@ -146,9 +149,9 @@ def test_build_article_list_notification_empty_list():
     assert "本週技術週報已發布" in message
     assert "本週統計：抓取 42 篇，精選 0 篇" in message
     assert "精選文章：" in message
-    
+
     # Should not have any article entries
     assert "1. [" not in message
-    
+
     # Check length
     assert len(message) <= 2000

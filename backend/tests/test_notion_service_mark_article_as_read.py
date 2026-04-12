@@ -2,11 +2,13 @@
 Unit tests for NotionService.mark_article_as_read
 Covers: mark_article_as_read method
 """
-import pytest
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from app.services.notion_service import NotionService
+import pytest
+
 from app.core.exceptions import NotionServiceError
+from app.services.notion_service import NotionService
 
 
 class TestMarkArticleAsRead:
@@ -37,7 +39,7 @@ class TestMarkArticleAsRead:
             service = NotionService()
             with pytest.raises(NotionServiceError) as exc_info:
                 await service.mark_article_as_read("article-page-001")
-            
+
             assert "Error updating article page status in Notion" in str(exc_info.value)
 
     @pytest.mark.asyncio
@@ -55,16 +57,14 @@ class TestMarkArticleAsRead:
         call_args = mock_client.pages.update.call_args
         assert call_args is not None
         _, kwargs = call_args
-        
+
         # Verify page_id parameter
         assert kwargs["page_id"] == "article-page-001"
-        
+
         # Verify properties structure
         assert "properties" in kwargs
         assert "Status" in kwargs["properties"]
-        assert kwargs["properties"]["Status"] == {
-            "status": {"name": "Read"}
-        }
+        assert kwargs["properties"]["Status"] == {"status": {"name": "Read"}}
 
     @pytest.mark.asyncio
     async def test_handles_different_page_ids(self):
@@ -75,13 +75,13 @@ class TestMarkArticleAsRead:
 
         with patch("app.services.notion_service.AsyncClient", return_value=mock_client):
             service = NotionService()
-            
+
             # Test with UUID format
             await service.mark_article_as_read("123e4567-e89b-12d3-a456-426614174000")
-            
+
             # Test with short ID
             await service.mark_article_as_read("abc123")
-            
+
             # Test with hyphenated ID
             await service.mark_article_as_read("page-id-with-hyphens")
 

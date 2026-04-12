@@ -1,10 +1,7 @@
 import { toast as sonnerToast } from 'sonner';
 
 export const toast = {
-  success: (
-    message: string,
-    options?: { description?: string; duration?: number },
-  ) => {
+  success: (message: string, options?: { description?: string; duration?: number }) => {
     sonnerToast.success(message, {
       duration: options?.duration || 3000,
       position: 'top-right',
@@ -23,10 +20,7 @@ export const toast = {
     });
   },
 
-  info: (
-    message: string,
-    options?: { description?: string; duration?: number },
-  ) => {
+  info: (message: string, options?: { description?: string; duration?: number }) => {
     sonnerToast.info(message, {
       duration: options?.duration || 3000,
       position: 'top-right',
@@ -47,7 +41,7 @@ export const toast = {
       loading: string;
       success: string;
       error: string;
-    },
+    }
   ) => {
     return sonnerToast.promise(promise, messages);
   },

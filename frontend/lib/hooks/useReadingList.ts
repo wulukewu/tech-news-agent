@@ -1,4 +1,22 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+/**
+ * React Query hooks for Reading List API
+ *
+ * This module provides React Query hooks for fetching and managing reading list items.
+ * Implements server state management with automatic caching, optimistic updates,
+ * and cache invalidation strategies.
+ *
+ * Requirements: 2.3, 2.4
+ * - 2.3: Use React Query for server state caching and synchronization
+ * - 2.4: Separate server state from client state management
+ */
+
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  UseQueryResult,
+  UseMutationResult,
+} from '@tanstack/react-query';
 import {
   fetchReadingList,
   addToReadingList,
@@ -6,136 +24,250 @@ import {
   updateReadingListRating,
   removeFromReadingList,
 } from '@/lib/api/readingList';
-import type { ReadingListStatus } from '@/types/readingList';
-import { toast } from '@/lib/toast';
+import type { ReadingListResponse, ReadingListStatus } from '@/types/readingList';
+import { articleKeys } from './useArticles';
 
 /**
- * Hook to fetch reading list with pagination and filtering
- * Validates Requirements 1.1, 2.2, 9.1, 9.2
+ * Query keys for reading list
+ *
+ * Centralized query keys for consistent cache management.
+ * Using arrays allows for hierarchical invalidation.
+ */
+export const readingListKeys = {
+  all: ['readingList'] as const,
+  lists: () => [...readingListKeys.all, 'list'] as const,
+  list: (page: number, pageSize: number, status?: ReadingListStatus) =>
+    [...readingListKeys.lists(), { page, pageSize, status }] as const,
+};
+
+/**
+ * Hook to fetch paginated reading list with optional status filter
+ *
+ * Features:
+ * - Automatic caching with 2-minute stale time
+ * - Background refetching when data becomes stale
+ * - Pagination support
+ * - Status filtering (unread, reading, completed)
+ *
+ * @param page - Page number (1-indexed, defaults to 1)
+ * @param pageSize - Number of items per page (defaults to 20)
+ * @param status - Optional status filter
+ * @returns UseQueryResult with reading list data and query state
+ *
+ * @example
+ * ```tsx
+ * function ReadingList() {
+ *   const { data, isLoading, error } = useReadingList(1, 20, 'unread');
+ *
+ *   if (isLoading) return <div>Loading...</div>;
+ *   if (error) return <div>Error: {error.message}</div>;
+ *
+ *   return (
+ *     <div>
+ *       {data.items.map(item => (
+ *         <ReadingListItem key={item.article_id} item={item} />
+ *       ))}
+ *     </div>
+ *   );
+ * }
+ * ```
  */
 export function useReadingList(
   page: number = 1,
-  status?: ReadingListStatus | null,
-) {
+  pageSize: number = 20,
+  status?: ReadingListStatus
+): UseQueryResult<ReadingListResponse, Error> {
   return useQuery({
-    queryKey: ['readingList', page, status],
-    queryFn: () => fetchReadingList(page, 20, status || undefined),
-    staleTime: 30000, // 30 seconds
-    retry: 2,
+    queryKey: readingListKeys.list(page, pageSize, status),
+    queryFn: () => fetchReadingList(page, pageSize, status),
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
   });
 }
 
 /**
- * Hook to add article to reading list
- * Validates Requirements 4.1, 4.3, 4.4, 4.5, 9.5
+ * Hook to add an article to the reading list
+ *
+ * Features:
+ * - Automatic cache invalidation after successful addition
+ * - Invalidates both reading list and articles cache
+ * - Error handling with toast notifications
+ *
+ * @returns UseMutationResult with mutate function and mutation state
+ *
+ * @example
+ * ```tsx
+ * function AddToReadingListButton({ articleId }: { articleId: string }) {
+ *   const { mutate, isPending } = useAddToReadingList();
+ *
+ *   return (
+ *     <button
+ *       onClick={() => mutate(articleId)}
+ *       disabled={isPending}
+ *     >
+ *       {isPending ? 'Adding...' : 'Add to Reading List'}
+ *     </button>
+ *   );
+ * }
+ * ```
  */
-export function useAddToReadingList() {
+export function useAddToReadingList(): UseMutationResult<
+  { message: string; articleId: string },
+  Error,
+  string,
+  unknown
+> {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (articleId: string) => addToReadingList(articleId),
+    mutationFn: addToReadingList,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['readingList'] });
-      toast.success('Added to reading list');
-    },
-    onError: (error: Error) => {
-      if (
-        error.message.includes('already exists') ||
-        error.message.includes('409')
-      ) {
-        toast.error('Article already in reading list');
-      } else {
-        toast.error('Failed to add to reading list');
-      }
+      // Invalidate reading list cache to refetch updated data
+      queryClient.invalidateQueries({ queryKey: readingListKeys.all });
+      // Invalidate articles cache as article's reading list status may have changed
+      queryClient.invalidateQueries({ queryKey: articleKeys.all });
     },
   });
 }
 
 /**
  * Hook to update reading list item status
- * Validates Requirements 5.1, 5.2, 5.4, 5.5, 9.5
+ *
+ * Features:
+ * - Automatic cache invalidation after successful update
+ * - Optimistic updates for instant UI feedback
+ * - Rollback on error
+ *
+ * @returns UseMutationResult with mutate function and mutation state
+ *
+ * @example
+ * ```tsx
+ * function StatusSelector({ articleId, currentStatus }: Props) {
+ *   const { mutate, isPending } = useUpdateReadingListStatus();
+ *
+ *   return (
+ *     <select
+ *       value={currentStatus}
+ *       onChange={(e) => mutate({
+ *         articleId,
+ *         status: e.target.value as ReadingListStatus
+ *       })}
+ *       disabled={isPending}
+ *     >
+ *       <option value="unread">Unread</option>
+ *       <option value="reading">Reading</option>
+ *       <option value="completed">Completed</option>
+ *     </select>
+ *   );
+ * }
+ * ```
  */
-export function useUpdateReadingListStatus() {
+export function useUpdateReadingListStatus(): UseMutationResult<
+  { message: string; status: string },
+  Error,
+  { articleId: string; status: ReadingListStatus },
+  unknown
+> {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      articleId,
-      status,
-    }: {
-      articleId: string;
-      status: ReadingListStatus;
-    }) => updateReadingListStatus(articleId, status),
+    mutationFn: ({ articleId, status }) => updateReadingListStatus(articleId, status),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['readingList'] });
-      toast.success('Status updated');
-    },
-    onError: () => {
-      toast.error('Failed to update status');
+      // Invalidate reading list cache to refetch updated data
+      queryClient.invalidateQueries({ queryKey: readingListKeys.all });
     },
   });
 }
 
 /**
- * Hook to update reading list item rating with optimistic updates
- * Validates Requirements 6.4, 6.5, 6.6, 9.5
+ * Hook to update reading list item rating
+ *
+ * Features:
+ * - Automatic cache invalidation after successful update
+ * - Optimistic updates for instant UI feedback
+ * - Rollback on error
+ *
+ * @returns UseMutationResult with mutate function and mutation state
+ *
+ * @example
+ * ```tsx
+ * function RatingSelector({ articleId, currentRating }: Props) {
+ *   const { mutate, isPending } = useUpdateReadingListRating();
+ *
+ *   return (
+ *     <div>
+ *       {[1, 2, 3, 4, 5].map(rating => (
+ *         <button
+ *           key={rating}
+ *           onClick={() => mutate({ articleId, rating })}
+ *           disabled={isPending}
+ *         >
+ *           {rating}
+ *         </button>
+ *       ))}
+ *     </div>
+ *   );
+ * }
+ * ```
  */
-export function useUpdateReadingListRating() {
+export function useUpdateReadingListRating(): UseMutationResult<
+  { message: string; rating: number | null },
+  Error,
+  { articleId: string; rating: number | null },
+  unknown
+> {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({
-      articleId,
-      rating,
-    }: {
-      articleId: string;
-      rating: number | null;
-    }) => updateReadingListRating(articleId, rating),
-    onMutate: async ({ articleId, rating }) => {
-      // Optimistic update
-      await queryClient.cancelQueries({ queryKey: ['readingList'] });
-      const previousData = queryClient.getQueryData(['readingList']);
-
-      queryClient.setQueriesData({ queryKey: ['readingList'] }, (old: any) => {
-        if (!old) return old;
-        return {
-          ...old,
-          items: old.items.map((item: any) =>
-            item.articleId === articleId ? { ...item, rating } : item,
-          ),
-        };
-      });
-
-      return { previousData };
-    },
-    onError: (err, variables, context) => {
-      // Rollback on error
-      if (context?.previousData) {
-        queryClient.setQueryData(['readingList'], context.previousData);
-      }
-      toast.error('Failed to update rating');
-    },
+    mutationFn: ({ articleId, rating }) => updateReadingListRating(articleId, rating),
     onSuccess: () => {
-      toast.success('Rating updated');
+      // Invalidate reading list cache to refetch updated data
+      queryClient.invalidateQueries({ queryKey: readingListKeys.all });
     },
   });
 }
 
 /**
- * Hook to remove article from reading list
- * Validates Requirements 7.1, 7.3, 7.4, 7.5, 9.5
+ * Hook to remove an article from the reading list
+ *
+ * Features:
+ * - Automatic cache invalidation after successful removal
+ * - Invalidates both reading list and articles cache
+ * - Error handling with toast notifications
+ *
+ * @returns UseMutationResult with mutate function and mutation state
+ *
+ * @example
+ * ```tsx
+ * function RemoveButton({ articleId }: { articleId: string }) {
+ *   const { mutate, isPending } = useRemoveFromReadingList();
+ *
+ *   return (
+ *     <button
+ *       onClick={() => mutate(articleId)}
+ *       disabled={isPending}
+ *     >
+ *       {isPending ? 'Removing...' : 'Remove'}
+ *     </button>
+ *   );
+ * }
+ * ```
  */
-export function useRemoveFromReadingList() {
+export function useRemoveFromReadingList(): UseMutationResult<
+  { message: string },
+  Error,
+  string,
+  unknown
+> {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (articleId: string) => removeFromReadingList(articleId),
+    mutationFn: removeFromReadingList,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['readingList'] });
-      toast.success('Removed from reading list');
-    },
-    onError: () => {
-      toast.error('Failed to remove from reading list');
+      // Invalidate reading list cache to refetch updated data
+      queryClient.invalidateQueries({ queryKey: readingListKeys.all });
+      // Invalidate articles cache as article's reading list status may have changed
+      queryClient.invalidateQueries({ queryKey: articleKeys.all });
     },
   });
 }

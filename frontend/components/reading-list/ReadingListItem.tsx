@@ -114,7 +114,7 @@ export function ReadingListItem({
       className={cn(
         'bg-card border border-border rounded-lg p-4 md:p-6',
         'transition-shadow duration-200 hover:shadow-lg',
-        'motion-reduce:transition-none',
+        'motion-reduce:transition-none'
       )}
     >
       {/* Title and URL */}
@@ -127,7 +127,7 @@ export function ReadingListItem({
             'text-xl font-semibold text-foreground hover:text-primary',
             'line-clamp-2 transition-colors',
             'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded',
-            'inline-flex items-center gap-2',
+            'inline-flex items-center gap-2'
           )}
         >
           {item.title}
@@ -146,7 +146,7 @@ export function ReadingListItem({
         <span
           className={cn(
             'inline-flex items-center px-2.5 py-0.5 rounded-full font-medium',
-            statusColors[item.status],
+            statusColors[item.status]
           )}
         >
           Status: {item.status}
@@ -186,7 +186,7 @@ export function ReadingListItem({
                 'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
                 'text-sm font-medium',
-                'motion-reduce:transition-none',
+                'motion-reduce:transition-none'
               )}
             >
               {loadingAction === 'status' ? (
@@ -210,7 +210,7 @@ export function ReadingListItem({
                 'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
                 'text-sm font-medium',
-                'motion-reduce:transition-none',
+                'motion-reduce:transition-none'
               )}
             >
               {loadingAction === 'status' ? (
@@ -234,7 +234,7 @@ export function ReadingListItem({
                 'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
                 'text-sm font-medium',
-                'motion-reduce:transition-none',
+                'motion-reduce:transition-none'
               )}
             >
               {loadingAction === 'status' ? (
@@ -259,7 +259,7 @@ export function ReadingListItem({
                 'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
                 'text-sm font-medium',
-                'motion-reduce:transition-none',
+                'motion-reduce:transition-none'
               )}
             >
               {loadingAction === 'status' ? (
@@ -283,7 +283,7 @@ export function ReadingListItem({
               'focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2',
               'disabled:opacity-50 disabled:cursor-not-allowed',
               'text-sm font-medium',
-              'motion-reduce:transition-none',
+              'motion-reduce:transition-none'
             )}
           >
             {loadingAction === 'remove' ? (

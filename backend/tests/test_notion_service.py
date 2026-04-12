@@ -2,12 +2,14 @@
 Unit tests for NotionService
 Covers: get_active_feeds, add_to_read_later, add_feed
 """
-import pytest
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
+from app.core.exceptions import NotionServiceError
 from app.schemas.article import ArticleSchema, RSSSource
 from app.services.notion_service import NotionService
-from app.core.exceptions import NotionServiceError
 
 
 def make_article(title="Test Article", url="https://example.com/article", category="AI"):
@@ -20,7 +22,9 @@ def make_article(title="Test Article", url="https://example.com/article", catego
     )
 
 
-def make_notion_page(name="Feed Name", url="https://example.com/feed.xml", category="AI", active=True):
+def make_notion_page(
+    name="Feed Name", url="https://example.com/feed.xml", category="AI", active=True
+):
     return {
         "properties": {
             "Name": {"title": [{"plain_text": name}]},
@@ -35,14 +39,17 @@ def make_notion_page(name="Feed Name", url="https://example.com/feed.xml", categ
 # get_active_feeds
 # ---------------------------------------------------------------------------
 
+
 class TestGetActiveFeeds:
     @pytest.mark.asyncio
     async def test_returns_rss_sources_from_notion(self):
         """get_active_feeds parses Notion pages into RSSSource objects."""
         mock_client = MagicMock()
-        mock_client.request = AsyncMock(return_value={
-            "results": [make_notion_page(name="HN", url="https://hn.com/rss", category="Tech")]
-        })
+        mock_client.request = AsyncMock(
+            return_value={
+                "results": [make_notion_page(name="HN", url="https://hn.com/rss", category="Tech")]
+            }
+        )
 
         with patch("app.services.notion_service.AsyncClient", return_value=mock_client):
             service = NotionService()
@@ -130,6 +137,7 @@ class TestGetActiveFeeds:
 # add_to_read_later
 # ---------------------------------------------------------------------------
 
+
 class TestAddToReadLater:
     @pytest.mark.asyncio
     async def test_calls_pages_create_once(self):
@@ -192,6 +200,7 @@ class TestAddToReadLater:
 # add_feed
 # ---------------------------------------------------------------------------
 
+
 class TestAddFeed:
     @pytest.mark.asyncio
     async def test_calls_pages_create_with_correct_properties(self):
@@ -239,6 +248,7 @@ class TestAddFeed:
 # Helpers for ReadingListItem tests
 # ---------------------------------------------------------------------------
 
+
 def make_notion_reading_page(
     page_id="page-001",
     title="Test Article",
@@ -258,7 +268,7 @@ def make_notion_reading_page(
             "Source_Category": {"select": {"name": category}},
             "Added_At": {"date": {"start": added_at}},
             "Rating": rating_prop,
-        }
+        },
     }
 
 
@@ -266,11 +276,13 @@ def make_notion_reading_page(
 # get_reading_list
 # ---------------------------------------------------------------------------
 
+
 class TestGetReadingList:
     @pytest.mark.asyncio
     async def test_returns_reading_list_items(self):
         """get_reading_list returns a list of ReadingListItem for Unread pages."""
         from app.schemas.article import ReadingListItem
+
         page = make_notion_reading_page()
         mock_client = MagicMock()
         mock_client.databases = MagicMock()
@@ -344,6 +356,7 @@ class TestGetReadingList:
 # mark_as_read
 # ---------------------------------------------------------------------------
 
+
 class TestMarkAsRead:
     @pytest.mark.asyncio
     async def test_calls_pages_update_with_read_status(self):
@@ -378,6 +391,7 @@ class TestMarkAsRead:
 # rate_article
 # ---------------------------------------------------------------------------
 
+
 class TestRateArticle:
     @pytest.mark.asyncio
     async def test_calls_pages_update_with_rating(self):
@@ -411,6 +425,7 @@ class TestRateArticle:
 # ---------------------------------------------------------------------------
 # get_highly_rated_articles
 # ---------------------------------------------------------------------------
+
 
 class TestGetHighlyRatedArticles:
     @pytest.mark.asyncio

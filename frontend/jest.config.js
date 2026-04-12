@@ -35,20 +35,22 @@ const customJestConfig = {
       statements: 70,
     },
   },
-  testMatch: ['**/__tests__/**/*.[jt]s?(x)', '**/?(*.)+(spec|test).[jt]s?(x)'],
+  testMatch: [
+    '**/__tests__/unit/**/*.[jt]s?(x)',
+    '**/__tests__/integration/**/*.[jt]s?(x)',
+    '**/__tests__/property/**/*.[jt]s?(x)',
+    '**/__tests__/performance/**/*.[jt]s?(x)',
+  ],
   testPathIgnorePatterns: [
     '/node_modules/',
     '/.next/',
-    '/e2e/',
-    '__tests__/test-utils.tsx',
+    '/__tests__/e2e/', // E2E tests run with Playwright
+    '/__tests__/utils/', // Utility files, not tests
     '\\.spec\\.ts$', // Exclude Playwright specs
     'bugfix-exploration\\.test\\.ts$', // Exclude first bugfix exploration test only
     'OnboardingModal',
   ],
-  transformIgnorePatterns: [
-    '/node_modules/',
-    '^.+\\.module\\.(css|sass|scss)$',
-  ],
+  transformIgnorePatterns: ['/node_modules/', '^.+\\.module\\.(css|sass|scss)$'],
 };
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async

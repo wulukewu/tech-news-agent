@@ -2,13 +2,14 @@
 Unit tests for RSSService
 Covers: _parse_date, _fetch_feed_content, _process_single_feed, fetch_all_feeds
 """
-import pytest
-from datetime import datetime, timezone, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
-import httpx
 
-from app.services.rss_service import RSSService
+from datetime import UTC, datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
 from app.schemas.article import RSSSource
+from app.services.rss_service import RSSService
 
 
 def make_source(name="TestFeed", url="https://example.com/feed.xml", category="AI"):
@@ -19,6 +20,7 @@ def make_source(name="TestFeed", url="https://example.com/feed.xml", category="A
 # _parse_date
 # ---------------------------------------------------------------------------
 
+
 class TestParseDate:
     def test_returns_utc_datetime_from_published_parsed(self):
         """_parse_date extracts datetime from published_parsed struct_time."""
@@ -28,7 +30,7 @@ class TestParseDate:
             "published_parsed": (2024, 6, 1, 12, 0, 0, 0, 0, 0),
         }
         result = service._parse_date(entry)
-        assert result == datetime(2024, 6, 1, 12, 0, 0, tzinfo=timezone.utc)
+        assert result == datetime(2024, 6, 1, 12, 0, 0, tzinfo=UTC)
 
     def test_falls_back_to_updated_parsed(self):
         """_parse_date falls back to updated_parsed when published_parsed is absent."""
@@ -38,29 +40,30 @@ class TestParseDate:
             "updated_parsed": (2024, 5, 15, 8, 30, 0, 0, 0, 0),
         }
         result = service._parse_date(entry)
-        assert result == datetime(2024, 5, 15, 8, 30, 0, tzinfo=timezone.utc)
+        assert result == datetime(2024, 5, 15, 8, 30, 0, tzinfo=UTC)
 
     def test_returns_now_when_no_date_fields(self):
         """_parse_date returns a recent datetime when no date fields are present."""
         service = RSSService()
-        before = datetime.now(timezone.utc)
+        before = datetime.now(UTC)
         result = service._parse_date({})
-        after = datetime.now(timezone.utc)
+        after = datetime.now(UTC)
         assert before <= result <= after
 
     def test_returns_now_on_malformed_struct(self):
         """_parse_date returns a recent datetime when struct_time is malformed."""
         service = RSSService()
         entry = {"published": "not-a-date", "published_parsed": None}
-        before = datetime.now(timezone.utc)
+        before = datetime.now(UTC)
         result = service._parse_date(entry)
-        after = datetime.now(timezone.utc)
+        after = datetime.now(UTC)
         assert before <= result <= after
 
 
 # ---------------------------------------------------------------------------
 # _process_single_feed
 # ---------------------------------------------------------------------------
+
 
 class TestProcessSingleFeed:
     @pytest.mark.asyncio
@@ -69,21 +72,33 @@ class TestProcessSingleFeed:
         service = RSSService(days_to_fetch=7)
         source = make_source()
 
-        recent_struct = (datetime.now(timezone.utc) - timedelta(days=1)).timetuple()[:6] + (0, 0, 0)
-        old_struct = (datetime.now(timezone.utc) - timedelta(days=10)).timetuple()[:6] + (0, 0, 0)
+        recent_struct = (datetime.now(UTC) - timedelta(days=1)).timetuple()[:6] + (0, 0, 0)
+        old_struct = (datetime.now(UTC) - timedelta(days=10)).timetuple()[:6] + (0, 0, 0)
 
         mock_feed = MagicMock()
         mock_feed.entries = [
-            {"title": "Recent", "link": "https://example.com/1", "summary": "content",
-             "published": "recent", "published_parsed": recent_struct},
-            {"title": "Old", "link": "https://example.com/2", "summary": "content",
-             "published": "old", "published_parsed": old_struct},
+            {
+                "title": "Recent",
+                "link": "https://example.com/1",
+                "summary": "content",
+                "published": "recent",
+                "published_parsed": recent_struct,
+            },
+            {
+                "title": "Old",
+                "link": "https://example.com/2",
+                "summary": "content",
+                "published": "old",
+                "published_parsed": old_struct,
+            },
         ]
 
         mock_client = AsyncMock()
 
-        with patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")), \
-             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed):
+        with (
+            patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")),
+            patch("app.services.rss_service.feedparser.parse", return_value=mock_feed),
+        ):
             result = await service._process_single_feed(source, mock_client)
 
         assert len(result) == 1
@@ -96,7 +111,9 @@ class TestProcessSingleFeed:
         source = make_source()
         mock_client = AsyncMock()
 
-        with patch.object(service, "_fetch_feed_content", AsyncMock(side_effect=Exception("network error"))):
+        with patch.object(
+            service, "_fetch_feed_content", AsyncMock(side_effect=Exception("network error"))
+        ):
             result = await service._process_single_feed(source, mock_client)
 
         assert result == []
@@ -107,15 +124,22 @@ class TestProcessSingleFeed:
         service = RSSService(days_to_fetch=7)
         source = make_source(name="MyFeed", category="DevOps")
 
-        recent_struct = datetime.now(timezone.utc).timetuple()[:6] + (0, 0, 0)
+        recent_struct = datetime.now(UTC).timetuple()[:6] + (0, 0, 0)
         mock_feed = MagicMock()
         mock_feed.entries = [
-            {"title": "Article", "link": "https://example.com/a", "summary": "s",
-             "published": "now", "published_parsed": recent_struct},
+            {
+                "title": "Article",
+                "link": "https://example.com/a",
+                "summary": "s",
+                "published": "now",
+                "published_parsed": recent_struct,
+            },
         ]
 
-        with patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")), \
-             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed):
+        with (
+            patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")),
+            patch("app.services.rss_service.feedparser.parse", return_value=mock_feed),
+        ):
             result = await service._process_single_feed(source, AsyncMock())
 
         assert result[0].feed_name == "MyFeed"
@@ -127,16 +151,23 @@ class TestProcessSingleFeed:
         service = RSSService(days_to_fetch=7)
         source = make_source()
 
-        recent_struct = datetime.now(timezone.utc).timetuple()[:6] + (0, 0, 0)
+        recent_struct = datetime.now(UTC).timetuple()[:6] + (0, 0, 0)
         long_summary = "x" * 2000
         mock_feed = MagicMock()
         mock_feed.entries = [
-            {"title": "Article", "link": "https://example.com/a", "summary": long_summary,
-             "published": "now", "published_parsed": recent_struct},
+            {
+                "title": "Article",
+                "link": "https://example.com/a",
+                "summary": long_summary,
+                "published": "now",
+                "published_parsed": recent_struct,
+            },
         ]
 
-        with patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")), \
-             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed):
+        with (
+            patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")),
+            patch("app.services.rss_service.feedparser.parse", return_value=mock_feed),
+        ):
             result = await service._process_single_feed(source, AsyncMock())
 
         # content_preview field was removed in schema update, so just verify article was created
@@ -146,38 +177,55 @@ class TestProcessSingleFeed:
     @pytest.mark.asyncio
     async def test_filters_old_articles_and_logs_count(self):
         """_process_single_feed filters articles older than days_to_fetch and logs filtered count.
-        
+
         Validates: Requirements 11.1, 11.4, 11.7
         """
         service = RSSService(days_to_fetch=7)
         source = make_source()
 
         # Create articles with different ages
-        recent_struct = (datetime.now(timezone.utc) - timedelta(days=2)).timetuple()[:6] + (0, 0, 0)
-        old_struct_1 = (datetime.now(timezone.utc) - timedelta(days=10)).timetuple()[:6] + (0, 0, 0)
-        old_struct_2 = (datetime.now(timezone.utc) - timedelta(days=15)).timetuple()[:6] + (0, 0, 0)
+        recent_struct = (datetime.now(UTC) - timedelta(days=2)).timetuple()[:6] + (0, 0, 0)
+        old_struct_1 = (datetime.now(UTC) - timedelta(days=10)).timetuple()[:6] + (0, 0, 0)
+        old_struct_2 = (datetime.now(UTC) - timedelta(days=15)).timetuple()[:6] + (0, 0, 0)
 
         mock_feed = MagicMock()
         mock_feed.entries = [
-            {"title": "Recent", "link": "https://example.com/1", "summary": "content",
-             "published": "recent", "published_parsed": recent_struct},
-            {"title": "Old1", "link": "https://example.com/2", "summary": "content",
-             "published": "old", "published_parsed": old_struct_1},
-            {"title": "Old2", "link": "https://example.com/3", "summary": "content",
-             "published": "old", "published_parsed": old_struct_2},
+            {
+                "title": "Recent",
+                "link": "https://example.com/1",
+                "summary": "content",
+                "published": "recent",
+                "published_parsed": recent_struct,
+            },
+            {
+                "title": "Old1",
+                "link": "https://example.com/2",
+                "summary": "content",
+                "published": "old",
+                "published_parsed": old_struct_1,
+            },
+            {
+                "title": "Old2",
+                "link": "https://example.com/3",
+                "summary": "content",
+                "published": "old",
+                "published_parsed": old_struct_2,
+            },
         ]
 
         mock_client = AsyncMock()
 
-        with patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")), \
-             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed), \
-             patch("app.services.rss_service.logger") as mock_logger:
+        with (
+            patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")),
+            patch("app.services.rss_service.feedparser.parse", return_value=mock_feed),
+            patch("app.services.rss_service.logger") as mock_logger,
+        ):
             result = await service._process_single_feed(source, mock_client)
 
         # Should only return the recent article
         assert len(result) == 1
         assert result[0].title == "Recent"
-        
+
         # Should log the filtered count
         mock_logger.info.assert_called()
         log_message = mock_logger.info.call_args[0][0]
@@ -187,7 +235,7 @@ class TestProcessSingleFeed:
     @pytest.mark.asyncio
     async def test_respects_configurable_time_window(self):
         """_process_single_feed respects the configurable days_to_fetch parameter.
-        
+
         Validates: Requirements 11.5, 11.6
         """
         # Test with 3 days window
@@ -195,21 +243,33 @@ class TestProcessSingleFeed:
         source = make_source()
 
         # Create articles at different ages
-        day_2_struct = (datetime.now(timezone.utc) - timedelta(days=2)).timetuple()[:6] + (0, 0, 0)
-        day_5_struct = (datetime.now(timezone.utc) - timedelta(days=5)).timetuple()[:6] + (0, 0, 0)
+        day_2_struct = (datetime.now(UTC) - timedelta(days=2)).timetuple()[:6] + (0, 0, 0)
+        day_5_struct = (datetime.now(UTC) - timedelta(days=5)).timetuple()[:6] + (0, 0, 0)
 
         mock_feed = MagicMock()
         mock_feed.entries = [
-            {"title": "Within3Days", "link": "https://example.com/1", "summary": "content",
-             "published": "recent", "published_parsed": day_2_struct},
-            {"title": "Beyond3Days", "link": "https://example.com/2", "summary": "content",
-             "published": "old", "published_parsed": day_5_struct},
+            {
+                "title": "Within3Days",
+                "link": "https://example.com/1",
+                "summary": "content",
+                "published": "recent",
+                "published_parsed": day_2_struct,
+            },
+            {
+                "title": "Beyond3Days",
+                "link": "https://example.com/2",
+                "summary": "content",
+                "published": "old",
+                "published_parsed": day_5_struct,
+            },
         ]
 
         mock_client = AsyncMock()
 
-        with patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")), \
-             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed):
+        with (
+            patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")),
+            patch("app.services.rss_service.feedparser.parse", return_value=mock_feed),
+        ):
             result = await service._process_single_feed(source, mock_client)
 
         # Should only return article within 3 days
@@ -219,7 +279,7 @@ class TestProcessSingleFeed:
     @pytest.mark.asyncio
     async def test_uses_current_time_when_published_at_missing(self):
         """_process_single_feed uses current time when published_at is not available.
-        
+
         Validates: Requirements 11.2, 11.3
         """
         service = RSSService(days_to_fetch=7)
@@ -233,11 +293,13 @@ class TestProcessSingleFeed:
 
         mock_client = AsyncMock()
 
-        with patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")), \
-             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed):
-            before = datetime.now(timezone.utc)
+        with (
+            patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")),
+            patch("app.services.rss_service.feedparser.parse", return_value=mock_feed),
+        ):
+            before = datetime.now(UTC)
             result = await service._process_single_feed(source, mock_client)
-            after = datetime.now(timezone.utc)
+            after = datetime.now(UTC)
 
         # Should return the article (since current time is within 7 days)
         assert len(result) == 1
@@ -250,6 +312,7 @@ class TestProcessSingleFeed:
 # fetch_all_feeds
 # ---------------------------------------------------------------------------
 
+
 class TestFetchAllFeeds:
     @pytest.mark.asyncio
     async def test_aggregates_articles_from_all_sources(self):
@@ -260,8 +323,10 @@ class TestFetchAllFeeds:
         async def fake_process(source, client):
             return [MagicMock(title=f"Article from {source.name}")]
 
-        with patch.object(service, "_process_single_feed", side_effect=fake_process), \
-             patch("app.services.rss_service.httpx.AsyncClient") as mock_client_cls:
+        with (
+            patch.object(service, "_process_single_feed", side_effect=fake_process),
+            patch("app.services.rss_service.httpx.AsyncClient") as mock_client_cls,
+        ):
             mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=MagicMock())
             mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)
             result = await service.fetch_all_feeds(sources)
@@ -293,8 +358,10 @@ class TestFetchAllFeeds:
                 raise Exception("broken feed")
             return [MagicMock(title="Good Article")]
 
-        with patch.object(service, "_process_single_feed", side_effect=fake_process), \
-             patch("app.services.rss_service.httpx.AsyncClient") as mock_client_cls:
+        with (
+            patch.object(service, "_process_single_feed", side_effect=fake_process),
+            patch("app.services.rss_service.httpx.AsyncClient") as mock_client_cls,
+        ):
             mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=MagicMock())
             mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)
             result = await service.fetch_all_feeds(sources)

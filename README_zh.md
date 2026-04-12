@@ -102,14 +102,14 @@ npm run dev
 
 ### 使用者指南
 
-- **[Web Dashboard 指南](./docs/USER_GUIDE.md)** - 使用 Web 介面
-- **[Discord Bot 指令](./docs/USER_GUIDE.md#discord-commands)** - 完整指令參考
+- **[使用者指南](./docs/USER_GUIDE.md)** - 使用 Web 介面和 Discord Bot
 - **[手動觸發 Scheduler](./docs/MANUAL_SCHEDULER_TRIGGER.md)** - 隨選文章抓取
 
 ### 開發者資源
 
 - **[開發者指南](./docs/DEVELOPER_GUIDE.md)** - 架構和 API 參考
 - **[專案概覽](./docs/PROJECT_OVERVIEW.md)** - 完整的系統文件
+- **[系統架構](./docs/ARCHITECTURE.md)** - 系統架構細節
 - **[測試指南](./docs/testing/supabase-migration-testing.md)** - 測試策略和工具
 
 ### 部署

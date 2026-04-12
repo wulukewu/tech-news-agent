@@ -3,21 +3,20 @@
 /**
  * Authentication Context
  *
- * This module provides a React Context for managing global authentication state.
- * It handles user authentication status, login/logout flows, and token validation.
+ * This module provides a React Context for managing authentication state only.
+ * It handles authentication status, login/logout flows, and token validation.
  *
- * Features:
- * - Global authentication state management
- * - Automatic authentication check on mount
- * - Token validation via backend API
- * - Persistent authentication across page refreshes
+ * Responsibilities:
+ * - Authentication status (isAuthenticated, loading)
+ * - Login/logout operations
+ * - Token validation
  * - Automatic logout on 401 responses
  *
- * Usage:
- * 1. Wrap your app with AuthProvider in the root layout
- * 2. Use the useAuth hook in any component to access auth state
+ * Does NOT handle:
+ * - User profile data (see UserContext)
+ * - Theme preferences (see ThemeContext)
  *
- * @example
+ * Usage:
  * ```tsx
  * // In app/layout.tsx
  * <AuthProvider>
@@ -25,20 +24,27 @@
  * </AuthProvider>
  *
  * // In any component
- * const { isAuthenticated, user, logout } = useAuth();
+ * const { isAuthenticated, login, logout } = useAuth();
  * ```
  */
 
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  useCallback,
-} from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthContextType, User } from '@/types/auth';
 import { checkAuthStatus, logout as logoutApi } from '@/lib/api/auth';
+
+/**
+ * Authentication Context Type
+ *
+ * Defines the shape of the authentication context.
+ * Only includes authentication-related state and methods.
+ */
+export interface AuthContextType {
+  isAuthenticated: boolean;
+  loading: boolean;
+  login: () => void;
+  logout: () => Promise<void>;
+  checkAuth: () => Promise<void>;
+}
 
 /**
  * Authentication Context
@@ -55,17 +61,9 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
  * Automatically checks authentication status on mount and listens for unauthorized events.
  *
  * @param children - Child components to wrap
- *
- * @example
- * ```tsx
- * <AuthProvider>
- *   <App />
- * </AuthProvider>
- * ```
  */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
 
@@ -75,24 +73,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * Verifies JWT token validity by calling the backend /api/auth/me endpoint.
    * Updates authentication state based on the response.
    *
-   * - On success: Sets isAuthenticated to true and stores user information
-   * - On failure: Sets isAuthenticated to false and clears user information
-   *
-   * This function is called:
-   * - On component mount (to restore auth state after page refresh)
-   * - After successful OAuth callback
-   * - When manually triggered by components
+   * Note: This only checks if the user is authenticated. User data is managed
+   * separately by UserContext to prevent unnecessary re-renders.
    */
   const checkAuth = useCallback(async () => {
     try {
       setLoading(true);
-      const userData = await checkAuthStatus();
+      await checkAuthStatus();
       setIsAuthenticated(true);
-      setUser(userData);
     } catch (error) {
       // Token is invalid or expired
       setIsAuthenticated(false);
-      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -117,7 +108,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    * 2. Clearing the authentication state
    * 3. Redirecting to the login page
    *
-   * @throws Error if logout API call fails
+   * Note: UserContext will automatically clear user data when it detects
+   * the authentication state change.
    */
   const logout = useCallback(async () => {
     try {
@@ -128,7 +120,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       // Clear authentication state
       setIsAuthenticated(false);
-      setUser(null);
       // Redirect to login page
       router.push('/');
     }
@@ -137,18 +128,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   /**
    * Initialize authentication state on mount
    *
-   * Checks if the user has a valid JWT token (stored in localStorage)
-   * by calling the checkAuth function.
-   *
-   * Skip this check if we're on the callback page, as it will handle
-   * authentication after receiving the token from the URL.
+   * Checks if the user has a valid JWT token by calling the checkAuth function.
+   * Skip this check if we're on the callback page.
    */
   useEffect(() => {
     // Skip auto-check on callback page
-    if (
-      typeof window !== 'undefined' &&
-      window.location.pathname === '/auth/callback'
-    ) {
+    if (typeof window !== 'undefined' && window.location.pathname === '/auth/callback') {
       setLoading(false);
       return;
     }
@@ -165,7 +150,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleUnauthorized = () => {
       setIsAuthenticated(false);
-      setUser(null);
       router.push('/');
     };
 
@@ -178,7 +162,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value: AuthContextType = {
     isAuthenticated,
-    user,
     loading,
     login,
     logout,
@@ -200,18 +183,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
  * @example
  * ```tsx
  * function MyComponent() {
- *   const { isAuthenticated, user, logout } = useAuth();
+ *   const { isAuthenticated, login, logout } = useAuth();
  *
  *   if (!isAuthenticated) {
- *     return <div>Please login</div>;
+ *     return <button onClick={login}>Login</button>;
  *   }
  *
- *   return (
- *     <div>
- *       <p>Welcome, {user?.username}</p>
- *       <button onClick={logout}>Logout</button>
- *     </div>
- *   );
+ *   return <button onClick={logout}>Logout</button>;
  * }
  * ```
  */

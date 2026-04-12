@@ -13,16 +13,16 @@ The overall task is complete when all five bugs are confirmed.
 
 import os
 import sys
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch, PropertyMock
 
 from app.core.exceptions import NotionServiceError
-
 
 # ---------------------------------------------------------------------------
 # Bug 1: Notion API AttributeError
 # ---------------------------------------------------------------------------
+
 
 class TestBug1NotionAttributeError:
     """
@@ -48,16 +48,14 @@ class TestBug1NotionAttributeError:
         re-raised as NotionServiceError.
         After the fix, this test PASSES – confirming the error handling is correct.
         """
-        from app.services.notion_service import NotionService
         from app.core.exceptions import NotionServiceError
+        from app.services.notion_service import NotionService
 
         # Build a mock client whose request() raises AttributeError
         # (simulating any unexpected SDK-level attribute error)
         mock_client = MagicMock()
         mock_client.request = AsyncMock(
-            side_effect=AttributeError(
-                "'AsyncClient' object has no attribute 'request'"
-            )
+            side_effect=AttributeError("'AsyncClient' object has no attribute 'request'")
         )
 
         with patch("app.services.notion_service.AsyncClient", return_value=mock_client):
@@ -72,6 +70,7 @@ class TestBug1NotionAttributeError:
 # ---------------------------------------------------------------------------
 # Bug 2: SSL patch runs unconditionally (even on Linux)
 # ---------------------------------------------------------------------------
+
 
 class TestBug2SSLPatchUnconditional:
     """
@@ -121,6 +120,7 @@ class TestBug2SSLPatchUnconditional:
 # Bug 3: Scheduler timezone always returns default value
 # ---------------------------------------------------------------------------
 
+
 class TestBug3SchedulerTimezone:
     """
     Bug Fix Verification: settings.timezone now correctly reads from the
@@ -139,6 +139,7 @@ class TestBug3SchedulerTimezone:
         After the fix, settings.timezone returns "UTC" when TIMEZONE=UTC is set.
         """
         import importlib
+
         import app.core.config as config_module
 
         # Patch the environment so TIMEZONE=UTC is visible
@@ -160,6 +161,7 @@ class TestBug3SchedulerTimezone:
 # Bug 4: /add_feed does not call Notion (NotionService.add_feed missing)
 # ---------------------------------------------------------------------------
 
+
 class TestBug4AddFeedMissingMethod:
     """
     Bug Condition: NotionService has no add_feed() method, and the
@@ -178,9 +180,9 @@ class TestBug4AddFeedMissingMethod:
         """
         from app.services.notion_service import NotionService
 
-        assert hasattr(NotionService, "add_feed"), (
-            "Bug 4 fix broken: NotionService is still missing the add_feed method."
-        )
+        assert hasattr(
+            NotionService, "add_feed"
+        ), "Bug 4 fix broken: NotionService is still missing the add_feed method."
 
     @pytest.mark.asyncio
     async def test_bug4_add_feed_command_does_not_call_notion(self):
@@ -210,7 +212,9 @@ class TestBug4AddFeedMissingMethod:
 
         with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion_instance):
             # The method is wrapped by @app_commands.command; call the underlying callback
-            await cog.add_feed.callback(cog, mock_interaction, name="Test", url="https://example.com", category="AI")
+            await cog.add_feed.callback(
+                cog, mock_interaction, name="Test", url="https://example.com", category="AI"
+            )
 
         # After the fix, add_feed is called exactly once on the notion instance
         assert mock_notion_instance.add_feed.call_count == 1, (
@@ -222,6 +226,7 @@ class TestBug4AddFeedMissingMethod:
 # ---------------------------------------------------------------------------
 # Bug 5: ReadLaterView not registered via bot.add_view()
 # ---------------------------------------------------------------------------
+
 
 class TestBug5ReadLaterViewNotPersistent:
     """
@@ -244,6 +249,7 @@ class TestBug5ReadLaterViewNotPersistent:
         After the fix, this test PASSES – confirming add_view is called.
         """
         import inspect
+
         from app.bot.client import TechNewsBot
 
         source = inspect.getsource(TechNewsBot.setup_hook)
@@ -259,6 +265,7 @@ class TestBug5ReadLaterViewNotPersistent:
         After the fix, this test PASSES – confirming the custom_id format is correct.
         """
         import re
+
         from app.bot.cogs.interactions import ReadLaterButton
         from app.schemas.article import ArticleSchema
 
@@ -283,6 +290,7 @@ class TestBug5ReadLaterViewNotPersistent:
 # Bug 6: Discord message length - oversized draft crashes followup.send
 # ---------------------------------------------------------------------------
 
+
 class TestBug6DiscordMessageLength:
     """
     Bug 6 test updated to reflect the new /news_now flow (Task 9):
@@ -299,7 +307,7 @@ class TestBug6DiscordMessageLength:
         The new flow uses build_discord_notification which enforces this limit.
         """
         from app.bot.cogs.news_commands import NewsCommands
-        from app.schemas.article import ArticleSchema, AIAnalysis
+        from app.schemas.article import AIAnalysis, ArticleSchema
 
         article = ArticleSchema(
             title="Test Article",
@@ -327,7 +335,9 @@ class TestBug6DiscordMessageLength:
 
         mock_notion = MagicMock()
         mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
-        mock_notion.create_weekly_digest_page = AsyncMock(return_value=("page-id", "https://notion.so/page"))
+        mock_notion.create_weekly_digest_page = AsyncMock(
+            return_value=("page-id", "https://notion.so/page")
+        )
         mock_notion.build_digest_blocks = MagicMock(return_value=[])
         mock_notion.append_digest_blocks = AsyncMock()
 
@@ -345,26 +355,29 @@ class TestBug6DiscordMessageLength:
         mock_read_later_view = MagicMock()
         mock_read_later_view.children = []
 
-        with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
-             patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
-             patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
-             patch("app.bot.cogs.news_commands.settings") as mock_settings, \
-             patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
-             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view), \
-             patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view):
+        with (
+            patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion),
+            patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss),
+            patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm),
+            patch("app.bot.cogs.news_commands.settings") as mock_settings,
+            patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view),
+            patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view),
+            patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view),
+        ):
             mock_settings.notion_weekly_digests_db_id = "test-db-id"
             await cog.news_now.callback(cog, mock_interaction)
 
         call_kwargs = mock_interaction.followup.send.call_args
         content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
-        assert len(content_sent) <= 2000, (
-            f"Req 5.2: notification exceeds 2000 chars (len={len(content_sent)})"
-        )
+        assert (
+            len(content_sent) <= 2000
+        ), f"Req 5.2: notification exceeds 2000 chars (len={len(content_sent)})"
 
 
 # ---------------------------------------------------------------------------
 # Bug 7: Markdown formatting - `+` list markers and missing newlines
 # ---------------------------------------------------------------------------
+
 
 class TestBug7MarkdownFormatting:
     """
@@ -376,7 +389,8 @@ class TestBug7MarkdownFormatting:
     """
 
     def _make_article(self, title="Test Article", url="https://example.com/article"):
-        from app.schemas.article import ArticleSchema, AIAnalysis
+        from app.schemas.article import AIAnalysis, ArticleSchema
+
         return ArticleSchema(
             title=title,
             url=url,
@@ -413,7 +427,9 @@ class TestBug7MarkdownFormatting:
 
         mock_notion = MagicMock()
         mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
-        mock_notion.create_weekly_digest_page = AsyncMock(return_value=("page-id", "https://notion.so/page"))
+        mock_notion.create_weekly_digest_page = AsyncMock(
+            return_value=("page-id", "https://notion.so/page")
+        )
         mock_notion.build_digest_blocks = MagicMock(return_value=[])
         mock_notion.append_digest_blocks = AsyncMock()
         mock_rss = MagicMock()
@@ -429,21 +445,23 @@ class TestBug7MarkdownFormatting:
         mock_read_later_view = MagicMock()
         mock_read_later_view.children = []
 
-        with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
-             patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
-             patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
-             patch("app.bot.cogs.news_commands.settings") as mock_settings, \
-             patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
-             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view), \
-             patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view):
+        with (
+            patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion),
+            patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss),
+            patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm),
+            patch("app.bot.cogs.news_commands.settings") as mock_settings,
+            patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view),
+            patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view),
+            patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view),
+        ):
             mock_settings.notion_weekly_digests_db_id = "test-db-id"
             await cog.news_now.callback(cog, mock_interaction)
 
         call_kwargs = mock_interaction.followup.send.call_args
         content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
-        assert len(content_sent) <= 2000, (
-            f"Req 5.2: notification exceeds 2000 chars (len={len(content_sent)})"
-        )
+        assert (
+            len(content_sent) <= 2000
+        ), f"Req 5.2: notification exceeds 2000 chars (len={len(content_sent)})"
 
     @pytest.mark.asyncio
     async def test_notification_contains_article_hyperlink(self):
@@ -467,8 +485,12 @@ class TestBug7MarkdownFormatting:
 
         mock_notion = MagicMock()
         mock_notion.get_active_feeds = AsyncMock(return_value=["feed1"])
-        mock_notion.create_article_page = AsyncMock(return_value=("page-id", "https://notion.so/page"))
-        mock_notion.build_article_list_notification = MagicMock(return_value="本週技術週報已發布\n\n本週統計：抓取 1 篇，精選 1 篇\n\n精選文章：\n1. [AI] Some Article\n   https://notion.so/page")
+        mock_notion.create_article_page = AsyncMock(
+            return_value=("page-id", "https://notion.so/page")
+        )
+        mock_notion.build_article_list_notification = MagicMock(
+            return_value="本週技術週報已發布\n\n本週統計：抓取 1 篇，精選 1 篇\n\n精選文章：\n1. [AI] Some Article\n   https://notion.so/page"
+        )
         mock_rss = MagicMock()
         mock_rss.fetch_all_feeds = AsyncMock(return_value=[article])
         mock_llm = MagicMock()
@@ -484,23 +506,25 @@ class TestBug7MarkdownFormatting:
         mock_mark_read_view = MagicMock()
         mock_mark_read_view.children = []
 
-        with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
-             patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
-             patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
-             patch("app.bot.cogs.news_commands.settings") as mock_settings, \
-             patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
-             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view), \
-             patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view), \
-             patch("app.bot.cogs.interactions.MarkReadView", return_value=mock_mark_read_view):
+        with (
+            patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion),
+            patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss),
+            patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm),
+            patch("app.bot.cogs.news_commands.settings") as mock_settings,
+            patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view),
+            patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view),
+            patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view),
+            patch("app.bot.cogs.interactions.MarkReadView", return_value=mock_mark_read_view),
+        ):
             mock_settings.notion_weekly_digests_db_id = "test-db-id"
             await cog.news_now.callback(cog, mock_interaction)
 
         call_kwargs = mock_interaction.followup.send.call_args
         content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
         # Check for Notion page link in notification (new format)
-        assert "https://notion.so/page" in content_sent, (
-            f"Req 5.1: Article hyperlink not found in notification. content='{content_sent}'"
-        )
+        assert (
+            "https://notion.so/page" in content_sent
+        ), f"Req 5.1: Article hyperlink not found in notification. content='{content_sent}'"
 
     @pytest.mark.asyncio
     async def test_degraded_notification_when_notion_fails(self):
@@ -540,28 +564,31 @@ class TestBug7MarkdownFormatting:
         mock_mark_read_view = MagicMock()
         mock_mark_read_view.children = []
 
-        with patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion), \
-             patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss), \
-             patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm), \
-             patch("app.bot.cogs.news_commands.settings") as mock_settings, \
-             patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view), \
-             patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view), \
-             patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view), \
-             patch("app.bot.cogs.interactions.MarkReadView", return_value=mock_mark_read_view):
+        with (
+            patch("app.bot.cogs.news_commands.NotionService", return_value=mock_notion),
+            patch("app.bot.cogs.news_commands.RSSService", return_value=mock_rss),
+            patch("app.bot.cogs.news_commands.LLMService", return_value=mock_llm),
+            patch("app.bot.cogs.news_commands.settings") as mock_settings,
+            patch("app.bot.cogs.interactions.FilterView", return_value=mock_filter_view),
+            patch("app.bot.cogs.interactions.DeepDiveView", return_value=mock_deep_dive_view),
+            patch("app.bot.cogs.interactions.ReadLaterView", return_value=mock_read_later_view),
+            patch("app.bot.cogs.interactions.MarkReadView", return_value=mock_mark_read_view),
+        ):
             mock_settings.notion_weekly_digests_db_id = "test-db-id"
             await cog.news_now.callback(cog, mock_interaction)
 
         call_kwargs = mock_interaction.followup.send.call_args
         content_sent = call_kwargs.kwargs.get("content") or call_kwargs.args[0]
         # In new workflow, all article page creation failures result in error message
-        assert "所有文章頁面建立失敗" in content_sent, (
-            f"Req 5.4: Degraded notification missing warning. content='{content_sent}'"
-        )
+        assert (
+            "所有文章頁面建立失敗" in content_sent
+        ), f"Req 5.4: Degraded notification missing warning. content='{content_sent}'"
 
 
 # ---------------------------------------------------------------------------
 # Bug 8: ReadLaterButton missing from combined_view (read-later-button-missing)
 # ---------------------------------------------------------------------------
+
 
 class TestBug8ReadLaterButtonMissing:
     """
@@ -619,6 +646,7 @@ class TestBug8ReadLaterButtonMissing:
     def _build_articles(self, count: int):
         """Helper: build a list of minimal ArticleSchema instances."""
         from app.schemas.article import ArticleSchema
+
         return [
             ArticleSchema(
                 title=f"Article {i}",
@@ -632,7 +660,8 @@ class TestBug8ReadLaterButtonMissing:
 
     def _build_combined_view_fixed(self, articles):
         """Helper: replicate the FIXED combined_view assembly logic."""
-        from app.bot.cogs.interactions import FilterView, DeepDiveView, ReadLaterView
+        from app.bot.cogs.interactions import DeepDiveView, FilterView, ReadLaterView
+
         combined_view = FilterView(articles=articles)
         for item in DeepDiveView(articles=articles[:5]).children:
             combined_view.add_item(item)
@@ -654,9 +683,9 @@ class TestBug8ReadLaterButtonMissing:
         for count in [1, 3, 5, 10, 15, 20]:
             articles = self._build_articles(count)
             combined_view = self._build_combined_view_fixed(articles)
-            assert any(isinstance(c, ReadLaterButton) for c in combined_view.children), (
-                f"Fix-check failed for count={count}: combined_view has no ReadLaterButton."
-            )
+            assert any(
+                isinstance(c, ReadLaterButton) for c in combined_view.children
+            ), f"Fix-check failed for count={count}: combined_view has no ReadLaterButton."
 
     def test_bug8_fix_check_total_components_le_25(self):
         """
@@ -669,9 +698,9 @@ class TestBug8ReadLaterButtonMissing:
             articles = self._build_articles(count)
             combined_view = self._build_combined_view_fixed(articles)
             total = len(combined_view.children)
-            assert total <= 25, (
-                f"Fix-check failed for count={count}: combined_view has {total} components (> 25)."
-            )
+            assert (
+                total <= 25
+            ), f"Fix-check failed for count={count}: combined_view has {total} components (> 25)."
 
     def test_bug8_fix_check_zero_articles_no_crash(self):
         """
@@ -689,6 +718,6 @@ class TestBug8ReadLaterButtonMissing:
         assert combined_view is not None
 
         # No ReadLaterButton expected when there are no articles
-        assert not any(isinstance(c, ReadLaterButton) for c in combined_view.children), (
-            "Fix-check failed for count=0: combined_view unexpectedly contains a ReadLaterButton."
-        )
+        assert not any(
+            isinstance(c, ReadLaterButton) for c in combined_view.children
+        ), "Fix-check failed for count=0: combined_view unexpectedly contains a ReadLaterButton."

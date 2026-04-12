@@ -15,10 +15,10 @@ import type { Article, ArticleListResponse } from '@/types/article';
  * @returns Promise resolving to array of category names
  */
 export async function fetchCategories(): Promise<string[]> {
-  const response = await apiClient.get<{ categories: string[] }>(
-    '/api/articles/categories',
+  const response = await apiClient.get<{ success: boolean; data: { categories: string[] } }>(
+    '/api/articles/categories'
   );
-  return response.categories;
+  return response.data.categories;
 }
 
 /**
@@ -41,7 +41,7 @@ export async function fetchCategories(): Promise<string[]> {
 export async function fetchMyArticles(
   page: number = 1,
   pageSize: number = 20,
-  categories?: string[],
+  categories?: string[]
 ): Promise<ArticleListResponse> {
   let url = `/api/articles/me?page=${page}&page_size=${pageSize}`;
 
@@ -49,5 +49,45 @@ export async function fetchMyArticles(
     url += `&categories=${encodeURIComponent(categories.join(','))}`;
   }
 
-  return apiClient.get<ArticleListResponse>(url);
+  const response = await apiClient.get<{
+    success: boolean;
+    data: Array<{
+      id: string;
+      title: string;
+      url: string;
+      publishedAt: string | null;
+      tinkeringIndex: number;
+      aiSummary: string | null;
+      feedName: string;
+      category: string;
+      isInReadingList: boolean;
+    }>;
+    pagination: {
+      total_count: number;
+      page: number;
+      page_size: number;
+      total_pages: number;
+      has_next: boolean;
+      has_previous: boolean;
+    };
+  }>(url);
+
+  // Transform backend response to frontend format
+  return {
+    articles: response.data.map((article) => ({
+      id: article.id,
+      title: article.title,
+      url: article.url,
+      feedName: article.feedName,
+      category: article.category,
+      publishedAt: article.publishedAt,
+      tinkeringIndex: article.tinkeringIndex,
+      aiSummary: article.aiSummary,
+      isInReadingList: article.isInReadingList,
+    })),
+    page: response.pagination.page,
+    pageSize: response.pagination.page_size,
+    totalCount: response.pagination.total_count,
+    hasNextPage: response.pagination.has_next,
+  };
 }

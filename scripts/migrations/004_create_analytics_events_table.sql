@@ -1,10 +1,10 @@
 -- Migration 004: Create analytics_events table
 -- Task 1.3: 建立 analytics_events 表格
 -- Requirements: 14.1, 14.2, 14.3
--- 
+--
 -- This migration creates the analytics_events table to track user onboarding events
 -- and behavior for analysis and optimization of the onboarding flow.
--- 
+--
 -- Event types include:
 -- - onboarding_started: User begins onboarding flow
 -- - step_completed: User completes an onboarding step

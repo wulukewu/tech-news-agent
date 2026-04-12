@@ -29,7 +29,7 @@ export function FeedCard({ feed, onToggle }: FeedCardProps) {
     <Card
       className={cn(
         'transition-all cursor-pointer hover:shadow-md',
-        feed.is_subscribed && 'border-primary',
+        feed.is_subscribed && 'border-primary'
       )}
     >
       <CardHeader>

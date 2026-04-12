@@ -22,13 +22,13 @@ def setup_jwt_secret():
     """設置測試用的 JWT_SECRET"""
     # 保存原始值
     original_secret = settings.jwt_secret
-    
+
     # 設置測試用的 secret
     test_secret = "test_jwt_secret_at_least_32_characters_long_for_testing"
     settings.jwt_secret = test_secret
-    
+
     yield
-    
+
     # 恢復原始值
     settings.jwt_secret = original_secret
 
@@ -75,16 +75,12 @@ async def test_cleanup_expired_tokens():
     user_id = uuid4()
     discord_id = "123456789"
     expired_token = create_access_token(
-        user_id=user_id,
-        discord_id=discord_id,
-        expires_delta=timedelta(days=-1)
+        user_id=user_id, discord_id=discord_id, expires_delta=timedelta(days=-1)
     )
 
     # Create a valid token
     valid_token = create_access_token(
-        user_id=user_id,
-        discord_id=discord_id,
-        expires_delta=timedelta(days=7)
+        user_id=user_id, discord_id=discord_id, expires_delta=timedelta(days=7)
     )
 
     # Add both tokens to blacklist
@@ -113,11 +109,7 @@ async def test_concurrent_access():
             await blacklist.add(f"token_{i}")
 
     # Add tokens concurrently
-    await asyncio.gather(
-        add_tokens(0, 100),
-        add_tokens(100, 100),
-        add_tokens(200, 100)
-    )
+    await asyncio.gather(add_tokens(0, 100), add_tokens(100, 100), add_tokens(200, 100))
 
     # Verify all tokens were added
     for i in range(300):
@@ -138,9 +130,7 @@ async def test_cleanup_with_invalid_tokens():
     user_id = uuid4()
     discord_id = "123456789"
     valid_token = create_access_token(
-        user_id=user_id,
-        discord_id=discord_id,
-        expires_delta=timedelta(days=7)
+        user_id=user_id, discord_id=discord_id, expires_delta=timedelta(days=7)
     )
     await blacklist.add(valid_token)
 

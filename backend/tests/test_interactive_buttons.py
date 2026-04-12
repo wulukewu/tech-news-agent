@@ -3,21 +3,22 @@ Unit tests for interactive buttons (ReadLaterButton, MarkReadButton, RatingSelec
 Task 4.6: 撰寫互動按鈕的單元測試
 Validates: Requirements 4.1-4.8, 5.1-5.7, 7.1-7.6, 9.1-9.6
 """
-import pytest
+
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID, uuid4
 
 import discord
+import pytest
 
-from app.bot.cogs.interactions import ReadLaterButton, MarkReadButton
+from app.bot.cogs.interactions import MarkReadButton, ReadLaterButton
 from app.bot.cogs.reading_list import MarkAsReadButton, RatingSelect
-from app.schemas.article import ReadingListItem
 from app.core.exceptions import SupabaseServiceError
-
+from app.schemas.article import ReadingListItem
 
 # ---------------------------------------------------------------------------
 # Helper functions
 # ---------------------------------------------------------------------------
+
 
 def make_interaction():
     """Create a mock Discord interaction."""
@@ -38,6 +39,7 @@ def make_reading_list_item(article_id=None, title="Test Article", rating=None):
     if article_id is None:
         article_id = uuid4()
     from datetime import datetime
+
     return ReadingListItem(
         article_id=article_id,
         title=title,
@@ -53,6 +55,7 @@ def make_reading_list_item(article_id=None, title="Test Article", rating=None):
 # ---------------------------------------------------------------------------
 # Task 4.6.1 — ReadLaterButton 儲存文章
 # ---------------------------------------------------------------------------
+
 
 class TestReadLaterButtonSaveArticle:
     @pytest.mark.asyncio
@@ -87,6 +90,7 @@ class TestReadLaterButtonSaveArticle:
 # Task 4.6.2 — ReadLaterButton 重複儲存
 # ---------------------------------------------------------------------------
 
+
 class TestReadLaterButtonDuplicateSave:
     @pytest.mark.asyncio
     async def test_duplicate_save_handled_gracefully(self):
@@ -111,6 +115,7 @@ class TestReadLaterButtonDuplicateSave:
 # Task 4.6.3 — MarkReadButton 更新狀態
 # ---------------------------------------------------------------------------
 
+
 class TestMarkReadButtonUpdateStatus:
     @pytest.mark.asyncio
     async def test_mark_read_success(self):
@@ -127,7 +132,7 @@ class TestMarkReadButtonUpdateStatus:
 
             # Verify update_article_status was called with correct parameters
             instance.update_article_status.assert_called_once_with(
-                str(interaction.user.id), article_id, 'Read'
+                str(interaction.user.id), article_id, "Read"
             )
 
             # Verify button was disabled
@@ -143,6 +148,7 @@ class TestMarkReadButtonUpdateStatus:
 # ---------------------------------------------------------------------------
 # Task 4.6.4 — MarkReadButton 自動加入閱讀清單
 # ---------------------------------------------------------------------------
+
 
 class TestMarkReadButtonAutoAdd:
     @pytest.mark.asyncio
@@ -167,6 +173,7 @@ class TestMarkReadButtonAutoAdd:
 # ---------------------------------------------------------------------------
 # Task 4.6.5 — RatingSelect 更新評分
 # ---------------------------------------------------------------------------
+
 
 class TestRatingSelectUpdateRating:
     @pytest.mark.asyncio
@@ -201,6 +208,7 @@ class TestRatingSelectUpdateRating:
 # Task 4.6.6 — RatingSelect 驗證評分範圍
 # ---------------------------------------------------------------------------
 
+
 class TestRatingSelectValidation:
     def test_rating_options_are_1_to_5(self):
         """RatingSelect options are exactly 1-5 stars."""
@@ -223,6 +231,7 @@ class TestRatingSelectValidation:
 # ---------------------------------------------------------------------------
 # Task 4.6.7 — custom_id 解析
 # ---------------------------------------------------------------------------
+
 
 class TestCustomIdParsing:
     def test_read_later_button_custom_id_format(self):
@@ -270,6 +279,7 @@ class TestCustomIdParsing:
 # Task 4.6.8 — 按鈕禁用
 # ---------------------------------------------------------------------------
 
+
 class TestButtonDisabling:
     @pytest.mark.asyncio
     async def test_read_later_button_disabled_after_success(self):
@@ -305,6 +315,7 @@ class TestButtonDisabling:
 # ---------------------------------------------------------------------------
 # Task 4.6.9 — 錯誤處理
 # ---------------------------------------------------------------------------
+
 
 class TestButtonErrorHandling:
     @pytest.mark.asyncio
@@ -382,6 +393,7 @@ class TestButtonErrorHandling:
 # Task 4.6.10 — MarkAsReadButton (reading list) 測試
 # ---------------------------------------------------------------------------
 
+
 class TestMarkAsReadButtonReadingList:
     @pytest.mark.asyncio
     async def test_mark_as_read_button_success(self):
@@ -398,7 +410,7 @@ class TestMarkAsReadButtonReadingList:
 
             # Verify update_article_status was called
             instance.update_article_status.assert_called_once_with(
-                str(interaction.user.id), item.article_id, 'Read'
+                str(interaction.user.id), item.article_id, "Read"
             )
 
             # Verify button was disabled
@@ -419,9 +431,7 @@ class TestMarkAsReadButtonReadingList:
 
         with patch("app.bot.cogs.reading_list.SupabaseService") as MockSupabase:
             instance = MockSupabase.return_value
-            instance.update_article_status = AsyncMock(
-                side_effect=Exception("Database error")
-            )
+            instance.update_article_status = AsyncMock(side_effect=Exception("Database error"))
 
             await button.callback(interaction)
 

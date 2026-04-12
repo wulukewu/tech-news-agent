@@ -10,7 +10,40 @@ const nextConfig = {
       config.watchOptions = {
         poll: 1000,
         aggregateTimeout: 300,
+        ignored: /node_modules/,
       };
+      return config;
+    },
+  }),
+
+  // Optimize for development
+  ...(process.env.NODE_ENV !== 'production' && {
+    webpack: (config, { dev, isServer }) => {
+      if (dev && !isServer) {
+        // Enable source maps for better debugging
+        config.devtool = 'eval-source-map';
+
+        // Improve HMR performance
+        config.watchOptions = {
+          poll: 1000,
+          aggregateTimeout: 300,
+          ignored: ['**/node_modules/**', '**/.git/**', '**/.next/**'],
+        };
+
+        // Enable faster builds in development
+        config.optimization = {
+          ...config.optimization,
+          removeAvailableModules: false,
+          removeEmptyChunks: false,
+          splitChunks: false,
+        };
+      }
+
+      // Enable source maps in production for debugging
+      if (!dev) {
+        config.devtool = 'source-map';
+      }
+
       return config;
     },
   }),

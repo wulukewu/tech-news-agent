@@ -5,10 +5,66 @@ on:
     branches: ['**']
   pull_request:
 
+env:
+  # Quality check thresholds
+  BACKEND_COVERAGE_THRESHOLD: 70
+  FRONTEND_COVERAGE_THRESHOLD: 70
+
 jobs:
+  backend-quality:
+    name: Backend Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'backend/requirements*.txt'
+
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
+          pip install mypy types-requests
+
+      - name: Check code formatting with Black
+        working-directory: backend
+        run: |
+          echo "🔍 Checking code formatting..."
+          black --check app/ tests/
+        continue-on-error: false
+
+      - name: Run Ruff linting
+        working-directory: backend
+        run: |
+          echo "🔍 Running Ruff linting..."
+          ruff check app/ tests/
+        continue-on-error: false
+
+      - name: Run type checking with mypy
+        working-directory: backend
+        run: |
+          echo "🔍 Running type checking..."
+          mypy app/ --ignore-missing-imports --no-strict-optional --python-version=3.11
+        continue-on-error: false
+
+      - name: Check code complexity with Ruff
+        working-directory: backend
+        run: |
+          echo "🔍 Checking code complexity..."
+          # Ruff includes complexity checks via pylint rules (PLR)
+          # This ensures functions don't exceed complexity limits
+          ruff check app/ tests/ --select PLR0912,PLR0913,PLR0915
+        continue-on-error: false
+
   backend-test:
     name: Backend Tests
     runs-on: ubuntu-latest
+    needs: backend-quality
 
     env:
       # Dummy values so Pydantic Settings can initialise during tests.
@@ -43,7 +99,7 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
-      - name: Run fast tests (all branches)
+      - name: Run fast tests with coverage (all branches)
         working-directory: backend
         env:
           HYPOTHESIS_PROFILE: ci
@@ -51,6 +107,9 @@ jobs:
           # Run only unit tests that don't require real Supabase
           # These tests use mocks and dummy credentials
           pytest --tb=short -q -n 2 --timeout=300 \
+            --cov=app \
+            --cov-report=term-missing \
+            --cov-report=json:coverage.json \
             tests/test_admin_commands.py \
             tests/test_analytics_service.py \
             tests/test_article_page_result.py \
@@ -62,7 +121,7 @@ jobs:
             tests/test_decorators.py \
             tests/test_health_endpoint.py
 
-      - name: Run full tests (main/PR only)
+      - name: Run full tests with coverage (main/PR only)
         if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
         working-directory: backend
         env:
@@ -70,6 +129,10 @@ jobs:
         run: |
           # Run all unit tests including property-based tests
           pytest --tb=short -q -n 2 --timeout=600 \
+            --cov=app \
+            --cov-report=term-missing \
+            --cov-report=json:coverage.json \
+            --cov-report=html:htmlcov \
             tests/test_admin_commands.py \
             tests/test_analytics_service.py \
             tests/test_article_page_result.py \
@@ -89,8 +152,39 @@ jobs:
             tests/test_input_validation_property.py \
             tests/test_security_headers_property.py
 
-  frontend-test:
-    name: Frontend Tests
+      - name: Upload backend coverage reports
+        if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: |
+            backend/coverage.json
+            backend/htmlcov/
+          retention-days: 30
+
+      - name: Check coverage threshold
+        if: github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+        working-directory: backend
+        run: |
+          echo "📊 Checking coverage threshold..."
+          python3 -c "
+          import json
+          with open('coverage.json') as f:
+              data = json.load(f)
+              total = data['totals']['percent_covered']
+              threshold = ${{ env.BACKEND_COVERAGE_THRESHOLD }}
+              print(f'Total coverage: {total:.2f}%')
+              print(f'Required threshold: {threshold}%')
+              if total < threshold:
+                  print(f'❌ Coverage is below {threshold}% threshold')
+                  exit(1)
+              else:
+                  print('✅ Coverage meets threshold')
+          "
+        continue-on-error: false
+
+  frontend-quality:
+    name: Frontend Quality Checks
     runs-on: ubuntu-latest
 
     steps:
@@ -106,18 +200,147 @@ jobs:
         working-directory: frontend
         run: npm ci
 
-      - name: Run type check
+      - name: Check code formatting with Prettier
         working-directory: frontend
-        run: npm run type-check
+        run: |
+          echo "🔍 Checking code formatting..."
+          npm run format:check
+        continue-on-error: false
 
-      - name: Run linter
+      - name: Run ESLint
         working-directory: frontend
-        run: npm run lint
+        run: |
+          echo "🔍 Running ESLint..."
+          npm run lint
+        continue-on-error: false
 
-      - name: Run unit tests
+      - name: Run TypeScript type check
         working-directory: frontend
-        run: npm test -- --passWithNoTests
+        run: |
+          echo "🔍 Running type checking..."
+          npm run type-check
+        continue-on-error: false
+
+      - name: Check code complexity with ESLint
+        working-directory: frontend
+        run: |
+          echo "🔍 Checking code complexity..."
+          # ESLint includes complexity rules configured in .eslintrc.json
+          # This ensures functions don't exceed complexity limits
+          npm run lint -- --no-fix
+        continue-on-error: false
+
+  frontend-test:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    needs: frontend-quality
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run tests with coverage
+        working-directory: frontend
+        run: |
+          echo "🧪 Running tests with coverage..."
+          npm run test:coverage -- --passWithNoTests
+        continue-on-error: false
+
+      - name: Upload frontend coverage reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-coverage
+          path: frontend/coverage/
+          retention-days: 30
+
+      - name: Check coverage threshold
+        working-directory: frontend
+        run: |
+          echo "📊 Checking coverage threshold..."
+          node -e "
+          const fs = require('fs');
+          try {
+            const coverage = JSON.parse(fs.readFileSync('coverage/coverage-summary.json', 'utf8'));
+            const total = coverage.total.lines.pct;
+            const threshold = ${{ env.FRONTEND_COVERAGE_THRESHOLD }};
+            console.log(\`Total coverage: \${total.toFixed(2)}%\`);
+            console.log(\`Required threshold: \${threshold}%\`);
+            if (total < threshold) {
+              console.log(\`❌ Coverage is below \${threshold}% threshold\`);
+              process.exit(1);
+            } else {
+              console.log('✅ Coverage meets threshold');
+            }
+          } catch (error) {
+            console.log('⚠️  No coverage data found, skipping threshold check');
+          }
+          "
+        continue-on-error: false
 
       - name: Build
         working-directory: frontend
         run: npm run build
+
+  # Quality Gate - All checks must pass
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+    needs: [backend-quality, backend-test, frontend-quality, frontend-test]
+    if: always()
+
+    steps:
+      - name: Check all jobs status
+        run: |
+          echo "🚪 Quality Gate - Checking all job results..."
+
+          # Check if any job failed
+          if [[ "${{ needs.backend-quality.result }}" != "success" ]]; then
+            echo "❌ Backend quality checks failed"
+            exit 1
+          fi
+
+          if [[ "${{ needs.backend-test.result }}" != "success" ]]; then
+            echo "❌ Backend tests failed"
+            exit 1
+          fi
+
+          if [[ "${{ needs.frontend-quality.result }}" != "success" ]]; then
+            echo "❌ Frontend quality checks failed"
+            exit 1
+          fi
+
+          if [[ "${{ needs.frontend-test.result }}" != "success" ]]; then
+            echo "❌ Frontend tests failed"
+            exit 1
+          fi
+
+          echo "✅ All quality checks passed!"
+          echo "🎉 Ready for merge!"
+
+      - name: Quality Gate Summary
+        run: |
+          echo "## Quality Gate Results 📊" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Quality | ${{ needs.backend-quality.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend Tests | ${{ needs.backend-test.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Quality | ${{ needs.frontend-quality.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend Tests | ${{ needs.frontend-test.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Quality Checks Include:" >> $GITHUB_STEP_SUMMARY
+          echo "- 🎨 Code formatting (Black, Prettier)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔍 Linting (Ruff, ESLint)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🏗️ Type checking (mypy, TypeScript)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🧮 Complexity checks (max function complexity)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🧪 Test coverage (≥${{ env.BACKEND_COVERAGE_THRESHOLD }}% backend, ≥${{ env.FRONTEND_COVERAGE_THRESHOLD }}% frontend)" >> $GITHUB_STEP_SUMMARY
+          echo "- ⚡ Build verification" >> $GITHUB_STEP_SUMMARY

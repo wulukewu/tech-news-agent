@@ -17,7 +17,7 @@ interface ArticleCardProps {
 
 export function ArticleCard({ article }: ArticleCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isAdded, setIsAdded] = useState(false);
+  const [isAdded, setIsAdded] = useState(article.isInReadingList);
   const addToReadingList = useAddToReadingList();
 
   const handleAddToReadingList = async () => {
@@ -29,6 +29,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
     try {
       await addToReadingList.mutateAsync(article.id);
       setIsAdded(true);
+      toast.success('Added to reading list');
     } catch (error) {
       // Error handling is done in the hook with toast
       console.error('Failed to add to reading list:', error);
@@ -37,21 +38,33 @@ export function ArticleCard({ article }: ArticleCardProps) {
 
   const formattedDate = article.publishedAt
     ? (() => {
-        const date = new Date(article.publishedAt);
-        const now = new Date();
-        const diffInMinutes = Math.floor(
-          (now.getTime() - date.getTime()) / 60000,
-        );
+        try {
+          const date = new Date(article.publishedAt);
+          // Check if date is valid
+          if (isNaN(date.getTime())) {
+            return 'Recently added';
+          }
 
-        if (diffInMinutes < 60) {
-          return `${diffInMinutes} minutes ago`;
+          const now = new Date();
+          const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
+
+          if (diffInMinutes < 0) {
+            // Future date, shouldn't happen but handle gracefully
+            return 'Recently added';
+          }
+
+          if (diffInMinutes < 60) {
+            return `${diffInMinutes} minutes ago`;
+          }
+          return formatDistanceToNow(date, { addSuffix: true });
+        } catch (error) {
+          console.error('Error formatting date:', error, 'publishedAt:', article.publishedAt);
+          return 'Recently added';
         }
-        return formatDistanceToNow(date, { addSuffix: true });
       })()
     : 'Recently added';
 
-  const shouldShowReadMore =
-    article.aiSummary && article.aiSummary.length > 200;
+  const shouldShowReadMore = article.aiSummary && article.aiSummary.length > 200;
 
   return (
     <article>
@@ -76,9 +89,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
                   </>
                 )}
                 <span aria-hidden="true">•</span>
-                <time dateTime={article.publishedAt || undefined}>
-                  {formattedDate}
-                </time>
+                <time dateTime={article.publishedAt || undefined}>{formattedDate}</time>
               </div>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
@@ -88,9 +99,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
                 variant="outline"
                 onClick={handleAddToReadingList}
                 disabled={addToReadingList.isPending || isAdded}
-                aria-label={
-                  isAdded ? 'Added to reading list' : 'Add to reading list'
-                }
+                aria-label={isAdded ? 'Added to reading list' : 'Add to reading list'}
               >
                 {addToReadingList.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -108,7 +117,7 @@ export function ArticleCard({ article }: ArticleCardProps) {
             <div
               className={cn(
                 'text-sm text-muted-foreground',
-                !isExpanded && shouldShowReadMore && 'line-clamp-3',
+                !isExpanded && shouldShowReadMore && 'line-clamp-3'
               )}
             >
               {article.aiSummary}
@@ -133,18 +142,13 @@ export function ArticleCard({ article }: ArticleCardProps) {
 
 function TinkeringIndexBadge({ index }: { index: number }) {
   return (
-    <div
-      className="flex items-center gap-0.5"
-      aria-label={`Tinkering index: ${index} out of 5`}
-    >
+    <div className="flex items-center gap-0.5" aria-label={`Tinkering index: ${index} out of 5`}>
       {Array.from({ length: 5 }).map((_, i) => (
         <Star
           key={i}
           className={cn(
             'h-4 w-4',
-            i < index
-              ? 'fill-yellow-400 text-yellow-400'
-              : 'text-gray-300 dark:text-gray-600',
+            i < index ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300 dark:text-gray-600'
           )}
         />
       ))}

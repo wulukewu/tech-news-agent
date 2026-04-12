@@ -1,0 +1,91 @@
+{
+  "timestamp": "2026-04-12T01:04:55.543465",
+  "endpoints": [
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "mean_response_time": 0.6496091838926077,
+      "median_response_time": 0.5411665188148618,
+      "p95_response_time": 0.7170420140028,
+      "p99_response_time": 5.624957964755595,
+      "min_response_time": 0.430750020314008,
+      "max_response_time": 5.624957964755595,
+      "success_rate": 0.0,
+      "total_requests": 50,
+      "timestamp": "2026-04-12T01:04:55.392065"
+    },
+    {
+      "endpoint": "/api/v1/feeds",
+      "method": "GET",
+      "mean_response_time": 0.5435308231972158,
+      "median_response_time": 0.48345798859372735,
+      "p95_response_time": 0.8232499822042882,
+      "p99_response_time": 2.5978750200010836,
+      "min_response_time": 0.4230420454405248,
+      "max_response_time": 2.5978750200010836,
+      "success_rate": 0.0,
+      "total_requests": 50,
+      "timestamp": "2026-04-12T01:04:55.420306"
+    },
+    {
+      "endpoint": "/api/v1/articles",
+      "method": "GET",
+      "mean_response_time": 0.6390466215088964,
+      "median_response_time": 0.5761880020145327,
+      "p95_response_time": 1.0046669631265104,
+      "p99_response_time": 1.3806670322082937,
+      "min_response_time": 0.4464160301722586,
+      "max_response_time": 1.3806670322082937,
+      "success_rate": 0.0,
+      "total_requests": 50,
+      "timestamp": "2026-04-12T01:04:55.452584"
+    },
+    {
+      "endpoint": "/api/v1/recommendations",
+      "method": "GET",
+      "mean_response_time": 0.6589334364980459,
+      "median_response_time": 0.568999967072159,
+      "p95_response_time": 1.0136660421267152,
+      "p99_response_time": 1.3372090179473162,
+      "min_response_time": 0.44187495950609446,
+      "max_response_time": 1.3372090179473162,
+      "success_rate": 0.0,
+      "total_requests": 50,
+      "timestamp": "2026-04-12T01:04:55.485774"
+    },
+    {
+      "endpoint": "/api/v1/reading-list",
+      "method": "GET",
+      "mean_response_time": 0.4709665186237544,
+      "median_response_time": 0.4679789999499917,
+      "p95_response_time": 0.5136670079082251,
+      "p99_response_time": 0.555249978788197,
+      "min_response_time": 0.4337920108810067,
+      "max_response_time": 0.555249978788197,
+      "success_rate": 0.0,
+      "total_requests": 50,
+      "timestamp": "2026-04-12T01:04:55.509563"
+    },
+    {
+      "endpoint": "/api/v1/analytics/events",
+      "method": "POST",
+      "mean_response_time": 0.6722224759869277,
+      "median_response_time": 0.5266249645501375,
+      "p95_response_time": 0.9067920036613941,
+      "p99_response_time": 3.0989170190878212,
+      "min_response_time": 0.43454201659187675,
+      "max_response_time": 3.0989170190878212,
+      "success_rate": 0.0,
+      "total_requests": 50,
+      "timestamp": "2026-04-12T01:04:55.543429"
+    }
+  ],
+  "summary": {
+    "overall_mean_response_time": 0.6057181766179079,
+    "overall_median_response_time": 0.644327902700752,
+    "fastest_endpoint": "/api/v1/reading-list",
+    "slowest_endpoint": "/api/v1/analytics/events",
+    "average_success_rate": 0.0,
+    "total_endpoints_measured": 6
+  }
+}

@@ -9,10 +9,13 @@ Tests cover:
 - Requirements 14.4: Validate Supabase connection on initialization
 - Requirements 17.1: Accept optional client parameter for dependency injection
 """
-import pytest
+
 from unittest.mock import MagicMock, patch
-from app.services.supabase_service import SupabaseService
+
+import pytest
+
 from app.core.exceptions import SupabaseServiceError
+from app.services.supabase_service import SupabaseService
 
 
 class TestSupabaseServiceInitialization:
@@ -26,15 +29,17 @@ class TestSupabaseServiceInitialization:
         # Arrange
         mock_client = MagicMock()
         # Mock the validation query
-        mock_client.table.return_value.select.return_value.limit.return_value.execute.return_value = MagicMock()
-        
+        mock_client.table.return_value.select.return_value.limit.return_value.execute.return_value = (
+            MagicMock()
+        )
+
         # Act
         service = SupabaseService(client=mock_client)
-        
+
         # Assert
         assert service.client is mock_client
 
-    @patch('app.services.supabase_service.create_client')
+    @patch("app.services.supabase_service.create_client")
     def test_init_with_valid_config(self, mock_create_client):
         """
         測試使用有效配置初始化
@@ -43,17 +48,19 @@ class TestSupabaseServiceInitialization:
         # Arrange
         mock_client = MagicMock()
         # Mock the validation query
-        mock_client.table.return_value.select.return_value.limit.return_value.execute.return_value = MagicMock()
+        mock_client.table.return_value.select.return_value.limit.return_value.execute.return_value = (
+            MagicMock()
+        )
         mock_create_client.return_value = mock_client
-        
+
         # Act
         service = SupabaseService()
-        
+
         # Assert
         assert service.client is mock_client
         mock_create_client.assert_called_once()
 
-    @patch('app.services.supabase_service.settings')
+    @patch("app.services.supabase_service.settings")
     def test_init_without_url_raises_error(self, mock_settings):
         """
         測試缺少 supabase_url 時拋出錯誤
@@ -62,16 +69,16 @@ class TestSupabaseServiceInitialization:
         # Arrange
         mock_settings.supabase_url = ""
         mock_settings.supabase_key = "test_key"
-        
+
         # Act & Assert
         with pytest.raises(SupabaseServiceError) as exc_info:
             SupabaseService(validate_connection=False)
-        
+
         assert "configuration is missing" in str(exc_info.value)
         assert exc_info.value.context["supabase_url_present"] is False
         assert exc_info.value.context["supabase_key_present"] is True
 
-    @patch('app.services.supabase_service.settings')
+    @patch("app.services.supabase_service.settings")
     def test_init_without_key_raises_error(self, mock_settings):
         """
         測試缺少 supabase_key 時拋出錯誤
@@ -80,16 +87,16 @@ class TestSupabaseServiceInitialization:
         # Arrange
         mock_settings.supabase_url = "https://test.supabase.co"
         mock_settings.supabase_key = ""
-        
+
         # Act & Assert
         with pytest.raises(SupabaseServiceError) as exc_info:
             SupabaseService(validate_connection=False)
-        
+
         assert "configuration is missing" in str(exc_info.value)
         assert exc_info.value.context["supabase_url_present"] is True
         assert exc_info.value.context["supabase_key_present"] is False
 
-    @patch('app.services.supabase_service.settings')
+    @patch("app.services.supabase_service.settings")
     def test_init_without_both_config_raises_error(self, mock_settings):
         """
         測試同時缺少 supabase_url 和 supabase_key 時拋出錯誤
@@ -98,17 +105,17 @@ class TestSupabaseServiceInitialization:
         # Arrange
         mock_settings.supabase_url = ""
         mock_settings.supabase_key = ""
-        
+
         # Act & Assert
         with pytest.raises(SupabaseServiceError) as exc_info:
             SupabaseService(validate_connection=False)
-        
+
         assert "configuration is missing" in str(exc_info.value)
         assert exc_info.value.context["supabase_url_present"] is False
         assert exc_info.value.context["supabase_key_present"] is False
         assert "troubleshooting" in exc_info.value.context
 
-    @patch('app.services.supabase_service.create_client')
+    @patch("app.services.supabase_service.create_client")
     def test_init_connection_failure_raises_error(self, mock_create_client):
         """
         測試連線失敗時拋出錯誤
@@ -116,11 +123,11 @@ class TestSupabaseServiceInitialization:
         """
         # Arrange
         mock_create_client.side_effect = Exception("Connection timeout")
-        
+
         # Act & Assert
         with pytest.raises(SupabaseServiceError) as exc_info:
             SupabaseService(validate_connection=False)
-        
+
         assert "Failed to initialize Supabase client" in str(exc_info.value)
         assert exc_info.value.original_error is not None
         assert "troubleshooting" in exc_info.value.context
@@ -132,14 +139,12 @@ class TestSupabaseServiceInitialization:
         """
         # Arrange
         error = SupabaseServiceError(
-            "Test error",
-            original_error=ValueError("Original"),
-            context={"key": "value"}
+            "Test error", original_error=ValueError("Original"), context={"key": "value"}
         )
-        
+
         # Act
         error_str = str(error)
-        
+
         # Assert
         assert "Test error" in error_str
         assert "Context:" in error_str
@@ -156,10 +161,10 @@ class TestConnectionValidation:
         """
         # Arrange
         mock_client = MagicMock()
-        
+
         # Act - 不應該呼叫 table() 方法
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         # Assert
         assert service.client is mock_client
         # 驗證沒有呼叫驗證查詢
@@ -173,15 +178,17 @@ class TestConnectionValidation:
         # Arrange
         mock_client = MagicMock()
         mock_response = MagicMock()
-        mock_client.table.return_value.select.return_value.limit.return_value.execute.return_value = mock_response
-        
+        mock_client.table.return_value.select.return_value.limit.return_value.execute.return_value = (
+            mock_response
+        )
+
         # Act
         service = SupabaseService(client=mock_client, validate_connection=True)
-        
+
         # Assert
         assert service.client is mock_client
         # 驗證有呼叫驗證查詢
-        mock_client.table.assert_called_once_with('users')
+        mock_client.table.assert_called_once_with("users")
 
     def test_validation_timeout_raises_error(self):
         """
@@ -191,12 +198,14 @@ class TestConnectionValidation:
         # Arrange
         mock_client = MagicMock()
         # 模擬超時
-        mock_client.table.return_value.select.return_value.limit.return_value.execute.side_effect = TimeoutError("Connection timed out")
-        
+        mock_client.table.return_value.select.return_value.limit.return_value.execute.side_effect = TimeoutError(
+            "Connection timed out"
+        )
+
         # Act & Assert
         with pytest.raises(SupabaseServiceError) as exc_info:
             SupabaseService(client=mock_client, validate_connection=True)
-        
+
         assert "timed out" in str(exc_info.value).lower()
         assert "troubleshooting" in exc_info.value.context
         assert "timeout_seconds" in exc_info.value.context
@@ -208,12 +217,14 @@ class TestConnectionValidation:
         """
         # Arrange
         mock_client = MagicMock()
-        mock_client.table.return_value.select.return_value.limit.return_value.execute.side_effect = Exception("401 Unauthorized")
-        
+        mock_client.table.return_value.select.return_value.limit.return_value.execute.side_effect = Exception(
+            "401 Unauthorized"
+        )
+
         # Act & Assert
         with pytest.raises(SupabaseServiceError) as exc_info:
             SupabaseService(client=mock_client, validate_connection=True)
-        
+
         assert "Failed to validate Supabase connection" in str(exc_info.value)
         assert "troubleshooting" in exc_info.value.context
         # 應該包含認證相關的提示
@@ -228,12 +239,14 @@ class TestConnectionValidation:
         """
         # Arrange
         mock_client = MagicMock()
-        mock_client.table.return_value.select.return_value.limit.return_value.execute.side_effect = Exception("404 Not Found")
-        
+        mock_client.table.return_value.select.return_value.limit.return_value.execute.side_effect = Exception(
+            "404 Not Found"
+        )
+
         # Act & Assert
         with pytest.raises(SupabaseServiceError) as exc_info:
             SupabaseService(client=mock_client, validate_connection=True)
-        
+
         assert "Failed to validate Supabase connection" in str(exc_info.value)
         hints = exc_info.value.context["troubleshooting"]
         # 應該包含 URL 相關的提示
@@ -247,12 +260,14 @@ class TestConnectionValidation:
         """
         # Arrange
         mock_client = MagicMock()
-        mock_client.table.return_value.select.return_value.limit.return_value.execute.side_effect = Exception("Network connection failed")
-        
+        mock_client.table.return_value.select.return_value.limit.return_value.execute.side_effect = Exception(
+            "Network connection failed"
+        )
+
         # Act & Assert
         with pytest.raises(SupabaseServiceError) as exc_info:
             SupabaseService(client=mock_client, validate_connection=True)
-        
+
         assert "Failed to validate Supabase connection" in str(exc_info.value)
         hints = exc_info.value.context["troubleshooting"]
         # 應該包含網路相關的提示
@@ -266,12 +281,14 @@ class TestConnectionValidation:
         """
         # Arrange
         mock_client = MagicMock()
-        mock_client.table.return_value.select.return_value.limit.return_value.execute.side_effect = Exception("SSL certificate verification failed")
-        
+        mock_client.table.return_value.select.return_value.limit.return_value.execute.side_effect = Exception(
+            "SSL certificate verification failed"
+        )
+
         # Act & Assert
         with pytest.raises(SupabaseServiceError) as exc_info:
             SupabaseService(client=mock_client, validate_connection=True)
-        
+
         assert "Failed to validate Supabase connection" in str(exc_info.value)
         hints = exc_info.value.context["troubleshooting"]
         # 應該包含 SSL 相關的提示
@@ -285,12 +302,14 @@ class TestConnectionValidation:
         """
         # Arrange
         mock_client = MagicMock()
-        mock_client.table.return_value.select.return_value.limit.return_value.execute.side_effect = ValueError("Invalid response")
-        
+        mock_client.table.return_value.select.return_value.limit.return_value.execute.side_effect = ValueError(
+            "Invalid response"
+        )
+
         # Act & Assert
         with pytest.raises(SupabaseServiceError) as exc_info:
             SupabaseService(client=mock_client, validate_connection=True)
-        
+
         assert "error_type" in exc_info.value.context
         assert exc_info.value.context["error_type"] == "ValueError"
 
@@ -301,13 +320,16 @@ class TestConnectionValidation:
         """
         # Arrange
         mock_client = MagicMock()
-        mock_client.table.return_value.select.return_value.limit.return_value.execute.side_effect = Exception("Connection failed")
-        
+        mock_client.table.return_value.select.return_value.limit.return_value.execute.side_effect = Exception(
+            "Connection failed"
+        )
+
         # Act & Assert
         with pytest.raises(SupabaseServiceError) as exc_info:
             SupabaseService(client=mock_client, validate_connection=True)
-        
+
         assert "supabase_url" in exc_info.value.context
         # URL 應該來自 settings
         from app.core.config import settings
+
         assert exc_info.value.context["supabase_url"] == settings.supabase_url

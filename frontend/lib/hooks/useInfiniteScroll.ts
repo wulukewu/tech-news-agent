@@ -17,8 +17,7 @@ export function useInfiniteScroll({
     const handleScroll = () => {
       if (loading || !hasMore) return;
 
-      const scrollTop =
-        window.pageYOffset || document.documentElement.scrollTop;
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = document.documentElement.clientHeight;
 
@@ -38,7 +37,7 @@ export function useInfiniteScroll({
 
 function throttle<T extends (...args: any[]) => any>(
   func: T,
-  delay: number,
+  delay: number
 ): (...args: Parameters<T>) => void {
   let lastCall = 0;
   return (...args: Parameters<T>) => {

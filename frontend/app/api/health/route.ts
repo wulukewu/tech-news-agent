@@ -16,6 +16,6 @@ export async function GET() {
       service: 'tech-news-agent-frontend',
       version: process.env.npm_package_version || '1.0.0',
     },
-    { status: 200 },
+    { status: 200 }
   );
 }

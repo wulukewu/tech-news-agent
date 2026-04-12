@@ -4,7 +4,7 @@ import { lazy, Suspense } from 'react';
 
 // Lazy load the TooltipTour component
 const TooltipTour = lazy(() =>
-  import('./TooltipTour').then((mod) => ({ default: mod.TooltipTour })),
+  import('./TooltipTour').then((mod) => ({ default: mod.TooltipTour }))
 );
 
 /**

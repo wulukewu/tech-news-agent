@@ -5,7 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 // Lazy load the OnboardingModal component
 const OnboardingModal = lazy(() =>
-  import('./OnboardingModal').then((mod) => ({ default: mod.OnboardingModal })),
+  import('./OnboardingModal').then((mod) => ({ default: mod.OnboardingModal }))
 );
 
 /**

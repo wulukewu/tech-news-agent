@@ -1,9 +1,11 @@
 """
 Tests for Discord bot admin commands.
 """
-import pytest
+
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import discord
+import pytest
 
 
 @pytest.fixture
@@ -23,44 +25,46 @@ def mock_interaction():
 @pytest.mark.asyncio
 class TestAdminCommands:
     """Test admin commands for scheduler management."""
-    
-    @patch('app.bot.cogs.admin_commands.background_fetch_job')
+
+    @patch("app.bot.cogs.admin_commands.background_fetch_job")
     async def test_trigger_fetch_command_success(self, mock_job, mock_interaction):
         """Test successful manual trigger via Discord command."""
-        from app.bot.cogs.admin_commands import AdminCommands
         from discord.ext import commands
-        
+
+        from app.bot.cogs.admin_commands import AdminCommands
+
         # Create bot and cog
         bot = MagicMock(spec=commands.Bot)
         admin_cog = AdminCommands(bot)
-        
+
         # Mock the background job
         mock_job.return_value = AsyncMock()
-        
+
         # Execute command - call the callback directly
         await admin_cog.trigger_fetch.callback(admin_cog, mock_interaction)
-        
+
         # Verify interaction was deferred
         mock_interaction.response.defer.assert_called_once()
-        
+
         # Verify followup message was sent
         mock_interaction.followup.send.assert_called_once()
-        
+
         # Verify embed was created with success message
         call_args = mock_interaction.followup.send.call_args
-        embed = call_args.kwargs['embed']
+        embed = call_args.kwargs["embed"]
         assert "✅" in embed.title or "成功" in embed.title
-    
-    @patch('app.bot.cogs.admin_commands.get_scheduler_health')
+
+    @patch("app.bot.cogs.admin_commands.get_scheduler_health")
     async def test_scheduler_status_command_healthy(self, mock_health, mock_interaction):
         """Test scheduler status command when scheduler is healthy."""
-        from app.bot.cogs.admin_commands import AdminCommands
         from discord.ext import commands
-        
+
+        from app.bot.cogs.admin_commands import AdminCommands
+
         # Create bot and cog
         bot = MagicMock(spec=commands.Bot)
         admin_cog = AdminCommands(bot)
-        
+
         # Mock healthy scheduler status
         mock_health.return_value = {
             "last_execution_time": "2024-01-01T12:00:00Z",
@@ -68,33 +72,34 @@ class TestAdminCommands:
             "failed_operations": 2,
             "total_operations": 27,
             "is_healthy": True,
-            "issues": []
+            "issues": [],
         }
-        
+
         # Execute command - call the callback directly
         await admin_cog.scheduler_status.callback(admin_cog, mock_interaction)
-        
+
         # Verify interaction was deferred
         mock_interaction.response.defer.assert_called_once()
-        
+
         # Verify followup message was sent
         mock_interaction.followup.send.assert_called_once()
-        
+
         # Verify embed shows healthy status
         call_args = mock_interaction.followup.send.call_args
-        embed = call_args.kwargs['embed']
+        embed = call_args.kwargs["embed"]
         assert "✅" in embed.title or "正常" in embed.title
-    
-    @patch('app.bot.cogs.admin_commands.get_scheduler_health')
+
+    @patch("app.bot.cogs.admin_commands.get_scheduler_health")
     async def test_scheduler_status_command_unhealthy(self, mock_health, mock_interaction):
         """Test scheduler status command when scheduler is unhealthy."""
-        from app.bot.cogs.admin_commands import AdminCommands
         from discord.ext import commands
-        
+
+        from app.bot.cogs.admin_commands import AdminCommands
+
         # Create bot and cog
         bot = MagicMock(spec=commands.Bot)
         admin_cog = AdminCommands(bot)
-        
+
         # Mock unhealthy scheduler status
         mock_health.return_value = {
             "last_execution_time": None,
@@ -102,19 +107,19 @@ class TestAdminCommands:
             "failed_operations": 0,
             "total_operations": 0,
             "is_healthy": False,
-            "issues": ["Scheduler has never executed"]
+            "issues": ["Scheduler has never executed"],
         }
-        
+
         # Execute command - call the callback directly
         await admin_cog.scheduler_status.callback(admin_cog, mock_interaction)
-        
+
         # Verify interaction was deferred
         mock_interaction.response.defer.assert_called_once()
-        
+
         # Verify followup message was sent
         mock_interaction.followup.send.assert_called_once()
-        
+
         # Verify embed shows unhealthy status
         call_args = mock_interaction.followup.send.call_args
-        embed = call_args.kwargs['embed']
+        embed = call_args.kwargs["embed"]
         assert "⚠️" in embed.title or "異常" in embed.title

@@ -7,21 +7,21 @@
 CREATE TABLE IF NOT EXISTS user_preferences (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID REFERENCES users(id) ON DELETE CASCADE UNIQUE NOT NULL,
-    
+
     -- Onboarding progress
     onboarding_completed BOOLEAN DEFAULT false,
     onboarding_step TEXT,
     onboarding_skipped BOOLEAN DEFAULT false,
     onboarding_started_at TIMESTAMPTZ,
     onboarding_completed_at TIMESTAMPTZ,
-    
+
     -- Tooltip tour
     tooltip_tour_completed BOOLEAN DEFAULT false,
     tooltip_tour_skipped BOOLEAN DEFAULT false,
-    
+
     -- Language preference
     preferred_language TEXT DEFAULT 'zh-TW',
-    
+
     -- Timestamps
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()

@@ -21,21 +21,21 @@ load_dotenv()
 
 def verify_analytics_events_table():
     """Verify that analytics_events table exists with correct schema"""
-    
+
     # Initialize Supabase client
     supabase_url = os.getenv("SUPABASE_URL")
     supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-    
+
     if not supabase_url or not supabase_key:
         print("❌ Error: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set")
         return False
-    
+
     supabase: Client = create_client(supabase_url, supabase_key)
-    
+
     print("🔍 Verifying Migration 004: Create analytics_events table\n")
-    
+
     all_checks_passed = True
-    
+
     # Check 1: Test table exists by attempting a query
     print("📋 Check 1: Verifying analytics_events table exists...")
     try:
@@ -45,7 +45,7 @@ def verify_analytics_events_table():
         print(f"  ❌ Table 'analytics_events' does not exist or is not accessible: {e}")
         all_checks_passed = False
         return all_checks_passed
-    
+
     # Check 2: Test insert operation with JSONB data
     print("\n📋 Check 2: Testing insert operation with JSONB event_data...")
     try:
@@ -62,21 +62,21 @@ def verify_analytics_events_table():
                 }
             }
         }
-        
+
         insert_result = supabase.table('analytics_events').insert(test_event).execute()
-        
+
         if insert_result.data and len(insert_result.data) > 0:
             print("  ✅ Successfully inserted test event")
             test_event_id = insert_result.data[0]['id']
-            
+
             # Check 3: Test query operation
             print("\n📋 Check 3: Testing query operation...")
             query_result = supabase.table('analytics_events').select('*').eq('id', test_event_id).execute()
-            
+
             if query_result.data and len(query_result.data) > 0:
                 print("  ✅ Successfully queried test event")
                 retrieved_event = query_result.data[0]
-                
+
                 # Check 4: Verify JSONB data integrity
                 print("\n📋 Check 4: Verifying JSONB event_data integrity...")
                 if retrieved_event['event_data'] == test_event['event_data']:
@@ -87,7 +87,7 @@ def verify_analytics_events_table():
                     print(f"     Expected: {test_event['event_data']}")
                     print(f"     Got: {retrieved_event['event_data']}")
                     all_checks_passed = False
-                
+
                 # Check 5: Verify required columns exist
                 print("\n📋 Check 5: Verifying required columns...")
                 required_columns = ['id', 'user_id', 'event_type', 'event_data', 'created_at']
@@ -97,7 +97,7 @@ def verify_analytics_events_table():
                     else:
                         print(f"  ❌ Column '{col}' missing")
                         all_checks_passed = False
-                
+
                 # Check 6: Test query by event_type (tests index)
                 print("\n📋 Check 6: Testing query by event_type (index test)...")
                 type_query = supabase.table('analytics_events').select('*').eq('event_type', 'test_verification_event').execute()
@@ -106,7 +106,7 @@ def verify_analytics_events_table():
                 else:
                     print("  ❌ Failed to query by event_type")
                     all_checks_passed = False
-                
+
                 # Check 7: Test query by user_id (tests index)
                 print("\n📋 Check 7: Testing query by user_id (index test)...")
                 user_query = supabase.table('analytics_events').select('*').eq('user_id', test_event['user_id']).execute()
@@ -115,7 +115,7 @@ def verify_analytics_events_table():
                 else:
                     print("  ❌ Failed to query by user_id")
                     all_checks_passed = False
-                
+
                 # Clean up test event
                 print("\n📋 Cleaning up test data...")
                 supabase.table('analytics_events').delete().eq('id', test_event_id).execute()
@@ -126,11 +126,11 @@ def verify_analytics_events_table():
         else:
             print("  ❌ Failed to insert test event")
             all_checks_passed = False
-            
+
     except Exception as e:
         print(f"  ❌ Error during testing: {str(e)}")
         all_checks_passed = False
-    
+
     # Summary
     print("\n" + "="*60)
     if all_checks_passed:
@@ -148,7 +148,7 @@ def verify_analytics_events_table():
         print("❌ Some verification checks failed.")
         print("Please review the migration and try again.")
     print("="*60)
-    
+
     return all_checks_passed
 
 if __name__ == "__main__":

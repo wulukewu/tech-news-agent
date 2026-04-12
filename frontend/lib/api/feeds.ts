@@ -19,7 +19,8 @@ import type { Feed, SubscriptionToggleResponse } from '@/types/feed';
  * **Validates: Requirements 7.5, 8.2**
  */
 export async function fetchFeeds(): Promise<Feed[]> {
-  return apiClient.get<Feed[]>('/api/feeds');
+  const response = await apiClient.get<{ success: boolean; data: Feed[] }>('/api/feeds');
+  return response.data;
 }
 
 /**
@@ -31,11 +32,33 @@ export async function fetchFeeds(): Promise<Feed[]> {
  *
  * **Validates: Requirements 7.5, 8.6**
  */
-export async function toggleSubscription(
-  feedId: string,
-): Promise<SubscriptionToggleResponse> {
-  return apiClient.post<SubscriptionToggleResponse>(
-    '/api/subscriptions/toggle',
-    { feed_id: feedId },
-  );
+export async function toggleSubscription(feedId: string): Promise<SubscriptionToggleResponse> {
+  const response = await apiClient.post<{
+    success: boolean;
+    data: SubscriptionToggleResponse;
+  }>('/api/subscriptions/toggle', {
+    feed_id: feedId,
+  });
+  return response.data;
+}
+
+/**
+ * Batch subscribe response
+ */
+export interface BatchSubscribeResponse {
+  subscribed_count: number;
+  failed_count: number;
+  failed_feeds: string[];
+  message: string;
+}
+
+/**
+ * Subscribe to multiple feeds at once
+ *
+ * @param feedIds - Array of feed IDs to subscribe to
+ * @returns Promise resolving to batch subscription result
+ * @throws Error if the API request fails
+ */
+export async function batchSubscribe(feedIds: string[]): Promise<BatchSubscribeResponse> {
+  return apiClient.post<BatchSubscribeResponse>('/api/subscriptions/batch', { feed_ids: feedIds });
 }

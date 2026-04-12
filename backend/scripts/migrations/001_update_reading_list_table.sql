@@ -3,7 +3,7 @@
 -- This migration updates the existing reading_list table to match design specifications
 
 -- Step 1: Add default value for status column
-ALTER TABLE reading_list 
+ALTER TABLE reading_list
 ALTER COLUMN status SET DEFAULT 'Unread';
 
 -- Step 2: Add NOT NULL constraints (with default values for existing rows)
@@ -11,7 +11,7 @@ ALTER COLUMN status SET DEFAULT 'Unread';
 UPDATE reading_list SET status = 'Unread' WHERE status IS NULL;
 
 -- Then add NOT NULL constraint
-ALTER TABLE reading_list 
+ALTER TABLE reading_list
 ALTER COLUMN status SET NOT NULL;
 
 -- Step 3: Drop existing indexes

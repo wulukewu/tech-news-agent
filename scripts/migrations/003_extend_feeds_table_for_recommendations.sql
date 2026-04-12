@@ -1,7 +1,7 @@
 -- Migration 003: Extend feeds table for recommendation system
 -- Task 1.2: 擴展 feeds 表格
 -- Requirements: 12.1, 12.2, 12.3, 12.4
--- 
+--
 -- This migration adds columns to support the new user onboarding recommendation system:
 -- - is_recommended: Flag to mark feeds as recommended for new users
 -- - recommendation_priority: Integer to control display order (higher = more important)

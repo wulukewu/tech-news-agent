@@ -6,13 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { fetchFeeds, toggleSubscription } from '@/lib/api/feeds';
 import type { Feed } from '@/types/feed';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { ChevronDown, ChevronRight, Star } from 'lucide-react';
@@ -25,9 +19,7 @@ export default function SubscriptionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toggling, setToggling] = useState<Set<string>>(new Set());
-  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(
-    new Set(),
-  );
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -46,18 +38,17 @@ export default function SubscriptionsPage() {
       setLoading(true);
       setError(null);
       const data = await fetchFeeds();
-      setFeeds(data);
+      setFeeds(data || []);
 
       // Auto-collapse non-recommended categories
       const nonRecommendedCategories = new Set(
-        data
-          .filter((feed) => !feed.is_recommended)
-          .map((feed) => feed.category),
+        (data || []).filter((feed) => !feed.is_recommended).map((feed) => feed.category)
       );
       setCollapsedCategories(nonRecommendedCategories);
     } catch (err) {
       console.error('Failed to load feeds:', err);
       setError('無法載入訂閱來源');
+      setFeeds([]);
     } finally {
       setLoading(false);
     }
@@ -71,10 +62,8 @@ export default function SubscriptionsPage() {
       // Update local state
       setFeeds(
         feeds.map((feed) =>
-          feed.id === result.feed_id
-            ? { ...feed, is_subscribed: result.is_subscribed }
-            : feed,
-        ),
+          feed.id === result.feed_id ? { ...feed, is_subscribed: result.is_subscribed } : feed
+        )
       );
     } catch (err) {
       console.error('Failed to toggle subscription:', err);
@@ -90,9 +79,7 @@ export default function SubscriptionsPage() {
 
   const handleCategoryToggle = async (category: string, subscribe: boolean) => {
     const categoryFeeds = feeds.filter((f) => f.category === category);
-    const feedsToToggle = categoryFeeds.filter(
-      (f) => f.is_subscribed !== subscribe,
-    );
+    const feedsToToggle = categoryFeeds.filter((f) => f.is_subscribed !== subscribe);
 
     if (feedsToToggle.length === 0) return;
 
@@ -104,22 +91,16 @@ export default function SubscriptionsPage() {
       });
 
       // Toggle all feeds in parallel
-      await Promise.all(
-        feedsToToggle.map((feed) => toggleSubscription(feed.id)),
-      );
+      await Promise.all(feedsToToggle.map((feed) => toggleSubscription(feed.id)));
 
       // Update local state
       setFeeds(
         feeds.map((feed) =>
-          feed.category === category
-            ? { ...feed, is_subscribed: subscribe }
-            : feed,
-        ),
+          feed.category === category ? { ...feed, is_subscribed: subscribe } : feed
+        )
       );
 
-      toast.success(
-        `已${subscribe ? '訂閱' : '取消訂閱'} ${feedsToToggle.length} 個來源`,
-      );
+      toast.success(`已${subscribe ? '訂閱' : '取消訂閱'} ${feedsToToggle.length} 個來源`);
     } catch (err) {
       console.error('Failed to toggle category:', err);
       toast.error('批量操作失敗');
@@ -145,16 +126,12 @@ export default function SubscriptionsPage() {
       });
 
       // Toggle all feeds in parallel
-      await Promise.all(
-        feedsToToggle.map((feed) => toggleSubscription(feed.id)),
-      );
+      await Promise.all(feedsToToggle.map((feed) => toggleSubscription(feed.id)));
 
       // Update local state
       setFeeds(feeds.map((feed) => ({ ...feed, is_subscribed: subscribe })));
 
-      toast.success(
-        `已${subscribe ? '訂閱' : '取消訂閱'} ${feedsToToggle.length} 個來源`,
-      );
+      toast.success(`已${subscribe ? '訂閱' : '取消訂閱'} ${feedsToToggle.length} 個來源`);
     } catch (err) {
       console.error('Failed to toggle all:', err);
       toast.error('批量操作失敗');
@@ -164,9 +141,7 @@ export default function SubscriptionsPage() {
   };
 
   const handleSubscribeRecommended = async () => {
-    const recommendedFeeds = feeds.filter(
-      (f) => f.is_recommended && !f.is_subscribed,
-    );
+    const recommendedFeeds = feeds.filter((f) => f.is_recommended && !f.is_subscribed);
 
     if (recommendedFeeds.length === 0) {
       toast.info('您已訂閱所有推薦來源');
@@ -181,15 +156,11 @@ export default function SubscriptionsPage() {
       });
 
       // Toggle all recommended feeds in parallel
-      await Promise.all(
-        recommendedFeeds.map((feed) => toggleSubscription(feed.id)),
-      );
+      await Promise.all(recommendedFeeds.map((feed) => toggleSubscription(feed.id)));
 
       // Update local state
       setFeeds(
-        feeds.map((feed) =>
-          feed.is_recommended ? { ...feed, is_subscribed: true } : feed,
-        ),
+        feeds.map((feed) => (feed.is_recommended ? { ...feed, is_subscribed: true } : feed))
       );
 
       toast.success(`已訂閱 ${recommendedFeeds.length} 個推薦來源`);
@@ -233,7 +204,7 @@ export default function SubscriptionsPage() {
   }
 
   // Group feeds by category
-  const feedsByCategory = feeds.reduce(
+  const feedsByCategory = (feeds || []).reduce(
     (acc, feed) => {
       if (!acc[feed.category]) {
         acc[feed.category] = [];
@@ -241,7 +212,7 @@ export default function SubscriptionsPage() {
       acc[feed.category].push(feed);
       return acc;
     },
-    {} as Record<string, Feed[]>,
+    {} as Record<string, Feed[]>
   );
 
   // Sort categories: recommended first
@@ -254,12 +225,12 @@ export default function SubscriptionsPage() {
     return a.localeCompare(b);
   });
 
-  const totalSubscribed = feeds.filter((f) => f.is_subscribed).length;
-  const totalRecommended = feeds.filter((f) => f.is_recommended).length;
-  const recommendedSubscribed = feeds.filter(
-    (f) => f.is_recommended && f.is_subscribed,
+  const totalSubscribed = (feeds || []).filter((f) => f.is_subscribed).length;
+  const totalRecommended = (feeds || []).filter((f) => f.is_recommended).length;
+  const recommendedSubscribed = (feeds || []).filter(
+    (f) => f.is_recommended && f.is_subscribed
   ).length;
-  const allSubscribed = totalSubscribed === feeds.length;
+  const allSubscribed = totalSubscribed === (feeds || []).length;
   const noneSubscribed = totalSubscribed === 0;
   const allRecommendedSubscribed = recommendedSubscribed === totalRecommended;
 
@@ -267,19 +238,14 @@ export default function SubscriptionsPage() {
     <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4">
       <div className="max-w-4xl mx-auto py-8">
         <div className="mb-8">
-          <Button
-            variant="outline"
-            onClick={() => router.push('/dashboard')}
-            className="mb-4"
-          >
+          <Button variant="outline" onClick={() => router.push('/dashboard')} className="mb-4">
             ← 返回 Dashboard
           </Button>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold">訂閱管理</h1>
               <p className="text-muted-foreground mt-2">
-                選擇您想要訂閱的 RSS 來源 ({totalSubscribed} / {feeds.length}{' '}
-                已訂閱)
+                選擇您想要訂閱的 RSS 來源 ({totalSubscribed} / {(feeds || []).length} 已訂閱)
               </p>
             </div>
             <div className="flex gap-2">
@@ -319,11 +285,8 @@ export default function SubscriptionsPage() {
         <div className="space-y-6">
           {sortedCategories.map((category) => {
             const categoryFeeds = feedsByCategory[category];
-            const subscribedCount = categoryFeeds.filter(
-              (f) => f.is_subscribed,
-            ).length;
-            const allCategorySubscribed =
-              subscribedCount === categoryFeeds.length;
+            const subscribedCount = categoryFeeds.filter((f) => f.is_subscribed).length;
+            const allCategorySubscribed = subscribedCount === categoryFeeds.length;
             const noneCategorySubscribed = subscribedCount === 0;
             const isCollapsed = collapsedCategories.has(category);
             const hasRecommended = categoryFeeds.some((f) => f.is_recommended);
@@ -392,10 +355,7 @@ export default function SubscriptionsPage() {
                             onCheckedChange={() => handleToggle(feed.id)}
                             disabled={toggling.has(feed.id)}
                           />
-                          <label
-                            htmlFor={feed.id}
-                            className="flex-1 cursor-pointer"
-                          >
+                          <label htmlFor={feed.id} className="flex-1 cursor-pointer">
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{feed.name}</span>
                               {feed.is_recommended && (
@@ -409,9 +369,7 @@ export default function SubscriptionsPage() {
                                 {feed.description}
                               </div>
                             )}
-                            <div className="text-sm text-muted-foreground">
-                              {feed.url}
-                            </div>
+                            <div className="text-sm text-muted-foreground">{feed.url}</div>
                           </label>
                           {toggling.has(feed.id) && (
                             <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />

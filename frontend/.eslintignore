@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+.next/
+out/
+build/
+dist/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+.DS_Store
+*.log
+*.tsbuildinfo
+
+# Temporarily ignore property-based test files with many console.log
+__tests__/property/bugfix/bugfix-exploration-undefined-article-id.test.ts
+__tests__/property/bugfix/bugfix-exploration.test.ts
+__tests__/property/bugfix/bugfix-preservation.test.ts
+__tests__/property/bugfix/bugfix-preservation-valid-article-id.test.ts
+
+# Temporarily ignore files with extensive logging for debugging
+__tests__/utils/render.tsx
+lib/debug/
+
+# Example files (not production code)
+components/EmptyState.examples.tsx
+lib/api/examples/

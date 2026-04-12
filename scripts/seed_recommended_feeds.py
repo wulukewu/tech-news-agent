@@ -21,26 +21,26 @@ from supabase import create_client, Client
 
 def main():
     """Main function to seed recommended feeds into Supabase database."""
-    
+
     # Load environment variables from .env file
     load_dotenv()
-    
+
     # Validate required environment variables
     supabase_url = os.getenv('SUPABASE_URL')
     supabase_key = os.getenv('SUPABASE_KEY')
-    
+
     if not supabase_url:
         raise ValueError(
             "Error: Missing required environment variable: SUPABASE_URL\n"
             "Please copy .env.example to .env and fill in the values"
         )
-    
+
     if not supabase_key:
         raise ValueError(
             "Error: Missing required environment variable: SUPABASE_KEY\n"
             "Please copy .env.example to .env and fill in the values"
         )
-    
+
     # Create Supabase client connection
     try:
         supabase: Client = create_client(supabase_url, supabase_key)
@@ -92,7 +92,7 @@ def main():
             "recommendation_priority": 85,
             "is_active": True
         },
-        
+
         # Web Development Category (Priority 89-75)
         {
             "name": "Hacker News",
@@ -139,7 +139,7 @@ def main():
             "recommendation_priority": 75,
             "is_active": True
         },
-        
+
         # Security Category (Priority 88-70)
         {
             "name": "Krebs on Security",
@@ -177,7 +177,7 @@ def main():
             "recommendation_priority": 70,
             "is_active": True
         },
-        
+
         # DevOps Category (Priority 83-65)
         {
             "name": "Docker Blog",
@@ -215,7 +215,7 @@ def main():
             "recommendation_priority": 65,
             "is_active": True
         },
-        
+
         # Cloud Category (Priority 81-68)
         {
             "name": "AWS News Blog",
@@ -244,7 +244,7 @@ def main():
             "recommendation_priority": 68,
             "is_active": True
         },
-        
+
         # Programming Category (Priority 77-60)
         {
             "name": "GitHub Blog",
@@ -274,11 +274,11 @@ def main():
             "is_active": True
         }
     ]
-    
+
     print("Supabase client initialized successfully")
     print(f"Ready to seed {len(recommended_feeds)} recommended feeds...")
     print()
-    
+
     # Check if the required columns exist
     print("Checking if feeds table has recommendation columns...")
     try:
@@ -287,7 +287,7 @@ def main():
             columns = test_result.data[0].keys()
             required_columns = ['is_recommended', 'recommendation_priority', 'description']
             missing_columns = [col for col in required_columns if col not in columns]
-            
+
             if missing_columns:
                 print(f"\n❌ Error: Missing required columns in feeds table: {', '.join(missing_columns)}")
                 print("\nThe feeds table needs to be extended with recommendation columns first.")
@@ -304,19 +304,19 @@ def main():
     except Exception as e:
         print(f"Warning: Could not verify schema: {e}")
         print("Proceeding anyway...")
-    
+
     print()
-    
+
     # Insert feeds with error handling
     inserted_count = 0
     skipped_count = 0
     updated_count = 0
-    
+
     for feed in recommended_feeds:
         try:
             # Check if feed with this URL already exists
             existing = supabase.table('feeds').select('id, name, url').eq('url', feed['url']).execute()
-            
+
             if existing.data and len(existing.data) > 0:
                 # Update existing feed to mark as recommended
                 feed_id = existing.data[0]['id']
@@ -333,23 +333,23 @@ def main():
                 supabase.table('feeds').insert(feed).execute()
                 inserted_count += 1
                 print(f"✓ Inserted: {feed['name']} (Priority: {feed['recommendation_priority']})")
-                
+
         except Exception as e:
             error_message = str(e).lower()
-            
+
             # Handle missing column error
             if 'could not find' in error_message and 'column' in error_message:
                 print(f"\n❌ Error: The feeds table is missing required columns")
                 print("Please apply migration 003_extend_feeds_table_for_recommendations.sql first")
                 print("See instructions above.")
                 return 1
-            
+
             # Handle duplicate URL error (shouldn't happen with our check, but just in case)
             elif 'duplicate' in error_message or 'unique' in error_message:
                 skipped_count += 1
                 print(f"⊘ Skipped (duplicate URL): {feed['name']}")
                 continue
-            
+
             # Handle connection errors
             elif 'connection' in error_message or 'network' in error_message or 'timeout' in error_message:
                 raise ConnectionError(
@@ -358,14 +358,14 @@ def main():
                     f"If the problem persists, check Supabase status at status.supabase.com\n"
                     f"Details: {str(e)}"
                 )
-            
+
             # Re-raise other unexpected errors
             else:
                 raise Exception(
                     f"Error: Unexpected error while processing feed '{feed['name']}'\n"
                     f"Details: {str(e)}"
                 )
-    
+
     # Print summary
     print()
     print("="*60)
@@ -383,10 +383,10 @@ def main():
     for feed in recommended_feeds:
         cat = feed['category']
         categories[cat] = categories.get(cat, 0) + 1
-    
+
     for category, count in sorted(categories.items(), key=lambda x: x[1], reverse=True):
         print(f"  • {category}: {count} feeds")
-    
+
     return 0
 
 

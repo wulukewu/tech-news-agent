@@ -10,18 +10,18 @@ from supabase import create_client, Client
 
 def main():
     """Check feeds table schema."""
-    
+
     load_dotenv()
-    
+
     supabase_url = os.getenv('SUPABASE_URL')
     supabase_key = os.getenv('SUPABASE_KEY')
-    
+
     if not supabase_url or not supabase_key:
         raise ValueError("SUPABASE_URL and SUPABASE_KEY must be set")
-    
+
     supabase: Client = create_client(supabase_url, supabase_key)
     print("Connected to Supabase")
-    
+
     # Try to query a feed to see what columns exist
     try:
         result = supabase.table('feeds').select('*').limit(1).execute()
@@ -45,7 +45,7 @@ def main():
                 supabase.table('feeds').delete().eq('url', test_feed['url']).execute()
             except Exception as e:
                 print(f"Error inserting test feed: {e}")
-                
+
     except Exception as e:
         print(f"Error querying feeds: {e}")
 

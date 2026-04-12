@@ -73,9 +73,7 @@ export function RatingSelector({
   };
 
   const displayRating = hoverRating ?? rating ?? 0;
-  const ratingText = rating
-    ? `Rated ${rating} out of 5 stars`
-    : 'Not rated. Click to rate';
+  const ratingText = rating ? `Rated ${rating} out of 5 stars` : 'Not rated. Click to rate';
 
   return (
     <div
@@ -102,7 +100,7 @@ export function RatingSelector({
             className={cn(
               'transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded',
               disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
-              'motion-reduce:transition-none',
+              'motion-reduce:transition-none'
             )}
           >
             <Star
@@ -112,7 +110,7 @@ export function RatingSelector({
                 isFilled && !isHovering && 'fill-yellow-400 text-yellow-400',
                 isHovering && 'fill-yellow-300 text-yellow-300',
                 !isFilled && !isHovering && 'text-gray-300 dark:text-gray-600',
-                'motion-reduce:transition-none',
+                'motion-reduce:transition-none'
               )}
             />
           </button>

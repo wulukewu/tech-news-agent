@@ -31,13 +31,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { setToken } from '@/lib/api/auth';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
 /**
  * Loading Spinner Component
@@ -66,20 +60,12 @@ function LoadingSpinner() {
  * @param error - Error message to display
  * @param onRetry - Callback function for retry button
  */
-function ErrorDisplay({
-  error,
-  onRetry,
-}: {
-  error: string;
-  onRetry: () => void;
-}) {
+function ErrorDisplay({ error, onRetry }: { error: string; onRetry: () => void }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md shadow-lg border-destructive">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-destructive">
-            驗證失敗
-          </CardTitle>
+          <CardTitle className="text-2xl font-bold text-destructive">驗證失敗</CardTitle>
           <CardDescription>Authentication Error</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -144,8 +130,7 @@ function CallbackPageInner() {
           let errorMessage = '驗證失敗，請重試。';
 
           if (errorParam === 'access_denied') {
-            errorMessage =
-              '您拒絕了授權請求。若要使用本服務，請授權 Discord 登入。';
+            errorMessage = '您拒絕了授權請求。若要使用本服務，請授權 Discord 登入。';
           } else if (errorDescription) {
             errorMessage = `驗證錯誤：${errorDescription}`;
           }
@@ -174,7 +159,7 @@ function CallbackPageInner() {
         const storedToken = localStorage.getItem('access_token');
         console.log(
           'Verified stored token:',
-          storedToken ? storedToken.substring(0, 20) + '...' : 'none',
+          storedToken ? storedToken.substring(0, 20) + '...' : 'none'
         );
 
         // Verify the token and update frontend state

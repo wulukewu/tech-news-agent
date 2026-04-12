@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-04-11T15:38:01.788Z",
+  "components": [
+    {
+      "componentName": "ArticleCard",
+      "renderTime": 0.4005000000000109,
+      "propsSize": 249,
+      "timestamp": "2026-04-11T15:38:01.753Z",
+      "reRenderTime": 0.19510019999999031
+    },
+    {
+      "componentName": "FeedList",
+      "renderTime": 0.6137832999999773,
+      "propsSize": 731,
+      "timestamp": "2026-04-11T15:38:01.761Z",
+      "reRenderTime": 0.14414169999998877
+    },
+    {
+      "componentName": "Dashboard",
+      "renderTime": 1.109237399999995,
+      "propsSize": 3128,
+      "timestamp": "2026-04-11T15:38:01.774Z"
+    }
+  ],
+  "summary": {
+    "averageRenderTime": 0.7078402333333278,
+    "slowestComponent": "Dashboard",
+    "fastestComponent": "ArticleCard",
+    "totalComponentsTested": 3
+  }
+}

@@ -22,14 +22,15 @@ import { cn } from '@/lib/utils';
  * Validates Requirements 1.1, 1.2, 1.3, 1.5, 2.1, 2.2, 2.5, 3.1, 3.2, 3.3, 3.4, 3.5, 8.1, 8.2, 8.3, 10.1, 10.2, 10.5, 12.1, 12.2, 12.3, 12.4, 12.5, 17.1, 17.3, 17.4
  */
 export default function ReadingListPage() {
-  const [selectedStatus, setSelectedStatus] =
-    useState<ReadingListStatus | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<ReadingListStatus | null>(null);
   const [page, setPage] = useState(1);
+  const pageSize = 20;
 
   // Fetch reading list data
   const { data, isLoading, isError, error, refetch } = useReadingList(
     page,
-    selectedStatus,
+    pageSize,
+    selectedStatus || undefined
   );
 
   // Mutations
@@ -68,9 +69,7 @@ export default function ReadingListPage() {
           <h1 className="text-3xl font-bold mb-6">Reading List</h1>
           <div className="flex flex-col items-center justify-center py-12 space-y-4">
             <AlertCircle className="h-12 w-12 text-destructive" />
-            <h2 className="text-xl font-semibold">
-              Failed to load reading list
-            </h2>
+            <h2 className="text-xl font-semibold">Failed to load reading list</h2>
             <p className="text-muted-foreground text-center max-w-md">
               {error?.message || 'Please try again.'}
             </p>
@@ -79,7 +78,7 @@ export default function ReadingListPage() {
               className={cn(
                 'px-4 py-2 rounded-md bg-primary text-primary-foreground',
                 'hover:bg-primary/90 transition-colors',
-                'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
+                'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
               )}
             >
               Retry
@@ -99,10 +98,7 @@ export default function ReadingListPage() {
 
           {/* Show status tabs even when empty */}
           <div className="mb-6">
-            <StatusFilterTabs
-              selectedStatus={selectedStatus}
-              onStatusChange={handleStatusChange}
-            />
+            <StatusFilterTabs selectedStatus={selectedStatus} onStatusChange={handleStatusChange} />
           </div>
 
           <EmptyState
@@ -116,7 +112,7 @@ export default function ReadingListPage() {
                   'inline-flex items-center px-4 py-2 rounded-md',
                   'bg-primary text-primary-foreground',
                   'hover:bg-primary/90 transition-colors',
-                  'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
+                  'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
                 )}
               >
                 Browse Articles
@@ -135,10 +131,7 @@ export default function ReadingListPage() {
 
         {/* Status Filter Tabs */}
         <div className="mb-6">
-          <StatusFilterTabs
-            selectedStatus={selectedStatus}
-            onStatusChange={handleStatusChange}
-          />
+          <StatusFilterTabs selectedStatus={selectedStatus} onStatusChange={handleStatusChange} />
         </div>
 
         {/* Reading List Items */}
@@ -172,7 +165,7 @@ export default function ReadingListPage() {
                 'hover:bg-primary/90 transition-colors',
                 'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
-                'font-medium',
+                'font-medium'
               )}
             >
               {isLoading ? (

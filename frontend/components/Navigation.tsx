@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, Rss, BookMarked, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
+import { useUser } from '@/contexts/UserContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -12,7 +13,8 @@ import { cn } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 
 export function Navigation() {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
+  const { user } = useUser();
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
@@ -51,7 +53,7 @@ export function Navigation() {
                       'flex items-center gap-2 px-3 py-2 rounded-md transition-colors cursor-pointer',
                       pathname === item.href
                         ? 'bg-primary text-primary-foreground'
-                        : 'hover:bg-muted',
+                        : 'hover:bg-muted'
                     )}
                     aria-current={pathname === item.href ? 'page' : undefined}
                   >
@@ -67,15 +69,8 @@ export function Navigation() {
             {user && (
               <div className="hidden md:flex items-center gap-2">
                 <Avatar className="h-8 w-8">
-                  {user.avatar && (
-                    <AvatarImage
-                      src={user.avatar}
-                      alt={user.username || 'User'}
-                    />
-                  )}
-                  <AvatarFallback>
-                    {user.username?.[0]?.toUpperCase() || 'U'}
-                  </AvatarFallback>
+                  {user.avatar && <AvatarImage src={user.avatar} alt={user.username || 'User'} />}
+                  <AvatarFallback>{user.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                 </Avatar>
                 <span className="text-sm">{user.username}</span>
               </div>
@@ -84,12 +79,7 @@ export function Navigation() {
             <ThemeToggle />
 
             {user && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLogout}
-                className="hidden md:flex"
-              >
+              <Button variant="outline" size="sm" onClick={handleLogout} className="hidden md:flex">
                 <LogOut className="h-4 w-4 mr-2" aria-hidden="true" />
                 Logout
               </Button>
@@ -103,11 +93,7 @@ export function Navigation() {
               aria-label="Toggle menu"
               aria-expanded={isMenuOpen}
             >
-              {isMenuOpen ? (
-                <X className="h-5 w-5" />
-              ) : (
-                <Menu className="h-5 w-5" />
-              )}
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
@@ -118,15 +104,8 @@ export function Navigation() {
             {user && (
               <div className="flex items-center gap-2 px-3 py-2 mb-2">
                 <Avatar className="h-8 w-8">
-                  {user.avatar && (
-                    <AvatarImage
-                      src={user.avatar}
-                      alt={user.username || 'User'}
-                    />
-                  )}
-                  <AvatarFallback>
-                    {user.username?.[0]?.toUpperCase() || 'U'}
-                  </AvatarFallback>
+                  {user.avatar && <AvatarImage src={user.avatar} alt={user.username || 'User'} />}
+                  <AvatarFallback>{user.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                 </Avatar>
                 <span className="text-sm font-medium">{user.username}</span>
               </div>
@@ -139,9 +118,7 @@ export function Navigation() {
                   href={item.href}
                   className={cn(
                     'flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer',
-                    pathname === item.href
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-muted',
+                    pathname === item.href ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
                   )}
                   onClick={() => setIsMenuOpen(false)}
                   aria-current={pathname === item.href ? 'page' : undefined}

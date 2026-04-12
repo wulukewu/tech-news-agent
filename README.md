@@ -454,14 +454,14 @@ For detailed testing documentation, see [Testing Guide](./docs/testing/supabase-
 
 ### User Guides
 
-- **[Web Dashboard Guide](./docs/USER_GUIDE.md)** - Using the web interface
-- **[Discord Bot Commands](./docs/USER_GUIDE.md#discord-commands)** - Complete command reference
+- **[User Guide](./docs/USER_GUIDE.md)** - Using the web interface and Discord bot
 - **[Manual Scheduler Trigger](./docs/MANUAL_SCHEDULER_TRIGGER.md)** - On-demand article fetching
 
 ### Developer Resources
 
 - **[Developer Guide](./docs/DEVELOPER_GUIDE.md)** - Architecture and API reference
 - **[Project Overview](./docs/PROJECT_OVERVIEW.md)** - Comprehensive system documentation
+- **[Architecture](./docs/ARCHITECTURE.md)** - System architecture details
 - **[Testing Guide](./docs/testing/supabase-migration-testing.md)** - Testing strategies and tools
 
 ### Deployment
@@ -469,11 +469,6 @@ For detailed testing documentation, see [Testing Guide](./docs/testing/supabase-
 - **[Deployment Guide](./docs/deployment/DEPLOYMENT.md)** - Production deployment steps
 - **[Deployment Checklist](./docs/deployment/DEPLOYMENT_CHECKLIST.md)** - Pre-deployment verification
 - **[Public Bot Setup](./docs/PUBLIC_BOT_SETUP.md)** - Making your bot public
-
-### 中文文件
-
-- **[中文版 README](./docs/README_zh.md)** - 繁體中文說明
-- **[Docker 中文指南](./docs/README_DOCKER.md)** - Docker 設定說明
 
 📖 **[Complete Documentation Index](./docs/README.md)** - Browse all documentation
 

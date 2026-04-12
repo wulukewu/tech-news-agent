@@ -1,6 +1,6 @@
 -- Rollback Migration 003: Extend feeds table for recommendation system
 -- Task 1.2: 擴展 feeds 表格
--- 
+--
 -- This script rolls back the changes made by 003_extend_feeds_table_for_recommendations.sql
 -- Use this only if you need to undo the migration
 

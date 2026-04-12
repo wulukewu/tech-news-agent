@@ -1,7 +1,9 @@
-from pydantic import BaseModel, Field, HttpUrl, ConfigDict, field_serializer
-from typing import Optional, List, Dict, Any
 from datetime import datetime
+from typing import Optional
 from uuid import UUID
+
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_serializer
+
 
 class RSSSource(BaseModel):
     id: UUID
@@ -9,11 +11,19 @@ class RSSSource(BaseModel):
     url: HttpUrl
     category: str
 
+
 class AIAnalysis(BaseModel):
     is_hardcore: bool = Field(description="Whether the article is recommended or discarded")
-    reason: str = Field(description="A one-sentence explanation of why it was recommended or discarded")
-    actionable_takeaway: Optional[str] = Field(default="", description="The actionable value extracted (can be empty if discarded)")
-    tinkering_index: int = Field(description="Tinkering index (1-5) indicating technical complexity")
+    reason: str = Field(
+        description="A one-sentence explanation of why it was recommended or discarded"
+    )
+    actionable_takeaway: Optional[str] = Field(
+        default="", description="The actionable value extracted (can be empty if discarded)"
+    )
+    tinkering_index: int = Field(
+        ge=1, le=5, description="Tinkering index (1-5) indicating technical complexity"
+    )
+
 
 class ArticleSchema(BaseModel):
     """文章資料模型（更新以匹配 Supabase 結構）"""
@@ -38,11 +48,12 @@ class ArticleSchema(BaseModel):
     ai_analysis: Optional[AIAnalysis] = None  # 保留：完整 AI 分析
 
     # 向量嵌入
-    embedding: Optional[List[float]] = None  # 新增：用於語義搜尋
+    embedding: Optional[list[float]] = None  # 新增：用於語義搜尋
 
     # 移除的欄位：
     # - content_preview: 不再需要，使用 ai_summary 替代
     # - raw_data: 不再需要，資料庫結構化儲存
+
 
 class ArticlePageResult(BaseModel):
     page_id: str
@@ -51,15 +62,17 @@ class ArticlePageResult(BaseModel):
     category: str
     tinkering_index: int
 
+
 class ReadingListItem(BaseModel):
-    article_id: UUID                      # 文章 UUID（更新自 page_id）
-    title: str                            # 文章標題
-    url: HttpUrl                          # 文章 URL
-    category: str                         # 分類（重新命名自 source_category）
-    status: str                           # 閱讀狀態（Unread, Read, Archived）
-    rating: Optional[int] = None          # 評分（1–5，未評分為 None）
-    added_at: datetime                    # 新增時間
-    updated_at: datetime                  # 更新時間
+    article_id: UUID  # 文章 UUID（更新自 page_id）
+    title: str  # 文章標題
+    url: HttpUrl  # 文章 URL
+    category: str  # 分類（重新命名自 source_category）
+    status: str  # 閱讀狀態（Unread, Read, Archived）
+    rating: Optional[int] = None  # 評分（1–5，未評分為 None）
+    added_at: datetime  # 新增時間
+    updated_at: datetime  # 更新時間
+
 
 class BatchResult(BaseModel):
     """批次操作結果"""
@@ -67,10 +80,7 @@ class BatchResult(BaseModel):
     inserted_count: int = Field(description="成功插入的記錄數")
     updated_count: int = Field(description="成功更新的記錄數")
     failed_count: int = Field(description="失敗的記錄數")
-    failed_articles: List[dict] = Field(
-        default_factory=list,
-        description="失敗的文章資訊（包含錯誤原因）"
-    )
+    failed_articles: list[dict] = Field(default_factory=list, description="失敗的文章資訊（包含錯誤原因）")
 
     @property
     def total_processed(self) -> int:
@@ -84,6 +94,7 @@ class BatchResult(BaseModel):
             return 1.0
         return (self.inserted_count + self.updated_count) / self.total_processed
 
+
 class Subscription(BaseModel):
     """使用者訂閱資訊"""
 
@@ -93,36 +104,41 @@ class Subscription(BaseModel):
     category: str
     subscribed_at: datetime
 
+
 class ArticleResponse(BaseModel):
     """文章回應（用於 API）"""
+
     id: UUID = Field(..., description="文章 UUID")
     title: str = Field(..., description="文章標題")
     url: HttpUrl = Field(..., description="文章 URL")
-    published_at: Optional[datetime] = Field(None, description="發布時間", serialization_alias="publishedAt")
-    tinkering_index: int = Field(..., ge=1, le=5, description="技術複雜度（1-5）", serialization_alias="tinkeringIndex")
+    published_at: Optional[datetime] = Field(
+        None, description="發布時間", serialization_alias="publishedAt"
+    )
+    tinkering_index: int = Field(
+        ..., ge=1, le=5, description="技術複雜度（1-5）", serialization_alias="tinkeringIndex"
+    )
     ai_summary: Optional[str] = Field(None, description="AI 摘要", serialization_alias="aiSummary")
     feed_name: str = Field(..., description="來源名稱", serialization_alias="feedName")
     category: str = Field(..., description="分類")
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        by_alias=True
+    is_in_reading_list: bool = Field(
+        False, description="是否已加入閱讀清單", serialization_alias="isInReadingList"
     )
-    
-    @field_serializer('published_at')
+
+    model_config = ConfigDict(populate_by_name=True, by_alias=True)
+
+    @field_serializer("published_at")
     def serialize_published_at(self, value: Optional[datetime], _info) -> Optional[str]:
         """確保 published_at 序列化為 ISO 8601 格式"""
         return value.isoformat() if value else None
 
+
 class ArticleListResponse(BaseModel):
     """文章列表回應（含分頁）"""
-    articles: List[ArticleResponse] = Field(..., description="文章列表")
+
+    articles: list[ArticleResponse] = Field(..., description="文章列表")
     page: int = Field(..., ge=1, description="當前頁碼")
     page_size: int = Field(..., ge=1, le=100, description="每頁文章數", serialization_alias="pageSize")
     total_count: int = Field(..., ge=0, description="總文章數", serialization_alias="totalCount")
     has_next_page: bool = Field(..., description="是否有下一頁", serialization_alias="hasNextPage")
-    
-    model_config = ConfigDict(
-        populate_by_name=True,
-        by_alias=True
-    )
+
+    model_config = ConfigDict(populate_by_name=True, by_alias=True)

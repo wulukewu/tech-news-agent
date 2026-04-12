@@ -3,21 +3,22 @@ Integration tests for /reading_list view and recommend commands
 Tasks 5.1, 5.2, 5.3: 驗證閱讀清單整合
 Validates: Requirements 6.1-6.9, 8.1-8.6
 """
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import UUID, uuid4
+
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
 
 import discord
+import pytest
 
-from app.bot.cogs.reading_list import ReadingListGroup, PaginationView
+from app.bot.cogs.reading_list import PaginationView, ReadingListGroup
+from app.core.exceptions import LLMServiceError
 from app.schemas.article import ReadingListItem
-from app.core.exceptions import SupabaseServiceError, LLMServiceError
-
 
 # ---------------------------------------------------------------------------
 # Helper functions
 # ---------------------------------------------------------------------------
+
 
 def make_interaction():
     """Create a mock Discord interaction."""
@@ -51,6 +52,7 @@ def make_reading_list_item(article_id=None, title="Test Article", rating=None, s
 # Task 5.1 — 驗證 /reading_list view 整合
 # ---------------------------------------------------------------------------
 
+
 class TestReadingListViewIntegration:
     @pytest.mark.asyncio
     async def test_view_returns_items_with_article_id(self):
@@ -59,10 +61,7 @@ class TestReadingListViewIntegration:
         interaction = make_interaction()
 
         # Create test items with article_id
-        test_items = [
-            make_reading_list_item(title=f"Article {i}")
-            for i in range(3)
-        ]
+        test_items = [make_reading_list_item(title=f"Article {i}") for i in range(3)]
 
         with patch("app.bot.cogs.reading_list.SupabaseService") as MockSupabase:
             instance = MockSupabase.return_value
@@ -72,7 +71,7 @@ class TestReadingListViewIntegration:
 
             # Verify get_reading_list was called with correct parameters
             instance.get_reading_list.assert_called_once_with(
-                str(interaction.user.id), status='Unread'
+                str(interaction.user.id), status="Unread"
             )
 
             # Verify response was sent
@@ -108,7 +107,8 @@ class TestReadingListViewIntegration:
 
             # Find MarkAsReadButton in view
             mark_read_buttons = [
-                child for child in view.children
+                child
+                for child in view.children
                 if hasattr(child, "custom_id") and child.custom_id.startswith("mark_read_")
             ]
 
@@ -139,7 +139,8 @@ class TestReadingListViewIntegration:
 
             # Find RatingSelect in view
             rating_selects = [
-                child for child in view.children
+                child
+                for child in view.children
                 if hasattr(child, "custom_id") and child.custom_id.startswith("rate_")
             ]
 
@@ -157,10 +158,7 @@ class TestReadingListViewIntegration:
 
         # Create 3 items to avoid Discord's 5-row limit
         # (Row 0: pagination, Row 1: mark read buttons, Rows 2-4: rating selects)
-        test_items = [
-            make_reading_list_item(title=f"Article {i}")
-            for i in range(3)
-        ]
+        test_items = [make_reading_list_item(title=f"Article {i}") for i in range(3)]
 
         with patch("app.bot.cogs.reading_list.SupabaseService") as MockSupabase:
             instance = MockSupabase.return_value
@@ -174,7 +172,8 @@ class TestReadingListViewIntegration:
 
             # Verify pagination buttons exist
             pagination_buttons = [
-                child for child in view.children
+                child
+                for child in view.children
                 if hasattr(child, "label") and ("上一頁" in child.label or "下一頁" in child.label)
             ]
 
@@ -203,6 +202,7 @@ class TestReadingListViewIntegration:
 # Task 5.2 — 驗證 /reading_list recommend 整合
 # ---------------------------------------------------------------------------
 
+
 class TestReadingListRecommendIntegration:
     @pytest.mark.asyncio
     async def test_recommend_queries_high_rated_articles(self):
@@ -215,15 +215,15 @@ class TestReadingListRecommendIntegration:
             make_reading_list_item(title="Article 2", rating=5),
         ]
 
-        with patch("app.bot.cogs.reading_list.SupabaseService") as MockSupabase, \
-             patch("app.bot.cogs.reading_list.LLMService") as MockLLM:
+        with (
+            patch("app.bot.cogs.reading_list.SupabaseService") as MockSupabase,
+            patch("app.bot.cogs.reading_list.LLMService") as MockLLM,
+        ):
             supabase_instance = MockSupabase.return_value
             supabase_instance.get_highly_rated_articles = AsyncMock(return_value=high_rated_items)
 
             llm_instance = MockLLM.return_value
-            llm_instance.generate_reading_recommendation = AsyncMock(
-                return_value="這是個人化推薦摘要"
-            )
+            llm_instance.generate_reading_recommendation = AsyncMock(return_value="這是個人化推薦摘要")
 
             await group.recommend.callback(group, interaction)
 
@@ -243,15 +243,15 @@ class TestReadingListRecommendIntegration:
             make_reading_list_item(title="Tech Article", rating=4),
         ]
 
-        with patch("app.bot.cogs.reading_list.SupabaseService") as MockSupabase, \
-             patch("app.bot.cogs.reading_list.LLMService") as MockLLM:
+        with (
+            patch("app.bot.cogs.reading_list.SupabaseService") as MockSupabase,
+            patch("app.bot.cogs.reading_list.LLMService") as MockLLM,
+        ):
             supabase_instance = MockSupabase.return_value
             supabase_instance.get_highly_rated_articles = AsyncMock(return_value=high_rated_items)
 
             llm_instance = MockLLM.return_value
-            llm_instance.generate_reading_recommendation = AsyncMock(
-                return_value="推薦摘要"
-            )
+            llm_instance.generate_reading_recommendation = AsyncMock(return_value="推薦摘要")
 
             await group.recommend.callback(group, interaction)
 
@@ -274,15 +274,15 @@ class TestReadingListRecommendIntegration:
 
         high_rated_items = [make_reading_list_item(rating=5)]
 
-        with patch("app.bot.cogs.reading_list.SupabaseService") as MockSupabase, \
-             patch("app.bot.cogs.reading_list.LLMService") as MockLLM:
+        with (
+            patch("app.bot.cogs.reading_list.SupabaseService") as MockSupabase,
+            patch("app.bot.cogs.reading_list.LLMService") as MockLLM,
+        ):
             supabase_instance = MockSupabase.return_value
             supabase_instance.get_highly_rated_articles = AsyncMock(return_value=high_rated_items)
 
             llm_instance = MockLLM.return_value
-            llm_instance.generate_reading_recommendation = AsyncMock(
-                return_value="推薦摘要"
-            )
+            llm_instance.generate_reading_recommendation = AsyncMock(return_value="推薦摘要")
 
             await group.recommend.callback(group, interaction)
 
@@ -315,8 +315,10 @@ class TestReadingListRecommendIntegration:
 
         high_rated_items = [make_reading_list_item(rating=5)]
 
-        with patch("app.bot.cogs.reading_list.SupabaseService") as MockSupabase, \
-             patch("app.bot.cogs.reading_list.LLMService") as MockLLM:
+        with (
+            patch("app.bot.cogs.reading_list.SupabaseService") as MockSupabase,
+            patch("app.bot.cogs.reading_list.LLMService") as MockLLM,
+        ):
             supabase_instance = MockSupabase.return_value
             supabase_instance.get_highly_rated_articles = AsyncMock(return_value=high_rated_items)
 
@@ -336,6 +338,7 @@ class TestReadingListRecommendIntegration:
 # ---------------------------------------------------------------------------
 # Task 5.3 — 撰寫閱讀清單的整合測試
 # ---------------------------------------------------------------------------
+
 
 class TestReadingListCompleteWorkflow:
     @pytest.mark.asyncio
@@ -409,7 +412,7 @@ class TestReadingListCompleteWorkflow:
 
             # Verify status was updated
             instance.update_article_status.assert_called_once_with(
-                str(interaction4.user.id), article_id, 'Read'
+                str(interaction4.user.id), article_id, "Read"
             )
 
     @pytest.mark.asyncio
@@ -417,10 +420,7 @@ class TestReadingListCompleteWorkflow:
         """Test pagination navigation with multiple pages."""
         # Create 3 items (limited to avoid Discord's 5-row limit bug)
         # Row 0: pagination, Row 1: mark read buttons, Rows 2-4: rating selects
-        test_items = [
-            make_reading_list_item(title=f"Article {i}")
-            for i in range(3)
-        ]
+        test_items = [make_reading_list_item(title=f"Article {i}") for i in range(3)]
 
         # Test page 0
         view = PaginationView(test_items, page=0)
@@ -449,7 +449,7 @@ class TestReadingListCompleteWorkflow:
 
             # Verify called with user 1's ID
             instance.get_reading_list.assert_called_once_with(
-                str(interaction1.user.id), status='Unread'
+                str(interaction1.user.id), status="Unread"
             )
 
         # User 2
@@ -466,7 +466,7 @@ class TestReadingListCompleteWorkflow:
 
             # Verify called with user 2's ID
             instance.get_reading_list.assert_called_once_with(
-                str(interaction2.user.id), status='Unread'
+                str(interaction2.user.id), status="Unread"
             )
 
     @pytest.mark.asyncio
@@ -482,8 +482,10 @@ class TestReadingListCompleteWorkflow:
             make_reading_list_item(title="Tech Article", rating=5),
         ]
 
-        with patch("app.bot.cogs.reading_list.SupabaseService") as MockSupabase, \
-             patch("app.bot.cogs.reading_list.LLMService") as MockLLM:
+        with (
+            patch("app.bot.cogs.reading_list.SupabaseService") as MockSupabase,
+            patch("app.bot.cogs.reading_list.LLMService") as MockLLM,
+        ):
             supabase_instance = MockSupabase.return_value
             supabase_instance.get_highly_rated_articles = AsyncMock(return_value=high_rated_items)
 

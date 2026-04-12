@@ -7,10 +7,13 @@ Tests cover:
 - Requirements 13.2: Query articles where tinkering_index IS NULL
 - Requirements 13.7: Support limit parameter to restrict result count
 """
-import pytest
+
 from unittest.mock import MagicMock
-from app.services.supabase_service import SupabaseService
+
+import pytest
+
 from app.core.exceptions import SupabaseServiceError
+from app.services.supabase_service import SupabaseService
 
 
 class TestGetUnanalyzedArticles:
@@ -27,33 +30,35 @@ class TestGetUnanalyzedArticles:
         mock_response = MagicMock()
         mock_response.data = [
             {
-                'id': 'article-1',
-                'url': 'https://example.com/article1',
-                'title': 'Article 1',
-                'feed_id': 'feed-1'
+                "id": "article-1",
+                "url": "https://example.com/article1",
+                "title": "Article 1",
+                "feed_id": "feed-1",
             },
             {
-                'id': 'article-2',
-                'url': 'https://example.com/article2',
-                'title': 'Article 2',
-                'feed_id': 'feed-2'
-            }
+                "id": "article-2",
+                "url": "https://example.com/article2",
+                "title": "Article 2",
+                "feed_id": "feed-2",
+            },
         ]
-        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = mock_response
-        
+        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = (
+            mock_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         # Act
         result = await service.get_unanalyzed_articles()
-        
+
         # Assert
         assert len(result) == 2
-        assert result[0]['id'] == 'article-1'
-        assert result[0]['url'] == 'https://example.com/article1'
-        assert result[0]['title'] == 'Article 1'
-        assert result[0]['feed_id'] == 'feed-1'
-        mock_client.table.assert_called_once_with('articles')
-        mock_client.table.return_value.select.assert_called_once_with('id, url, title, feed_id')
+        assert result[0]["id"] == "article-1"
+        assert result[0]["url"] == "https://example.com/article1"
+        assert result[0]["title"] == "Article 1"
+        assert result[0]["feed_id"] == "feed-1"
+        mock_client.table.assert_called_once_with("articles")
+        mock_client.table.return_value.select.assert_called_once_with("id, url, title, feed_id")
 
     @pytest.mark.asyncio
     async def test_returns_articles_with_null_tinkering_index(self):
@@ -66,22 +71,24 @@ class TestGetUnanalyzedArticles:
         mock_response = MagicMock()
         mock_response.data = [
             {
-                'id': 'article-3',
-                'url': 'https://example.com/article3',
-                'title': 'Article 3',
-                'feed_id': 'feed-3'
+                "id": "article-3",
+                "url": "https://example.com/article3",
+                "title": "Article 3",
+                "feed_id": "feed-3",
             }
         ]
-        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = mock_response
-        
+        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = (
+            mock_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         # Act
         result = await service.get_unanalyzed_articles()
-        
+
         # Assert
         assert len(result) == 1
-        assert result[0]['id'] == 'article-3'
+        assert result[0]["id"] == "article-3"
 
     @pytest.mark.asyncio
     async def test_uses_or_condition_for_null_checks(self):
@@ -93,15 +100,19 @@ class TestGetUnanalyzedArticles:
         mock_client = MagicMock()
         mock_response = MagicMock()
         mock_response.data = []
-        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = mock_response
-        
+        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = (
+            mock_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         # Act
         await service.get_unanalyzed_articles()
-        
+
         # Assert
-        mock_client.table.return_value.select.return_value.or_.assert_called_once_with('ai_summary.is.null,tinkering_index.is.null')
+        mock_client.table.return_value.select.return_value.or_.assert_called_once_with(
+            "ai_summary.is.null,tinkering_index.is.null"
+        )
 
     @pytest.mark.asyncio
     async def test_respects_limit_parameter(self):
@@ -113,15 +124,19 @@ class TestGetUnanalyzedArticles:
         mock_client = MagicMock()
         mock_response = MagicMock()
         mock_response.data = []
-        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = mock_response
-        
+        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = (
+            mock_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         # Act
         await service.get_unanalyzed_articles(limit=50)
-        
+
         # Assert
-        mock_client.table.return_value.select.return_value.or_.return_value.limit.assert_called_once_with(50)
+        mock_client.table.return_value.select.return_value.or_.return_value.limit.assert_called_once_with(
+            50
+        )
 
     @pytest.mark.asyncio
     async def test_defaults_to_100_limit(self):
@@ -133,15 +148,19 @@ class TestGetUnanalyzedArticles:
         mock_client = MagicMock()
         mock_response = MagicMock()
         mock_response.data = []
-        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = mock_response
-        
+        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = (
+            mock_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         # Act
         await service.get_unanalyzed_articles()
-        
+
         # Assert
-        mock_client.table.return_value.select.return_value.or_.return_value.limit.assert_called_once_with(100)
+        mock_client.table.return_value.select.return_value.or_.return_value.limit.assert_called_once_with(
+            100
+        )
 
     @pytest.mark.asyncio
     async def test_returns_empty_list_when_no_articles(self):
@@ -153,13 +172,15 @@ class TestGetUnanalyzedArticles:
         mock_client = MagicMock()
         mock_response = MagicMock()
         mock_response.data = []
-        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = mock_response
-        
+        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = (
+            mock_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         # Act
         result = await service.get_unanalyzed_articles()
-        
+
         # Assert
         assert result == []
         assert isinstance(result, list)
@@ -174,13 +195,15 @@ class TestGetUnanalyzedArticles:
         mock_client = MagicMock()
         mock_response = MagicMock()
         mock_response.data = None
-        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = mock_response
-        
+        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = (
+            mock_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         # Act
         result = await service.get_unanalyzed_articles()
-        
+
         # Assert
         assert result == []
 
@@ -192,14 +215,16 @@ class TestGetUnanalyzedArticles:
         """
         # Arrange
         mock_client = MagicMock()
-        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.side_effect = Exception("Database connection failed")
-        
+        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.side_effect = Exception(
+            "Database connection failed"
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         # Act & Assert
         with pytest.raises(SupabaseServiceError) as exc_info:
             await service.get_unanalyzed_articles()
-        
+
         assert "Database operation failed" in str(exc_info.value)
         assert exc_info.value.context["limit"] == 100
         assert exc_info.value.context["operation"] == "get_unanalyzed_articles"
@@ -214,15 +239,17 @@ class TestGetUnanalyzedArticles:
         mock_client = MagicMock()
         mock_response = MagicMock()
         mock_response.data = []
-        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = mock_response
-        
+        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = (
+            mock_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         # Act
         await service.get_unanalyzed_articles()
-        
+
         # Assert
-        mock_client.table.return_value.select.assert_called_once_with('id, url, title, feed_id')
+        mock_client.table.return_value.select.assert_called_once_with("id, url, title, feed_id")
 
     @pytest.mark.asyncio
     async def test_returns_correct_structure(self):
@@ -235,30 +262,32 @@ class TestGetUnanalyzedArticles:
         mock_response = MagicMock()
         mock_response.data = [
             {
-                'id': 'test-id',
-                'url': 'https://test.com/article',
-                'title': 'Test Article',
-                'feed_id': 'test-feed-id'
+                "id": "test-id",
+                "url": "https://test.com/article",
+                "title": "Test Article",
+                "feed_id": "test-feed-id",
             }
         ]
-        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = mock_response
-        
+        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = (
+            mock_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         # Act
         result = await service.get_unanalyzed_articles()
-        
+
         # Assert
         assert len(result) == 1
         article = result[0]
-        assert 'id' in article
-        assert 'url' in article
-        assert 'title' in article
-        assert 'feed_id' in article
-        assert article['id'] == 'test-id'
-        assert article['url'] == 'https://test.com/article'
-        assert article['title'] == 'Test Article'
-        assert article['feed_id'] == 'test-feed-id'
+        assert "id" in article
+        assert "url" in article
+        assert "title" in article
+        assert "feed_id" in article
+        assert article["id"] == "test-id"
+        assert article["url"] == "https://test.com/article"
+        assert article["title"] == "Test Article"
+        assert article["feed_id"] == "test-feed-id"
 
     @pytest.mark.asyncio
     async def test_accepts_custom_limit(self):
@@ -270,15 +299,19 @@ class TestGetUnanalyzedArticles:
         mock_client = MagicMock()
         mock_response = MagicMock()
         mock_response.data = []
-        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = mock_response
-        
+        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = (
+            mock_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         # Act
         await service.get_unanalyzed_articles(limit=200)
-        
+
         # Assert
-        mock_client.table.return_value.select.return_value.or_.return_value.limit.assert_called_once_with(200)
+        mock_client.table.return_value.select.return_value.or_.return_value.limit.assert_called_once_with(
+            200
+        )
 
     @pytest.mark.asyncio
     async def test_handles_large_result_set(self):
@@ -292,23 +325,25 @@ class TestGetUnanalyzedArticles:
         # 模擬返回 100 筆文章
         mock_response.data = [
             {
-                'id': f'article-{i}',
-                'url': f'https://example.com/article{i}',
-                'title': f'Article {i}',
-                'feed_id': f'feed-{i % 10}'
+                "id": f"article-{i}",
+                "url": f"https://example.com/article{i}",
+                "title": f"Article {i}",
+                "feed_id": f"feed-{i % 10}",
             }
             for i in range(100)
         ]
-        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = mock_response
-        
+        mock_client.table.return_value.select.return_value.or_.return_value.limit.return_value.execute.return_value = (
+            mock_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         # Act
         result = await service.get_unanalyzed_articles(limit=100)
-        
+
         # Assert
         assert len(result) == 100
-        assert all('id' in article for article in result)
-        assert all('url' in article for article in result)
-        assert all('title' in article for article in result)
-        assert all('feed_id' in article for article in result)
+        assert all("id" in article for article in result)
+        assert all("url" in article for article in result)
+        assert all("title" in article for article in result)
+        assert all("feed_id" in article for article in result)

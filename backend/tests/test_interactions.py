@@ -2,20 +2,21 @@
 Unit and property-based tests for FilterSelect and FilterView
 Tasks 2.4, 2.5, 2.6, 2.7
 """
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+
+from unittest.mock import AsyncMock, MagicMock
 
 import discord
+import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from app.schemas.article import ArticleSchema
 from app.bot.cogs.interactions import FilterSelect, FilterView
-
+from app.schemas.article import ArticleSchema
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def make_article(title="Test Article", source_category="AI", source_name="TestSource"):
     return ArticleSchema(
@@ -37,6 +38,7 @@ def make_interaction():
 # ---------------------------------------------------------------------------
 # Task 2.4 — Unit tests for FilterSelect and FilterView
 # ---------------------------------------------------------------------------
+
 
 class TestFilterSelectPlaceholder:
     def test_placeholder_text(self):
@@ -78,9 +80,7 @@ class TestFilterSelectMissingCategory:
         interaction = make_interaction()
         await select.callback(interaction)
 
-        interaction.response.send_message.assert_called_once_with(
-            "⚠️ 此分類目前沒有文章。", ephemeral=True
-        )
+        interaction.response.send_message.assert_called_once_with("⚠️ 此分類目前沒有文章。", ephemeral=True)
 
 
 class TestFilterSelectOptionLimit:
@@ -102,6 +102,7 @@ class TestFilterSelectOptionLimit:
 # Feature: discord-interaction-enhancement, Property 1: FilterSelect 選項包含所有分類且「顯示全部」排第一
 # Validates: Requirements 1.2, 1.3, 1.4
 # ---------------------------------------------------------------------------
+
 
 def _article_strategy():
     return st.builds(
@@ -154,6 +155,7 @@ class TestFilterSelectOptionsProperty:
 # Validates: Requirements 2.3, 4.6
 # ---------------------------------------------------------------------------
 
+
 def _truncate(content: str) -> str:
     """Mirrors the truncation logic in FilterSelect.callback."""
     if len(content) > 2000:
@@ -190,6 +192,7 @@ class TestTruncationProperty:
 # Validates: Requirements 2.1
 # ---------------------------------------------------------------------------
 
+
 class TestFilterCategoryConsistencyProperty:
     @given(
         articles=st.lists(_article_strategy(), min_size=1, max_size=50),
@@ -219,6 +222,7 @@ class TestFilterCategoryConsistencyProperty:
 # ---------------------------------------------------------------------------
 
 import hashlib
+
 from app.bot.cogs.interactions import DeepDiveButton, DeepDiveView
 
 
@@ -276,6 +280,7 @@ class TestDeepDiveViewButtonCount:
 # Validates: Requirements 3.1, 3.4
 # ---------------------------------------------------------------------------
 
+
 class TestDeepDiveViewButtonCountProperty:
     @given(articles=st.lists(_article_strategy(), min_size=0, max_size=20))
     @settings(max_examples=5)
@@ -290,6 +295,7 @@ class TestDeepDiveViewButtonCountProperty:
 # Feature: discord-interaction-enhancement, Property 5: DeepDiveButton 標籤與 custom_id 格式正確性
 # Validates: Requirements 3.2, 3.3
 # ---------------------------------------------------------------------------
+
 
 class TestDeepDiveButtonFormatProperty:
     @given(article=_article_strategy())
@@ -317,6 +323,7 @@ class TestDeepDiveButtonFormatProperty:
 # Feature: discord-interaction-enhancement, Property 7: View 持久性 timeout 不變量
 # Validates: Requirements 6.1, 6.2
 # ---------------------------------------------------------------------------
+
 
 class TestViewTimeoutInvariantProperty:
     @given(articles=st.lists(_article_strategy(), min_size=0, max_size=10))

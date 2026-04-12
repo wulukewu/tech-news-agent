@@ -4,22 +4,25 @@
 提供個人化文章動態查詢功能，基於使用者訂閱源。
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from typing import List
 from datetime import datetime, timedelta
 from uuid import UUID
 
+from fastapi import APIRouter, Depends, HTTPException, Query
+
 from app.api.auth import get_current_user
+from app.schemas.article import ArticleResponse
+from app.schemas.responses import (
+    PaginatedResponse,
+    paginated_response,
+    success_response,
+)
 from app.services.supabase_service import SupabaseService
-from app.schemas.article import ArticleResponse, ArticleListResponse
 
 router = APIRouter()
 
 
 @router.get("/categories")
-async def get_categories(
-    current_user: dict = Depends(get_current_user)
-):
+async def get_categories(current_user: dict = Depends(get_current_user)):
     """
     查詢所有可用的文章類別
 
@@ -33,32 +36,24 @@ async def get_categories(
         supabase = SupabaseService()
 
         # 查詢所有不重複的類別
-        response = (
-            supabase.client.table("feeds")
-            .select("category")
-            .eq("is_active", True)
-            .execute()
-        )
+        response = supabase.client.table("feeds").select("category").eq("is_active", True).execute()
 
         # 提取不重複的類別
         categories = list(set(feed["category"] for feed in response.data if feed.get("category")))
         categories.sort()
 
-        return {"categories": categories}
+        return success_response({"categories": categories})
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve categories: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve categories: {e!s}")
 
 
-@router.get("/me", response_model=ArticleListResponse)
+@router.get("/me", response_model=PaginatedResponse[ArticleResponse])
 async def get_my_articles(
     page: int = Query(1, ge=1, description="頁碼（從 1 開始）"),
     page_size: int = Query(20, ge=1, le=100, description="每頁文章數（1-100）"),
     categories: str = Query(None, description="篩選類別（逗號分隔，例如：前端開發,AI 應用）"),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user),
 ):
     """
     查詢所有文章（可按類別篩選）
@@ -92,18 +87,12 @@ async def get_my_articles(
             .eq("user_id", str(current_user["user_id"]))
             .execute()
         )
-        
+
         subscribed_feed_ids = [sub["feed_id"] for sub in subscriptions_response.data]
-        
+
         # 如果用戶沒有訂閱任何 feed，返回空列表
         if not subscribed_feed_ids:
-            return ArticleListResponse(
-                articles=[],
-                page=page,
-                page_size=page_size,
-                total_count=0,
-                has_next_page=False
-            )
+            return paginated_response(items=[], total_count=0, page=page, page_size=page_size)
 
         # 2. 建立基礎查詢 - 只查詢用戶訂閱的 feeds 的文章
         query = (
@@ -124,8 +113,7 @@ async def get_my_articles(
 
         # 執行查詢
         response = (
-            query
-            .order("tinkering_index", desc=True)
+            query.order("tinkering_index", desc=True)
             .order("published_at", desc=True)
             .range(offset, offset + page_size - 1)
             .execute()
@@ -155,24 +143,36 @@ async def get_my_articles(
         count_response = count_query.execute()
         total_count = count_response.count if count_response.count else 0
 
+        # 3. 查詢用戶的 reading list 中的文章 IDs
+        reading_list_response = (
+            supabase.client.table("reading_list")
+            .select("article_id")
+            .eq("user_id", str(current_user["user_id"]))
+            .execute()
+        )
+        reading_list_article_ids = {item["article_id"] for item in reading_list_response.data}
+
         # 組合回應
         articles = []
         for article in response.data:
             feed_info = article.get("feeds", {})
-            
+
             # 處理 published_at - 確保包含時區資訊
             published_at = None
             if article.get("published_at"):
                 try:
                     pub_at_str = article["published_at"]
                     # 處理 Z 結尾的格式
-                    if pub_at_str.endswith('Z'):
-                        pub_at_str = pub_at_str[:-1] + '+00:00'
+                    if pub_at_str.endswith("Z"):
+                        pub_at_str = pub_at_str[:-1] + "+00:00"
                     # 解析為 datetime（會保留時區資訊）
                     published_at = datetime.fromisoformat(pub_at_str)
                 except (ValueError, TypeError):
                     published_at = None
-            
+
+            # 檢查文章是否在 reading list 中
+            is_in_reading_list = article["id"] in reading_list_article_ids
+
             articles.append(
                 ArticleResponse(
                     id=UUID(article["id"]),
@@ -182,23 +182,17 @@ async def get_my_articles(
                     tinkering_index=article["tinkering_index"],
                     ai_summary=article.get("ai_summary"),
                     feed_name=feed_info.get("name", "Unknown"),
-                    category=feed_info.get("category", "Unknown")
+                    category=feed_info.get("category", "Unknown"),
+                    is_in_reading_list=is_in_reading_list,
                 )
             )
 
         # 計算是否有下一頁
         has_next_page = (page * page_size) < total_count
 
-        return ArticleListResponse(
-            articles=articles,
-            page=page,
-            page_size=page_size,
-            total_count=total_count,
-            has_next_page=has_next_page
+        return paginated_response(
+            items=articles, total_count=total_count, page=page, page_size=page_size
         )
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to retrieve articles: {str(e)}"
-        )
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve articles: {e!s}")

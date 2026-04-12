@@ -3,26 +3,27 @@ Unit tests for MarkReadView
 Task 7.1: Write unit tests for MarkReadView
 Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5
 """
-import pytest
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import discord
+import pytest
 
+from app.bot.cogs.interactions import MarkReadButton, MarkReadView
 from app.schemas.article import ArticlePageResult
-from app.bot.cogs.interactions import MarkReadView, MarkReadButton
 from app.services.notion_service import NotionServiceError
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def make_article_page(
     page_id="page-001",
     page_url="https://notion.so/page-001",
     title="Test Article",
     category="AI",
-    tinkering_index=3
+    tinkering_index=3,
 ):
     return ArticlePageResult(
         page_id=page_id,
@@ -47,6 +48,7 @@ def make_interaction():
 # ---------------------------------------------------------------------------
 # Task 7.1 — Unit tests for MarkReadView
 # ---------------------------------------------------------------------------
+
 
 class TestMarkReadButtonLabel:
     def test_label_truncated_when_title_exceeds_15_chars(self):
@@ -82,19 +84,19 @@ class TestMarkReadButtonCallback:
         """Button click calls notion.mark_article_as_read with the correct page_id."""
         article_page = make_article_page(page_id="article-page-001", title="Test Article")
         btn = MarkReadButton(article_page)
-        
+
         # Mock view via the internal _view attribute (discord.py stores it there)
         mock_view = MagicMock()
         btn._view = mock_view
-        
+
         interaction = make_interaction()
-        
+
         with patch("app.bot.cogs.interactions.NotionService") as MockNotionService:
             mock_notion = MockNotionService.return_value
             mock_notion.mark_article_as_read = AsyncMock()
-            
+
             await btn.callback(interaction)
-            
+
             mock_notion.mark_article_as_read.assert_called_once_with("article-page-001")
 
     @pytest.mark.asyncio
@@ -102,21 +104,20 @@ class TestMarkReadButtonCallback:
         """On success, sends '✅ 已標記「{title}」為已讀' (ephemeral)."""
         article_page = make_article_page(title="Amazing Article")
         btn = MarkReadButton(article_page)
-        
+
         mock_view = MagicMock()
         btn._view = mock_view
-        
+
         interaction = make_interaction()
-        
+
         with patch("app.bot.cogs.interactions.NotionService") as MockNotionService:
             mock_notion = MockNotionService.return_value
             mock_notion.mark_article_as_read = AsyncMock()
-            
+
             await btn.callback(interaction)
-            
+
             interaction.followup.send.assert_called_once_with(
-                "✅ 已標記「Amazing Article」為已讀",
-                ephemeral=True
+                "✅ 已標記「Amazing Article」為已讀", ephemeral=True
             )
 
     @pytest.mark.asyncio
@@ -124,40 +125,37 @@ class TestMarkReadButtonCallback:
         """On failure, sends '❌ 標記失敗，請稍後再試' (ephemeral)."""
         article_page = make_article_page()
         btn = MarkReadButton(article_page)
-        
+
         mock_view = MagicMock()
         btn._view = mock_view
-        
+
         interaction = make_interaction()
-        
+
         with patch("app.bot.cogs.interactions.NotionService") as MockNotionService:
             mock_notion = MockNotionService.return_value
             mock_notion.mark_article_as_read = AsyncMock(
                 side_effect=NotionServiceError("API Error")
             )
-            
+
             await btn.callback(interaction)
-            
-            interaction.followup.send.assert_called_once_with(
-                "❌ 標記失敗，請稍後再試",
-                ephemeral=True
-            )
+
+            interaction.followup.send.assert_called_once_with("❌ 標記失敗，請稍後再試", ephemeral=True)
 
     @pytest.mark.asyncio
     async def test_button_disabled_after_success(self):
         """Button is disabled after successful mark."""
         article_page = make_article_page()
         btn = MarkReadButton(article_page)
-        
+
         mock_view = MagicMock()
         btn._view = mock_view
-        
+
         interaction = make_interaction()
-        
+
         with patch("app.bot.cogs.interactions.NotionService") as MockNotionService:
             mock_notion = MockNotionService.return_value
             mock_notion.mark_article_as_read = AsyncMock()
-            
+
             assert btn.disabled is False
             await btn.callback(interaction)
             assert btn.disabled is True

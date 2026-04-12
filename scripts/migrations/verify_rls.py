@@ -17,25 +17,25 @@ sys.path.insert(0, str(project_root))
 
 def verify_rls_policies():
     """Verify RLS policies are correctly applied."""
-    
+
     # Load environment variables
     load_dotenv()
-    
+
     supabase_url = os.getenv('SUPABASE_URL')
     supabase_key = os.getenv('SUPABASE_KEY')
-    
+
     if not supabase_url or not supabase_key:
         print("❌ Error: SUPABASE_URL and SUPABASE_KEY must be set in .env")
         sys.exit(1)
-    
+
     try:
         # Create Supabase client
         supabase: Client = create_client(supabase_url, supabase_key)
         print("✅ Connected to Supabase")
-        
+
         print("\n🔍 Verifying RLS policies on reading_list table...")
         print("=" * 60)
-        
+
         # Test 1: Check if RLS is enabled
         print("\n1. Checking if RLS is enabled...")
         try:
@@ -48,7 +48,7 @@ def verify_rls_policies():
                 print("   ✅ RLS is enabled (access denied as expected)")
             else:
                 print(f"   ⚠️  Unexpected error: {e}")
-        
+
         # Test 2: Verify policies exist
         print("\n2. Verifying RLS policies exist...")
         policies_to_check = [
@@ -57,10 +57,10 @@ def verify_rls_policies():
             'reading_list_update_policy',
             'reading_list_delete_policy'
         ]
-        
+
         print(f"   Expected policies: {', '.join(policies_to_check)}")
         print("   ✅ Policies should be created (verify in Supabase Dashboard > Authentication > Policies)")
-        
+
         # Test 3: Explain RLS behavior
         print("\n3. RLS Policy Behavior:")
         print("   - SELECT: Users can only view their own reading list entries")
@@ -68,7 +68,7 @@ def verify_rls_policies():
         print("   - UPDATE: Users can only update their own reading list entries")
         print("   - DELETE: Users can only delete their own reading list entries")
         print("   - All policies enforce: user_id = auth.uid()")
-        
+
         print("\n" + "=" * 60)
         print("✅ RLS verification complete")
         print("\nTo verify policies in Supabase Dashboard:")
@@ -79,7 +79,7 @@ def verify_rls_policies():
         print("   - reading_list_insert_policy")
         print("   - reading_list_update_policy")
         print("   - reading_list_delete_policy")
-        
+
     except Exception as e:
         print(f"❌ Error: {e}")
         sys.exit(1)

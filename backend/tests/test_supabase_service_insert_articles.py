@@ -10,12 +10,13 @@ Tests cover:
 - Requirements 4.6: Return accurate BatchResult with counts
 - Requirements 4.8: Continue processing on individual article failures
 """
-import pytest
-from unittest.mock import MagicMock, patch
+
+from unittest.mock import MagicMock
 from uuid import uuid4
+
+import pytest
+
 from app.services.supabase_service import SupabaseService
-from app.schemas.article import BatchResult
-from app.core.exceptions import SupabaseServiceError
 
 
 class TestInsertArticles:
@@ -29,29 +30,31 @@ class TestInsertArticles:
         """
         # Arrange
         mock_client = MagicMock()
-        
+
         # Mock check for existing article (not found)
         mock_existing_response = MagicMock()
         mock_existing_response.data = []
-        
+
         # Mock successful upsert
         mock_upsert_response = MagicMock()
-        mock_upsert_response.data = [{'id': str(uuid4())}]
-        
-        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = mock_existing_response
-        mock_client.table.return_value.upsert.return_value.execute.return_value = mock_upsert_response
-        
+        mock_upsert_response.data = [{"id": str(uuid4())}]
+
+        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = (
+            mock_existing_response
+        )
+        mock_client.table.return_value.upsert.return_value.execute.return_value = (
+            mock_upsert_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
-        articles = [{
-            'title': 'New Article',
-            'url': 'https://example.com/new',
-            'feed_id': str(uuid4())
-        }]
-        
+
+        articles = [
+            {"title": "New Article", "url": "https://example.com/new", "feed_id": str(uuid4())}
+        ]
+
         # Act
         result = await service.insert_articles(articles)
-        
+
         # Assert
         assert result.inserted_count == 1
         assert result.updated_count == 0
@@ -66,29 +69,35 @@ class TestInsertArticles:
         """
         # Arrange
         mock_client = MagicMock()
-        
+
         # Mock check for existing article (found)
         mock_existing_response = MagicMock()
-        mock_existing_response.data = [{'id': str(uuid4())}]
-        
+        mock_existing_response.data = [{"id": str(uuid4())}]
+
         # Mock successful upsert
         mock_upsert_response = MagicMock()
-        mock_upsert_response.data = [{'id': str(uuid4())}]
-        
-        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = mock_existing_response
-        mock_client.table.return_value.upsert.return_value.execute.return_value = mock_upsert_response
-        
+        mock_upsert_response.data = [{"id": str(uuid4())}]
+
+        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = (
+            mock_existing_response
+        )
+        mock_client.table.return_value.upsert.return_value.execute.return_value = (
+            mock_upsert_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
-        articles = [{
-            'title': 'Existing Article',
-            'url': 'https://example.com/existing',
-            'feed_id': str(uuid4())
-        }]
-        
+
+        articles = [
+            {
+                "title": "Existing Article",
+                "url": "https://example.com/existing",
+                "feed_id": str(uuid4()),
+            }
+        ]
+
         # Act
         result = await service.insert_articles(articles)
-        
+
         # Assert
         assert result.inserted_count == 0
         assert result.updated_count == 1
@@ -102,32 +111,34 @@ class TestInsertArticles:
         """
         # Arrange
         mock_client = MagicMock()
-        
+
         mock_existing_response = MagicMock()
         mock_existing_response.data = []
-        
+
         mock_upsert_response = MagicMock()
-        mock_upsert_response.data = [{'id': str(uuid4())}]
-        
-        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = mock_existing_response
-        mock_client.table.return_value.upsert.return_value.execute.return_value = mock_upsert_response
-        
+        mock_upsert_response.data = [{"id": str(uuid4())}]
+
+        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = (
+            mock_existing_response
+        )
+        mock_client.table.return_value.upsert.return_value.execute.return_value = (
+            mock_upsert_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
-        articles = [{
-            'title': 'Test Article',
-            'url': 'https://example.com/test',
-            'feed_id': str(uuid4())
-        }]
-        
+
+        articles = [
+            {"title": "Test Article", "url": "https://example.com/test", "feed_id": str(uuid4())}
+        ]
+
         # Act
         await service.insert_articles(articles)
-        
+
         # Assert
         # Verify upsert was called with on_conflict='url'
         upsert_call = mock_client.table.return_value.upsert.call_args
         assert upsert_call is not None
-        assert upsert_call[1]['on_conflict'] == 'url'
+        assert upsert_call[1]["on_conflict"] == "url"
 
     @pytest.mark.asyncio
     async def test_validates_foreign_key_feed_id(self):
@@ -137,34 +148,37 @@ class TestInsertArticles:
         """
         # Arrange
         mock_client = MagicMock()
-        
+
         mock_existing_response = MagicMock()
         mock_existing_response.data = []
-        
+
         # Mock foreign key constraint violation
-        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = mock_existing_response
+        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = (
+            mock_existing_response
+        )
         mock_client.table.return_value.upsert.return_value.execute.side_effect = Exception(
             'foreign key constraint "articles_feed_id_fkey" violated'
         )
-        
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         invalid_feed_id = str(uuid4())
-        articles = [{
-            'title': 'Test Article',
-            'url': 'https://example.com/test',
-            'feed_id': invalid_feed_id
-        }]
-        
+        articles = [
+            {"title": "Test Article", "url": "https://example.com/test", "feed_id": invalid_feed_id}
+        ]
+
         # Act
         result = await service.insert_articles(articles)
-        
+
         # Assert
         assert result.inserted_count == 0
         assert result.updated_count == 0
         assert result.failed_count == 1
         assert len(result.failed_articles) == 1
-        assert 'foreign key' in result.failed_articles[0]['error'].lower() or 'reference' in result.failed_articles[0]['error'].lower()
+        assert (
+            "foreign key" in result.failed_articles[0]["error"].lower()
+            or "reference" in result.failed_articles[0]["error"].lower()
+        )
 
     @pytest.mark.asyncio
     async def test_returns_accurate_batch_result(self):
@@ -174,55 +188,67 @@ class TestInsertArticles:
         """
         # Arrange
         mock_client = MagicMock()
-        
+
         # Mock responses for 3 articles: 1 new, 1 existing, 1 failed
         def mock_select_side_effect(*args, **kwargs):
             mock_response = MagicMock()
             # First call: new article (empty)
             # Second call: existing article (found)
             # Third call: will fail on upsert
-            if not hasattr(mock_select_side_effect, 'call_count'):
+            if not hasattr(mock_select_side_effect, "call_count"):
                 mock_select_side_effect.call_count = 0
-            
+
             if mock_select_side_effect.call_count == 0:
                 mock_response.data = []  # New article
             elif mock_select_side_effect.call_count == 1:
-                mock_response.data = [{'id': str(uuid4())}]  # Existing article
+                mock_response.data = [{"id": str(uuid4())}]  # Existing article
             else:
                 mock_response.data = []  # Will fail
-            
+
             mock_select_side_effect.call_count += 1
             return mock_response
-        
-        mock_client.table.return_value.select.return_value.eq.return_value.execute.side_effect = mock_select_side_effect
-        
+
+        mock_client.table.return_value.select.return_value.eq.return_value.execute.side_effect = (
+            mock_select_side_effect
+        )
+
         # Mock upsert responses
         def mock_upsert_side_effect(*args, **kwargs):
-            if not hasattr(mock_upsert_side_effect, 'call_count'):
+            if not hasattr(mock_upsert_side_effect, "call_count"):
                 mock_upsert_side_effect.call_count = 0
-            
+
             if mock_upsert_side_effect.call_count < 2:
                 mock_response = MagicMock()
-                mock_response.data = [{'id': str(uuid4())}]
+                mock_response.data = [{"id": str(uuid4())}]
                 mock_upsert_side_effect.call_count += 1
                 return mock_response
             else:
                 mock_upsert_side_effect.call_count += 1
                 raise Exception("Database error")
-        
-        mock_client.table.return_value.upsert.return_value.execute.side_effect = mock_upsert_side_effect
-        
+
+        mock_client.table.return_value.upsert.return_value.execute.side_effect = (
+            mock_upsert_side_effect
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         articles = [
-            {'title': 'New Article', 'url': 'https://example.com/new', 'feed_id': str(uuid4())},
-            {'title': 'Existing Article', 'url': 'https://example.com/existing', 'feed_id': str(uuid4())},
-            {'title': 'Failed Article', 'url': 'https://example.com/failed', 'feed_id': str(uuid4())}
+            {"title": "New Article", "url": "https://example.com/new", "feed_id": str(uuid4())},
+            {
+                "title": "Existing Article",
+                "url": "https://example.com/existing",
+                "feed_id": str(uuid4()),
+            },
+            {
+                "title": "Failed Article",
+                "url": "https://example.com/failed",
+                "feed_id": str(uuid4()),
+            },
         ]
-        
+
         # Act
         result = await service.insert_articles(articles)
-        
+
         # Assert
         assert result.inserted_count == 1
         assert result.updated_count == 1
@@ -237,43 +263,47 @@ class TestInsertArticles:
         """
         # Arrange
         mock_client = MagicMock()
-        
+
         # Mock responses
-        call_count = {'select': 0, 'upsert': 0}
-        
+        call_count = {"select": 0, "upsert": 0}
+
         def mock_select_side_effect(*args, **kwargs):
             mock_response = MagicMock()
             mock_response.data = []
-            call_count['select'] += 1
+            call_count["select"] += 1
             return mock_response
-        
+
         def mock_upsert_side_effect(*args, **kwargs):
-            call_count['upsert'] += 1
-            if call_count['upsert'] == 2:  # Second article fails
+            call_count["upsert"] += 1
+            if call_count["upsert"] == 2:  # Second article fails
                 raise Exception("Database error on second article")
             mock_response = MagicMock()
-            mock_response.data = [{'id': str(uuid4())}]
+            mock_response.data = [{"id": str(uuid4())}]
             return mock_response
-        
-        mock_client.table.return_value.select.return_value.eq.return_value.execute.side_effect = mock_select_side_effect
-        mock_client.table.return_value.upsert.return_value.execute.side_effect = mock_upsert_side_effect
-        
+
+        mock_client.table.return_value.select.return_value.eq.return_value.execute.side_effect = (
+            mock_select_side_effect
+        )
+        mock_client.table.return_value.upsert.return_value.execute.side_effect = (
+            mock_upsert_side_effect
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         articles = [
-            {'title': 'Article 1', 'url': 'https://example.com/1', 'feed_id': str(uuid4())},
-            {'title': 'Article 2', 'url': 'https://example.com/2', 'feed_id': str(uuid4())},
-            {'title': 'Article 3', 'url': 'https://example.com/3', 'feed_id': str(uuid4())}
+            {"title": "Article 1", "url": "https://example.com/1", "feed_id": str(uuid4())},
+            {"title": "Article 2", "url": "https://example.com/2", "feed_id": str(uuid4())},
+            {"title": "Article 3", "url": "https://example.com/3", "feed_id": str(uuid4())},
         ]
-        
+
         # Act
         result = await service.insert_articles(articles)
-        
+
         # Assert
         assert result.inserted_count == 2  # Articles 1 and 3 succeeded
-        assert result.failed_count == 1    # Article 2 failed
+        assert result.failed_count == 1  # Article 2 failed
         assert len(result.failed_articles) == 1
-        assert 'Article 2' in str(result.failed_articles[0])
+        assert "Article 2" in str(result.failed_articles[0])
 
     @pytest.mark.asyncio
     async def test_handles_empty_articles_list(self):
@@ -284,10 +314,10 @@ class TestInsertArticles:
         # Arrange
         mock_client = MagicMock()
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         # Act
         result = await service.insert_articles([])
-        
+
         # Assert
         assert result.inserted_count == 0
         assert result.updated_count == 0
@@ -302,33 +332,35 @@ class TestInsertArticles:
         """
         # Arrange
         mock_client = MagicMock()
-        
+
         mock_existing_response = MagicMock()
         mock_existing_response.data = []
-        
+
         mock_upsert_response = MagicMock()
-        mock_upsert_response.data = [{'id': str(uuid4())}]
-        
-        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = mock_existing_response
-        mock_client.table.return_value.upsert.return_value.execute.return_value = mock_upsert_response
-        
+        mock_upsert_response.data = [{"id": str(uuid4())}]
+
+        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = (
+            mock_existing_response
+        )
+        mock_client.table.return_value.upsert.return_value.execute.return_value = (
+            mock_upsert_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
-        long_title = 'A' * 3000  # Exceeds 2000 character limit
-        articles = [{
-            'title': long_title,
-            'url': 'https://example.com/long-title',
-            'feed_id': str(uuid4())
-        }]
-        
+
+        long_title = "A" * 3000  # Exceeds 2000 character limit
+        articles = [
+            {"title": long_title, "url": "https://example.com/long-title", "feed_id": str(uuid4())}
+        ]
+
         # Act
         result = await service.insert_articles(articles)
-        
+
         # Assert
         assert result.inserted_count == 1
         # Verify the title was truncated in the upsert call
         upsert_call = mock_client.table.return_value.upsert.call_args
-        assert len(upsert_call[0][0]['title']) == 2000
+        assert len(upsert_call[0][0]["title"]) == 2000
 
     @pytest.mark.asyncio
     async def test_truncates_long_ai_summary(self):
@@ -338,34 +370,40 @@ class TestInsertArticles:
         """
         # Arrange
         mock_client = MagicMock()
-        
+
         mock_existing_response = MagicMock()
         mock_existing_response.data = []
-        
+
         mock_upsert_response = MagicMock()
-        mock_upsert_response.data = [{'id': str(uuid4())}]
-        
-        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = mock_existing_response
-        mock_client.table.return_value.upsert.return_value.execute.return_value = mock_upsert_response
-        
+        mock_upsert_response.data = [{"id": str(uuid4())}]
+
+        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = (
+            mock_existing_response
+        )
+        mock_client.table.return_value.upsert.return_value.execute.return_value = (
+            mock_upsert_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
-        long_summary = 'B' * 6000  # Exceeds 5000 character limit
-        articles = [{
-            'title': 'Test Article',
-            'url': 'https://example.com/long-summary',
-            'feed_id': str(uuid4()),
-            'ai_summary': long_summary
-        }]
-        
+
+        long_summary = "B" * 6000  # Exceeds 5000 character limit
+        articles = [
+            {
+                "title": "Test Article",
+                "url": "https://example.com/long-summary",
+                "feed_id": str(uuid4()),
+                "ai_summary": long_summary,
+            }
+        ]
+
         # Act
         result = await service.insert_articles(articles)
-        
+
         # Assert
         assert result.inserted_count == 1
         # Verify the summary was truncated in the upsert call
         upsert_call = mock_client.table.return_value.upsert.call_args
-        assert len(upsert_call[0][0]['ai_summary']) == 5000
+        assert len(upsert_call[0][0]["ai_summary"]) == 5000
 
     @pytest.mark.asyncio
     async def test_processes_articles_in_batches_of_100(self):
@@ -375,31 +413,35 @@ class TestInsertArticles:
         """
         # Arrange
         mock_client = MagicMock()
-        
+
         mock_existing_response = MagicMock()
         mock_existing_response.data = []
-        
+
         mock_upsert_response = MagicMock()
-        mock_upsert_response.data = [{'id': str(uuid4())}]
-        
-        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = mock_existing_response
-        mock_client.table.return_value.upsert.return_value.execute.return_value = mock_upsert_response
-        
+        mock_upsert_response.data = [{"id": str(uuid4())}]
+
+        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = (
+            mock_existing_response
+        )
+        mock_client.table.return_value.upsert.return_value.execute.return_value = (
+            mock_upsert_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         # Create 150 articles to test batching
         articles = [
             {
-                'title': f'Article {i}',
-                'url': f'https://example.com/article-{i}',
-                'feed_id': str(uuid4())
+                "title": f"Article {i}",
+                "url": f"https://example.com/article-{i}",
+                "feed_id": str(uuid4()),
             }
             for i in range(150)
         ]
-        
+
         # Act
         result = await service.insert_articles(articles)
-        
+
         # Assert
         assert result.inserted_count == 150
         assert result.failed_count == 0
@@ -415,21 +457,23 @@ class TestInsertArticles:
         # Arrange
         mock_client = MagicMock()
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
-        articles = [{
-            'title': 'Article without URL',
-            'feed_id': str(uuid4())
-            # Missing 'url' field
-        }]
-        
+
+        articles = [
+            {
+                "title": "Article without URL",
+                "feed_id": str(uuid4()),
+                # Missing 'url' field
+            }
+        ]
+
         # Act
         result = await service.insert_articles(articles)
-        
+
         # Assert
         assert result.inserted_count == 0
         assert result.failed_count == 1
         assert len(result.failed_articles) == 1
-        assert 'url' in result.failed_articles[0]['error'].lower()
+        assert "url" in result.failed_articles[0]["error"].lower()
 
     @pytest.mark.asyncio
     async def test_validates_required_feed_id_field(self):
@@ -440,21 +484,23 @@ class TestInsertArticles:
         # Arrange
         mock_client = MagicMock()
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
-        articles = [{
-            'title': 'Article without feed_id',
-            'url': 'https://example.com/no-feed'
-            # Missing 'feed_id' field
-        }]
-        
+
+        articles = [
+            {
+                "title": "Article without feed_id",
+                "url": "https://example.com/no-feed",
+                # Missing 'feed_id' field
+            }
+        ]
+
         # Act
         result = await service.insert_articles(articles)
-        
+
         # Assert
         assert result.inserted_count == 0
         assert result.failed_count == 1
         assert len(result.failed_articles) == 1
-        assert 'feed_id' in result.failed_articles[0]['error'].lower()
+        assert "feed_id" in result.failed_articles[0]["error"].lower()
 
     @pytest.mark.asyncio
     async def test_validates_url_format(self):
@@ -465,16 +511,14 @@ class TestInsertArticles:
         # Arrange
         mock_client = MagicMock()
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
-        articles = [{
-            'title': 'Article with invalid URL',
-            'url': 'not-a-valid-url',
-            'feed_id': str(uuid4())
-        }]
-        
+
+        articles = [
+            {"title": "Article with invalid URL", "url": "not-a-valid-url", "feed_id": str(uuid4())}
+        ]
+
         # Act
         result = await service.insert_articles(articles)
-        
+
         # Assert
         assert result.inserted_count == 0
         assert result.failed_count == 1
@@ -489,21 +533,23 @@ class TestInsertArticles:
         # Arrange
         mock_client = MagicMock()
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
-        articles = [{
-            'title': 'Article with invalid tinkering_index',
-            'url': 'https://example.com/invalid-index',
-            'feed_id': str(uuid4()),
-            'tinkering_index': 10  # Invalid: must be 1-5
-        }]
-        
+
+        articles = [
+            {
+                "title": "Article with invalid tinkering_index",
+                "url": "https://example.com/invalid-index",
+                "feed_id": str(uuid4()),
+                "tinkering_index": 10,  # Invalid: must be 1-5
+            }
+        ]
+
         # Act
         result = await service.insert_articles(articles)
-        
+
         # Assert
         assert result.inserted_count == 0
         assert result.failed_count == 1
-        assert 'tinkering_index' in result.failed_articles[0]['error'].lower()
+        assert "tinkering_index" in result.failed_articles[0]["error"].lower()
 
     @pytest.mark.asyncio
     async def test_accepts_null_tinkering_index(self):
@@ -513,28 +559,34 @@ class TestInsertArticles:
         """
         # Arrange
         mock_client = MagicMock()
-        
+
         mock_existing_response = MagicMock()
         mock_existing_response.data = []
-        
+
         mock_upsert_response = MagicMock()
-        mock_upsert_response.data = [{'id': str(uuid4())}]
-        
-        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = mock_existing_response
-        mock_client.table.return_value.upsert.return_value.execute.return_value = mock_upsert_response
-        
+        mock_upsert_response.data = [{"id": str(uuid4())}]
+
+        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = (
+            mock_existing_response
+        )
+        mock_client.table.return_value.upsert.return_value.execute.return_value = (
+            mock_upsert_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
-        articles = [{
-            'title': 'Article with null tinkering_index',
-            'url': 'https://example.com/null-index',
-            'feed_id': str(uuid4()),
-            'tinkering_index': None
-        }]
-        
+
+        articles = [
+            {
+                "title": "Article with null tinkering_index",
+                "url": "https://example.com/null-index",
+                "feed_id": str(uuid4()),
+                "tinkering_index": None,
+            }
+        ]
+
         # Act
         result = await service.insert_articles(articles)
-        
+
         # Assert
         assert result.inserted_count == 1
         assert result.failed_count == 0
@@ -547,28 +599,34 @@ class TestInsertArticles:
         """
         # Arrange
         mock_client = MagicMock()
-        
+
         mock_existing_response = MagicMock()
         mock_existing_response.data = []
-        
+
         mock_upsert_response = MagicMock()
-        mock_upsert_response.data = [{'id': str(uuid4())}]
-        
-        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = mock_existing_response
-        mock_client.table.return_value.upsert.return_value.execute.return_value = mock_upsert_response
-        
+        mock_upsert_response.data = [{"id": str(uuid4())}]
+
+        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = (
+            mock_existing_response
+        )
+        mock_client.table.return_value.upsert.return_value.execute.return_value = (
+            mock_upsert_response
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
-        articles = [{
-            'title': 'Article with null ai_summary',
-            'url': 'https://example.com/null-summary',
-            'feed_id': str(uuid4()),
-            'ai_summary': None
-        }]
-        
+
+        articles = [
+            {
+                "title": "Article with null ai_summary",
+                "url": "https://example.com/null-summary",
+                "feed_id": str(uuid4()),
+                "ai_summary": None,
+            }
+        ]
+
         # Act
         result = await service.insert_articles(articles)
-        
+
         # Assert
         assert result.inserted_count == 1
         assert result.failed_count == 0
@@ -581,37 +639,41 @@ class TestInsertArticles:
         """
         # Arrange
         mock_client = MagicMock()
-        
-        call_count = {'select': 0, 'upsert': 0}
-        
+
+        call_count = {"select": 0, "upsert": 0}
+
         def mock_select_side_effect(*args, **kwargs):
             mock_response = MagicMock()
             # Alternate between new and existing
-            mock_response.data = [{'id': str(uuid4())}] if call_count['select'] % 2 == 0 else []
-            call_count['select'] += 1
+            mock_response.data = [{"id": str(uuid4())}] if call_count["select"] % 2 == 0 else []
+            call_count["select"] += 1
             return mock_response
-        
+
         def mock_upsert_side_effect(*args, **kwargs):
-            call_count['upsert'] += 1
-            if call_count['upsert'] == 3:  # Third article fails
+            call_count["upsert"] += 1
+            if call_count["upsert"] == 3:  # Third article fails
                 raise Exception("Database error")
             mock_response = MagicMock()
-            mock_response.data = [{'id': str(uuid4())}]
+            mock_response.data = [{"id": str(uuid4())}]
             return mock_response
-        
-        mock_client.table.return_value.select.return_value.eq.return_value.execute.side_effect = mock_select_side_effect
-        mock_client.table.return_value.upsert.return_value.execute.side_effect = mock_upsert_side_effect
-        
+
+        mock_client.table.return_value.select.return_value.eq.return_value.execute.side_effect = (
+            mock_select_side_effect
+        )
+        mock_client.table.return_value.upsert.return_value.execute.side_effect = (
+            mock_upsert_side_effect
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
+
         articles = [
-            {'title': f'Article {i}', 'url': f'https://example.com/{i}', 'feed_id': str(uuid4())}
+            {"title": f"Article {i}", "url": f"https://example.com/{i}", "feed_id": str(uuid4())}
             for i in range(5)
         ]
-        
+
         # Act
         result = await service.insert_articles(articles)
-        
+
         # Assert
         assert result.total_processed == 5
         assert result.inserted_count + result.updated_count == 4
@@ -626,30 +688,36 @@ class TestInsertArticles:
         """
         # Arrange
         mock_client = MagicMock()
-        
+
         mock_existing_response = MagicMock()
         mock_existing_response.data = []
-        
-        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = mock_existing_response
-        mock_client.table.return_value.upsert.return_value.execute.side_effect = Exception("Specific database error")
-        
+
+        mock_client.table.return_value.select.return_value.eq.return_value.execute.return_value = (
+            mock_existing_response
+        )
+        mock_client.table.return_value.upsert.return_value.execute.side_effect = Exception(
+            "Specific database error"
+        )
+
         service = SupabaseService(client=mock_client, validate_connection=False)
-        
-        articles = [{
-            'title': 'Failed Article',
-            'url': 'https://example.com/failed',
-            'feed_id': str(uuid4())
-        }]
-        
+
+        articles = [
+            {
+                "title": "Failed Article",
+                "url": "https://example.com/failed",
+                "feed_id": str(uuid4()),
+            }
+        ]
+
         # Act
         result = await service.insert_articles(articles)
-        
+
         # Assert
         assert result.failed_count == 1
         assert len(result.failed_articles) == 1
         failed_article = result.failed_articles[0]
-        assert 'article' in failed_article
-        assert 'error' in failed_article
-        assert 'error_type' in failed_article
-        assert failed_article['article']['url'] == 'https://example.com/failed'
-        assert 'Specific database error' in failed_article['error']
+        assert "article" in failed_article
+        assert "error" in failed_article
+        assert "error_type" in failed_article
+        assert failed_article["article"]["url"] == "https://example.com/failed"
+        assert "Specific database error" in failed_article["error"]
