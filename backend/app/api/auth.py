@@ -5,7 +5,6 @@ JWT 認證工具模組
 """
 
 import asyncio
-import os
 from datetime import datetime, timedelta
 from typing import Any, Optional
 from urllib.parse import urlencode
@@ -358,8 +357,8 @@ async def discord_callback(
         raise HTTPException(status_code=500, detail="Failed to generate authentication token")
 
     # 8. 重定向到前端並設定 Cookie
-    # 前端 URL 從環境變數讀取
-    frontend_url = os.getenv("NEXT_PUBLIC_APP_URL", "http://localhost:3000")
+    # 前端 URL 從配置讀取
+    frontend_url = settings.frontend_url
 
     # 重定向到前端的 callback 頁面，並將 token 作為 URL 參數傳遞
     # 前端會接收 token 並設置為 Cookie

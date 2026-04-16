@@ -81,6 +81,9 @@ class Settings(BaseSettings):
     # Security Configuration
     cookie_secure: bool = True  # Use HTTPS in production
 
+    # Frontend Configuration (Required for OAuth redirects)
+    frontend_url: str = "http://localhost:3000"
+
     model_config = SettingsConfigDict(
         env_file=".env", env_file_encoding="utf-8", extra="ignore", case_sensitive=False
     )
@@ -225,6 +228,20 @@ class Settings(BaseSettings):
                 )
         return v
 
+    @field_validator("frontend_url")
+    @classmethod
+    def validate_frontend_url(cls, v: str) -> str:
+        """Validate frontend URL format."""
+        if not v:
+            raise ConfigurationError(
+                "FRONTEND_URL is required for OAuth redirects. Example: http://localhost:3000"
+            )
+        if not (v.startswith("http://") or v.startswith("https://")):
+            raise ConfigurationError(f"FRONTEND_URL must start with http:// or https://. Got: {v}")
+        # Remove trailing slash for consistency
+        return v.rstrip("/")
+        return v
+
     @model_validator(mode="after")
     def validate_environment_specific_settings(self) -> "Settings":
         """Validate environment-specific configuration requirements."""
@@ -242,6 +259,12 @@ class Settings(BaseSettings):
                 raise ConfigurationError(
                     "DISCORD_REDIRECT_URI must use HTTPS in production environment"
                 )
+            if "localhost" in self.frontend_url:
+                raise ConfigurationError(
+                    "FRONTEND_URL should not include localhost in production environment"
+                )
+            if "http://" in self.frontend_url:
+                raise ConfigurationError("FRONTEND_URL must use HTTPS in production environment")
 
         # Test-specific validations
         if self.app_env == "test":

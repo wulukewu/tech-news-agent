@@ -30,5 +30,12 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "lib/api/examples/**/*"]
+  "exclude": [
+    "node_modules",
+    "lib/api/examples/**/*",
+    "vitest.setup.ts",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "__tests__/**/*"
+  ]
 }

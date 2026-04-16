@@ -106,7 +106,7 @@ export class PerformanceMonitor {
 
     // First Input Delay (FID)
     this.observePerformanceEntry('first-input', (entries) => {
-      const firstEntry = entries[0];
+      const firstEntry = entries[0] as any; // PerformanceEventTiming not fully typed
       this.vitals.FID = firstEntry.processingStart - firstEntry.startTime;
       this.checkThreshold('FID', this.vitals.FID);
     });
