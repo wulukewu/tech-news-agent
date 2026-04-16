@@ -85,7 +85,7 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:3000"
 
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore", case_sensitive=False
+        env_file="../.env", env_file_encoding="utf-8", extra="ignore", case_sensitive=False
     )
 
     @field_validator("supabase_url")
@@ -240,7 +240,6 @@ class Settings(BaseSettings):
             raise ConfigurationError(f"FRONTEND_URL must start with http:// or https://. Got: {v}")
         # Remove trailing slash for consistency
         return v.rstrip("/")
-        return v
 
     @model_validator(mode="after")
     def validate_environment_specific_settings(self) -> "Settings":
@@ -279,21 +278,21 @@ def get_env_file() -> str:
     Determine which .env file to load based on APP_ENV.
 
     Priority:
-    1. .env.{APP_ENV} (e.g., .env.prod)
-    2. .env (default)
+    1. ../.env.{APP_ENV} (e.g., ../.env.prod)
+    2. ../.env (default, in project root)
 
     Returns:
         Path to the environment file to load
     """
     app_env = os.getenv("APP_ENV", "dev")
-    env_file = f".env.{app_env}"
+    env_file = f"../.env.{app_env}"
 
     # Check if environment-specific file exists
     if Path(env_file).exists():
         return env_file
 
-    # Fall back to default .env
-    return ".env"
+    # Fall back to default .env in project root
+    return "../.env"
 
 
 def load_settings() -> Settings:

@@ -40,6 +40,8 @@ An automated technical information curation system combining FastAPI backend, Ne
 
 ## 🚀 Quick Start
 
+> **⚡ 快速設定**: 查看 [環境變數快速設定指南](./QUICK_ENV_SETUP.md) 5 分鐘完成配置
+
 ### Prerequisites
 
 1. **Supabase Account** - [Sign up at supabase.com](https://supabase.com)

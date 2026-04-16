@@ -8,6 +8,7 @@ Complete documentation for the Tech News Agent project.
 
 - [Quick Start Guide](./QUICKSTART.md) - Get up and running in minutes
 - [Environment Setup](./setup/ENV_SETUP_GUIDE.md) - Complete environment variable reference
+- [Environment File Structure](./ENV_FILE_STRUCTURE.md) - 📁 Why we use a single .env file
 - [Docker Guide](./docker/DOCKER_GUIDE.md) - Docker deployment instructions
 
 ### User Guides
@@ -40,6 +41,8 @@ Complete documentation for the Tech News Agent project.
 
 - [Deployment Guide](./deployment/DEPLOYMENT.md) - Production deployment steps
 - [Deployment Checklist](./deployment/deployment-checklist.md) - Complete Netlify + Render deployment guide
+- [OAuth Redirect Fix](./deployment/oauth-redirect-fix.md) - 🔧 Fix Discord OAuth redirect to localhost issue
+- [Render Environment Setup](./deployment/render-env-setup.md) - Quick environment variable setup for Render
 - [Netlify Deployment Complete](./deployment/netlify-deployment-complete.md) - ✅ Current deployment status & next steps
 - [Netlify Frontend Guide](./deployment/netlify-frontend.md) - Next.js deployment to Netlify (免費版)
 - [Netlify Deployment Troubleshooting](./deployment/netlify-deployment.md) - Fix 404 errors and common issues
@@ -134,6 +137,12 @@ docs/
 
 **Deploy to production (免費版)**
 → [Netlify + Render 完整指南](./deployment/deployment-checklist.md)
+
+**Fix OAuth redirect to localhost**
+→ [OAuth Redirect Fix](./deployment/oauth-redirect-fix.md)
+
+**Set up Render environment variables**
+→ [Render Environment Setup](./deployment/render-env-setup.md)
 
 **Deploy Next.js to Netlify**
 → [Netlify Frontend Guide](./deployment/netlify-frontend.md)

@@ -38,6 +38,8 @@
 
 ## 🚀 快速開始
 
+> **⚡ 快速設定**: 查看 [環境變數快速設定指南](./QUICK_ENV_SETUP.md) 5 分鐘完成配置
+
 ### 前置需求
 
 1. **Supabase 帳號** - [在 supabase.com 註冊](https://supabase.com)
