@@ -90,6 +90,11 @@ class DMNotificationService:
             是否成功發送
         """
         try:
+            # 驗證 discord_id 是否為有效的數字
+            if not discord_id.isdigit():
+                logger.warning(f"Invalid discord_id format: {discord_id}, skipping")
+                return False
+
             # 取得使用者物件
             user = await self.bot.fetch_user(int(discord_id))
             if not user:
@@ -193,6 +198,11 @@ class DMNotificationService:
             是否成功發送
         """
         try:
+            # 驗證 discord_id 是否為有效的數字
+            if not discord_id.isdigit():
+                logger.warning(f"Invalid discord_id format: {discord_id}, skipping")
+                return False
+
             user = await self.bot.fetch_user(int(discord_id))
             if not user:
                 logger.warning(f"User {discord_id} not found")

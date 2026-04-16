@@ -18,14 +18,14 @@ export async function fetchReadingList(
   const response = await apiClient.get<{
     success: boolean;
     data: Array<{
-      articleId: string;
+      article_id: string;
       title: string;
       url: string;
       category: string;
       status: ReadingListStatus;
       rating: number | null;
-      addedAt: string;
-      updatedAt: string;
+      added_at: string;
+      updated_at: string;
     }>;
     pagination: {
       total_count: number;
@@ -37,10 +37,17 @@ export async function fetchReadingList(
     };
   }>(url);
 
+  // Validate response structure
+  const responseData = response.data;
+  if (!responseData.data || !Array.isArray(responseData.data)) {
+    console.error('Invalid reading list response:', responseData);
+    throw new Error('Invalid response format from reading list API');
+  }
+
   // Transform backend response to frontend format
   return {
-    items: response.data.map((item) => ({
-      articleId: item.articleId,
+    items: responseData.data.map((item) => ({
+      articleId: item.article_id,
       title: item.title,
       url: item.url,
       feedName: '', // Not provided by backend
@@ -50,12 +57,12 @@ export async function fetchReadingList(
       aiSummary: null, // Not provided by backend
       status: item.status,
       rating: item.rating,
-      addedAt: item.addedAt,
+      addedAt: item.added_at,
     })),
-    page: response.pagination.page,
-    pageSize: response.pagination.page_size,
-    totalCount: response.pagination.total_count,
-    hasNextPage: response.pagination.has_next,
+    page: responseData.pagination.page,
+    pageSize: responseData.pagination.page_size,
+    totalCount: responseData.pagination.total_count,
+    hasNextPage: responseData.pagination.has_next,
   };
 }
 

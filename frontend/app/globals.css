@@ -101,6 +101,53 @@
     clip: auto;
     white-space: normal;
   }
+
+  /* Mobile bottom navigation spacing */
+  .mobile-bottom-nav-spacing {
+    padding-bottom: 80px; /* Space for bottom navigation */
+  }
+
+  /* Responsive container with proper spacing */
+  .responsive-container {
+    @apply container mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Responsive grid layouts */
+  .responsive-grid {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4;
+  }
+
+  .responsive-grid-2 {
+    @apply grid grid-cols-1 gap-4 md:grid-cols-2;
+  }
+
+  .responsive-grid-3 {
+    @apply grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3;
+  }
+
+  /* Responsive text sizes */
+  .responsive-heading {
+    @apply text-xl sm:text-2xl lg:text-3xl font-bold;
+  }
+
+  .responsive-subheading {
+    @apply text-lg sm:text-xl lg:text-2xl font-semibold;
+  }
+
+  /* Sidebar transitions */
+  .sidebar-transition {
+    transition:
+      transform 0.2s ease-in-out,
+      width 0.2s ease-in-out;
+  }
+
+  /* Theme transition */
+  .theme-transition {
+    transition:
+      background-color 0.2s ease-in-out,
+      color 0.2s ease-in-out,
+      border-color 0.2s ease-in-out;
+  }
 }
 
 /* Enhanced focus indicators for keyboard navigation */
@@ -124,5 +171,122 @@
   *:focus-visible {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
+  }
+
+  /* Enhanced button focus states */
+  button:focus-visible {
+    @apply ring-2 ring-ring ring-offset-2;
+  }
+
+  /* Enhanced link focus states */
+  a:focus-visible {
+    @apply ring-2 ring-ring ring-offset-2 rounded-sm;
+  }
+}
+
+/* Responsive design improvements */
+@layer components {
+  /* Mobile-first responsive navigation */
+  .mobile-nav {
+    @apply fixed bottom-0 left-0 right-0 z-40 bg-background border-t lg:hidden;
+  }
+
+  .mobile-nav-item {
+    @apply flex flex-col items-center gap-1 px-3 py-2 text-xs font-medium rounded-md transition-colors cursor-pointer touch-target;
+  }
+
+  /* Desktop sidebar styles */
+  .desktop-sidebar {
+    @apply hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 lg:z-40;
+  }
+
+  .desktop-sidebar-collapsed {
+    @apply lg:w-16;
+  }
+
+  /* Responsive card layouts */
+  .card-responsive {
+    @apply p-4 sm:p-6 rounded-lg border bg-card text-card-foreground shadow-sm;
+  }
+
+  /* Responsive button groups */
+  .button-group-responsive {
+    @apply flex flex-col gap-2 sm:flex-row sm:gap-4;
+  }
+}
+
+/* Animation improvements */
+@layer utilities {
+  /* Smooth theme transitions */
+  .smooth-theme-transition {
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease,
+      border-color 0.3s ease;
+  }
+
+  /* Hover animations */
+  .hover-lift {
+    transition:
+      transform 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+
+  /* Loading animations */
+  .loading-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Fade in animation */
+  .fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Slide in animation */
+  .slide-in {
+    animation: slideIn 0.3s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  .sidebar,
+  .mobile-nav,
+  button {
+    display: none !important;
   }
 }

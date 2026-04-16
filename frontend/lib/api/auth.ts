@@ -18,7 +18,7 @@ import { User } from '@/types/auth';
  */
 export function getToken(): string | null {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem('access_token');
+  return localStorage.getItem('auth_token');
 }
 
 /**
@@ -26,7 +26,7 @@ export function getToken(): string | null {
  */
 export function setToken(token: string): void {
   if (typeof window === 'undefined') return;
-  localStorage.setItem('access_token', token);
+  localStorage.setItem('auth_token', token);
 }
 
 /**
@@ -34,7 +34,7 @@ export function setToken(token: string): void {
  */
 export function removeToken(): void {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem('access_token');
+  localStorage.removeItem('auth_token');
 }
 
 /**
@@ -57,7 +57,8 @@ export function removeToken(): void {
  * ```
  */
 export async function checkAuthStatus(): Promise<User> {
-  return apiClient.get<User>('/api/auth/me');
+  const response = await apiClient.get<User>('/api/auth/me');
+  return response.data;
 }
 
 /**

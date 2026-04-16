@@ -26,6 +26,22 @@ export interface Feed {
   recommendation_priority?: number;
   /** Description of the feed */
   description?: string;
+  /** Last update time */
+  last_updated?: string | null;
+  /** Feed health status */
+  health_status?: 'healthy' | 'warning' | 'error' | 'unknown';
+  /** Error message if feed has issues */
+  error_message?: string;
+  /** Total number of articles from this feed */
+  total_articles?: number;
+  /** Number of articles published this week */
+  articles_this_week?: number;
+  /** Average tinkering index of articles from this feed */
+  average_tinkering_index?: number;
+  /** Custom tags for feed organization */
+  tags?: string[];
+  /** Notification preferences for this feed */
+  notification_enabled?: boolean;
 }
 
 /**

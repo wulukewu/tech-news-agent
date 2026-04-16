@@ -25,6 +25,9 @@ export {
 // Feed and subscription hooks
 export { useFeeds, useToggleSubscription, feedKeys } from './useFeeds';
 
+// URL state and navigation hooks
+export { useUrlState, useKeyboardNavigation, useFocusNavigation } from './useUrlState';
+
 /**
  * Query key utilities
  *

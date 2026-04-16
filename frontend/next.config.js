@@ -4,6 +4,11 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
 
+  // Enable App Router and experimental features
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+  },
+
   // Enable hot reloading in Docker (dev only)
   ...(process.env.NODE_ENV !== 'production' && {
     webpackDevMiddleware: (config) => {
@@ -16,37 +21,55 @@ const nextConfig = {
     },
   }),
 
-  // Optimize for development
-  ...(process.env.NODE_ENV !== 'production' && {
-    webpack: (config, { dev, isServer }) => {
-      if (dev && !isServer) {
-        // Enable source maps for better debugging
-        config.devtool = 'eval-source-map';
+  // Optimize for development and production
+  webpack: (config, { dev, isServer }) => {
+    if (dev && !isServer) {
+      // Enable source maps for better debugging
+      config.devtool = 'eval-source-map';
 
-        // Improve HMR performance
-        config.watchOptions = {
-          poll: 1000,
-          aggregateTimeout: 300,
-          ignored: ['**/node_modules/**', '**/.git/**', '**/.next/**'],
-        };
+      // Improve HMR performance
+      config.watchOptions = {
+        poll: 1000,
+        aggregateTimeout: 300,
+        ignored: ['**/node_modules/**', '**/.git/**', '**/.next/**'],
+      };
 
-        // Enable faster builds in development
-        config.optimization = {
-          ...config.optimization,
-          removeAvailableModules: false,
-          removeEmptyChunks: false,
-          splitChunks: false,
-        };
-      }
+      // Enable faster builds in development
+      config.optimization = {
+        ...config.optimization,
+        removeAvailableModules: false,
+        removeEmptyChunks: false,
+        splitChunks: false,
+      };
+    }
 
-      // Enable source maps in production for debugging
-      if (!dev) {
-        config.devtool = 'source-map';
-      }
+    // Enable source maps in production for debugging
+    if (!dev) {
+      config.devtool = 'source-map';
+    }
 
-      return config;
-    },
-  }),
+    // Optimize bundle splitting
+    if (!dev) {
+      config.optimization.splitChunks = {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+          },
+          common: {
+            name: 'common',
+            minChunks: 2,
+            chunks: 'all',
+            enforce: true,
+          },
+        },
+      };
+    }
+
+    return config;
+  },
 
   // Environment variables
   env: {
@@ -55,8 +78,10 @@ const nextConfig = {
 
   // Image optimization
   images: {
-    domains: ['cdn.discordapp.com'],
+    domains: ['cdn.discordapp.com', 'images.unsplash.com', 'avatars.githubusercontent.com'],
     formats: ['image/avif', 'image/webp'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
 
   // Compiler optimizations
@@ -64,13 +89,8 @@ const nextConfig = {
     removeConsole: process.env.NODE_ENV === 'production',
   },
 
-  // Disable font optimization if network issues during build
-  optimizeFonts: false,
-
-  // Experimental features for better performance
-  // experimental: {
-  //   optimizeCss: true, // Requires 'critters' package
-  // },
+  // Enable font optimization
+  optimizeFonts: true,
 
   // Security headers
   async headers() {
@@ -101,6 +121,45 @@ const nextConfig = {
           {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=()',
+          },
+          {
+            key: 'Content-Security-Policy',
+            value:
+              process.env.NODE_ENV === 'development'
+                ? "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' http://localhost:* https:; manifest-src 'self';"
+                : "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; manifest-src 'self';",
+          },
+        ],
+      },
+      // PWA manifest headers
+      {
+        source: '/manifest.json',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/manifest+json',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      // Service worker headers
+      {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+          {
+            key: 'Service-Worker-Allowed',
+            value: '/',
           },
         ],
       },

@@ -62,3 +62,85 @@ export interface BatchSubscribeResponse {
 export async function batchSubscribe(feedIds: string[]): Promise<BatchSubscribeResponse> {
   return apiClient.post<BatchSubscribeResponse>('/api/subscriptions/batch', { feed_ids: feedIds });
 }
+
+/**
+ * Add custom RSS feed
+ *
+ * @param url - RSS feed URL
+ * @param name - Optional feed name
+ * @param category - Optional feed category
+ * @returns Promise resolving to the created feed
+ * @throws Error if the API request fails
+ */
+export async function addCustomFeed(url: string, name?: string, category?: string): Promise<Feed> {
+  const response = await apiClient.post<{ success: boolean; data: Feed }>('/api/feeds/custom', {
+    url,
+    name,
+    category,
+  });
+  return response.data;
+}
+
+/**
+ * Preview RSS feed before subscribing
+ *
+ * @param url - RSS feed URL to preview
+ * @returns Promise resolving to feed preview data
+ * @throws Error if the API request fails
+ */
+export async function previewFeed(url: string): Promise<{
+  title: string;
+  description?: string;
+  url: string;
+  category?: string;
+  articleCount?: number;
+  lastUpdated?: string;
+}> {
+  const response = await apiClient.post<{
+    success: boolean;
+    data: {
+      title: string;
+      description?: string;
+      url: string;
+      category?: string;
+      articleCount?: number;
+      lastUpdated?: string;
+    };
+  }>('/api/feeds/preview', { url });
+  return response.data;
+}
+
+/**
+ * Update feed notification preferences
+ *
+ * @param feedId - Feed ID
+ * @param enabled - Whether notifications are enabled for this feed
+ * @returns Promise resolving to updated feed
+ * @throws Error if the API request fails
+ */
+export async function updateFeedNotificationPreference(
+  feedId: string,
+  enabled: boolean
+): Promise<Feed> {
+  const response = await apiClient.patch<{ success: boolean; data: Feed }>(
+    `/api/feeds/${feedId}/notifications`,
+    { enabled }
+  );
+  return response.data;
+}
+
+/**
+ * Update feed tags
+ *
+ * @param feedId - Feed ID
+ * @param tags - Array of tags
+ * @returns Promise resolving to updated feed
+ * @throws Error if the API request fails
+ */
+export async function updateFeedTags(feedId: string, tags: string[]): Promise<Feed> {
+  const response = await apiClient.patch<{ success: boolean; data: Feed }>(
+    `/api/feeds/${feedId}/tags`,
+    { tags }
+  );
+  return response.data;
+}

@@ -73,9 +73,10 @@ export async function logAnalyticsEvent(event: AnalyticsEvent): Promise<{ messag
 export async function getOnboardingCompletionRate(
   days: number = 30
 ): Promise<OnboardingCompletionRateResponse> {
-  return apiClient.get<OnboardingCompletionRateResponse>(
+  const response = await apiClient.get<OnboardingCompletionRateResponse>(
     `/api/analytics/onboarding/completion-rate?days=${days}`
   );
+  return response.data;
 }
 
 /**
@@ -84,7 +85,8 @@ export async function getOnboardingCompletionRate(
  * @returns Promise resolving to drop-off rates data
  */
 export async function getDropOffRates(): Promise<DropOffRatesResponse> {
-  return apiClient.get<DropOffRatesResponse>('/api/analytics/onboarding/drop-off');
+  const response = await apiClient.get<DropOffRatesResponse>('/api/analytics/onboarding/drop-off');
+  return response.data;
 }
 
 /**
@@ -93,5 +95,8 @@ export async function getDropOffRates(): Promise<DropOffRatesResponse> {
  * @returns Promise resolving to average time data
  */
 export async function getAverageTimePerStep(): Promise<AverageTimePerStepResponse> {
-  return apiClient.get<AverageTimePerStepResponse>('/api/analytics/onboarding/average-time');
+  const response = await apiClient.get<AverageTimePerStepResponse>(
+    '/api/analytics/onboarding/average-time'
+  );
+  return response.data;
 }

@@ -13,9 +13,23 @@ import { toast } from '@/lib/toast';
 
 interface ArticleCardProps {
   article: Article;
+  /** Show analysis button (for Deep Dive Analysis) */
+  showAnalysisButton?: boolean;
+  /** Show reading list button */
+  showReadingListButton?: boolean;
+  /** Callback when analysis is requested */
+  onAnalyze?: (articleId: string) => void;
+  /** Callback when article is added to reading list */
+  onAddToReadingList?: (articleId: string) => void;
 }
 
-export function ArticleCard({ article }: ArticleCardProps) {
+export function ArticleCard({
+  article,
+  showAnalysisButton = false,
+  showReadingListButton = true,
+  onAnalyze,
+  onAddToReadingList,
+}: ArticleCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isAdded, setIsAdded] = useState(article.isInReadingList);
   const addToReadingList = useAddToReadingList();
@@ -26,6 +40,13 @@ export function ArticleCard({ article }: ArticleCardProps) {
       toast.error('Unable to add article: Invalid article data');
       return;
     }
+
+    // Use callback if provided, otherwise use the hook
+    if (onAddToReadingList) {
+      onAddToReadingList(article.id);
+      return;
+    }
+
     try {
       await addToReadingList.mutateAsync(article.id);
       setIsAdded(true);
@@ -33,6 +54,12 @@ export function ArticleCard({ article }: ArticleCardProps) {
     } catch (error) {
       // Error handling is done in the hook with toast
       console.error('Failed to add to reading list:', error);
+    }
+  };
+
+  const handleAnalyze = () => {
+    if (onAnalyze && article.id) {
+      onAnalyze(article.id);
     }
   };
 
@@ -94,21 +121,34 @@ export function ArticleCard({ article }: ArticleCardProps) {
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               <TinkeringIndexBadge index={article.tinkeringIndex} />
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={handleAddToReadingList}
-                disabled={addToReadingList.isPending || isAdded}
-                aria-label={isAdded ? 'Added to reading list' : 'Add to reading list'}
-              >
-                {addToReadingList.isPending ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : isAdded ? (
-                  <BookmarkCheck className="h-4 w-4" />
-                ) : (
-                  <BookmarkPlus className="h-4 w-4" />
-                )}
-              </Button>
+              {showAnalysisButton && (
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={handleAnalyze}
+                  aria-label="Deep Dive Analysis"
+                  className="text-xs"
+                >
+                  Deep Dive Analysis
+                </Button>
+              )}
+              {showReadingListButton && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleAddToReadingList}
+                  disabled={addToReadingList.isPending || isAdded}
+                  aria-label={isAdded ? 'Added to reading list' : 'Add to reading list'}
+                >
+                  {addToReadingList.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : isAdded ? (
+                    <BookmarkCheck className="h-4 w-4" />
+                  ) : (
+                    <BookmarkPlus className="h-4 w-4" />
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </CardHeader>

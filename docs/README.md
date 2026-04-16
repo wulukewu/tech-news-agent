@@ -39,7 +39,10 @@ Complete documentation for the Tech News Agent project.
 ### Deployment
 
 - [Deployment Guide](./deployment/DEPLOYMENT.md) - Production deployment steps
-- [Deployment Checklist](./deployment/DEPLOYMENT_CHECKLIST.md) - Pre-deployment verification
+- [Deployment Checklist](./deployment/deployment-checklist.md) - Complete Netlify + Render deployment guide
+- [Netlify Frontend Guide](./deployment/netlify-frontend.md) - Next.js deployment to Netlify (免費版)
+- [Render Backend Guide](./deployment/render-backend.md) - FastAPI deployment to Render (免費版)
+- [Vercel Frontend Guide](./deployment/vercel-frontend.md) - Alternative: Next.js on Vercel
 - [Public Bot Setup](./PUBLIC_BOT_SETUP.md) - Making your bot public
 - [Public Bot Migration](./PUBLIC_BOT_MIGRATION_SUMMARY.md) - Migration guide
 - [Public Bot Quickstart](./PUBLIC_BOT_QUICKSTART.md) - Quick setup
@@ -65,6 +68,9 @@ Complete documentation for the Tech News Agent project.
 
 - [Troubleshooting Guide](./TROUBLESHOOTING.md) - Common issues and solutions
 - [Rate Limit Guide](./RATE_LIMIT_GUIDE.md) - Handling API rate limits
+- [Frontend Errors Fix Guide](./frontend-errors-fix-guide.md) - Comprehensive frontend error solutions
+- [Frontend Quick Fix](./frontend-quick-fix.md) - Quick fixes for common frontend issues
+- [Service Worker Dev Guide](./service-worker-dev-guide.md) - Service worker development and debugging
 
 ### Validation & Verification
 
@@ -122,11 +128,17 @@ docs/
 **Write tests**
 → [Testing Guide](./testing/supabase-migration-testing.md)
 
-**Deploy to production**
-→ [Deployment Guide](./deployment/DEPLOYMENT.md)
+**Deploy to production (免費版)**
+→ [Netlify + Render 完整指南](./deployment/deployment-checklist.md)
+
+**Deploy Next.js to Netlify**
+→ [Netlify Frontend Guide](./deployment/netlify-frontend.md)
+
+**Deploy FastAPI to Render**
+→ [Render Backend Guide](./deployment/render-backend.md)
 
 **Troubleshoot issues**
-→ [Troubleshooting Guide](./TROUBLESHOOTING.md)
+→ [Troubleshooting Guide](./TROUBLESHOOTING.md) or [Frontend Errors Fix](./frontend-errors-fix-guide.md)
 
 **Contribute code**
 → [Developer Guide](./DEVELOPER_GUIDE.md) and [Code Quality](./CODE_QUALITY.md)

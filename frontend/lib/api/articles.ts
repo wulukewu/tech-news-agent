@@ -18,7 +18,7 @@ export async function fetchCategories(): Promise<string[]> {
   const response = await apiClient.get<{ success: boolean; data: { categories: string[] } }>(
     '/api/articles/categories'
   );
-  return response.data.categories;
+  return response.data.data.categories;
 }
 
 /**
@@ -74,7 +74,7 @@ export async function fetchMyArticles(
 
   // Transform backend response to frontend format
   return {
-    articles: response.data.map((article) => ({
+    articles: response.data.data.map((article) => ({
       id: article.id,
       title: article.title,
       url: article.url,
@@ -85,9 +85,9 @@ export async function fetchMyArticles(
       aiSummary: article.aiSummary,
       isInReadingList: article.isInReadingList,
     })),
-    page: response.pagination.page,
-    pageSize: response.pagination.page_size,
-    totalCount: response.pagination.total_count,
-    hasNextPage: response.pagination.has_next,
+    page: response.data.pagination.page,
+    pageSize: response.data.pagination.page_size,
+    totalCount: response.data.pagination.total_count,
+    hasNextPage: response.data.pagination.has_next,
   };
 }

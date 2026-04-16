@@ -3,7 +3,18 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Rss, BookMarked, LogOut, Menu, X } from 'lucide-react';
+import {
+  Home,
+  Rss,
+  BookMarked,
+  LogOut,
+  Menu,
+  X,
+  Settings,
+  BarChart3,
+  Heart,
+  Monitor,
+} from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useUser } from '@/contexts/UserContext';
 import { Button } from '@/components/ui/button';
@@ -20,8 +31,13 @@ export function Navigation() {
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: Home },
-    { href: '/subscriptions', label: 'Subscriptions', icon: Rss },
+    { href: '/articles', label: 'Articles', icon: Rss },
     { href: '/reading-list', label: 'Reading List', icon: BookMarked },
+    { href: '/recommendations', label: 'Recommendations', icon: Heart },
+    { href: '/subscriptions', label: 'Subscriptions', icon: Rss },
+    { href: '/analytics', label: 'Analytics', icon: BarChart3 },
+    { href: '/system-status', label: 'System Status', icon: Monitor },
+    { href: '/settings', label: 'Settings', icon: Settings },
   ];
 
   const handleLogout = async () => {
@@ -34,16 +50,20 @@ export function Navigation() {
   };
 
   return (
-    <header className="border-b bg-background">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <nav className="container mx-auto px-4" aria-label="Main navigation">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
-            <Link href="/dashboard" className="text-xl font-bold">
+            <Link
+              href="/dashboard"
+              className="text-xl font-bold hover:text-primary transition-colors"
+            >
               Tech News Agent
             </Link>
 
+            {/* Desktop navigation - only show main items */}
             <div className="hidden md:flex gap-4">
-              {navItems.map((item) => {
+              {navItems.slice(0, 4).map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link
@@ -51,9 +71,9 @@ export function Navigation() {
                     href={item.href}
                     className={cn(
                       'flex items-center gap-2 px-3 py-2 rounded-md transition-colors cursor-pointer',
-                      pathname === item.href
-                        ? 'bg-primary text-primary-foreground'
-                        : 'hover:bg-muted'
+                      'hover:bg-accent hover:text-accent-foreground',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                      pathname === item.href ? 'bg-primary text-primary-foreground' : ''
                     )}
                     aria-current={pathname === item.href ? 'page' : undefined}
                   >
@@ -76,7 +96,7 @@ export function Navigation() {
               </div>
             )}
 
-            <ThemeToggle />
+            <ThemeToggle variant="dropdown" />
 
             {user && (
               <Button variant="outline" size="sm" onClick={handleLogout} className="hidden md:flex">
@@ -117,8 +137,10 @@ export function Navigation() {
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer',
-                    pathname === item.href ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                    'flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors',
+                    'hover:bg-accent hover:text-accent-foreground',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                    pathname === item.href ? 'bg-primary text-primary-foreground' : ''
                   )}
                   onClick={() => setIsMenuOpen(false)}
                   aria-current={pathname === item.href ? 'page' : undefined}

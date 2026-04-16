@@ -1,21 +1,28 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchFeeds, toggleSubscription } from '@/lib/api/feeds';
+import { fetchFeeds, toggleSubscription, addCustomFeed, previewFeed } from '@/lib/api/feeds';
 import type { Feed } from '@/types/feed';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { ChevronDown, ChevronRight, Star } from 'lucide-react';
+import { ChevronDown, ChevronRight, Star, Bell, BellOff } from 'lucide-react';
 import { toast } from '@/lib/toast';
+import { FeedHealthIndicator } from '@/features/subscriptions/components/FeedHealthIndicator';
+import { FeedStatistics } from '@/features/subscriptions/components/FeedStatistics';
+import { AddCustomFeedDialog } from '@/features/subscriptions/components/AddCustomFeedDialog';
+import { OPMLImportExport } from '@/features/subscriptions/components/OPMLImportExport';
+import { FeedSearch } from '@/features/subscriptions/components/FeedSearch';
+import type { OPMLOutline } from '@/features/subscriptions/utils/opml';
 
 export default function SubscriptionsPage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const [feeds, setFeeds] = useState<Feed[]>([]);
+  const [filteredFeeds, setFilteredFeeds] = useState<Feed[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toggling, setToggling] = useState<Set<string>>(new Set());
@@ -39,6 +46,7 @@ export default function SubscriptionsPage() {
       setError(null);
       const data = await fetchFeeds();
       setFeeds(data || []);
+      setFilteredFeeds(data || []);
 
       // Auto-collapse non-recommended categories
       const nonRecommendedCategories = new Set(
@@ -49,6 +57,7 @@ export default function SubscriptionsPage() {
       console.error('Failed to load feeds:', err);
       setError('無法載入訂閱來源');
       setFeeds([]);
+      setFilteredFeeds([]);
     } finally {
       setLoading(false);
     }
@@ -78,7 +87,7 @@ export default function SubscriptionsPage() {
   };
 
   const handleCategoryToggle = async (category: string, subscribe: boolean) => {
-    const categoryFeeds = feeds.filter((f) => f.category === category);
+    const categoryFeeds = filteredFeeds.filter((f) => f.category === category);
     const feedsToToggle = categoryFeeds.filter((f) => f.is_subscribed !== subscribe);
 
     if (feedsToToggle.length === 0) return;
@@ -114,7 +123,7 @@ export default function SubscriptionsPage() {
   };
 
   const handleToggleAll = async (subscribe: boolean) => {
-    const feedsToToggle = feeds.filter((f) => f.is_subscribed !== subscribe);
+    const feedsToToggle = filteredFeeds.filter((f) => f.is_subscribed !== subscribe);
 
     if (feedsToToggle.length === 0) return;
 
@@ -188,6 +197,40 @@ export default function SubscriptionsPage() {
     });
   };
 
+  const handleAddCustomFeed = async (url: string, name?: string, category?: string) => {
+    await addCustomFeed(url, name, category);
+    await loadFeeds(); // Reload feeds after adding
+  };
+
+  const handlePreviewFeed = async (url: string) => {
+    return await previewFeed(url);
+  };
+
+  const handleOPMLImport = async (opmlFeeds: OPMLOutline[]) => {
+    // Import feeds from OPML
+    const importPromises = opmlFeeds.map((feed) =>
+      addCustomFeed(feed.xmlUrl!, feed.text, feed.category)
+    );
+
+    await Promise.allSettled(importPromises);
+    await loadFeeds(); // Reload feeds after import
+  };
+
+  const handleFilteredFeedsChange = useCallback((filtered: Feed[]) => {
+    setFilteredFeeds(filtered);
+  }, []);
+
+  const toggleNotification = async (feedId: string, currentState: boolean) => {
+    // This would call the API to update notification preferences
+    // For now, just update local state
+    setFeeds(
+      feeds.map((feed) =>
+        feed.id === feedId ? { ...feed, notification_enabled: !currentState } : feed
+      )
+    );
+    toast.success(`已${!currentState ? '啟用' : '停用'}通知`);
+  };
+
   if (authLoading || loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -204,7 +247,7 @@ export default function SubscriptionsPage() {
   }
 
   // Group feeds by category
-  const feedsByCategory = (feeds || []).reduce(
+  const feedsByCategory = (filteredFeeds || []).reduce(
     (acc, feed) => {
       if (!acc[feed.category]) {
         acc[feed.category] = [];
@@ -234,21 +277,42 @@ export default function SubscriptionsPage() {
   const noneSubscribed = totalSubscribed === 0;
   const allRecommendedSubscribed = recommendedSubscribed === totalRecommended;
 
+  // Calculate overall statistics
+  const totalArticles = feeds.reduce((sum, feed) => sum + (feed.total_articles || 0), 0);
+  const totalArticlesThisWeek = feeds.reduce(
+    (sum, feed) => sum + (feed.articles_this_week || 0),
+    0
+  );
+  const avgTinkeringIndex =
+    feeds.reduce((sum, feed) => sum + (feed.average_tinkering_index || 0), 0) / feeds.length || 0;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4">
-      <div className="max-w-4xl mx-auto py-8">
+      <div className="max-w-6xl mx-auto py-8">
         <div className="mb-8">
           <Button variant="outline" onClick={() => router.push('/dashboard')} className="mb-4">
             ← 返回 Dashboard
           </Button>
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold">訂閱管理</h1>
-              <p className="text-muted-foreground mt-2">
-                選擇您想要訂閱的 RSS 來源 ({totalSubscribed} / {(feeds || []).length} 已訂閱)
-              </p>
+
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold">訂閱管理</h1>
+                <p className="text-muted-foreground mt-2">
+                  選擇您想要訂閱的 RSS 來源 ({totalSubscribed} / {(feeds || []).length} 已訂閱)
+                </p>
+              </div>
             </div>
-            <div className="flex gap-2">
+
+            {/* Overall Statistics */}
+            <FeedStatistics
+              totalArticles={totalArticles}
+              articlesThisWeek={totalArticlesThisWeek}
+              averageTinkeringIndex={avgTinkeringIndex}
+            />
+
+            {/* Action Bar */}
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant="default"
                 onClick={handleSubscribeRecommended}
@@ -272,7 +336,19 @@ export default function SubscriptionsPage() {
               >
                 全部取消
               </Button>
+
+              <div className="flex-1" />
+
+              <AddCustomFeedDialog
+                onAddFeed={handleAddCustomFeed}
+                onPreviewFeed={handlePreviewFeed}
+              />
+
+              <OPMLImportExport feeds={feeds} onImport={handleOPMLImport} />
             </div>
+
+            {/* Search Bar */}
+            <FeedSearch feeds={feeds} onFilteredFeedsChange={handleFilteredFeedsChange} />
           </div>
         </div>
 
@@ -347,32 +423,101 @@ export default function SubscriptionsPage() {
                       {categoryFeeds.map((feed) => (
                         <div
                           key={feed.id}
-                          className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+                          className="flex items-start space-x-3 p-4 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-muted"
                         >
                           <Checkbox
                             id={feed.id}
                             checked={feed.is_subscribed}
                             onCheckedChange={() => handleToggle(feed.id)}
                             disabled={toggling.has(feed.id)}
+                            className="mt-1"
                           />
-                          <label htmlFor={feed.id} className="flex-1 cursor-pointer">
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{feed.name}</span>
-                              {feed.is_recommended && (
-                                <Badge variant="outline" className="text-xs">
-                                  推薦
-                                </Badge>
+                          <div className="flex-1 min-w-0">
+                            <label htmlFor={feed.id} className="cursor-pointer block">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-medium">{feed.name}</span>
+                                {feed.is_recommended && (
+                                  <Badge variant="outline" className="text-xs">
+                                    推薦
+                                  </Badge>
+                                )}
+                                {feed.tags && feed.tags.length > 0 && (
+                                  <>
+                                    {feed.tags.map((tag) => (
+                                      <Badge key={tag} variant="secondary" className="text-xs">
+                                        {tag}
+                                      </Badge>
+                                    ))}
+                                  </>
+                                )}
+                              </div>
+                              {feed.description && (
+                                <div className="text-sm text-muted-foreground mt-1">
+                                  {feed.description}
+                                </div>
+                              )}
+                              <div className="text-sm text-muted-foreground mt-1 break-all">
+                                {feed.url}
+                              </div>
+                            </label>
+
+                            {/* Feed Health and Statistics */}
+                            <div className="mt-3 flex flex-wrap items-center gap-3">
+                              {feed.last_updated && (
+                                <FeedHealthIndicator
+                                  lastUpdateTime={feed.last_updated}
+                                  status={feed.health_status || 'unknown'}
+                                  errorMessage={feed.error_message}
+                                />
+                              )}
+
+                              {feed.is_subscribed && (
+                                <>
+                                  {feed.total_articles !== undefined && (
+                                    <Badge variant="outline" className="text-xs">
+                                      {feed.total_articles} 篇文章
+                                    </Badge>
+                                  )}
+                                  {feed.articles_this_week !== undefined && (
+                                    <Badge variant="outline" className="text-xs">
+                                      本週 {feed.articles_this_week} 篇
+                                    </Badge>
+                                  )}
+                                  {feed.average_tinkering_index !== undefined && (
+                                    <Badge variant="outline" className="text-xs">
+                                      平均深度 {feed.average_tinkering_index.toFixed(1)}
+                                    </Badge>
+                                  )}
+
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      toggleNotification(
+                                        feed.id,
+                                        feed.notification_enabled || false
+                                      )
+                                    }
+                                    className="h-7 gap-1"
+                                  >
+                                    {feed.notification_enabled ? (
+                                      <>
+                                        <Bell className="w-3 h-3" />
+                                        <span className="text-xs">通知已啟用</span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <BellOff className="w-3 h-3" />
+                                        <span className="text-xs">啟用通知</span>
+                                      </>
+                                    )}
+                                  </Button>
+                                </>
                               )}
                             </div>
-                            {feed.description && (
-                              <div className="text-sm text-muted-foreground mt-1">
-                                {feed.description}
-                              </div>
-                            )}
-                            <div className="text-sm text-muted-foreground">{feed.url}</div>
-                          </label>
+                          </div>
                           {toggling.has(feed.id) && (
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent flex-shrink-0 mt-1" />
                           )}
                         </div>
                       ))}
@@ -383,6 +528,12 @@ export default function SubscriptionsPage() {
             );
           })}
         </div>
+
+        {filteredFeeds.length === 0 && !loading && (
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">沒有找到符合條件的 Feed</p>
+          </div>
+        )}
       </div>
     </div>
   );

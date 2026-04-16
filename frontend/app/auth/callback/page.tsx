@@ -156,7 +156,7 @@ function CallbackPageInner() {
         console.log('Token stored in localStorage');
 
         // Verify token was stored
-        const storedToken = localStorage.getItem('access_token');
+        const storedToken = localStorage.getItem('auth_token');
         console.log(
           'Verified stored token:',
           storedToken ? storedToken.substring(0, 20) + '...' : 'none'

@@ -1,0 +1,359 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import {
+  Home,
+  Rss,
+  BookMarked,
+  Settings,
+  BarChart3,
+  Heart,
+  Monitor,
+  ChevronLeft,
+  ChevronRight,
+  Menu,
+  X,
+  Search,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { useUser } from '@/contexts/UserContext';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { ThemeToggle } from '@/components/ThemeToggle';
+
+export interface NavigationItem {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: string | number;
+  disabled?: boolean;
+  shortcut?: string;
+}
+
+interface SidebarProps {
+  navigation?: NavigationItem[];
+  collapsed?: boolean;
+  onToggle?: () => void;
+  className?: string;
+}
+
+const defaultNavigation: NavigationItem[] = [
+  { href: '/dashboard', label: 'Dashboard', icon: Home, shortcut: 'D' },
+  { href: '/articles', label: 'Articles', icon: Rss, shortcut: 'A' },
+  { href: '/reading-list', label: 'Reading List', icon: BookMarked, shortcut: 'R' },
+  { href: '/recommendations', label: 'Recommendations', icon: Heart, shortcut: 'E' },
+  { href: '/subscriptions', label: 'Subscriptions', icon: Rss, shortcut: 'S' },
+  { href: '/analytics', label: 'Analytics', icon: BarChart3, shortcut: 'N' },
+  { href: '/system-status', label: 'System Status', icon: Monitor, shortcut: 'M' },
+  { href: '/settings', label: 'Settings', icon: Settings, shortcut: ',' },
+];
+
+/**
+ * Sidebar - Responsive sidebar navigation component
+ * Supports desktop sidebar and mobile bottom navigation with keyboard shortcuts
+ */
+export function Sidebar({
+  navigation = defaultNavigation,
+  collapsed = false,
+  onToggle,
+  className,
+}: SidebarProps) {
+  const pathname = usePathname();
+  const { user } = useUser();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Only handle shortcuts when not in input fields
+      if (event.target instanceof HTMLInputElement || event.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      // Handle Cmd/Ctrl + key combinations
+      if (event.metaKey || event.ctrlKey) {
+        const shortcut = event.key.toLowerCase();
+        const item = navigation.find((nav) => nav.shortcut?.toLowerCase() === shortcut);
+
+        if (item && !item.disabled) {
+          event.preventDefault();
+          window.location.href = item.href;
+        }
+      }
+
+      // Handle escape to close mobile menu
+      if (event.key === 'Escape' && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [navigation, mobileMenuOpen]);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <div className={cn('hidden lg:flex lg:flex-col lg:h-full', className)}>
+        {/* Sidebar header */}
+        <div
+          className={cn(
+            'flex items-center border-b transition-all duration-300',
+            collapsed ? 'justify-center p-2' : 'justify-between p-4'
+          )}
+        >
+          {!collapsed && (
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              {user && (
+                <>
+                  <Avatar className="h-8 w-8 flex-shrink-0">
+                    {user.avatar && <AvatarImage src={user.avatar} alt={user.username || 'User'} />}
+                    <AvatarFallback>{user.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground truncate">{user.username}</p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      ID: {user.id.slice(0, 8)}...
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Theme toggle and collapse button */}
+          <div className="flex items-center gap-1">
+            {!collapsed && <ThemeToggle variant="button" />}
+            {onToggle && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onToggle}
+                className="h-8 w-8"
+                aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+              >
+                {collapsed ? (
+                  <ChevronRight className="h-4 w-4" />
+                ) : (
+                  <ChevronLeft className="h-4 w-4" />
+                )}
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-2 space-y-1 overflow-y-auto" aria-label="Sidebar navigation">
+          {navigation.map((item) => {
+            const Icon = item.icon;
+            const isActive = pathname === item.href;
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={cn(
+                  'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer group relative',
+                  'hover:bg-accent hover:text-accent-foreground',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                  isActive && 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm',
+                  item.disabled && 'opacity-50 cursor-not-allowed pointer-events-none',
+                  collapsed && 'justify-center px-2'
+                )}
+                aria-current={isActive ? 'page' : undefined}
+                aria-disabled={item.disabled}
+                title={collapsed ? `${item.label} (Cmd+${item.shortcut})` : undefined}
+              >
+                <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+                {!collapsed && (
+                  <>
+                    <span className="truncate flex-1">{item.label}</span>
+                    <div className="flex items-center gap-2">
+                      {item.badge && (
+                        <span className="bg-muted text-muted-foreground text-xs px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                          {item.badge}
+                        </span>
+                      )}
+                      {item.shortcut && (
+                        <kbd className="hidden group-hover:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                          <span className="text-xs">⌘</span>
+                          {item.shortcut}
+                        </kbd>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {/* Tooltip for collapsed state */}
+                {collapsed && (
+                  <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-sm rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
+                    {item.label}
+                    {item.shortcut && (
+                      <span className="ml-2 text-xs text-muted-foreground">⌘{item.shortcut}</span>
+                    )}
+                  </div>
+                )}
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* Collapsed theme toggle */}
+        {collapsed && (
+          <div className="p-2 border-t">
+            <div className="flex justify-center">
+              <ThemeToggle variant="button" />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Mobile Navigation */}
+      <div className="lg:hidden">
+        {/* Mobile menu button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggleMobileMenu}
+          className="fixed top-4 left-4 z-50 lg:hidden bg-background/80 backdrop-blur border"
+          aria-label="Toggle mobile menu"
+          aria-expanded={mobileMenuOpen}
+        >
+          {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </Button>
+
+        {/* Mobile menu overlay */}
+        {mobileMenuOpen && (
+          <div
+            className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden"
+            onClick={toggleMobileMenu}
+            aria-hidden="true"
+          />
+        )}
+
+        {/* Mobile menu */}
+        <div
+          className={cn(
+            'fixed inset-y-0 left-0 z-50 w-72 bg-background border-r transform transition-transform duration-300 ease-in-out lg:hidden shadow-xl',
+            mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+          )}
+        >
+          <div className="flex flex-col h-full">
+            {/* Mobile header */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                {user && (
+                  <>
+                    <Avatar className="h-8 w-8">
+                      {user.avatar && (
+                        <AvatarImage src={user.avatar} alt={user.username || 'User'} />
+                      )}
+                      <AvatarFallback>{user.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {user.username}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        ID: {user.id.slice(0, 8)}...
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+              <div className="flex items-center gap-1">
+                <ThemeToggle variant="button" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleMobileMenu}
+                  className="h-8 w-8"
+                  aria-label="Close mobile menu"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Mobile navigation */}
+            <nav className="flex-1 p-4 space-y-1 overflow-y-auto" aria-label="Mobile navigation">
+              {navigation.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={toggleMobileMenu}
+                    className={cn(
+                      'flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-colors cursor-pointer',
+                      'hover:bg-accent hover:text-accent-foreground',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                      isActive && 'bg-primary text-primary-foreground hover:bg-primary/90',
+                      item.disabled && 'opacity-50 cursor-not-allowed pointer-events-none'
+                    )}
+                    aria-current={isActive ? 'page' : undefined}
+                    aria-disabled={item.disabled}
+                  >
+                    <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+                    <span className="truncate flex-1">{item.label}</span>
+                    {item.badge && (
+                      <span className="bg-muted text-muted-foreground text-xs px-2 py-0.5 rounded-full">
+                        {item.badge}
+                      </span>
+                    )}
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+
+        {/* Mobile bottom navigation */}
+        <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur border-t lg:hidden safe-area-pb">
+          <nav className="flex justify-around py-2" aria-label="Bottom navigation">
+            {navigation.slice(0, 5).map((item) => {
+              const Icon = item.icon;
+              const isActive = pathname === item.href;
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    'flex flex-col items-center gap-1 px-2 py-2 text-xs font-medium rounded-lg transition-colors cursor-pointer relative min-h-[44px] min-w-[44px] justify-center',
+                    'hover:bg-accent hover:text-accent-foreground',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                    isActive && 'text-primary bg-primary/10',
+                    item.disabled && 'opacity-50 cursor-not-allowed pointer-events-none'
+                  )}
+                  aria-current={isActive ? 'page' : undefined}
+                  aria-disabled={item.disabled}
+                  aria-label={item.label}
+                >
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                  <span className="truncate max-w-[60px] leading-tight">{item.label}</span>
+                  {item.badge && (
+                    <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center">
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
+      </div>
+    </>
+  );
+}

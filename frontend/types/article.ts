@@ -47,13 +47,35 @@ export interface ArticleListResponse {
 }
 
 /**
+ * Sort field options for articles
+ */
+export type SortField = 'date' | 'tinkering_index' | 'category';
+
+/**
+ * Sort order options
+ */
+export type SortOrder = 'asc' | 'desc';
+
+/**
  * Filter options for article queries
  */
 export interface ArticleFilters {
-  /** Filter by category (optional) */
+  /** Filter by categories (optional) - supports multiple categories */
+  categories?: string[];
+  /** Filter by single category (deprecated - use categories instead) */
   category?: string;
   /** Minimum tinkering index (1-5, optional) */
   minTinkeringIndex?: number;
   /** Maximum tinkering index (1-5, optional) */
   maxTinkeringIndex?: number;
+  /** Sort field (optional) */
+  sortBy?: SortField;
+  /** Sort order (optional) */
+  sortOrder?: SortOrder;
+  /** Filter by start date (optional) */
+  startDate?: Date;
+  /** Filter by end date (optional) */
+  endDate?: Date;
+  /** Filter by sources (optional) - supports multiple sources */
+  sources?: string[];
 }
