@@ -51,9 +51,9 @@ export const LazySystemStatusPage = createLazyRoute(
 );
 
 /**
- * Settings Page - User settings
+ * Settings Page - User settings (commented out - route doesn't exist)
  */
-export const LazySettingsPage = createLazyRoute(() => import('@/app/settings/page'), 'Settings');
+// export const LazySettingsPage = createLazyRoute(() => import('@/app/settings/page'), 'Settings');
 
 /**
  * Reading List Page - User's saved articles
@@ -64,9 +64,9 @@ export const LazyReadingListPage = createLazyRoute(
 );
 
 /**
- * Search Page - Advanced search interface
+ * Search Page - Advanced search interface (commented out - route doesn't exist)
  */
-export const LazySearchPage = createLazyRoute(
-  () => import('@/app/(dashboard)/search/page'),
-  'Search'
-);
+// export const LazySearchPage = createLazyRoute(
+//   () => import('@/app/(dashboard)/search/page'),
+//   'Search'
+// );

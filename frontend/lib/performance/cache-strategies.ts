@@ -12,7 +12,13 @@
  * - 12.1: TanStack Query intelligent caching strategies
  */
 
-import { QueryClient, QueryKey, UseQueryOptions } from '@tanstack/react-query';
+import {
+  QueryClient,
+  QueryKey,
+  UseQueryOptions,
+  useQueryClient,
+  useQuery,
+} from '@tanstack/react-query';
 
 export interface CacheConfig {
   /** Cache time in milliseconds */
@@ -74,7 +80,7 @@ export const CACHE_CONFIGS: Record<CacheStrategy, CacheConfig> = {
     staleTime: 1000 * 60 * 60, // 1 hour
     retry: 1,
     retryDelay: () => 5000,
-    refetchInterval: false,
+    refetchInterval: undefined,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   },
@@ -121,7 +127,7 @@ export function getNetworkAwareCacheConfig(strategy: CacheStrategy): CacheConfig
       // Reduce background refetch frequency
       refetchInterval: baseConfig.refetchInterval
         ? (baseConfig.refetchInterval as number) * 2
-        : false,
+        : undefined,
       // Be less aggressive with refetching
       refetchOnWindowFocus: false,
     };
@@ -141,11 +147,7 @@ export function createOptimizedQueryClient(): QueryClient {
         ...CACHE_CONFIGS[CacheStrategy.DYNAMIC],
         // Enable network-aware behavior
         networkMode: 'offlineFirst',
-        // Intelligent error handling
-        useErrorBoundary: (error: any) => {
-          // Only use error boundary for unexpected errors
-          return error?.status >= 500;
-        },
+        // Intelligent error handling - removed useErrorBoundary as it's deprecated
       },
       mutations: {
         // Retry mutations on network errors

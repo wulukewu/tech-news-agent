@@ -62,12 +62,12 @@ export function lazyWithSuspense<T extends ComponentType<any>>(
 export function dynamicWithLoading<T extends ComponentType<any>>(
   importFn: () => Promise<{ default: T }>,
   options?: {
-    loading?: () => React.ReactNode;
+    loading?: () => JSX.Element;
     ssr?: boolean;
   }
 ) {
   return dynamic(importFn, {
-    loading: options?.loading || (() => <LoadingFallback />),
+    loading: options?.loading,
     ssr: options?.ssr ?? true,
   });
 }
@@ -93,12 +93,12 @@ export function createLazyRoute<T extends ComponentType<any>>(
 export function createLazyComponent<T extends ComponentType<any>>(
   importFn: () => Promise<{ default: T }>,
   options?: {
-    fallback?: React.ReactNode;
+    fallback?: JSX.Element;
     ssr?: boolean;
   }
 ) {
   return dynamicWithLoading(importFn, {
-    loading: () => options?.fallback || <SkeletonFallback />,
+    loading: options?.fallback ? () => options.fallback! : undefined,
     ssr: options?.ssr ?? false, // Components usually don't need SSR
   });
 }

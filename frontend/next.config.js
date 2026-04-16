@@ -5,14 +5,14 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
 
-  // Disable type checking during build (types are checked in CI)
+  // Enable type checking during build
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
-  // Disable ESLint during build (linting is done in CI)
+  // Enable ESLint during build
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
 
   // Enable App Router and experimental features
