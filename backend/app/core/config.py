@@ -311,13 +311,33 @@ def load_settings() -> Settings:
 
 # Global settings instance
 # This will fail fast on import if configuration is invalid
-# For testing, this can be skipped by setting SKIP_CONFIG_LOAD=1
+settings: Settings | None = None
+
 try:
     if os.getenv("SKIP_CONFIG_LOAD") != "1":
         settings = load_settings()
-    else:
-        settings = None  # type: ignore
-except Exception:
-    # In test environments, allow the module to load even if config is invalid
-    # Tests will set up their own environment variables
-    settings = None  # type: ignore
+        if settings is None:
+            raise ConfigurationError("Settings loaded but returned None")
+except ConfigurationError as e:
+    # Log the specific configuration error
+    import sys
+
+    print(f"Configuration Error: {e}", file=sys.stderr)
+    # In production, we want to fail fast
+    if os.getenv("APP_ENV") == "prod":
+        raise
+    # In development/test, allow the module to load
+    settings = None
+except Exception as e:
+    # Log unexpected errors
+    import sys
+
+    print(f"Unexpected error loading configuration: {e}", file=sys.stderr)
+    # In production, we want to fail fast
+    if os.getenv("APP_ENV") == "prod":
+        raise ConfigurationError(
+            f"Failed to load configuration: {e}. "
+            "Ensure all required environment variables are set in your deployment platform."
+        ) from e
+    # In development/test, allow the module to load
+    settings = None

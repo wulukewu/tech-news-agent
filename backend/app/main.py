@@ -98,7 +98,8 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down Tech News Agent lifespan...")
 
     # Shutdown Scheduler
-    scheduler.shutdown(wait=False)
+    if scheduler is not None:
+        scheduler.shutdown(wait=False)
 
     # Shutdown Discord Bot
     if bot_task and not bot_task.done():
@@ -195,7 +196,7 @@ async def health_check():
         "status": "healthy",
         "services": {
             "bot": "healthy" if bot_ready else "degraded",
-            "scheduler": "healthy" if scheduler.running else "degraded",
+            "scheduler": "healthy" if (scheduler and scheduler.running) else "degraded",
             "database": "healthy",
             "oauth": "healthy",
             "jwt": "healthy",

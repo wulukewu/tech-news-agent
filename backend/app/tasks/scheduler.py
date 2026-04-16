@@ -14,8 +14,8 @@ from app.services.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
 
-# Global scheduler instance
-scheduler = AsyncIOScheduler(timezone=settings.timezone)
+# Global scheduler instance (initialized lazily)
+scheduler: AsyncIOScheduler | None = None
 
 # Global health tracking
 _scheduler_health = {
@@ -478,6 +478,19 @@ def setup_scheduler():
 
     Validates: Requirements 6.1, 6.2, 6.3, 6.4, 6.5, 6.6
     """
+    global scheduler
+
+    # Ensure settings is loaded
+    if settings is None:
+        raise RuntimeError(
+            "Settings not loaded. Ensure environment variables are properly configured. "
+            "Check .env file and required variables."
+        )
+
+    # Initialize scheduler if not already done
+    if scheduler is None:
+        scheduler = AsyncIOScheduler(timezone=settings.timezone)
+
     # Get CRON expression from settings
     cron_expression = settings.scheduler_cron
 
