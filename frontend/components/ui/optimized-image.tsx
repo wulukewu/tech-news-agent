@@ -168,7 +168,7 @@ export function OptimizedImage({
 }
 
 // Preset image components for common use cases with mobile optimization
-export function AvatarImage({
+export function OptimizedAvatarImage({
   src,
   alt,
   size = 40,

@@ -205,8 +205,8 @@ export function useAnalysisModal(articleId: string, articleTitle: string) {
 export function useAnalysisTracking(articleId: string) {
   const trackAnalysisView = useCallback(() => {
     // Track when user views analysis
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'analysis_view', {
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'analysis_view', {
         article_id: articleId,
         timestamp: Date.now(),
       });
@@ -215,8 +215,8 @@ export function useAnalysisTracking(articleId: string) {
 
   const trackAnalysisCopy = useCallback(() => {
     // Track when user copies analysis
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'analysis_copy', {
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'analysis_copy', {
         article_id: articleId,
         timestamp: Date.now(),
       });
@@ -225,8 +225,8 @@ export function useAnalysisTracking(articleId: string) {
 
   const trackAnalysisShare = useCallback(() => {
     // Track when user shares analysis
-    if (typeof window !== 'undefined' && window.gtag) {
-      window.gtag('event', 'analysis_share', {
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'analysis_share', {
         article_id: articleId,
         timestamp: Date.now(),
       });

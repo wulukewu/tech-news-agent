@@ -102,8 +102,8 @@ export function AnimatedContainer({
       case 'bounce':
         animationClasses = [
           isActive ? 'opacity-100 scale-100' : 'opacity-0 scale-110',
-          isActive && hasAnimated && 'animate-bounce motion-reduce:animate-none',
-        ];
+          isActive && hasAnimated ? 'animate-bounce motion-reduce:animate-none' : '',
+        ].filter(Boolean);
         break;
 
       case 'spin':

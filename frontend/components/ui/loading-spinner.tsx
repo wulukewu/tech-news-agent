@@ -62,13 +62,3 @@ export function PageLoader({ text = '載入中...' }: { text?: string }) {
     </div>
   );
 }
-
-export function Skeleton({
-  className,
-  children,
-}: {
-  className?: string;
-  children?: React.ReactNode;
-}) {
-  return <div className={cn('animate-pulse bg-muted rounded-md', className)}>{children}</div>;
-}

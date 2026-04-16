@@ -225,6 +225,10 @@ export async function fetchArticlesWithFallback() {
         has_next: false,
         has_previous: false,
       },
+      status: 200,
+      statusText: 'OK',
+      headers: {},
+      config: {} as any,
     }),
     cacheKey: 'articles',
   });
@@ -268,7 +272,7 @@ export async function loadDashboardData() {
       () => apiClient.get('/api/feeds'),
     ],
     {
-      fallback: () => [],
+      fallback: () => [] as any,
       skipOnError: true,
     }
   );
@@ -369,12 +373,18 @@ export async function loadDashboard() {
       maxRetries: 3,
       cacheKey: 'dashboard-data',
       useCache: true,
-      fallback: () => ({
-        articles: { data: [], pagination: {} },
-        readingList: { data: [], pagination: {} },
-        feeds: [],
-        recommendations: { recommendations: [], total_count: 0 },
-      }),
+      fallback: (() => ({
+        data: {
+          articles: { data: [], pagination: {} },
+          readingList: { data: [], pagination: {} },
+          feeds: [],
+          recommendations: { recommendations: [], total_count: 0 },
+        },
+        status: 200,
+        statusText: 'OK',
+        headers: {},
+        config: {} as any,
+      })) as any,
       onError: (error) => {
         // Log error for monitoring
         console.error('Dashboard load error:', error);

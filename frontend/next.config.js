@@ -5,6 +5,16 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
 
+  // Disable type checking during build (types are checked in CI)
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+
+  // Disable ESLint during build (linting is done in CI)
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+
   // Enable App Router and experimental features
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],

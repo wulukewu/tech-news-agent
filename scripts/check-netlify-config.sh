@@ -99,8 +99,26 @@ fi
 
 echo ""
 
-# Check 4: Environment variables
-echo "4️⃣  Checking environment variables..."
+# Check 4: Duplicate routes
+echo "4️⃣  Checking for duplicate routes..."
+ROUTES=$(find frontend/app -name "page.tsx" -type f | sed 's|frontend/app/||' | sed 's|/page.tsx||' | sed 's|(dashboard)/||g' | sort)
+DUPLICATES=$(echo "$ROUTES" | uniq -d)
+
+if [ -n "$DUPLICATES" ]; then
+    echo -e "${RED}✗${NC} Found duplicate routes:"
+    echo "$DUPLICATES" | while read -r route; do
+        echo -e "   ${RED}Duplicate:${NC} /$route"
+        find frontend/app -name "page.tsx" -type f | grep -E "(^|/)$route/page.tsx$" | sed 's|^|   - |'
+    done
+    ERRORS=$((ERRORS + 1))
+else
+    echo -e "${GREEN}✓${NC} No duplicate routes found"
+fi
+
+echo ""
+
+# Check 5: Environment variables
+echo "5️⃣  Checking environment variables..."
 if [ -f "frontend/.env.local" ] || [ -f "frontend/.env" ]; then
     echo -e "${GREEN}✓${NC} Environment file found"
     echo -e "${YELLOW}⚠${NC} Remember to set these in Netlify UI:"

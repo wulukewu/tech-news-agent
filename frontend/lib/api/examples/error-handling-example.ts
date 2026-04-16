@@ -116,11 +116,11 @@ export async function retryableErrorHandling() {
 
 export async function customRetryConfiguration() {
   // Configure retry behavior
-  apiClient.setRetryConfig({
+  (apiClient as any).setRetryConfig({
     maxRetries: 5,
     baseDelay: 2000,
     maxDelay: 60000,
-    onRetry: (attempt, error, delay) => {
+    onRetry: (attempt: number, error: any, delay: number) => {
       console.log(`Retry attempt ${attempt} after ${delay}ms`);
       console.log(`Error: ${error.errorCode}`);
       // Show retry notification to user

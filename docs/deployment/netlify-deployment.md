@@ -103,7 +103,38 @@ curl -I https://your-site.netlify.app/settings
 2. 清除 Netlify 的 build cache: Site settings → Build & deploy → Clear cache and retry deploy
 3. 檢查 build logs 是否有錯誤
 
-### 問題 2: API 請求失敗 (CORS)
+### 問題 2: 路由衝突錯誤 (Duplicate Routes)
+
+**錯誤訊息**:
+
+```
+You cannot have two parallel pages that resolve to the same path.
+Please check /(dashboard)/settings/notifications/page and /settings/notifications/page.
+```
+
+**原因**: Next.js App Router 中，route groups `(folder)` 不影響 URL 路徑，所以：
+
+- `app/(dashboard)/settings/page.tsx` → `/settings`
+- `app/settings/page.tsx` → `/settings` (衝突!)
+
+**解決方案**:
+
+1. 檢查是否有重複的路由
+2. 刪除重複的頁面檔案
+3. 使用 route groups 來組織程式碼，但不要創建同名的實際路由
+
+**檢查方法**:
+
+```bash
+# 找出所有 page.tsx 檔案
+find frontend/app -name "page.tsx" -type f | sort
+
+# 檢查是否有路徑衝突
+# (dashboard)/settings/notifications → /settings/notifications
+# settings/notifications → /settings/notifications (衝突!)
+```
+
+### 問題 3: API 請求失敗 (CORS)
 
 **解決方案**:
 在 `netlify.toml` 中設定 API proxy:

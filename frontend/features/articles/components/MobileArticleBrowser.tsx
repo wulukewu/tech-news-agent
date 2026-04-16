@@ -189,7 +189,6 @@ export function MobileArticleBrowser({
                   article={article}
                   showAnalysisButton={true}
                   showReadingListButton={true}
-                  className="h-full"
                 />
               </div>
             ))}

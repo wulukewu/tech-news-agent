@@ -108,5 +108,5 @@ export async function logout(): Promise<void> {
  * ```
  */
 export async function refreshToken(): Promise<void> {
-  return apiClient.post<void>('/api/auth/refresh');
+  await apiClient.post<void>('/api/auth/refresh');
 }

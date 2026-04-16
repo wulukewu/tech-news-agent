@@ -47,5 +47,4 @@ export * from './virtualized-list';
 // Re-export types for convenience
 export type { FilterOption } from './multi-select-filter';
 export type { SortDirection } from './sortable-table-header';
-export type { DragDropItem } from './drag-drop-list';
 export type { HapticPattern } from '../../lib/utils/haptic-feedback';

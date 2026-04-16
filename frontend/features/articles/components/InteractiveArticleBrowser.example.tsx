@@ -22,7 +22,6 @@ import {
   StaggeredList,
   type FilterOption,
   type SortDirection,
-  type DragDropItem,
 } from '@/components/ui';
 import { useHapticFeedback } from '@/lib/utils/haptic-feedback';
 import { useKeyboardNavigation } from '@/lib/hooks/useUrlState';
@@ -73,6 +72,11 @@ const mockCategories: FilterOption[] = [
   { value: 'security', label: 'Security', count: 12 },
   { value: 'cloud', label: 'Cloud Computing', count: 10 },
 ];
+
+interface DragDropItem {
+  id: string;
+  content: React.ReactNode;
+}
 
 const mockFeeds: DragDropItem[] = [
   {

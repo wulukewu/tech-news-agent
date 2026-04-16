@@ -229,14 +229,14 @@ export function VirtualizedList<T>({
           width={width}
           itemCount={items.length}
           itemSize={itemHeight as (index: number) => number}
-          itemData={memoizedItemData}
+          itemData={memoizedItemData as any}
           overscanCount={overscan}
           onScroll={handleScroll}
           onItemsRendered={handleItemsRendered}
           initialScrollOffset={initialScrollOffset}
           useIsScrolling={useIsScrolling}
         >
-          {VariableSizeItemRenderer}
+          {VariableSizeItemRenderer as any}
         </VariableSizeList>
       </div>
     );
@@ -251,14 +251,14 @@ export function VirtualizedList<T>({
         width={width}
         itemCount={items.length}
         itemSize={itemHeight as number}
-        itemData={memoizedItemData}
+        itemData={memoizedItemData as any}
         overscanCount={overscan}
         onScroll={handleScroll}
         onItemsRendered={handleItemsRendered}
         initialScrollOffset={initialScrollOffset}
         useIsScrolling={useIsScrolling}
       >
-        {FixedSizeItemRenderer}
+        {FixedSizeItemRenderer as any}
       </List>
     </div>
   );

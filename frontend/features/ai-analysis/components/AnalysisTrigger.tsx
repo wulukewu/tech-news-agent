@@ -26,7 +26,7 @@ interface AnalysisTriggerProps {
   /** Button variant */
   variant?: 'default' | 'outline' | 'secondary' | 'ghost';
   /** Button size */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
   /** Whether to show full text or just icon */
   showText?: boolean;
   /** Custom button text */

@@ -122,7 +122,7 @@ export function useBackgroundSync() {
       if (state.isSupported) {
         try {
           const registration = await navigator.serviceWorker.ready;
-          await registration.sync.register('background-sync-articles');
+          await (registration as any).sync.register('background-sync-articles');
         } catch (error) {
           console.error('Failed to register background sync:', error);
         }

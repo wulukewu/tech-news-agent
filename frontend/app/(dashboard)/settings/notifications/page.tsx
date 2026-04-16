@@ -99,7 +99,7 @@ export default function NotificationSettingsPage() {
           <p className="text-muted-foreground">管理您的通知偏好和頻率設定</p>
         </div>
         <ErrorMessage
-          error={error as Error}
+          message={(error as Error).message || '無法載入通知設定'}
           onRetry={() => queryClient.invalidateQueries({ queryKey: ['notificationSettings'] })}
         />
       </div>
