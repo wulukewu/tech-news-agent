@@ -15,11 +15,11 @@
  */
 
 // Export main API client
-export { apiClient, default as ApiClient } from './client';
-export type { ApiClientConfig, RequestInterceptor, ResponseInterceptor } from './client';
+export { apiClient } from './client';
 
-// Export error types and utilities
-export { ApiError, ErrorCode, parseApiError, isNetworkError, isTimeoutError } from './errors';
+// Export error types and utilities - avoid duplicate exports
+export type { ApiError } from './client';
+export { ErrorCode, parseApiError, isNetworkError, isTimeoutError } from './errors';
 export type { ApiErrorResponse, ErrorDetail } from './errors';
 
 // Export retry utilities

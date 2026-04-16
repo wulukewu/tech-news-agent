@@ -11,6 +11,14 @@ import { ApiError } from './errors';
 import { API_FEATURE_FLAGS } from './featureFlags';
 
 /**
+ * Extended Axios config with performance tracking
+ */
+interface AxiosRequestConfigWithPerf extends AxiosRequestConfig {
+  _perfStartTime?: number;
+  _retryCount?: number;
+}
+
+/**
  * Performance metric for a single API call
  */
 export interface PerformanceMetric {
@@ -101,7 +109,7 @@ class PerformanceMonitor {
    * @param startTime - Start time from startRequest
    */
   public recordSuccess(
-    config: AxiosRequestConfig,
+    config: AxiosRequestConfigWithPerf,
     response: AxiosResponse,
     startTime: number
   ): void {
@@ -116,7 +124,7 @@ class PerformanceMonitor {
       duration: endTime - startTime,
       statusCode: response.status,
       success: true,
-      retryCount: (config as any)._retryCount || 0,
+      retryCount: config._retryCount || 0,
     };
 
     this.addMetric(metric);
@@ -130,7 +138,7 @@ class PerformanceMonitor {
    * @param startTime - Start time from startRequest
    */
   public recordError(
-    config: AxiosRequestConfig | undefined,
+    config: AxiosRequestConfigWithPerf | undefined,
     error: ApiError,
     startTime: number
   ): void {
@@ -146,7 +154,7 @@ class PerformanceMonitor {
       statusCode: error.statusCode,
       success: false,
       errorCode: error.errorCode,
-      retryCount: (config as any)._retryCount || 0,
+      retryCount: config._retryCount || 0,
     };
 
     this.addMetric(metric);
@@ -302,7 +310,7 @@ export const performanceMonitor = PerformanceMonitor.getInstance();
  */
 export const performanceInterceptor = {
   request: {
-    onFulfilled: (config: any) => {
+    onFulfilled: (config: AxiosRequestConfigWithPerf) => {
       if (performanceMonitor.isEnabled()) {
         config._perfStartTime = performanceMonitor.startRequest(config);
       }
@@ -311,14 +319,16 @@ export const performanceInterceptor = {
   },
   response: {
     onFulfilled: (response: AxiosResponse) => {
-      if (performanceMonitor.isEnabled() && response.config._perfStartTime) {
-        performanceMonitor.recordSuccess(response.config, response, response.config._perfStartTime);
+      const config = response.config as AxiosRequestConfigWithPerf;
+      if (performanceMonitor.isEnabled() && config._perfStartTime) {
+        performanceMonitor.recordSuccess(config, response, config._perfStartTime);
       }
       return response;
     },
     onRejected: (error: any) => {
-      if (performanceMonitor.isEnabled() && error.config?._perfStartTime) {
-        performanceMonitor.recordError(error.config, error, error.config._perfStartTime);
+      const config = error.config as AxiosRequestConfigWithPerf;
+      if (performanceMonitor.isEnabled() && config?._perfStartTime) {
+        performanceMonitor.recordError(config, error, config._perfStartTime);
       }
       return Promise.reject(error);
     },

@@ -40,8 +40,10 @@ Complete documentation for the Tech News Agent project.
 
 - [Deployment Guide](./deployment/DEPLOYMENT.md) - Production deployment steps
 - [Deployment Checklist](./deployment/deployment-checklist.md) - Complete Netlify + Render deployment guide
+- [Netlify Deployment Complete](./deployment/netlify-deployment-complete.md) - ✅ Current deployment status & next steps
 - [Netlify Frontend Guide](./deployment/netlify-frontend.md) - Next.js deployment to Netlify (免費版)
 - [Netlify Deployment Troubleshooting](./deployment/netlify-deployment.md) - Fix 404 errors and common issues
+- [Netlify Fixes Summary](./deployment/netlify-fixes-summary.md) - Summary of all fixes applied
 - [Render Backend Guide](./deployment/render-backend.md) - FastAPI deployment to Render (免費版)
 - [Vercel Frontend Guide](./deployment/vercel-frontend.md) - Alternative: Next.js on Vercel
 - [Public Bot Setup](./PUBLIC_BOT_SETUP.md) - Making your bot public
@@ -61,6 +63,7 @@ Complete documentation for the Tech News Agent project.
 ### Project Management
 
 - [Task Summaries](./tasks/) - Completed task documentation
+- [TypeScript Errors Fix Plan](./tasks/typescript-errors-fix-plan.md) - Systematic plan to fix all type errors
 - [CI Documentation](./ci/) - Continuous integration setup
 - [File Organization](./FILE_ORGANIZATION.md) - Project structure guide
 - [Restructure Summary](./RESTRUCTURE_SUMMARY.md) - Recent restructuring changes

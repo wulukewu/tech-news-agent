@@ -50,14 +50,11 @@ export async function fetchReadingList(
       articleId: item.article_id,
       title: item.title,
       url: item.url,
-      feedName: '', // Not provided by backend
       category: item.category,
-      publishedAt: null, // Not provided by backend
-      tinkeringIndex: 0, // Not provided by backend
-      aiSummary: null, // Not provided by backend
       status: item.status,
       rating: item.rating,
       addedAt: item.added_at,
+      updatedAt: item.updated_at,
     })),
     page: responseData.pagination.page,
     pageSize: responseData.pagination.page_size,
@@ -82,8 +79,8 @@ export async function addToReadingList(
   }>('/api/reading-list', { article_id: articleId });
 
   return {
-    message: response.data.message,
-    articleId: response.data.article_id,
+    message: response.data.data.message,
+    articleId: response.data.data.article_id,
   };
 }
 
@@ -103,7 +100,7 @@ export async function updateReadingListStatus(
     data: { message: string; status: string };
   }>(`/api/reading-list/${articleId}/status`, { status });
 
-  return response.data;
+  return response.data.data;
 }
 
 /**
@@ -122,7 +119,7 @@ export async function updateReadingListRating(
     data: { message: string; rating: number | null };
   }>(`/api/reading-list/${articleId}/rating`, { rating });
 
-  return response.data;
+  return response.data.data;
 }
 
 /**
@@ -138,5 +135,5 @@ export async function removeFromReadingList(articleId: string): Promise<{ messag
     data: { message: string };
   }>(`/api/reading-list/${articleId}`);
 
-  return response.data;
+  return response.data.data;
 }

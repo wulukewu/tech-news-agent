@@ -20,7 +20,7 @@ import type { Feed, SubscriptionToggleResponse } from '@/types/feed';
  */
 export async function fetchFeeds(): Promise<Feed[]> {
   const response = await apiClient.get<{ success: boolean; data: Feed[] }>('/api/feeds');
-  return response.data;
+  return response.data.data;
 }
 
 /**
@@ -39,7 +39,7 @@ export async function toggleSubscription(feedId: string): Promise<SubscriptionTo
   }>('/api/subscriptions/toggle', {
     feed_id: feedId,
   });
-  return response.data;
+  return response.data.data;
 }
 
 /**
@@ -60,7 +60,10 @@ export interface BatchSubscribeResponse {
  * @throws Error if the API request fails
  */
 export async function batchSubscribe(feedIds: string[]): Promise<BatchSubscribeResponse> {
-  return apiClient.post<BatchSubscribeResponse>('/api/subscriptions/batch', { feed_ids: feedIds });
+  const response = await apiClient.post<BatchSubscribeResponse>('/api/subscriptions/batch', {
+    feed_ids: feedIds,
+  });
+  return response.data;
 }
 
 /**
@@ -78,7 +81,7 @@ export async function addCustomFeed(url: string, name?: string, category?: strin
     name,
     category,
   });
-  return response.data;
+  return response.data.data;
 }
 
 /**
@@ -107,7 +110,7 @@ export async function previewFeed(url: string): Promise<{
       lastUpdated?: string;
     };
   }>('/api/feeds/preview', { url });
-  return response.data;
+  return response.data.data;
 }
 
 /**
@@ -126,7 +129,7 @@ export async function updateFeedNotificationPreference(
     `/api/feeds/${feedId}/notifications`,
     { enabled }
   );
-  return response.data;
+  return response.data.data;
 }
 
 /**
@@ -142,5 +145,5 @@ export async function updateFeedTags(feedId: string, tags: string[]): Promise<Fe
     `/api/feeds/${feedId}/tags`,
     { tags }
   );
-  return response.data;
+  return response.data.data;
 }

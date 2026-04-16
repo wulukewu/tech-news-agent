@@ -151,7 +151,14 @@ export class PrefetchStrategy {
 
     this.queryClient.prefetchQuery({
       queryKey: ['articles', 'list', nextPageFilters],
-      queryFn: () => import('../api/articles').then((api) => api.getArticles(nextPageFilters)),
+      queryFn: () =>
+        import('../api/articles').then((api) =>
+          api.fetchMyArticles(
+            nextPageFilters.page,
+            nextPageFilters.pageSize,
+            nextPageFilters.categories
+          )
+        ),
       ...cacheStrategies.articleList,
     });
   }
@@ -160,24 +167,18 @@ export class PrefetchStrategy {
    * Prefetch article details when user hovers over article card
    */
   prefetchArticleDetails(articleId: string) {
-    this.queryClient.prefetchQuery({
-      queryKey: ['articles', 'detail', articleId],
-      queryFn: () => import('../api/articles').then((api) => api.getArticle(articleId)),
-      ...cacheStrategies.articleDetail,
-    });
+    // Article details prefetching would need a getArticleById function
+    // Skipping for now as it doesn't exist in the API
+    console.log('Article details prefetch not implemented yet');
   }
 
   /**
    * Prefetch AI analysis for popular articles
    */
   prefetchPopularAnalyses(popularArticleIds: string[]) {
-    popularArticleIds.slice(0, 5).forEach((articleId) => {
-      this.queryClient.prefetchQuery({
-        queryKey: ['ai-analysis', articleId],
-        queryFn: () => import('../api/articles').then((api) => api.getAnalysis(articleId)),
-        ...cacheStrategies.aiAnalysis,
-      });
-    });
+    // AI analysis prefetching would need a getAnalysis function
+    // Skipping for now as it doesn't exist in the API
+    console.log('AI analysis prefetch not implemented yet');
   }
 
   /**
@@ -186,7 +187,7 @@ export class PrefetchStrategy {
   prefetchRecommendations() {
     this.queryClient.prefetchQuery({
       queryKey: ['recommendations'],
-      queryFn: () => import('../api/recommendations').then((api) => api.getRecommendations()),
+      queryFn: () => import('../api/recommendations').then((api) => api.getRecommendedFeeds()),
       ...cacheStrategies.recommendations,
     });
   }
@@ -197,7 +198,7 @@ export class PrefetchStrategy {
   prefetchReadingList() {
     this.queryClient.prefetchQuery({
       queryKey: ['reading-list'],
-      queryFn: () => import('../api/readingList').then((api) => api.getReadingList()),
+      queryFn: () => import('../api/readingList').then((api) => api.fetchReadingList()),
       ...cacheStrategies.readingList,
     });
   }
@@ -259,7 +260,10 @@ export class BackgroundSyncStrategy {
     // to replay failed mutations when online
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.ready.then((registration) => {
-        registration.sync?.register('background-sync-mutations');
+        // Check if sync is supported before using it
+        if ('sync' in registration) {
+          (registration as any).sync.register('background-sync-mutations');
+        }
       });
     }
   }

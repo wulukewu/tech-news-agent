@@ -132,21 +132,22 @@ export async function validateApiCall(
     result.responseTime = performance.now() - startTime;
     result.success = false;
 
-    if (error instanceof ApiError) {
-      result.statusCode = error.statusCode;
-      result.error = error.userMessage;
+    const apiError = error as any;
+    if (apiError.response) {
+      result.statusCode = apiError.response.status;
+      result.error = apiError.message || 'Unknown error';
 
       // Validate error structure
-      if (expectedResponse.hasErrorField && !error.message) {
+      if (expectedResponse.hasErrorField && !apiError.message) {
         result.discrepancies.push('Missing error message');
       }
 
-      if (expectedResponse.hasErrorCodeField && !error.errorCode) {
+      if (expectedResponse.hasErrorCodeField && !apiError.code) {
         result.discrepancies.push('Missing error code');
       }
     } else {
       result.error = error instanceof Error ? error.message : 'Unknown error';
-      result.discrepancies.push('Error is not an ApiError instance');
+      result.discrepancies.push('Error is not an API error response');
     }
 
     // Log error discrepancies

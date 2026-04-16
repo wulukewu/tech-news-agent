@@ -67,7 +67,7 @@ export interface BatchResult {
   /** 失敗的記錄數 */
   failed_count: number;
   /** 失敗的文章資訊（包含錯誤原因） */
-  failed_articles: dict[];
+  failed_articles: Array<Record<string, any>>;
 }
 
 /**

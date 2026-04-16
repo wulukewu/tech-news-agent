@@ -33,10 +33,10 @@ export interface AuthState {
 /**
  * Fetch current user information
  */
-async function getCurrentUser(): Promise<User | null> {
+export async function getCurrentUser(): Promise<User | null> {
   try {
     const response = await apiClient.get<{ data: User }>('/api/auth/me');
-    return response.data;
+    return response.data.data;
   } catch (error) {
     // If 401, user is not authenticated
     if ((error as any)?.response?.status === 401) {

@@ -31,5 +31,6 @@ export async function triggerScheduler(): Promise<{
  * @returns Promise resolving to scheduler status
  */
 export async function getSchedulerStatus(): Promise<SchedulerStatus> {
-  return apiClient.get<SchedulerStatus>('/api/scheduler/status');
+  const response = await apiClient.get<SchedulerStatus>('/api/scheduler/status');
+  return response.data;
 }

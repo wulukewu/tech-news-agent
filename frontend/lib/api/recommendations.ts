@@ -33,5 +33,6 @@ export interface RecommendedFeedsResponse {
  * @returns Promise resolving to recommended feeds
  */
 export async function getRecommendedFeeds(): Promise<RecommendedFeedsResponse> {
-  return apiClient.get<RecommendedFeedsResponse>('/api/feeds/recommended');
+  const response = await apiClient.get<RecommendedFeedsResponse>('/api/feeds/recommended');
+  return response.data;
 }

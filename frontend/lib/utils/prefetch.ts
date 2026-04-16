@@ -238,7 +238,7 @@ export class IntelligentPrefetcher {
         action: async () => {
           await this.queryClient.prefetchQuery({
             queryKey: ['articles', 'list', { page: 1 }],
-            queryFn: () => import('../api/articles').then((api) => api.getArticles({ page: 1 })),
+            queryFn: () => import('../api/articles').then((api) => api.fetchMyArticles(1, 20)),
             ...cacheStrategies.articleList,
           });
         },
@@ -253,7 +253,7 @@ export class IntelligentPrefetcher {
         action: async () => {
           await this.queryClient.prefetchQuery({
             queryKey: ['reading-list'],
-            queryFn: () => import('../api/readingList').then((api) => api.getReadingList()),
+            queryFn: () => import('../api/readingList').then((api) => api.fetchReadingList()),
             ...cacheStrategies.readingList,
           });
         },
@@ -268,7 +268,8 @@ export class IntelligentPrefetcher {
         action: async () => {
           await this.queryClient.prefetchQuery({
             queryKey: ['recommendations'],
-            queryFn: () => import('../api/recommendations').then((api) => api.getRecommendations()),
+            queryFn: () =>
+              import('../api/recommendations').then((api) => api.getRecommendedFeeds()),
             ...cacheStrategies.recommendations,
           });
         },
@@ -283,7 +284,7 @@ export class IntelligentPrefetcher {
         action: async () => {
           await this.queryClient.prefetchQuery({
             queryKey: ['subscriptions'],
-            queryFn: () => import('../api/feeds').then((api) => api.getUserSubscriptions()),
+            queryFn: () => import('../api/feeds').then((api) => api.fetchFeeds()),
             ...cacheStrategies.subscriptions,
           });
         },
@@ -298,27 +299,27 @@ export class IntelligentPrefetcher {
         action: async () => {
           await this.queryClient.prefetchQuery({
             queryKey: ['system', 'status'],
-            queryFn: () => import('../api/scheduler').then((api) => api.getSystemStatus()),
+            queryFn: () => import('../api/scheduler').then((api) => api.getSchedulerStatus()),
             ...cacheStrategies.systemStatus,
           });
         },
         cooldown: 30 * 60 * 1000, // 30 minutes
       },
 
-      // Low priority: Analytics data
-      {
-        key: 'analytics',
-        priority: PrefetchPriority.LOW,
-        condition: () => this.userBehavior.timeSpent['/analytics'] > 30000, // 30 seconds
-        action: async () => {
-          await this.queryClient.prefetchQuery({
-            queryKey: ['analytics', 'overview'],
-            queryFn: () => import('../api/analytics').then((api) => api.getAnalyticsOverview()),
-            ...cacheStrategies.analytics,
-          });
-        },
-        cooldown: 60 * 60 * 1000, // 1 hour
-      },
+      // Low priority: Analytics data - commented out as function doesn't exist
+      // {
+      //   key: 'analytics',
+      //   priority: PrefetchPriority.LOW,
+      //   condition: () => this.userBehavior.timeSpent['/analytics'] > 30000, // 30 seconds
+      //   action: async () => {
+      //     await this.queryClient.prefetchQuery({
+      //       queryKey: ['analytics', 'overview'],
+      //       queryFn: () => import('../api/analytics').then((api) => api.getAnalyticsOverview()),
+      //       ...cacheStrategies.analytics,
+      //     });
+      //   },
+      //   cooldown: 60 * 60 * 1000, // 1 hour
+      // },
     ];
   }
 
