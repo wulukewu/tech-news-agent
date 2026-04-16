@@ -4,10 +4,10 @@ import { ArticleBrowser } from '@/features/articles/components/ArticleBrowser';
 import { MobileArticleBrowser } from '@/features/articles/components/MobileArticleBrowser';
 import { useUrlState } from '@/lib/hooks/useUrlState';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import type { ArticleFilters } from '@/types/article';
 
-export default function ArticlesPage() {
+function ArticlesPageContent() {
   const { initialFilters, updateUrl, isInitialized } = useUrlState();
   const { isMobile } = useResponsiveLayout();
   const [analysisModalOpen, setAnalysisModalOpen] = useState(false);
@@ -107,5 +107,29 @@ export default function ArticlesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ArticlesPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">文章瀏覽</h1>
+              <p className="text-muted-foreground text-sm sm:text-base">
+                探索最新的技術文章和深度分析
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </div>
+      }
+    >
+      <ArticlesPageContent />
+    </Suspense>
   );
 }
