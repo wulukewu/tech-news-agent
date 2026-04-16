@@ -44,7 +44,7 @@ from app.core.errors import (
     validation_exception_handler,
 )
 from app.core.logger import RequestContextMiddleware, get_logger
-from app.tasks.scheduler import get_scheduler_health, scheduler, setup_scheduler
+from app.tasks.scheduler import get_scheduler, get_scheduler_health, setup_scheduler
 
 # Use centralized structured logger
 logger = get_logger(__name__)
@@ -70,9 +70,16 @@ async def lifespan(app: FastAPI):
     logger.info("Configuration validated successfully.")
 
     # 1. Start the Scheduler
-    setup_scheduler()
-    scheduler.start()
-    logger.info("Scheduler started.")
+    try:
+        setup_scheduler()
+        scheduler = get_scheduler()
+        if scheduler is None:
+            raise RuntimeError("Scheduler initialization failed - scheduler is None after setup")
+        scheduler.start()
+        logger.info("Scheduler started successfully.")
+    except Exception as e:
+        logger.error(f"Failed to start scheduler: {e}", exc_info=True)
+        raise
 
     # 2. Start the Discord Bot in the background
     bot_task = None
@@ -98,6 +105,7 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down Tech News Agent lifespan...")
 
     # Shutdown Scheduler
+    scheduler = get_scheduler()
     if scheduler is not None:
         scheduler.shutdown(wait=False)
 
@@ -190,6 +198,9 @@ async def health_check():
     Validates: Requirements 20.1, 20.2, 20.3, 20.4, 20.5, 20.6, 20.7
     """
     bot_ready = bot.is_ready() if settings.discord_token else False
+
+    # Get scheduler instance
+    scheduler = get_scheduler()
 
     # Initialize health status
     health_status = {

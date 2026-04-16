@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from datetime import UTC, datetime, timedelta
+from typing import Optional
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
@@ -15,7 +16,23 @@ from app.services.supabase_service import SupabaseService
 logger = logging.getLogger(__name__)
 
 # Global scheduler instance (initialized lazily)
-scheduler: AsyncIOScheduler | None = None
+_scheduler: Optional[AsyncIOScheduler] = None
+
+
+def get_scheduler() -> Optional[AsyncIOScheduler]:
+    """Get the global scheduler instance."""
+    return _scheduler
+
+
+def __getattr__(name: str):
+    """
+    Dynamic attribute access for backward compatibility.
+    Allows 'from app.tasks.scheduler import scheduler' to work correctly.
+    """
+    if name == "scheduler":
+        return _scheduler
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
+
 
 # Global health tracking
 _scheduler_health = {
@@ -475,21 +492,32 @@ def setup_scheduler():
 
     Raises:
         ValueError: If CRON expression is invalid
+        RuntimeError: If settings is not loaded
 
     Validates: Requirements 6.1, 6.2, 6.3, 6.4, 6.5, 6.6
     """
-    global scheduler
+    global _scheduler
+
+    logger.info("Setting up scheduler...")
 
     # Ensure settings is loaded
     if settings is None:
-        raise RuntimeError(
+        error_msg = (
             "Settings not loaded. Ensure environment variables are properly configured. "
             "Check .env file and required variables."
         )
+        logger.error(error_msg)
+        raise RuntimeError(error_msg)
+
+    logger.info(f"Settings loaded successfully. Timezone: {settings.timezone}")
 
     # Initialize scheduler if not already done
-    if scheduler is None:
-        scheduler = AsyncIOScheduler(timezone=settings.timezone)
+    if _scheduler is None:
+        logger.info("Initializing AsyncIOScheduler...")
+        _scheduler = AsyncIOScheduler(timezone=settings.timezone)
+        logger.info(f"Scheduler initialized: {_scheduler}")
+    else:
+        logger.info(f"Scheduler already initialized: {_scheduler}")
 
     # Get CRON expression from settings
     cron_expression = settings.scheduler_cron
@@ -506,7 +534,7 @@ def setup_scheduler():
         raise ValueError(error_msg) from e
 
     # Register the background job
-    scheduler.add_job(
+    _scheduler.add_job(
         background_fetch_job,
         trigger=trigger,
         id="background_fetch",
@@ -519,7 +547,7 @@ def setup_scheduler():
     dm_cron = settings.dm_notification_cron or "10 */6 * * *"  # 10 minutes after fetch job
     try:
         dm_trigger = CronTrigger.from_crontab(dm_cron, timezone=scheduler_tz)
-        scheduler.add_job(
+        _scheduler.add_job(
             send_dm_notifications,
             trigger=dm_trigger,
             id="dm_notifications",
@@ -534,7 +562,7 @@ def setup_scheduler():
         logger.warning("DM notifications will not be scheduled")
 
     # Register token blacklist cleanup job (runs every hour)
-    scheduler.add_job(
+    _scheduler.add_job(
         cleanup_token_blacklist,
         trigger=CronTrigger(hour="*", timezone=scheduler_tz),  # Every hour
         id="token_blacklist_cleanup",
@@ -552,6 +580,15 @@ def setup_scheduler():
     logger.info(
         f"Token blacklist cleanup job registered: " f"Runs every hour in timezone '{scheduler_tz}'"
     )
+
+    # Verify scheduler was initialized
+    if _scheduler is None:
+        error_msg = "CRITICAL: Scheduler is still None after setup_scheduler()"
+        logger.error(error_msg)
+        raise RuntimeError(error_msg)
+
+    logger.info(f"Scheduler setup completed successfully. Scheduler instance: {_scheduler}")
+    return _scheduler
 
 
 async def get_scheduler_health() -> dict:
