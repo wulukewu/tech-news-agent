@@ -41,6 +41,7 @@ Complete documentation for the Tech News Agent project.
 - [Deployment Guide](./deployment/DEPLOYMENT.md) - Production deployment steps
 - [Deployment Checklist](./deployment/deployment-checklist.md) - Complete Netlify + Render deployment guide
 - [Netlify Frontend Guide](./deployment/netlify-frontend.md) - Next.js deployment to Netlify (免費版)
+- [Netlify Deployment Troubleshooting](./deployment/netlify-deployment.md) - Fix 404 errors and common issues
 - [Render Backend Guide](./deployment/render-backend.md) - FastAPI deployment to Render (免費版)
 - [Vercel Frontend Guide](./deployment/vercel-frontend.md) - Alternative: Next.js on Vercel
 - [Public Bot Setup](./PUBLIC_BOT_SETUP.md) - Making your bot public
@@ -133,6 +134,9 @@ docs/
 
 **Deploy Next.js to Netlify**
 → [Netlify Frontend Guide](./deployment/netlify-frontend.md)
+
+**Fix Netlify 404 errors**
+→ [Netlify Troubleshooting](./deployment/netlify-deployment.md)
 
 **Deploy FastAPI to Render**
 → [Render Backend Guide](./deployment/render-backend.md)

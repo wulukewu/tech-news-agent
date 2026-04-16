@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: 'standalone',
+  // Use 'standalone' for Docker, remove for Netlify
+  // output: 'standalone',
   reactStrictMode: true,
   swcMinify: true,
 
