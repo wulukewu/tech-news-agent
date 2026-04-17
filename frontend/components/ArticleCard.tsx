@@ -114,22 +114,24 @@ export function ArticleCard({
           <CardContent className="p-0">
             {/* Vertical stack layout */}
             <div className="flex flex-col gap-3">
-              {/* Image - Full width, responsive with next/image (400x225) */}
-              <div className="relative w-full aspect-video overflow-hidden rounded-t-lg">
-                <Image
-                  src={article.imageUrl || '/images/placeholder.svg'}
-                  alt={article.title}
-                  width={400}
-                  height={225}
-                  className="w-full h-auto object-cover"
-                  sizes="(max-width: 768px) 100vw, 400px"
-                  priority={false}
-                  onError={(e) => {
-                    // Fallback to placeholder on error
-                    e.currentTarget.src = '/images/placeholder.svg';
-                  }}
-                />
-              </div>
+              {/* Image - Only show if imageUrl exists */}
+              {article.imageUrl && (
+                <div className="relative w-full aspect-video overflow-hidden rounded-t-lg">
+                  <Image
+                    src={article.imageUrl}
+                    alt={article.title}
+                    width={400}
+                    height={225}
+                    className="w-full h-auto object-cover"
+                    sizes="(max-width: 768px) 100vw, 400px"
+                    priority={false}
+                    onError={(e) => {
+                      // Hide image on error
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
 
               {/* Content container with padding */}
               <div className="px-4 pb-4 flex flex-col gap-3">
@@ -238,27 +240,31 @@ export function ArticleCard({
     <article>
       <Card className="hover:shadow-lg hover:-translate-y-1 transition-all duration-200 cursor-pointer">
         <CardContent className="p-0">
-          {/* Horizontal layout: image left, content right */}
+          {/* Horizontal layout: image left (if available), content right */}
           <div className="flex gap-4">
-            {/* Image - Left side (200x150) */}
-            <div className="relative w-48 h-32 flex-shrink-0 overflow-hidden rounded-l-lg">
-              <Image
-                src={article.imageUrl || '/images/placeholder.svg'}
-                alt={article.title}
-                width={200}
-                height={150}
-                className="w-full h-full object-cover"
-                sizes="(max-width: 768px) 100vw, 200px"
-                priority={false}
-                onError={(e) => {
-                  // Fallback to placeholder on error
-                  e.currentTarget.src = '/images/placeholder.svg';
-                }}
-              />
-            </div>
+            {/* Image - Left side (200x150) - Only show if imageUrl exists */}
+            {article.imageUrl && (
+              <div className="relative w-48 h-32 flex-shrink-0 overflow-hidden rounded-l-lg">
+                <Image
+                  src={article.imageUrl}
+                  alt={article.title}
+                  width={200}
+                  height={150}
+                  className="w-full h-full object-cover"
+                  sizes="(max-width: 768px) 100vw, 200px"
+                  priority={false}
+                  onError={(e) => {
+                    // Hide image on error
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              </div>
+            )}
 
             {/* Content - Right side */}
-            <div className="flex flex-1 flex-col gap-2 py-4 pr-4">
+            <div
+              className={cn('flex flex-1 flex-col gap-2 py-4', article.imageUrl ? 'pr-4' : 'px-4')}
+            >
               {/* Title and Share button row */}
               <div className="flex items-start justify-between gap-2">
                 <a

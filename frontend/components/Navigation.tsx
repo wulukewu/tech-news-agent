@@ -72,52 +72,63 @@ export function Navigation() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <nav className="container mx-auto px-4" aria-label="Main navigation">
         <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link href="/dashboard" className="hover:opacity-80 transition-opacity">
+          <div className="flex items-center gap-4 lg:gap-6">
+            <Link href="/dashboard" className="hover:opacity-80 transition-opacity flex-shrink-0">
               <Logo size={28} showText={true} textClassName="hidden sm:inline text-xl" />
             </Link>
 
             {/* Desktop navigation - only show main items */}
-            <div className="hidden md:flex gap-4">
+            <div className="hidden md:flex gap-1.5 lg:gap-2">
               {navItems.slice(0, 4).map((item) => {
                 const Icon = item.icon;
+                const isActive = pathname === item.href;
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      'flex items-center gap-2 px-3 py-2 rounded-md transition-colors cursor-pointer',
+                      'flex items-center gap-1.5 px-2.5 lg:px-3 py-2 rounded-md transition-colors cursor-pointer',
                       'hover:bg-accent hover:text-accent-foreground',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                      pathname === item.href ? 'bg-primary text-primary-foreground' : ''
+                      isActive
+                        ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground'
+                        : 'text-foreground'
                     )}
-                    aria-current={pathname === item.href ? 'page' : undefined}
+                    aria-current={isActive ? 'page' : undefined}
                   >
                     <Icon className="h-4 w-4" aria-hidden="true" />
-                    {item.label}
+                    <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
                   </Link>
                 );
               })}
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
             {user && (
-              <div className="hidden md:flex items-center gap-2">
-                <Avatar className="h-8 w-8">
+              <div className="hidden lg:flex items-center gap-2 mr-2">
+                <Avatar className="h-7 w-7">
                   {user.avatar && <AvatarImage src={user.avatar} alt={user.username || 'User'} />}
-                  <AvatarFallback>{user.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+                  <AvatarFallback className="text-xs">
+                    {user.username?.[0]?.toUpperCase() || 'U'}
+                  </AvatarFallback>
                 </Avatar>
-                <span className="text-sm">{user.username}</span>
+                <span className="text-sm max-w-[100px] truncate">{user.username}</span>
               </div>
             )}
 
             <ThemeToggle variant="dropdown" />
 
             {user && (
-              <Button variant="outline" size="sm" onClick={handleLogout} className="hidden md:flex">
-                <LogOut className="h-4 w-4 mr-2" aria-hidden="true" />
-                Logout
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="hidden md:flex gap-1.5 px-2.5"
+                title="Logout"
+              >
+                <LogOut className="h-4 w-4" aria-hidden="true" />
+                <span className="text-sm">Logout</span>
               </Button>
             )}
 
