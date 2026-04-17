@@ -152,6 +152,14 @@ const config: Config = {
           from: { transform: 'translateY(100%)' },
           to: { transform: 'translateY(0)' },
         },
+        'slide-in-from-bottom': {
+          from: { transform: 'translateY(100%)' },
+          to: { transform: 'translateY(0)' },
+        },
+        'slide-out-to-bottom': {
+          from: { transform: 'translateY(0)' },
+          to: { transform: 'translateY(100%)' },
+        },
         'scale-up': {
           from: { transform: 'scale(0.95)', opacity: '0' },
           to: { transform: 'scale(1)', opacity: '1' },
@@ -169,6 +177,8 @@ const config: Config = {
         'slide-in-from-left': 'slide-in-from-left 0.3s ease-out',
         'slide-out-to-left': 'slide-out-to-left 0.3s ease-out',
         'slide-up': 'slide-up 0.3s ease-out',
+        'slide-in-from-bottom': 'slide-in-from-bottom 0.3s ease-out',
+        'slide-out-to-bottom': 'slide-out-to-bottom 0.3s ease-out',
         'scale-up': 'scale-up 0.2s ease-out',
         shimmer: 'shimmer 2s infinite linear',
       },

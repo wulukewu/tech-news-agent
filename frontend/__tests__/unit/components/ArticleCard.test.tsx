@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@/__tests__/utils/test-utils';
+import { renderWithProviders as render, screen, fireEvent } from '@/__tests__/utils/test-utils';
 import { ArticleCard } from '@/components/ArticleCard';
 import type { Article } from '@/types/article';
 
@@ -45,16 +45,16 @@ describe('ArticleCard', () => {
   it('should expand AI summary when "Read more" is clicked', () => {
     render(<ArticleCard article={mockArticle} />);
 
-    // Initially, summary should be clamped
+    // Initially, summary should be clamped (mobile uses line-clamp-2)
     const summary = screen.getByText(/this is a test article summary/i);
-    expect(summary).toHaveClass('line-clamp-3');
+    expect(summary).toHaveClass('line-clamp-2');
 
     // Click "Read more"
     const readMoreButton = screen.getByRole('button', { name: /read more/i });
     fireEvent.click(readMoreButton);
 
     // Summary should no longer be clamped
-    expect(summary).not.toHaveClass('line-clamp-3');
+    expect(summary).not.toHaveClass('line-clamp-2');
 
     // Button text should change to "Show less"
     expect(screen.getByRole('button', { name: /show less/i })).toBeInTheDocument();

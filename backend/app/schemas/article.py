@@ -32,6 +32,7 @@ class ArticleSchema(BaseModel):
     id: Optional[UUID] = None  # 新增：文章 UUID（從資料庫查詢時使用）
     title: str = Field(..., max_length=2000)
     url: HttpUrl
+    image_url: Optional[HttpUrl] = None  # 新增：文章縮圖/封面圖片 URL
 
     # 來源資訊（重新命名）
     feed_id: UUID  # 新增：關聯到 feeds 表
@@ -111,6 +112,9 @@ class ArticleResponse(BaseModel):
     id: UUID = Field(..., description="文章 UUID")
     title: str = Field(..., description="文章標題")
     url: HttpUrl = Field(..., description="文章 URL")
+    image_url: Optional[HttpUrl] = Field(
+        None, description="文章縮圖 URL", serialization_alias="imageUrl"
+    )
     published_at: Optional[datetime] = Field(
         None, description="發布時間", serialization_alias="publishedAt"
     )

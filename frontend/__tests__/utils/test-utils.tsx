@@ -9,6 +9,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { vi } from 'vitest';
 
+// Re-export testing library utilities for convenience
+export { render, screen, fireEvent, waitFor } from '@testing-library/react';
+
 // Mock user context
 const mockUser = {
   id: 'test-user-id',

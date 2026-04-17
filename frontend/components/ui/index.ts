@@ -12,6 +12,8 @@ export * from './command';
 export * from './dialog';
 export * from './dropdown-menu';
 export * from './input';
+export * from './form-input';
+export * from './character-count';
 export * from './label';
 export * from './popover';
 export * from './progress';

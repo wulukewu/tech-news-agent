@@ -16,6 +16,8 @@ export interface Article {
   title: string;
   /** Original article URL */
   url: string;
+  /** Article thumbnail/cover image URL (optional) */
+  imageUrl?: string | null;
   /** Name of the feed this article belongs to */
   feedName: string;
   /** Category classification (e.g., "AI", "Web Development") */
