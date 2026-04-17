@@ -74,9 +74,9 @@ export async function trackRecommendationInteraction(
   interaction: RecommendationInteraction
 ): Promise<void> {
   try {
-    await apiClient.post('/api/v1/recommendations/interactions', interaction);
+    await apiClient.post('/api/v1/recommendations/track', interaction);
   } catch (error: any) {
-    // Don't throw error for analytics tracking failures
-    console.error('Failed to track recommendation interaction:', error);
+    const apiError = handleApiError(error);
+    throw new Error(apiError.message);
   }
 }

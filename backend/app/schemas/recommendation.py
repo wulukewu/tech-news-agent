@@ -7,10 +7,11 @@ API requests and responses.
 Requirements: 2.1, 2.2, 4.1, 12.1, 12.4
 """
 
+from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_serializer
 
 
 class RecommendedFeed(BaseModel):
@@ -140,3 +141,118 @@ class FeedsByCategoryResponse(BaseModel):
             }
         }
     )
+
+
+# Article Recommendation Schemas
+
+
+class ArticleRecommendation(BaseModel):
+    """
+    Article recommendation model
+
+    Represents a recommended article based on user ratings and preferences.
+    """
+
+    id: str = Field(..., description="Recommendation ID")
+    article_id: UUID = Field(..., description="Article UUID")
+    title: str = Field(..., description="Article title")
+    url: HttpUrl = Field(..., description="Article URL")
+    feed_name: str = Field(..., description="Source feed name", serialization_alias="feedName")
+    category: str = Field(..., description="Article category")
+    published_at: Optional[datetime] = Field(
+        None, description="Publication date", serialization_alias="publishedAt"
+    )
+    tinkering_index: int = Field(
+        ...,
+        ge=1,
+        le=5,
+        description="Technical complexity (1-5)",
+        serialization_alias="tinkeringIndex",
+    )
+    ai_summary: Optional[str] = Field(
+        None, description="AI-generated summary", serialization_alias="aiSummary"
+    )
+    reason: str = Field(..., description="AI-generated recommendation reason")
+    confidence: float = Field(..., ge=0.0, le=1.0, description="Recommendation confidence score")
+    generated_at: datetime = Field(
+        ..., description="When recommendation was generated", serialization_alias="generatedAt"
+    )
+    dismissed: bool = Field(default=False, description="Whether user dismissed this recommendation")
+
+    model_config = ConfigDict(populate_by_name=True, by_alias=True)
+
+    @field_serializer("published_at", "generated_at")
+    def serialize_datetime(self, value: Optional[datetime], _info) -> Optional[str]:
+        """Serialize datetime to ISO 8601 format"""
+        return value.isoformat() if value else None
+
+
+class ArticleRecommendationsResponse(BaseModel):
+    """
+    Response model for article recommendations endpoint
+    """
+
+    recommendations: list[ArticleRecommendation] = Field(
+        ..., description="List of recommended articles"
+    )
+    total_count: int = Field(
+        ..., description="Total number of recommendations", serialization_alias="totalCount"
+    )
+    has_sufficient_data: bool = Field(
+        ...,
+        description="Whether user has enough rating data",
+        serialization_alias="hasSufficientData",
+    )
+    min_ratings_required: int = Field(
+        ...,
+        description="Minimum ratings needed for recommendations",
+        serialization_alias="minRatingsRequired",
+    )
+    user_rating_count: int = Field(
+        ..., description="User's current rating count", serialization_alias="userRatingCount"
+    )
+
+    model_config = ConfigDict(populate_by_name=True, by_alias=True)
+
+
+class RefreshRecommendationsRequest(BaseModel):
+    """
+    Request model for refreshing recommendations
+    """
+
+    limit: Optional[int] = Field(
+        default=10, ge=1, le=50, description="Maximum number of recommendations"
+    )
+
+
+class DismissRecommendationRequest(BaseModel):
+    """
+    Request model for dismissing a recommendation
+    """
+
+    recommendation_id: str = Field(
+        ..., description="ID of recommendation to dismiss", serialization_alias="recommendationId"
+    )
+
+    model_config = ConfigDict(populate_by_name=True, by_alias=True)
+
+
+class RecommendationInteraction(BaseModel):
+    """
+    Model for tracking recommendation interactions
+    """
+
+    recommendation_id: str = Field(
+        ..., description="Recommendation ID", serialization_alias="recommendationId"
+    )
+    interaction_type: str = Field(
+        ..., description="Type of interaction (view, click, dismiss, refresh)"
+    )
+    timestamp: datetime = Field(..., description="When interaction occurred")
+
+    model_config = ConfigDict(populate_by_name=True, by_alias=True)
+
+    @field_serializer("timestamp")
+    def serialize_timestamp(self, value: datetime, _info) -> str:
+        """Serialize timestamp to ISO 8601 format"""
+        return value.isoformat()
