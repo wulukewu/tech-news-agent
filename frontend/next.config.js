@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Use 'standalone' for Docker, remove for Netlify
-  // output: 'standalone',
+  // Use 'standalone' for Docker only, disable for Netlify
+  // Automatically detect Docker environment
+  ...(process.env.DOCKER_BUILD === 'true' && { output: 'standalone' }),
   reactStrictMode: true,
   swcMinify: true,
 
