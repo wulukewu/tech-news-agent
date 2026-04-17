@@ -22,7 +22,7 @@ import {
 import { Slider } from '@/components/ui/slider';
 
 interface FeedNotificationSettingsProps {
-  feedSettings: FeedSettings[];
+  feedSettings?: FeedSettings[];
   onFeedSettingsChange: (feedSettings: FeedSettings[]) => void;
   disabled?: boolean;
 }
@@ -34,39 +34,42 @@ export function FeedNotificationSettings({
 }: FeedNotificationSettingsProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  // Provide default value if feedSettings is undefined
+  const safeFeedSettings = feedSettings || [];
+
   const { data: availableFeeds, isLoading } = useQuery({
     queryKey: ['availableFeeds'],
     queryFn: getAvailableFeeds,
   });
 
   const handleToggleFeed = (feedId: string, enabled: boolean) => {
-    const existingIndex = feedSettings.findIndex((s) => s.feedId === feedId);
+    const existingIndex = safeFeedSettings.findIndex((s) => s.feedId === feedId);
 
     if (existingIndex >= 0) {
-      const updated = [...feedSettings];
+      const updated = [...safeFeedSettings];
       updated[existingIndex] = { ...updated[existingIndex], enabled };
       onFeedSettingsChange(updated);
     } else {
-      onFeedSettingsChange([...feedSettings, { feedId, enabled, minTinkeringIndex: 3 }]);
+      onFeedSettingsChange([...safeFeedSettings, { feedId, enabled, minTinkeringIndex: 3 }]);
     }
   };
 
   const handleUpdateThreshold = (feedId: string, minTinkeringIndex: number) => {
-    const existingIndex = feedSettings.findIndex((s) => s.feedId === feedId);
+    const existingIndex = safeFeedSettings.findIndex((s) => s.feedId === feedId);
 
     if (existingIndex >= 0) {
-      const updated = [...feedSettings];
+      const updated = [...safeFeedSettings];
       updated[existingIndex] = { ...updated[existingIndex], minTinkeringIndex };
       onFeedSettingsChange(updated);
     }
   };
 
   const handleRemoveFeed = (feedId: string) => {
-    onFeedSettingsChange(feedSettings.filter((s) => s.feedId !== feedId));
+    onFeedSettingsChange(safeFeedSettings.filter((s) => s.feedId !== feedId));
   };
 
   const getFeedSetting = (feedId: string) => {
-    return feedSettings.find((s) => s.feedId === feedId);
+    return safeFeedSettings.find((s) => s.feedId === feedId);
   };
 
   const getFeedName = (feedId: string) => {
@@ -88,9 +91,9 @@ export function FeedNotificationSettings({
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Configured Feeds */}
-        {feedSettings.length > 0 ? (
+        {safeFeedSettings.length > 0 ? (
           <div className="space-y-3">
-            {feedSettings.map((setting) => {
+            {safeFeedSettings.map((setting) => {
               if (!setting.feedId) return null;
 
               return (
@@ -178,34 +181,35 @@ export function FeedNotificationSettings({
               </div>
             ) : (
               <div className="space-y-2">
-                {availableFeeds?.map((feed) => {
-                  const isConfigured = feedSettings.some((s) => s.feedId === feed.id);
+                {Array.isArray(availableFeeds) &&
+                  availableFeeds.map((feed) => {
+                    const isConfigured = safeFeedSettings.some((s) => s.feedId === feed.id);
 
-                  return (
-                    <div
-                      key={feed.id}
-                      className="flex items-center justify-between rounded-lg border p-3 hover:bg-accent/50 transition-colors"
-                    >
-                      <div className="flex-1">
-                        <p className="font-medium">{feed.name}</p>
-                        <p className="text-sm text-muted-foreground">{feed.category}</p>
-                      </div>
-                      <Button
-                        variant={isConfigured ? 'secondary' : 'default'}
-                        size="sm"
-                        onClick={() => {
-                          if (!isConfigured) {
-                            handleToggleFeed(feed.id, true);
-                          }
-                          setIsDialogOpen(false);
-                        }}
-                        disabled={isConfigured}
+                    return (
+                      <div
+                        key={feed.id}
+                        className="flex items-center justify-between rounded-lg border p-3 hover:bg-accent/50 transition-colors"
                       >
-                        {isConfigured ? '已設定' : '新增'}
-                      </Button>
-                    </div>
-                  );
-                })}
+                        <div className="flex-1">
+                          <p className="font-medium">{feed.name}</p>
+                          <p className="text-sm text-muted-foreground">{feed.category}</p>
+                        </div>
+                        <Button
+                          variant={isConfigured ? 'secondary' : 'default'}
+                          size="sm"
+                          onClick={() => {
+                            if (!isConfigured) {
+                              handleToggleFeed(feed.id, true);
+                            }
+                            setIsDialogOpen(false);
+                          }}
+                          disabled={isConfigured}
+                        >
+                          {isConfigured ? '已設定' : '新增'}
+                        </Button>
+                      </div>
+                    );
+                  })}
               </div>
             )}
           </DialogContent>

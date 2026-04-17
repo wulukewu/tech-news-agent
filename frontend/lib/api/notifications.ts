@@ -80,7 +80,9 @@ export async function sendTestNotification(): Promise<void> {
 export async function getAvailableFeeds(): Promise<
   Array<{ id: string; name: string; category: string }>
 > {
-  const response =
-    await apiClient.get<Array<{ id: string; name: string; category: string }>>('/api/feeds');
-  return response.data;
+  const response = await apiClient.get<{
+    success: boolean;
+    data: Array<{ id: string; name: string; category: string }>;
+  }>('/api/feeds');
+  return response.data.data; // Extract data from SuccessResponse wrapper
 }

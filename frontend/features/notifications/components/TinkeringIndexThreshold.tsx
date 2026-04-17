@@ -24,7 +24,9 @@ export function TinkeringIndexThreshold({
   onThresholdChange,
   disabled = false,
 }: TinkeringIndexThresholdProps) {
-  const currentLabel = thresholdLabels.find((l) => l.value === threshold) || thresholdLabels[2];
+  // Provide default value if threshold is undefined
+  const safeThreshold = threshold || 3;
+  const currentLabel = thresholdLabels.find((l) => l.value === safeThreshold) || thresholdLabels[2];
 
   return (
     <Card>
@@ -40,25 +42,25 @@ export function TinkeringIndexThreshold({
           <div className="flex items-center justify-between">
             <Label>最低技術深度指數</Label>
             <div className="flex items-center gap-1">
-              {Array.from({ length: threshold }).map((_, i) => (
+              {Array.from({ length: safeThreshold }).map((_, i) => (
                 <Star
                   key={i}
                   className="h-4 w-4 fill-yellow-400 text-yellow-400"
                   data-testid={`star-filled-${i}`}
                 />
               ))}
-              {Array.from({ length: 5 - threshold }).map((_, i) => (
+              {Array.from({ length: 5 - safeThreshold }).map((_, i) => (
                 <Star
-                  key={i + threshold}
+                  key={i + safeThreshold}
                   className="h-4 w-4 text-muted-foreground"
-                  data-testid={`star-empty-${i + threshold}`}
+                  data-testid={`star-empty-${i + safeThreshold}`}
                 />
               ))}
             </div>
           </div>
 
           <Slider
-            value={[threshold]}
+            value={[safeThreshold]}
             onValueChange={([value]) => onThresholdChange(value)}
             min={1}
             max={5}

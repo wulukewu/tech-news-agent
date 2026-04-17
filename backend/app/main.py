@@ -183,6 +183,11 @@ app.include_router(recommendations.router, prefix="/api", tags=["recommendations
 app.include_router(analytics.router, prefix="/api", tags=["analytics"])
 app.include_router(logs.router, tags=["logs"])
 
+# Import and register notifications router
+from app.api import notifications
+
+app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
+
 
 @app.get("/")
 async def root():

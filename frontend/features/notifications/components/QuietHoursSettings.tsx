@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Moon } from 'lucide-react';
 
 interface QuietHoursSettingsProps {
-  quietHours: {
+  quietHours?: {
     enabled: boolean;
     start: string;
     end: string;
@@ -21,16 +21,23 @@ export function QuietHoursSettings({
   onQuietHoursChange,
   disabled = false,
 }: QuietHoursSettingsProps) {
+  // Provide default values if quietHours is undefined
+  const safeQuietHours = quietHours || {
+    enabled: false,
+    start: '22:00',
+    end: '08:00',
+  };
+
   const handleToggle = (enabled: boolean) => {
-    onQuietHoursChange({ ...quietHours, enabled });
+    onQuietHoursChange({ ...safeQuietHours, enabled });
   };
 
   const handleStartChange = (start: string) => {
-    onQuietHoursChange({ ...quietHours, start });
+    onQuietHoursChange({ ...safeQuietHours, start });
   };
 
   const handleEndChange = (end: string) => {
-    onQuietHoursChange({ ...quietHours, end });
+    onQuietHoursChange({ ...safeQuietHours, end });
   };
 
   return (
@@ -50,20 +57,20 @@ export function QuietHoursSettings({
           </div>
           <Switch
             id="quiet-hours-enabled"
-            checked={quietHours.enabled}
+            checked={safeQuietHours.enabled}
             onCheckedChange={handleToggle}
             disabled={disabled}
           />
         </div>
 
-        {quietHours.enabled && (
+        {safeQuietHours.enabled && (
           <div className="grid grid-cols-2 gap-4 pt-2">
             <div className="space-y-2">
               <Label htmlFor="quiet-hours-start">開始時間</Label>
               <Input
                 id="quiet-hours-start"
                 type="time"
-                value={quietHours.start}
+                value={safeQuietHours.start}
                 onChange={(e) => handleStartChange(e.target.value)}
                 disabled={disabled}
               />
@@ -73,7 +80,7 @@ export function QuietHoursSettings({
               <Input
                 id="quiet-hours-end"
                 type="time"
-                value={quietHours.end}
+                value={safeQuietHours.end}
                 onChange={(e) => handleEndChange(e.target.value)}
                 disabled={disabled}
               />
@@ -81,9 +88,9 @@ export function QuietHoursSettings({
           </div>
         )}
 
-        {quietHours.enabled && (
+        {safeQuietHours.enabled && (
           <p className="text-sm text-muted-foreground">
-            通知將在 {quietHours.start} 至 {quietHours.end} 期間暫停
+            通知將在 {safeQuietHours.start} 至 {safeQuietHours.end} 期間暫停
           </p>
         )}
       </CardContent>

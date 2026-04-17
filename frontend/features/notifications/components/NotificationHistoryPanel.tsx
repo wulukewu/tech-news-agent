@@ -74,7 +74,7 @@ export function NotificationHistoryPanel() {
           </div>
         ) : error ? (
           <ErrorMessage message={(error as Error).message || '無法載入通知歷史記錄'} />
-        ) : !data || data.recentHistory.length === 0 ? (
+        ) : !data || !data.recentHistory || data.recentHistory.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <History className="h-12 w-12 mx-auto mb-2 opacity-50" />
             <p>尚無通知記錄</p>

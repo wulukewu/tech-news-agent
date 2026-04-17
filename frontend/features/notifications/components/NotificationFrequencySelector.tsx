@@ -49,7 +49,7 @@ export function NotificationFrequencySelector({
       </CardHeader>
       <CardContent>
         <RadioGroup
-          value={frequency}
+          value={frequency || 'immediate'}
           onValueChange={(value) => onFrequencyChange(value as NotificationFrequency)}
           disabled={disabled}
           className="space-y-3"
