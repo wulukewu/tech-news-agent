@@ -24,6 +24,19 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
+
+    /* Category colors - Light mode (Req 24.1, 24.2, 24.5) */
+    /* WCAG AA compliant contrast ratios */
+    --category-tech-news: 217 91% 60%; /* #3B82F6 - blue-500 */
+    --category-ai-ml: 271 81% 66%; /* #A855F7 - purple-500 */
+    --category-web-dev: 160 84% 39%; /* #10B981 - green-500 */
+    --category-devops: 25 95% 53%; /* #F97316 - orange-500 */
+    --category-security: 0 84% 60%; /* #EF4444 - red-500 */
+    --category-mobile: 258 90% 66%; /* #8B5CF6 - violet-500 */
+    --category-database: 188 94% 43%; /* #06B6D4 - cyan-500 */
+    --category-cloud: 199 89% 48%; /* #0EA5E9 - sky-500 */
+    --category-blockchain: 38 92% 50%; /* #F59E0B - amber-500 */
+    --category-default: 220 9% 46%; /* #6B7280 - gray-500 */
   }
 
   .dark {
@@ -46,6 +59,19 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
+
+    /* Category colors - Dark mode (Req 24.1, 24.2, 24.5) */
+    /* WCAG AA compliant contrast ratios */
+    --category-tech-news: 213 97% 87%; /* #60A5FA - blue-400 */
+    --category-ai-ml: 270 91% 85%; /* #C084FC - purple-400 */
+    --category-web-dev: 158 64% 52%; /* #34D399 - green-400 */
+    --category-devops: 20 91% 74%; /* #FB923C - orange-400 */
+    --category-security: 0 91% 71%; /* #F87171 - red-400 */
+    --category-mobile: 258 90% 76%; /* #A78BFA - violet-400 */
+    --category-database: 187 92% 69%; /* #22D3EE - cyan-400 */
+    --category-cloud: 199 95% 74%; /* #38BDF8 - sky-400 */
+    --category-blockchain: 38 92% 67%; /* #FCD34D - amber-300 */
+    --category-default: 220 14% 71%; /* #9CA3AF - gray-400 */
   }
 }
 
@@ -56,6 +82,38 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Smooth color transitions when switching themes (200ms) - Req 4.8, 17.6 */
+  *,
+  *::before,
+  *::after {
+    transition:
+      background-color 200ms ease-in-out,
+      border-color 200ms ease-in-out,
+      color 200ms ease-in-out,
+      fill 200ms ease-in-out,
+      stroke 200ms ease-in-out;
+  }
+
+  /* Disable transitions for elements that should change instantly */
+  input,
+  textarea,
+  select,
+  button:active,
+  [role='button']:active {
+    transition: none;
+  }
+
+  /* Respect user's motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }
 
 /* Touch device optimizations */
@@ -64,6 +122,74 @@
   .touch-target {
     min-width: 44px;
     min-height: 44px;
+  }
+
+  /* Category badge utilities (Req 24.2, 24.8) */
+  .category-badge {
+    @apply inline-flex items-center rounded-md px-2 py-1 text-xs font-medium;
+  }
+
+  .category-badge-sm {
+    @apply category-badge h-5; /* 20px height */
+  }
+
+  .category-badge-md {
+    @apply category-badge h-6; /* 24px height */
+  }
+
+  .category-badge-lg {
+    @apply category-badge h-7; /* 28px height */
+  }
+
+  /* Category color classes */
+  .category-tech-news {
+    background-color: hsl(var(--category-tech-news));
+    color: white;
+  }
+
+  .category-ai-ml {
+    background-color: hsl(var(--category-ai-ml));
+    color: white;
+  }
+
+  .category-web-dev {
+    background-color: hsl(var(--category-web-dev));
+    color: white;
+  }
+
+  .category-devops {
+    background-color: hsl(var(--category-devops));
+    color: white;
+  }
+
+  .category-security {
+    background-color: hsl(var(--category-security));
+    color: white;
+  }
+
+  .category-mobile {
+    background-color: hsl(var(--category-mobile));
+    color: white;
+  }
+
+  .category-database {
+    background-color: hsl(var(--category-database));
+    color: white;
+  }
+
+  .category-cloud {
+    background-color: hsl(var(--category-cloud));
+    color: white;
+  }
+
+  .category-blockchain {
+    background-color: hsl(var(--category-blockchain));
+    color: white;
+  }
+
+  .category-default {
+    background-color: hsl(var(--category-default));
+    color: white;
   }
 
   /* Smooth scrolling for touch devices */

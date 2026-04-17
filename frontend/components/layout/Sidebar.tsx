@@ -3,25 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  Home,
-  Rss,
-  BookMarked,
-  Settings,
-  BarChart3,
-  Heart,
-  Monitor,
-  ChevronLeft,
-  ChevronRight,
-  Menu,
-  X,
-  Search,
-} from 'lucide-react';
+import { Home, Rss, BookMarked, Menu, X, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/contexts/UserContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Logo } from '@/components/Logo';
 
 export interface NavigationItem {
   href: string;
@@ -41,18 +29,16 @@ interface SidebarProps {
 
 const defaultNavigation: NavigationItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: Home, shortcut: 'D' },
-  { href: '/articles', label: 'Articles', icon: Rss, shortcut: 'A' },
   { href: '/reading-list', label: 'Reading List', icon: BookMarked, shortcut: 'R' },
-  { href: '/recommendations', label: 'Recommendations', icon: Heart, shortcut: 'E' },
   { href: '/subscriptions', label: 'Subscriptions', icon: Rss, shortcut: 'S' },
-  { href: '/analytics', label: 'Analytics', icon: BarChart3, shortcut: 'N' },
-  { href: '/system-status', label: 'System Status', icon: Monitor, shortcut: 'M' },
-  { href: '/settings', label: 'Settings', icon: Settings, shortcut: ',' },
+  { href: '/settings', label: 'Settings', icon: Bell, shortcut: 'N' },
 ];
 
 /**
  * Sidebar - Responsive sidebar navigation component
- * Supports desktop sidebar and mobile bottom navigation with keyboard shortcuts
+ * Desktop: Fixed sidebar with 64px collapsed / 256px expanded width
+ * Mobile: Slide-out drawer navigation
+ * Requirements: 3.1, 3.4, 3.5, 3.6, 17.1
  */
 export function Sidebar({
   navigation = defaultNavigation,
@@ -102,57 +88,26 @@ export function Sidebar({
 
   return (
     <>
-      {/* Desktop Sidebar */}
+      {/* Desktop Sidebar - Req 3.1, 3.4, 3.5, 3.6 */}
       <div className={cn('hidden lg:flex lg:flex-col lg:h-full', className)}>
-        {/* Sidebar header */}
+        {/* Logo section at top - Req 3.1 */}
         <div
           className={cn(
             'flex items-center border-b transition-all duration-300',
-            collapsed ? 'justify-center p-2' : 'justify-between p-4'
+            collapsed ? 'justify-center p-3' : 'justify-between p-4'
           )}
         >
-          {!collapsed && (
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              {user && (
-                <>
-                  <Avatar className="h-8 w-8 flex-shrink-0">
-                    {user.avatar && <AvatarImage src={user.avatar} alt={user.username || 'User'} />}
-                    <AvatarFallback>{user.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-foreground truncate">{user.username}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      ID: {user.id.slice(0, 8)}...
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Theme toggle and collapse button */}
-          <div className="flex items-center gap-1">
-            {!collapsed && <ThemeToggle variant="button" />}
-            {onToggle && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onToggle}
-                className="h-8 w-8"
-                aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              >
-                {collapsed ? (
-                  <ChevronRight className="h-4 w-4" />
-                ) : (
-                  <ChevronLeft className="h-4 w-4" />
-                )}
-              </Button>
-            )}
-          </div>
+          <Link href="/dashboard" className="hover:opacity-80 transition-opacity">
+            <Logo
+              size={collapsed ? 24 : 28}
+              showText={!collapsed}
+              textClassName="text-base font-bold"
+            />
+          </Link>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-2 space-y-1 overflow-y-auto" aria-label="Sidebar navigation">
+        {/* Navigation items - Req 3.1, 3.4 */}
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto" aria-label="Sidebar navigation">
           {navigation.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -162,10 +117,12 @@ export function Sidebar({
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer group relative',
+                  'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer group relative',
                   'hover:bg-accent hover:text-accent-foreground',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                  isActive && 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm',
+                  // Active state with left border highlight - Req 3.4
+                  isActive &&
+                    'bg-accent/50 text-accent-foreground before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary before:rounded-r',
                   item.disabled && 'opacity-50 cursor-not-allowed pointer-events-none',
                   collapsed && 'justify-center px-2'
                 )}
@@ -207,14 +164,37 @@ export function Sidebar({
           })}
         </nav>
 
-        {/* Collapsed theme toggle */}
-        {collapsed && (
-          <div className="p-2 border-t">
-            <div className="flex justify-center">
-              <ThemeToggle variant="button" />
+        {/* User profile section at bottom - Req 3.5, 3.6, 17.1 */}
+        <div
+          className={cn(
+            'border-t p-3 transition-all duration-300',
+            collapsed ? 'flex flex-col items-center gap-2' : 'space-y-3'
+          )}
+        >
+          {user && (
+            <div
+              className={cn('flex items-center gap-3', collapsed ? 'flex-col' : 'flex-row min-w-0')}
+            >
+              <Avatar className={cn('flex-shrink-0', collapsed ? 'h-8 w-8' : 'h-10 w-10')}>
+                {user.avatar && <AvatarImage src={user.avatar} alt={user.username || 'User'} />}
+                <AvatarFallback>{user.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+              </Avatar>
+              {!collapsed && (
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-foreground truncate">{user.username}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    ID: {user.id.slice(0, 8)}...
+                  </p>
+                </div>
+              )}
             </div>
+          )}
+
+          {/* Theme toggle in profile section - Req 3.6, 17.1 */}
+          <div className={cn('flex', collapsed ? 'justify-center' : 'justify-start')}>
+            <ThemeToggle variant="button" />
           </div>
-        )}
+        </div>
       </div>
 
       {/* Mobile Navigation */}

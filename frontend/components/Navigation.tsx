@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -28,7 +28,7 @@ export function Navigation() {
   const { logout } = useAuth();
   const { user } = useUser();
   const pathname = usePathname();
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: Home },
@@ -41,6 +41,20 @@ export function Navigation() {
     { href: '/settings', label: 'Settings', icon: Settings },
   ];
 
+  // Prevent body scrolling when drawer is open (Req 3.3, 23.5)
+  useEffect(() => {
+    if (isDrawerOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isDrawerOpen]);
+
   const handleLogout = async () => {
     try {
       await logout();
@@ -48,6 +62,10 @@ export function Navigation() {
     } catch (error) {
       toast.error('Failed to logout');
     }
+  };
+
+  const closeDrawer = () => {
+    setIsDrawerOpen(false);
   };
 
   return (
@@ -103,68 +121,110 @@ export function Navigation() {
               </Button>
             )}
 
+            {/* Hamburger menu button - visible below 768px (Req 23.1) */}
             <Button
               variant="ghost"
               size="sm"
-              className="md:hidden"
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              aria-label="Toggle menu"
-              aria-expanded={isMenuOpen}
+              className="md:hidden touch-target cursor-pointer"
+              onClick={() => setIsDrawerOpen(!isDrawerOpen)}
+              aria-label="Toggle navigation menu"
+              aria-expanded={isDrawerOpen}
             >
-              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {isDrawerOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
+      </nav>
 
-        {/* Mobile menu */}
-        {isMenuOpen && (
-          <div className="md:hidden py-4 space-y-2 border-t">
+      {/* Mobile drawer navigation (Req 23.2, 23.3, 23.4) */}
+      {isDrawerOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop overlay (Req 23.3, 23.4) */}
+          <div
+            className="absolute inset-0 bg-black/50 animate-fade-in"
+            onClick={closeDrawer}
+            aria-hidden="true"
+          />
+
+          {/* Drawer panel - slides in from left (Req 23.2) */}
+          <nav
+            className="absolute left-0 top-0 bottom-0 w-64 bg-card border-r shadow-xl animate-slide-in-from-left"
+            aria-label="Mobile navigation"
+          >
+            {/* User profile section at top (Req 23.7) */}
             {user && (
-              <div className="flex items-center gap-2 px-3 py-2 mb-2">
-                <Avatar className="h-8 w-8">
+              <div className="flex items-center gap-3 p-4 border-b">
+                <Avatar className="h-10 w-10">
                   {user.avatar && <AvatarImage src={user.avatar} alt={user.username || 'User'} />}
                   <AvatarFallback>{user.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                 </Avatar>
-                <span className="text-sm font-medium">{user.username}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{user.username}</p>
+                </div>
+                {/* Close button in drawer header */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="touch-target cursor-pointer"
+                  onClick={closeDrawer}
+                  aria-label="Close navigation menu"
+                >
+                  <X className="h-5 w-5" />
+                </Button>
               </div>
             )}
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    'flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors',
-                    'hover:bg-accent hover:text-accent-foreground',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                    pathname === item.href ? 'bg-primary text-primary-foreground' : ''
-                  )}
-                  onClick={() => setIsMenuOpen(false)}
-                  aria-current={pathname === item.href ? 'page' : undefined}
+
+            {/* Navigation items with full-width touch targets (Req 3.7, 23.6) */}
+            <div className="py-4 space-y-1 overflow-y-auto max-h-[calc(100vh-200px)]">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={cn(
+                      'flex items-center gap-3 px-4 py-3 min-h-56 w-full cursor-pointer transition-colors',
+                      'hover:bg-accent hover:text-accent-foreground',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                      isActive && 'bg-primary text-primary-foreground relative',
+                      isActive &&
+                        'before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary-foreground'
+                    )}
+                    onClick={closeDrawer}
+                    aria-current={isActive ? 'page' : undefined}
+                  >
+                    <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Bottom section with theme toggle and logout */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-card space-y-2">
+              <div className="flex items-center justify-between px-2">
+                <span className="text-sm font-medium">Theme</span>
+                <ThemeToggle variant="dropdown" />
+              </div>
+              {user && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    handleLogout();
+                    closeDrawer();
+                  }}
+                  className="w-full justify-start touch-target cursor-pointer"
                 >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
-                  {item.label}
-                </Link>
-              );
-            })}
-            {user && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  handleLogout();
-                  setIsMenuOpen(false);
-                }}
-                className="w-full justify-start"
-              >
-                <LogOut className="h-4 w-4 mr-2" aria-hidden="true" />
-                Logout
-              </Button>
-            )}
-          </div>
-        )}
-      </nav>
+                  <LogOut className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Logout
+                </Button>
+              )}
+            </div>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

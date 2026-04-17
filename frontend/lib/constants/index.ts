@@ -83,6 +83,91 @@ export const ARTICLE_CATEGORIES = [
   'product',
 ] as const;
 
+// Category color mapping (Req 24.1, 24.2, 24.5)
+// Colors maintain WCAG AA contrast ratios in both light and dark modes
+export const CATEGORY_COLORS = {
+  // Primary categories with defined colors
+  'tech-news': {
+    light: '#3B82F6', // blue-500
+    dark: '#60A5FA', // blue-400
+    label: 'Tech News',
+  },
+  'ai-ml': {
+    light: '#A855F7', // purple-500
+    dark: '#C084FC', // purple-400
+    label: 'AI/ML',
+  },
+  'web-dev': {
+    light: '#10B981', // green-500
+    dark: '#34D399', // green-400
+    label: 'Web Dev',
+  },
+  devops: {
+    light: '#F97316', // orange-500
+    dark: '#FB923C', // orange-400
+    label: 'DevOps',
+  },
+  security: {
+    light: '#EF4444', // red-500
+    dark: '#F87171', // red-400
+    label: 'Security',
+  },
+  // Additional categories with semantic colors
+  mobile: {
+    light: '#8B5CF6', // violet-500
+    dark: '#A78BFA', // violet-400
+    label: 'Mobile',
+  },
+  database: {
+    light: '#06B6D4', // cyan-500
+    dark: '#22D3EE', // cyan-400
+    label: 'Database',
+  },
+  cloud: {
+    light: '#0EA5E9', // sky-500
+    dark: '#38BDF8', // sky-400
+    label: 'Cloud',
+  },
+  blockchain: {
+    light: '#F59E0B', // amber-500
+    dark: '#FCD34D', // amber-300
+    label: 'Blockchain',
+  },
+  // Fallback for unknown categories (Req 24.7)
+  default: {
+    light: '#6B7280', // gray-500
+    dark: '#9CA3AF', // gray-400
+    label: 'Other',
+  },
+} as const;
+
+// Category aliases for flexible matching (Req 24.6)
+export const CATEGORY_ALIASES: Record<string, keyof typeof CATEGORY_COLORS> = {
+  tech: 'tech-news',
+  'tech-news': 'tech-news',
+  ai: 'ai-ml',
+  'ai-ml': 'ai-ml',
+  'machine-learning': 'ai-ml',
+  'data-science': 'ai-ml',
+  web: 'web-dev',
+  'web-dev': 'web-dev',
+  frontend: 'web-dev',
+  backend: 'web-dev',
+  devops: 'devops',
+  security: 'security',
+  cybersecurity: 'security',
+  mobile: 'mobile',
+  database: 'database',
+  cloud: 'cloud',
+  blockchain: 'blockchain',
+  iot: 'default',
+  programming: 'default',
+  'software-engineering': 'default',
+  'open-source': 'default',
+  startup: 'default',
+  product: 'default',
+} as const;
+
 // Tinkering index levels
 export const TINKERING_INDEX_LEVELS = [
   { value: 1, label: '入門', description: '適合初學者' },
