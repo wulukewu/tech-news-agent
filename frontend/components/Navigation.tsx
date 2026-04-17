@@ -20,6 +20,7 @@ import { useUser } from '@/contexts/UserContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Logo } from '@/components/Logo';
 import { cn } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 
@@ -54,11 +55,8 @@ export function Navigation() {
       <nav className="container mx-auto px-4" aria-label="Main navigation">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
-            <Link
-              href="/dashboard"
-              className="text-xl font-bold hover:text-primary transition-colors"
-            >
-              Tech News Agent
+            <Link href="/dashboard" className="hover:opacity-80 transition-opacity">
+              <Logo size={28} showText={true} textClassName="hidden sm:inline text-xl" />
             </Link>
 
             {/* Desktop navigation - only show main items */}
