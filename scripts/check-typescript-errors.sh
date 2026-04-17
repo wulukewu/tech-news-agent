@@ -28,7 +28,13 @@ count_errors() {
 show_errors() {
     local file=$1
     echo -e "${BLUE}Checking: $file${NC}"
-    npx tsc --noEmit "$file" 2>&1 | grep "error TS" || echo -e "${GREEN}  ✓ No errors${NC}"
+    # Use project-wide type checking instead of individual file checking
+    # This ensures proper module resolution and JSX settings
+    if npx tsc --noEmit --project . 2>&1 | grep "$file" | grep "error TS" > /dev/null; then
+        npx tsc --noEmit --project . 2>&1 | grep "$file" | grep "error TS"
+    else
+        echo -e "${GREEN}  ✓ No errors${NC}"
+    fi
     echo ""
 }
 
@@ -93,8 +99,8 @@ echo ""
 
 # Run full type check
 echo "Running full type check..."
-if npx tsc --noEmit 2>&1 | grep -q "error TS"; then
-    ERROR_COUNT=$(npx tsc --noEmit 2>&1 | grep -c "error TS" || echo "0")
+if npx tsc --noEmit --project . 2>&1 | grep -q "error TS"; then
+    ERROR_COUNT=$(npx tsc --noEmit --project . 2>&1 | grep -c "error TS" || echo "0")
     echo -e "${RED}✗ Found $ERROR_COUNT TypeScript errors${NC}"
     echo ""
     echo "Run 'npm run type-check' for full details"
