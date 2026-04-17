@@ -128,7 +128,7 @@ export function FeedNotificationSettings({
                           max={5}
                           step={1}
                           disabled={disabled}
-                          className="w-full max-w-xs"
+                          className="w-full sm:max-w-xs"
                         />
                       </div>
                     )}
@@ -145,6 +145,7 @@ export function FeedNotificationSettings({
                       size="icon"
                       onClick={() => handleRemoveFeed(setting.feedId!)}
                       disabled={disabled}
+                      className="min-h-[44px] min-w-[44px]"
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -164,7 +165,7 @@ export function FeedNotificationSettings({
         {/* Add Feed Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="w-full" disabled={disabled}>
+            <Button variant="outline" className="w-full min-h-[48px]" disabled={disabled}>
               <Plus className="mr-2 h-4 w-4" />
               新增來源通知設定
             </Button>

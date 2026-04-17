@@ -33,7 +33,8 @@ export function FeedSearch({ feeds, onFilteredFeedsChange, className = '' }: Fee
         feed.name.toLowerCase().includes(query) ||
         feed.category.toLowerCase().includes(query) ||
         feed.url.toLowerCase().includes(query) ||
-        feed.description?.toLowerCase().includes(query)
+        feed.description?.toLowerCase().includes(query) ||
+        feed.tags?.some((tag) => tag.toLowerCase().includes(query))
     );
   }, [feeds, searchQuery]);
 
@@ -51,7 +52,7 @@ export function FeedSearch({ feeds, onFilteredFeedsChange, className = '' }: Fee
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
       <Input
         type="text"
-        placeholder="搜尋 Feed 名稱、分類或 URL..."
+        placeholder="搜尋 Feed 名稱、分類、標籤或 URL..."
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         className="pl-9 pr-9"

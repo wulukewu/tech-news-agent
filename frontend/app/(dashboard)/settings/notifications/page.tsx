@@ -20,6 +20,7 @@ import { QuietHoursSettings } from '@/features/notifications/components/QuietHou
 import { TinkeringIndexThreshold } from '@/features/notifications/components/TinkeringIndexThreshold';
 import { FeedNotificationSettings } from '@/features/notifications/components/FeedNotificationSettings';
 import { NotificationHistoryPanel } from '@/features/notifications/components/NotificationHistoryPanel';
+import { NotificationPreview } from '@/features/notifications/components/NotificationPreview';
 import { Bell, BellOff, Mail, MessageSquare, Check } from 'lucide-react';
 
 export default function NotificationSettingsPage() {
@@ -138,104 +139,138 @@ export default function NotificationSettingsPage() {
       </div>
 
       {/* Global Notification Status */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            {settings.enabled ? (
-              <Bell className="h-5 w-5 text-green-600" />
-            ) : (
-              <BellOff className="h-5 w-5 text-muted-foreground" />
-            )}
-            通知狀態
-          </CardTitle>
-          <CardDescription>
-            {settings.enabled ? '通知功能已啟用' : '通知功能已停用'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="notifications-enabled">啟用通知</Label>
-              <p className="text-sm text-muted-foreground">接收新文章和更新的通知</p>
-            </div>
-            <Switch
-              id="notifications-enabled"
-              checked={settings.enabled}
-              onCheckedChange={(checked) => handleToggle('enabled', checked)}
-              disabled={isSaving}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold mb-2">全域設定</h2>
+          <p className="text-sm text-muted-foreground mb-4">控制所有通知的主要開關</p>
+        </div>
 
-      {/* Notification Channels */}
-      <Card>
-        <CardHeader>
-          <CardTitle>通知渠道</CardTitle>
-          <CardDescription>選擇您希望接收通知的方式</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5 flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <Label htmlFor="dm-enabled">Discord DM 通知</Label>
-                <p className="text-sm text-muted-foreground">透過 Discord 私訊接收通知</p>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              {settings.enabled ? (
+                <Bell className="h-5 w-5 text-green-600" />
+              ) : (
+                <BellOff className="h-5 w-5 text-muted-foreground" />
+              )}
+              通知狀態
+            </CardTitle>
+            <CardDescription>
+              {settings.enabled ? '通知功能已啟用' : '通知功能已停用'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="notifications-enabled">啟用通知</Label>
+                <p className="text-sm text-muted-foreground">接收新文章和更新的通知</p>
               </div>
+              <Switch
+                id="notifications-enabled"
+                checked={settings.enabled}
+                onCheckedChange={(checked) => handleToggle('enabled', checked)}
+                disabled={isSaving}
+              />
             </div>
-            <Switch
-              id="dm-enabled"
-              checked={settings.dmEnabled}
-              onCheckedChange={(checked) => handleToggle('dmEnabled', checked)}
-              disabled={isSaving || !settings.enabled}
-            />
-          </div>
+          </CardContent>
+        </Card>
+      </div>
 
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5 flex items-center gap-2">
-              <Mail className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <Label htmlFor="email-enabled">電子郵件通知</Label>
-                <p className="text-sm text-muted-foreground">透過電子郵件接收通知</p>
+      {/* Delivery Preferences */}
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold mb-2">傳送偏好設定</h2>
+          <p className="text-sm text-muted-foreground mb-4">設定通知的傳送方式和時間</p>
+        </div>
+
+        {/* Notification Channels */}
+        <Card>
+          <CardHeader>
+            <CardTitle>通知渠道</CardTitle>
+            <CardDescription>選擇您希望接收通知的方式</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5 flex items-center gap-2">
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <Label htmlFor="dm-enabled">Discord DM 通知</Label>
+                  <p className="text-sm text-muted-foreground">透過 Discord 私訊接收通知</p>
+                </div>
               </div>
+              <Switch
+                id="dm-enabled"
+                checked={settings.dmEnabled}
+                onCheckedChange={(checked) => handleToggle('dmEnabled', checked)}
+                disabled={isSaving || !settings.enabled}
+              />
             </div>
-            <Switch
-              id="email-enabled"
-              checked={settings.emailEnabled}
-              onCheckedChange={(checked) => handleToggle('emailEnabled', checked)}
-              disabled={isSaving || !settings.enabled}
-            />
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Notification Frequency */}
-      <NotificationFrequencySelector
-        frequency={settings.frequency}
-        onFrequencyChange={(frequency) => handleUpdate({ frequency })}
-        disabled={isSaving || !settings.enabled}
-      />
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5 flex items-center gap-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <Label htmlFor="email-enabled">電子郵件通知</Label>
+                  <p className="text-sm text-muted-foreground">透過電子郵件接收通知</p>
+                </div>
+              </div>
+              <Switch
+                id="email-enabled"
+                checked={settings.emailEnabled}
+                onCheckedChange={(checked) => handleToggle('emailEnabled', checked)}
+                disabled={isSaving || !settings.enabled}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Quiet Hours */}
-      <QuietHoursSettings
-        quietHours={settings.quietHours}
-        onQuietHoursChange={(quietHours) => handleUpdate({ quietHours })}
-        disabled={isSaving || !settings.enabled}
-      />
+        {/* Notification Frequency */}
+        <NotificationFrequencySelector
+          frequency={settings.frequency}
+          onFrequencyChange={(frequency) => handleUpdate({ frequency })}
+          disabled={isSaving || !settings.enabled}
+        />
 
-      {/* Tinkering Index Threshold */}
-      <TinkeringIndexThreshold
-        threshold={settings.minTinkeringIndex}
-        onThresholdChange={(minTinkeringIndex) => handleUpdate({ minTinkeringIndex })}
-        disabled={isSaving || !settings.enabled}
-      />
+        {/* Quiet Hours */}
+        <QuietHoursSettings
+          quietHours={settings.quietHours}
+          onQuietHoursChange={(quietHours) => handleUpdate({ quietHours })}
+          disabled={isSaving || !settings.enabled}
+        />
+      </div>
 
-      {/* Feed-specific Notification Settings */}
-      <FeedNotificationSettings
-        feedSettings={settings.feedSettings}
-        onFeedSettingsChange={(feedSettings) => handleUpdate({ feedSettings })}
-        disabled={isSaving || !settings.enabled}
-      />
+      {/* Content Filtering */}
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold mb-2">內容篩選</h2>
+          <p className="text-sm text-muted-foreground mb-4">設定接收通知的內容條件</p>
+        </div>
+
+        {/* Tinkering Index Threshold */}
+        <TinkeringIndexThreshold
+          threshold={settings.minTinkeringIndex}
+          onThresholdChange={(minTinkeringIndex) => handleUpdate({ minTinkeringIndex })}
+          disabled={isSaving || !settings.enabled}
+        />
+      </div>
+
+      {/* Feed-Specific Settings */}
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-lg font-semibold mb-2">個別來源設定</h2>
+          <p className="text-sm text-muted-foreground mb-4">為特定 RSS 來源自訂通知偏好</p>
+        </div>
+
+        {/* Feed-specific Notification Settings */}
+        <FeedNotificationSettings
+          feedSettings={settings.feedSettings}
+          onFeedSettingsChange={(feedSettings) => handleUpdate({ feedSettings })}
+          disabled={isSaving || !settings.enabled}
+        />
+      </div>
+
+      {/* Notification Preview */}
+      <NotificationPreview settings={settings} />
 
       {/* Notification History */}
       <NotificationHistoryPanel />

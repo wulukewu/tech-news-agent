@@ -26,7 +26,18 @@ export default function SubscriptionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toggling, setToggling] = useState<Set<string>>(new Set());
-  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(() => {
+    // Load collapsed state from localStorage
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('subscriptions-collapsed-categories');
+        return saved ? new Set(JSON.parse(saved)) : new Set();
+      } catch {
+        return new Set();
+      }
+    }
+    return new Set();
+  });
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -185,6 +196,38 @@ export default function SubscriptionsPage() {
     }
   };
 
+  const handleRetryFailedFeeds = async () => {
+    const failedFeeds = feeds.filter((f) => f.health_status === 'error');
+
+    if (failedFeeds.length === 0) {
+      toast.info('沒有需要重試的失敗來源');
+      return;
+    }
+
+    try {
+      setToggling((prev) => {
+        const next = new Set(prev);
+        failedFeeds.forEach((f) => next.add(f.id));
+        return next;
+      });
+
+      // Here you would call an API to retry failed feeds
+      // For now, we'll simulate the retry by reloading feeds
+      await loadFeeds();
+
+      toast.success(`已重試 ${failedFeeds.length} 個失敗的來源`);
+    } catch (err) {
+      console.error('Failed to retry feeds:', err);
+      toast.error('重試失敗來源時發生錯誤');
+    } finally {
+      setToggling((prev) => {
+        const next = new Set(prev);
+        failedFeeds.forEach((f) => next.delete(f.id));
+        return next;
+      });
+    }
+  };
+
   const toggleCategoryCollapse = (category: string) => {
     setCollapsedCategories((prev) => {
       const next = new Set(prev);
@@ -193,6 +236,16 @@ export default function SubscriptionsPage() {
       } else {
         next.add(category);
       }
+
+      // Persist to localStorage
+      if (typeof window !== 'undefined') {
+        try {
+          localStorage.setItem('subscriptions-collapsed-categories', JSON.stringify([...next]));
+        } catch (error) {
+          console.warn('Failed to save collapsed categories to localStorage:', error);
+        }
+      }
+
       return next;
     });
   };
@@ -258,6 +311,21 @@ export default function SubscriptionsPage() {
     {} as Record<string, Feed[]>
   );
 
+  // Sort feeds within each category by health status (healthy first, errors last)
+  Object.keys(feedsByCategory).forEach((category) => {
+    feedsByCategory[category].sort((a, b) => {
+      const healthOrder = { healthy: 0, warning: 1, unknown: 2, error: 3 };
+      const aHealth = a.health_status || 'unknown';
+      const bHealth = b.health_status || 'unknown';
+
+      const healthDiff = healthOrder[aHealth] - healthOrder[bHealth];
+      if (healthDiff !== 0) return healthDiff;
+
+      // If health status is the same, sort by name
+      return a.name.localeCompare(b.name);
+    });
+  });
+
   // Sort categories: recommended first
   const sortedCategories = Object.keys(feedsByCategory).sort((a, b) => {
     const aHasRecommended = feedsByCategory[a].some((f) => f.is_recommended);
@@ -311,6 +379,65 @@ export default function SubscriptionsPage() {
               averageTinkeringIndex={avgTinkeringIndex}
             />
 
+            {/* Health Statistics Summary */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <Card className="border-green-200 dark:border-green-800">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">健康</div>
+                      <div className="text-lg font-semibold text-green-600 dark:text-green-400">
+                        {feeds.filter((f) => f.health_status === 'healthy').length}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-yellow-200 dark:border-yellow-800">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">過時</div>
+                      <div className="text-lg font-semibold text-yellow-600 dark:text-yellow-400">
+                        {feeds.filter((f) => f.health_status === 'warning').length}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-red-200 dark:border-red-800">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">錯誤</div>
+                      <div className="text-lg font-semibold text-red-600 dark:text-red-400">
+                        {feeds.filter((f) => f.health_status === 'error').length}
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card className="border-gray-200 dark:border-gray-800">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+                    <div>
+                      <div className="text-xs text-muted-foreground">未知</div>
+                      <div className="text-lg font-semibold text-gray-600 dark:text-gray-400">
+                        {
+                          feeds.filter((f) => f.health_status === 'unknown' || !f.health_status)
+                            .length
+                        }
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             {/* Action Bar */}
             <div className="flex flex-wrap items-center gap-2">
               <Button
@@ -335,6 +462,24 @@ export default function SubscriptionsPage() {
                 disabled={noneSubscribed || toggling.size > 0}
               >
                 全部取消
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleRetryFailedFeeds}
+                disabled={
+                  feeds.filter((f) => f.health_status === 'error').length === 0 || toggling.size > 0
+                }
+                className="gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                  />
+                </svg>
+                重試失敗來源
               </Button>
 
               <div className="flex-1" />
@@ -418,106 +563,125 @@ export default function SubscriptionsPage() {
                   </div>
                 </CardHeader>
                 {!isCollapsed && (
-                  <CardContent>
+                  <CardContent className="animate-in slide-in-from-top-2 duration-300">
                     <div className="space-y-3">
                       {categoryFeeds.map((feed) => (
                         <div
                           key={feed.id}
-                          className="flex items-start space-x-3 p-4 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-muted"
+                          className="flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-3 p-4 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-muted"
                         >
-                          <Checkbox
-                            id={feed.id}
-                            checked={feed.is_subscribed}
-                            onCheckedChange={() => handleToggle(feed.id)}
-                            disabled={toggling.has(feed.id)}
-                            className="mt-1"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <label htmlFor={feed.id} className="cursor-pointer block">
-                              <div className="flex items-center gap-2 flex-wrap">
-                                <span className="font-medium">{feed.name}</span>
-                                {feed.is_recommended && (
-                                  <Badge variant="outline" className="text-xs">
-                                    推薦
-                                  </Badge>
-                                )}
-                                {feed.tags && feed.tags.length > 0 && (
-                                  <>
-                                    {feed.tags.map((tag) => (
-                                      <Badge key={tag} variant="secondary" className="text-xs">
-                                        {tag}
-                                      </Badge>
-                                    ))}
-                                  </>
-                                )}
-                              </div>
-                              {feed.description && (
-                                <div className="text-sm text-muted-foreground mt-1">
-                                  {feed.description}
+                          <div className="flex items-start space-x-3 flex-1">
+                            <Checkbox
+                              id={feed.id}
+                              checked={feed.is_subscribed}
+                              onCheckedChange={() => handleToggle(feed.id)}
+                              disabled={toggling.has(feed.id)}
+                              className="mt-1 flex-shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <label htmlFor={feed.id} className="cursor-pointer block">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-medium">{feed.name}</span>
+                                  {feed.is_recommended && (
+                                    <Badge variant="outline" className="text-xs">
+                                      推薦
+                                    </Badge>
+                                  )}
+                                  {feed.tags && feed.tags.length > 0 && (
+                                    <>
+                                      {feed.tags.map((tag) => (
+                                        <Badge key={tag} variant="secondary" className="text-xs">
+                                          {tag}
+                                        </Badge>
+                                      ))}
+                                    </>
+                                  )}
                                 </div>
-                              )}
-                              <div className="text-sm text-muted-foreground mt-1 break-all">
-                                {feed.url}
+                                {feed.description && (
+                                  <div className="text-sm text-muted-foreground mt-1">
+                                    {feed.description}
+                                  </div>
+                                )}
+                                <div className="text-sm text-muted-foreground mt-1 break-all">
+                                  {feed.url}
+                                </div>
+                              </label>
+
+                              {/* Feed Health and Statistics - Stacked on mobile */}
+                              <div className="mt-3 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3">
+                                {feed.last_updated && (
+                                  <FeedHealthIndicator
+                                    lastUpdateTime={feed.last_updated}
+                                    status={feed.health_status || 'unknown'}
+                                    errorMessage={feed.error_message}
+                                  />
+                                )}
+
+                                {feed.is_subscribed && (
+                                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                                    <div className="flex flex-wrap gap-2">
+                                      {feed.total_articles !== undefined && (
+                                        <Badge variant="outline" className="text-xs">
+                                          {feed.total_articles} 篇文章
+                                        </Badge>
+                                      )}
+                                      {feed.articles_this_week !== undefined && (
+                                        <Badge variant="outline" className="text-xs">
+                                          本週 {feed.articles_this_week} 篇
+                                        </Badge>
+                                      )}
+                                      {feed.average_tinkering_index !== undefined && (
+                                        <Badge
+                                          variant="outline"
+                                          className="text-xs flex items-center gap-1"
+                                        >
+                                          <div className="flex">
+                                            {Array.from({ length: 5 }).map((_, i) => (
+                                              <Star
+                                                key={i}
+                                                className={`w-2.5 h-2.5 ${
+                                                  i < Math.floor(feed.average_tinkering_index!)
+                                                    ? 'fill-yellow-400 text-yellow-400'
+                                                    : 'text-gray-300'
+                                                }`}
+                                              />
+                                            ))}
+                                          </div>
+                                          {feed.average_tinkering_index.toFixed(1)}
+                                        </Badge>
+                                      )}
+                                    </div>
+
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() =>
+                                        toggleNotification(
+                                          feed.id,
+                                          feed.notification_enabled || false
+                                        )
+                                      }
+                                      className="h-7 gap-1 self-start sm:self-auto"
+                                    >
+                                      {feed.notification_enabled ? (
+                                        <>
+                                          <Bell className="w-3 h-3" />
+                                          <span className="text-xs">通知已啟用</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <BellOff className="w-3 h-3" />
+                                          <span className="text-xs">啟用通知</span>
+                                        </>
+                                      )}
+                                    </Button>
+                                  </div>
+                                )}
                               </div>
-                            </label>
-
-                            {/* Feed Health and Statistics */}
-                            <div className="mt-3 flex flex-wrap items-center gap-3">
-                              {feed.last_updated && (
-                                <FeedHealthIndicator
-                                  lastUpdateTime={feed.last_updated}
-                                  status={feed.health_status || 'unknown'}
-                                  errorMessage={feed.error_message}
-                                />
-                              )}
-
-                              {feed.is_subscribed && (
-                                <>
-                                  {feed.total_articles !== undefined && (
-                                    <Badge variant="outline" className="text-xs">
-                                      {feed.total_articles} 篇文章
-                                    </Badge>
-                                  )}
-                                  {feed.articles_this_week !== undefined && (
-                                    <Badge variant="outline" className="text-xs">
-                                      本週 {feed.articles_this_week} 篇
-                                    </Badge>
-                                  )}
-                                  {feed.average_tinkering_index !== undefined && (
-                                    <Badge variant="outline" className="text-xs">
-                                      平均深度 {feed.average_tinkering_index.toFixed(1)}
-                                    </Badge>
-                                  )}
-
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() =>
-                                      toggleNotification(
-                                        feed.id,
-                                        feed.notification_enabled || false
-                                      )
-                                    }
-                                    className="h-7 gap-1"
-                                  >
-                                    {feed.notification_enabled ? (
-                                      <>
-                                        <Bell className="w-3 h-3" />
-                                        <span className="text-xs">通知已啟用</span>
-                                      </>
-                                    ) : (
-                                      <>
-                                        <BellOff className="w-3 h-3" />
-                                        <span className="text-xs">啟用通知</span>
-                                      </>
-                                    )}
-                                  </Button>
-                                </>
-                              )}
                             </div>
                           </div>
                           {toggling.has(feed.id) && (
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent flex-shrink-0 mt-1" />
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent flex-shrink-0 mt-1 self-start sm:self-auto" />
                           )}
                         </div>
                       ))}

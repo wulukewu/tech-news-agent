@@ -45,7 +45,10 @@ export function StatusFilterTabs({
           className={cn(
             'flex gap-4 border-b border-border',
             'overflow-x-auto scrollbar-hide',
-            'md:overflow-x-visible'
+            'md:overflow-x-visible',
+            // Mobile horizontal scroll styling
+            'pb-px', // Prevent border from being cut off during scroll
+            'snap-x snap-mandatory' // Smooth snapping on mobile
           )}
         >
           {tabs.map((tab) => (
@@ -54,15 +57,18 @@ export function StatusFilterTabs({
               value={tab.value}
               className={cn(
                 'relative px-4 py-3 text-sm font-medium transition-colors',
-                'whitespace-nowrap',
+                'whitespace-nowrap flex-shrink-0', // Prevent text wrapping and shrinking
                 'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-t',
                 'hover:text-foreground',
                 'data-[state=active]:text-primary',
                 'data-[state=inactive]:text-muted-foreground',
                 'after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5',
-                'after:transition-colors',
+                'after:transition-colors after:duration-200',
                 'data-[state=active]:after:bg-primary',
-                'motion-reduce:transition-none'
+                'motion-reduce:transition-none',
+                // Mobile touch targets
+                'min-h-[44px] min-w-[44px]', // Ensure minimum touch target size
+                'snap-start' // Snap alignment for horizontal scroll
               )}
               aria-selected={currentValue === tab.value}
             >

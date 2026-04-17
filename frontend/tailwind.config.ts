@@ -165,8 +165,14 @@ const config: Config = {
           to: { transform: 'scale(1)', opacity: '1' },
         },
         shimmer: {
-          '0%': { backgroundPosition: '-1000px 0' },
-          '100%': { backgroundPosition: '1000px 0' },
+          '0%': {
+            backgroundPosition: '-1000px 0',
+            transform: 'translateX(-100%)',
+          },
+          '100%': {
+            backgroundPosition: '1000px 0',
+            transform: 'translateX(100%)',
+          },
         },
       },
       animation: {
