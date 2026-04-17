@@ -187,7 +187,11 @@ const config: Config = {
   plugins: [
     require('tailwindcss-animate'),
     // Add custom utilities
-    function ({ addUtilities }: any) {
+    function ({
+      addUtilities,
+    }: {
+      addUtilities: (utilities: Record<string, Record<string, string>>) => void;
+    }) {
       const newUtilities = {
         '.touch-target': {
           minHeight: '44px',
@@ -204,6 +208,15 @@ const config: Config = {
         },
         '.safe-area-pr': {
           paddingRight: 'env(safe-area-inset-right)',
+        },
+        '.scrollbar-hide': {
+          /* Hide scrollbar for Chrome, Safari and Opera */
+          '&::-webkit-scrollbar': {
+            display: 'none',
+          },
+          /* Hide scrollbar for IE, Edge and Firefox */
+          '-ms-overflow-style': 'none' /* IE and Edge */,
+          'scrollbar-width': 'none' /* Firefox */,
         },
       };
       addUtilities(newUtilities);
