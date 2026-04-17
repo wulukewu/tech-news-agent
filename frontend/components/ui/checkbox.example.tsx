@@ -8,10 +8,15 @@
 import React, { useState } from 'react';
 import { Checkbox } from './checkbox';
 import { Label } from './label';
+import type { CheckedState } from '@radix-ui/react-checkbox';
 
 export function CheckboxExamples() {
   const [checked, setChecked] = useState(false);
-  const [indeterminate, setIndeterminate] = useState<boolean | 'indeterminate'>('indeterminate');
+  const [indeterminate, setIndeterminate] = useState<CheckedState>('indeterminate');
+
+  const handleCheckedChange = (value: CheckedState) => {
+    setChecked(value === true);
+  };
 
   return (
     <div className="space-y-8 p-8">
@@ -26,7 +31,7 @@ export function CheckboxExamples() {
       <section>
         <h2 className="text-2xl font-bold mb-4">Controlled Checkbox</h2>
         <div className="flex items-center space-x-2">
-          <Checkbox id="controlled" checked={checked} onCheckedChange={setChecked} />
+          <Checkbox id="controlled" checked={checked} onCheckedChange={handleCheckedChange} />
           <Label htmlFor="controlled">
             Controlled checkbox (currently {checked ? 'checked' : 'unchecked'})
           </Label>
