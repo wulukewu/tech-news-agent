@@ -187,11 +187,7 @@ const config: Config = {
   plugins: [
     require('tailwindcss-animate'),
     // Add custom utilities
-    function ({
-      addUtilities,
-    }: {
-      addUtilities: (utilities: Record<string, Record<string, string>>) => void;
-    }) {
+    function ({ addUtilities }: { addUtilities: (utilities: Record<string, any>) => void }) {
       const newUtilities = {
         '.touch-target': {
           minHeight: '44px',

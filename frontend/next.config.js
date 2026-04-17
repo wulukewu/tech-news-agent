@@ -4,6 +4,8 @@ const nextConfig = {
   // Automatically detect Docker environment
   ...(process.env.DOCKER_BUILD === 'true' && { output: 'standalone' }),
   reactStrictMode: true,
+
+  // Disable SWC minification if NEXT_DISABLE_SWC is set
   swcMinify: true,
 
   // Enable type checking during build
