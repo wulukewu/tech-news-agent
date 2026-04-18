@@ -24,3 +24,6 @@ export { UserProvider, useUser, type User, type UserContextType } from './UserCo
 
 // ThemeContext exports
 export { ThemeProvider, useTheme, type Theme, type ThemeContextType } from './ThemeContext';
+
+// NotFoundContext exports
+export { NotFoundProvider, useNotFound } from './NotFoundContext';

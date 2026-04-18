@@ -15,6 +15,7 @@ import { useEffect } from 'react';
 import { Navigation } from '@/components/Navigation';
 import { AppLayout } from '@/components/layout';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNotFound } from '@/contexts/NotFoundContext';
 
 interface ConditionalLayoutProps {
   children: React.ReactNode;
@@ -38,13 +39,15 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { isAuthenticated, loading } = useAuth();
+  const { isNotFound } = useNotFound();
 
   // Routes that should NOT have navigation/layout/auth
   const publicRoutes = ['/', '/login', '/auth/callback'];
   const isPublicRoute = publicRoutes.includes(pathname);
 
   // Check if this is a protected route (dashboard, recommendations, etc.)
-  const isProtectedRoute = !isPublicRoute;
+  // Note: 404 pages should not be treated as protected routes
+  const isProtectedRoute = !isPublicRoute && !isNotFound && pathname.startsWith('/dashboard');
 
   // Handle auth redirect for protected routes
   useEffect(() => {
@@ -55,6 +58,11 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
 
   // If it's a public route, render children without layout
   if (isPublicRoute) {
+    return <>{children}</>;
+  }
+
+  // If it's not a protected route (e.g., 404 page), render without layout
+  if (!isProtectedRoute) {
     return <>{children}</>;
   }
 
