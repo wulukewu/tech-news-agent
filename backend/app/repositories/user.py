@@ -141,6 +141,34 @@ class UserRepository(BaseRepository[User]):
                 details={"field": "discord_id", "value": discord_id},
             )
 
+        # Discord IDs must be numeric (snowflake IDs are 64-bit integers)
+        if not discord_id.strip().isdigit():
+            raise ValidationError(
+                "Invalid discord_id: must be a numeric string (Discord snowflake ID)",
+                error_code=ErrorCode.VALIDATION_INVALID_FORMAT,
+                details={"field": "discord_id", "value": discord_id},
+            )
+
+        # Validate Discord snowflake range (must fit in 64-bit signed integer)
+        try:
+            discord_id_int = int(discord_id.strip())
+            if discord_id_int > 9223372036854775807:  # Max 64-bit signed int
+                raise ValidationError(
+                    "Invalid discord_id: value exceeds maximum Discord snowflake ID",
+                    error_code=ErrorCode.VALIDATION_INVALID_FORMAT,
+                    details={
+                        "field": "discord_id",
+                        "value": discord_id,
+                        "max": 9223372036854775807,
+                    },
+                )
+        except ValueError:
+            raise ValidationError(
+                "Invalid discord_id: must be a valid integer",
+                error_code=ErrorCode.VALIDATION_INVALID_FORMAT,
+                details={"field": "discord_id", "value": discord_id},
+            )
+
         # Set default values
         validated_data = {
             "discord_id": discord_id.strip(),
@@ -173,6 +201,35 @@ class UserRepository(BaseRepository[User]):
                     error_code=ErrorCode.VALIDATION_INVALID_FORMAT,
                     details={"field": "discord_id", "value": discord_id},
                 )
+
+            # Discord IDs must be numeric (snowflake IDs are 64-bit integers)
+            if not discord_id.strip().isdigit():
+                raise ValidationError(
+                    "Invalid discord_id: must be a numeric string (Discord snowflake ID)",
+                    error_code=ErrorCode.VALIDATION_INVALID_FORMAT,
+                    details={"field": "discord_id", "value": discord_id},
+                )
+
+            # Validate Discord snowflake range (must fit in 64-bit signed integer)
+            try:
+                discord_id_int = int(discord_id.strip())
+                if discord_id_int > 9223372036854775807:  # Max 64-bit signed int
+                    raise ValidationError(
+                        "Invalid discord_id: value exceeds maximum Discord snowflake ID",
+                        error_code=ErrorCode.VALIDATION_INVALID_FORMAT,
+                        details={
+                            "field": "discord_id",
+                            "value": discord_id,
+                            "max": 9223372036854775807,
+                        },
+                    )
+            except ValueError:
+                raise ValidationError(
+                    "Invalid discord_id: must be a valid integer",
+                    error_code=ErrorCode.VALIDATION_INVALID_FORMAT,
+                    details={"field": "discord_id", "value": discord_id},
+                )
+
             validated_data["discord_id"] = discord_id.strip()
 
         # Validate dm_notifications_enabled if provided
