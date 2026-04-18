@@ -1,12 +1,17 @@
+// Polyfill 'self' for SSR compatibility
+if (typeof global.self === 'undefined') {
+  global.self = global;
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Use 'standalone' for Docker only, disable for Netlify
-  // Automatically detect Docker environment
-  ...(process.env.DOCKER_BUILD === 'true' && { output: 'standalone' }),
+  // Temporarily disabled to fix build issues
+  // ...(process.env.DOCKER_BUILD === 'true' && { output: 'standalone' }),
   reactStrictMode: true,
 
   // Disable SWC minification if NEXT_DISABLE_SWC is set
-  swcMinify: true,
+  swcMinify: process.env.NEXT_DISABLE_SWC !== 'true',
 
   // Enable type checking during build (but ignore in Docker to prevent build failures)
   typescript: {
@@ -21,57 +26,15 @@ const nextConfig = {
   // Enable App Router and experimental features
   experimental: {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
+    // Temporarily disabled instrumentationHook to fix build issues
+    // instrumentationHook: true,
   },
 
   // Optimize for development and production
-  webpack: (config, { dev, isServer }) => {
-    if (dev && !isServer) {
-      // Enable source maps for better debugging
-      config.devtool = 'eval-source-map';
-
-      // Improve HMR performance
-      config.watchOptions = {
-        poll: 1000,
-        aggregateTimeout: 300,
-        ignored: ['**/node_modules/**', '**/.git/**', '**/.next/**'],
-      };
-
-      // Enable faster builds in development
-      config.optimization = {
-        ...config.optimization,
-        removeAvailableModules: false,
-        removeEmptyChunks: false,
-        splitChunks: false,
-      };
-    }
-
-    // Enable source maps in production for debugging
-    if (!dev) {
-      config.devtool = 'source-map';
-    }
-
-    // Optimize bundle splitting
-    if (!dev) {
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all',
-          },
-          common: {
-            name: 'common',
-            minChunks: 2,
-            chunks: 'all',
-            enforce: true,
-          },
-        },
-      };
-    }
-
-    return config;
-  },
+  // Temporarily disabled all webpack customizations to fix build issues
+  // webpack: (config, { dev, isServer }) => {
+  //   return config;
+  // },
 
   // Environment variables
   env: {

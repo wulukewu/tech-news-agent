@@ -20,7 +20,7 @@ import {
   useDismissRecommendation,
   useTrackRecommendationInteraction,
 } from '@/features/recommendations/hooks/useRecommendations';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 /**
  * RecommendationsPage component
@@ -61,9 +61,7 @@ export default function RecommendationsPage() {
           toast.success('推薦已更新');
         },
         onError: (error) => {
-          toast.error('更新推薦失敗', {
-            description: error.message,
-          });
+          toast.error('更新推薦失敗');
         },
       }
     );
@@ -91,9 +89,7 @@ export default function RecommendationsPage() {
             toast.success('已忽略此推薦');
           },
           onError: (error) => {
-            toast.error('操作失敗', {
-              description: error.message,
-            });
+            toast.error('操作失敗');
           },
         }
       );

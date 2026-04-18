@@ -9,7 +9,6 @@
 
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'sonner';
 
 import { AnalysisTrigger } from '@/features/ai-analysis/components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -140,8 +139,6 @@ export default function AnalysisDemoPage() {
           </div>
         </div>
       </div>
-
-      <Toaster position="top-right" />
     </QueryClientProvider>
   );
 }

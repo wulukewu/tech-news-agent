@@ -1,11 +1,7 @@
-import { Metadata } from 'next';
+'use client';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Palette } from 'lucide-react';
-
-export const metadata: Metadata = {
-  title: '外觀設定',
-  description: '自訂主題、語言和顯示偏好',
-};
 
 export default function AppearancePage() {
   return (

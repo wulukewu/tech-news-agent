@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ErrorMessage } from '@/components/ui/error-message';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import {
   getNotificationSettings,
   updateNotificationSettings,
@@ -46,15 +46,10 @@ export default function NotificationSettingsPage() {
     },
     onSuccess: (updatedSettings) => {
       queryClient.setQueryData(['notificationSettings'], updatedSettings);
-      toast.success('設定已儲存', {
-        description: '您的通知偏好設定已成功更新',
-        icon: <Check className="h-4 w-4" />,
-      });
+      toast.success('設定已儲存');
     },
     onError: (error: any) => {
-      toast.error('儲存失敗', {
-        description: error.message || '無法儲存通知設定，請稍後再試',
-      });
+      toast.error('儲存失敗');
     },
     onSettled: () => {
       setIsSaving(false);
@@ -65,14 +60,10 @@ export default function NotificationSettingsPage() {
   const testMutation = useMutation({
     mutationFn: sendTestNotification,
     onSuccess: () => {
-      toast.success('測試通知已發送', {
-        description: '請檢查您的通知渠道',
-      });
+      toast.success('測試通知已發送');
     },
     onError: (error: any) => {
-      toast.error('發送失敗', {
-        description: error.message || '無法發送測試通知',
-      });
+      toast.error('發送失敗');
     },
   });
 

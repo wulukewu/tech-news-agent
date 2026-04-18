@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@/__tests__/utils/test-utils';
 import { OnboardingModal } from '@/components/OnboardingModal';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 
 // Mock sonner toast
 jest.mock('sonner', () => ({

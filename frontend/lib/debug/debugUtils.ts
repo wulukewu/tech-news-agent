@@ -210,6 +210,14 @@ export function debugComponentLifecycle(
 
 // Error context collection
 export function collectErrorContext(): Record<string, any> {
+  // Only collect browser-specific context in browser environment
+  if (typeof window === 'undefined') {
+    return {
+      timestamp: new Date().toISOString(),
+      environment: 'server',
+    };
+  }
+
   return {
     url: window.location.href,
     userAgent: navigator.userAgent,

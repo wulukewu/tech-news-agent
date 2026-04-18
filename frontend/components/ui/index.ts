@@ -44,7 +44,8 @@ export * from './error-message';
 export * from './loading-spinner';
 export * from './optimized-image';
 export * from './pagination';
-export * from './virtualized-list';
+// Note: VirtualizedList is not exported here to prevent SSR issues
+// Import directly from './virtualized-list' when needed
 
 // Re-export types for convenience
 export type { FilterOption } from './multi-select-filter';

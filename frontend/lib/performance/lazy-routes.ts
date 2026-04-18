@@ -14,7 +14,7 @@ import { createLazyRoute } from './code-splitting';
  * Articles Page - Main article browsing interface
  */
 export const LazyArticlesPage = createLazyRoute(
-  () => import('@/app/dashboard/articles/page'),
+  () => import('@/app/app/articles/page'),
   'Articles'
 );
 
@@ -30,7 +30,7 @@ export const LazyRecommendationsPage = createLazyRoute(
  * Analytics Page - User analytics dashboard
  */
 export const LazyAnalyticsPage = createLazyRoute(
-  () => import('@/app/dashboard/analytics/page'),
+  () => import('@/app/app/analytics/page'),
   'Analytics'
 );
 
@@ -48,14 +48,6 @@ export const LazySubscriptionsPage = createLazyRoute(
 export const LazySystemStatusPage = createLazyRoute(
   () => import('@/app/app/system-status/page'),
   'System Status'
-);
-
-/**
- * Settings Page - User settings
- */
-export const LazySettingsPage = createLazyRoute(
-  () => import('@/app/dashboard/settings/page'),
-  'Settings'
 );
 
 /**

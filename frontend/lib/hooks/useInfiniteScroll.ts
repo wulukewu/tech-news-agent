@@ -46,6 +46,9 @@ export function useInfiniteScroll({
     // Don't set up observer if we can't load more or are already loading
     if (!hasMore || loading) return;
 
+    // Check if we're in a browser environment
+    if (typeof window === 'undefined' || typeof IntersectionObserver === 'undefined') return;
+
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
 

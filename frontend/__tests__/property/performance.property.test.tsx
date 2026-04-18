@@ -10,7 +10,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import fc from 'fast-check';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { VirtualizedList } from '../../components/ui/VirtualizedList';
+import { VirtualizedList } from '@/components/ui/VirtualizedList';
 import { PerformanceMonitor, PERFORMANCE_THRESHOLDS } from '../../lib/utils/performance-monitoring';
 import { createOptimizedQueryClient } from '../../lib/cache/strategies';
 

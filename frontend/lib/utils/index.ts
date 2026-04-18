@@ -46,7 +46,9 @@ export function formatRelativeTime(date: Date | string): string {
 
 // URL utilities
 export function buildUrl(base: string, params: Record<string, any>): string {
-  const url = new URL(base, window.location.origin);
+  // Only use window.location.origin in browser environment
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+  const url = new URL(base, origin);
 
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {

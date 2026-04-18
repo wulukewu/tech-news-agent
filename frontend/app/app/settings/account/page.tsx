@@ -1,11 +1,7 @@
-import { Metadata } from 'next';
+'use client';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { User } from 'lucide-react';
-
-export const metadata: Metadata = {
-  title: '帳戶設定',
-  description: '管理個人資料和安全性設定',
-};
 
 export default function AccountPage() {
   return (

@@ -3,7 +3,6 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useArticles } from '@/lib/hooks/useArticles';
 import { ArticleCard } from '@/components/ArticleCard';
-import { VirtualizedList } from '@/components/ui/virtualized-list';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ErrorMessage } from '@/components/ui/error-message';
 import { CategoryFilterMenu } from './CategoryFilterMenu';
@@ -224,39 +223,6 @@ export function ArticleBrowser({
     [onAddToReadingList]
   );
 
-  // Render article card for virtualized list
-  const renderArticleCard = useCallback(
-    ({
-      index,
-      style,
-      data,
-    }: {
-      index: number;
-      style: React.CSSProperties;
-      data: Article & { showAnalysisButton?: boolean; showReadingListButton?: boolean };
-    }) => (
-      <div style={style} className="p-2">
-        <div
-          data-article-index={index}
-          tabIndex={focusedIndex === index ? 0 : -1}
-          className={cn(
-            'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg',
-            focusedIndex === index && 'ring-2 ring-primary ring-offset-2'
-          )}
-        >
-          <ArticleCard
-            article={data}
-            showAnalysisButton={data.showAnalysisButton}
-            showReadingListButton={data.showReadingListButton}
-            onAnalyze={handleAnalyze}
-            onAddToReadingList={handleAddToReadingList}
-          />
-        </div>
-      </div>
-    ),
-    [handleAnalyze, handleAddToReadingList, focusedIndex]
-  );
-
   // Loading state
   if (isLoading) {
     return (
@@ -410,46 +376,35 @@ export function ArticleBrowser({
       </div>
 
       {/* Article Grid */}
-      {enableVirtualization && filteredAndSortedArticles.length > 50 ? (
-        // Virtual scrolling for large lists
-        <VirtualizedList
-          items={articlesWithButtons}
-          itemHeight={280} // Approximate height of ArticleCard
-          renderItem={renderArticleCard}
-          height={600}
-          className="border rounded-lg"
-          aria-label="文章列表"
-        />
-      ) : (
-        // Regular responsive grid layout
-        <div
-          className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-          role="grid"
-          aria-label="文章列表"
-        >
-          {articlesWithButtons.map((article, index) => (
-            <div
-              key={article.id}
-              data-article-index={index}
-              tabIndex={focusedIndex === index ? 0 : -1}
-              className={cn(
-                'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg',
-                focusedIndex === index && 'ring-2 ring-primary ring-offset-2'
-              )}
-              role="gridcell"
-              aria-label={`文章: ${article.title}`}
-            >
-              <ArticleCard
-                article={article}
-                showAnalysisButton={article.showAnalysisButton}
-                showReadingListButton={article.showReadingListButton}
-                onAnalyze={handleAnalyze}
-                onAddToReadingList={handleAddToReadingList}
-              />
-            </div>
-          ))}
-        </div>
-      )}
+      {/* Note: Virtual scrolling temporarily disabled to fix SSR build issues */}
+      {/* TODO: Re-enable virtual scrolling after resolving react-window SSR compatibility */}
+      <div
+        className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        role="grid"
+        aria-label="文章列表"
+      >
+        {articlesWithButtons.map((article, index) => (
+          <div
+            key={article.id}
+            data-article-index={index}
+            tabIndex={focusedIndex === index ? 0 : -1}
+            className={cn(
+              'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg',
+              focusedIndex === index && 'ring-2 ring-primary ring-offset-2'
+            )}
+            role="gridcell"
+            aria-label={`文章: ${article.title}`}
+          >
+            <ArticleCard
+              article={article}
+              showAnalysisButton={article.showAnalysisButton}
+              showReadingListButton={article.showReadingListButton}
+              onAnalyze={handleAnalyze}
+              onAddToReadingList={handleAddToReadingList}
+            />
+          </div>
+        ))}
+      </div>
 
       {/* Pagination Info */}
       {articleData?.hasNextPage && (

@@ -1,11 +1,7 @@
-import { Metadata } from 'next';
+'use client';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Settings } from 'lucide-react';
-
-export const metadata: Metadata = {
-  title: '偏好設定',
-  description: '管理一般偏好設定',
-};
 
 export default function PreferencesPage() {
   return (

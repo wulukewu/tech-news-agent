@@ -54,6 +54,10 @@ ${outlines}
  * Parse OPML file content and extract feeds
  */
 export function parseOPML(opmlContent: string): OPMLOutline[] {
+  if (typeof window === 'undefined') {
+    throw new Error('parseOPML can only be used in browser environment');
+  }
+
   const parser = new DOMParser();
   const doc = parser.parseFromString(opmlContent, 'text/xml');
 
@@ -87,6 +91,10 @@ export function parseOPML(opmlContent: string): OPMLOutline[] {
  * Download OPML file
  */
 export function downloadOPML(opmlContent: string, filename: string = 'subscriptions.opml'): void {
+  if (typeof window === 'undefined') {
+    throw new Error('downloadOPML can only be used in browser environment');
+  }
+
   const blob = new Blob([opmlContent], { type: 'text/xml;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -102,6 +110,10 @@ export function downloadOPML(opmlContent: string, filename: string = 'subscripti
  * Read OPML file from File object
  */
 export function readOPMLFile(file: File): Promise<string> {
+  if (typeof window === 'undefined') {
+    throw new Error('readOPMLFile can only be used in browser environment');
+  }
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -138,6 +150,10 @@ function escapeXml(unsafe: string): string {
  * Validate OPML file
  */
 export function validateOPML(opmlContent: string): { valid: boolean; error?: string } {
+  if (typeof window === 'undefined') {
+    return { valid: false, error: 'validateOPML can only be used in browser environment' };
+  }
+
   try {
     const parser = new DOMParser();
     const doc = parser.parseFromString(opmlContent, 'text/xml');

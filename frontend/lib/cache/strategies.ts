@@ -218,6 +218,9 @@ export class BackgroundSyncStrategy {
    * Setup background refetch for critical data
    */
   setupBackgroundRefetch() {
+    // Only run in browser environment
+    if (typeof window === 'undefined') return;
+
     const activeIntervals = new Map<string, NodeJS.Timeout>();
 
     // Refetch articles every 5 minutes when tab is active
@@ -231,7 +234,11 @@ export class BackgroundSyncStrategy {
           if (!activeIntervals.has(queryHash)) {
             const intervalId = setInterval(
               () => {
-                if (document.visibilityState === 'visible' && query.getObserversCount() > 0) {
+                if (
+                  typeof document !== 'undefined' &&
+                  document.visibilityState === 'visible' &&
+                  query.getObserversCount() > 0
+                ) {
                   query.fetch();
                 }
               },
@@ -256,6 +263,9 @@ export class BackgroundSyncStrategy {
    * Sync offline mutations when connection is restored
    */
   syncOfflineMutations() {
+    // Only run in browser environment
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') return;
+
     // This would integrate with the service worker
     // to replay failed mutations when online
     if ('serviceWorker' in navigator) {
@@ -285,6 +295,9 @@ export class MemoryManager {
    * Monitor and cleanup memory usage
    */
   setupMemoryManagement() {
+    // Only run in browser environment
+    if (typeof window === 'undefined') return;
+
     // Check memory usage every 2 minutes
     setInterval(
       () => {
@@ -294,7 +307,7 @@ export class MemoryManager {
     );
 
     // Listen for memory pressure events
-    if ('memory' in performance) {
+    if (typeof performance !== 'undefined' && 'memory' in performance) {
       const checkMemory = () => {
         const memInfo = (performance as any).memory;
         const usedRatio = memInfo.usedJSHeapSize / memInfo.jsHeapSizeLimit;
@@ -347,7 +360,7 @@ export class MemoryManager {
       .forEach((query) => queryCache.remove(query));
 
     // Force garbage collection if available
-    if ('gc' in window) {
+    if (typeof window !== 'undefined' && 'gc' in window) {
       (window as any).gc();
     }
   }

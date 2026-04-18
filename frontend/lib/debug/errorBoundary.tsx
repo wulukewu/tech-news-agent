@@ -48,8 +48,8 @@ export class ErrorBoundary extends Component<Props, State> {
       stack: error.stack,
       componentStack: errorInfo.componentStack,
       errorId: this.state.errorId,
-      url: window.location.href,
-      userAgent: navigator.userAgent,
+      url: typeof window !== 'undefined' ? window.location.href : 'SSR',
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'SSR',
       timestamp: new Date().toISOString(),
     });
 
@@ -84,8 +84,8 @@ export class ErrorBoundary extends Component<Props, State> {
             stack: error.stack,
             componentStack: errorInfo.componentStack,
             errorId: this.state.errorId,
-            url: window.location.href,
-            userAgent: navigator.userAgent,
+            url: typeof window !== 'undefined' ? window.location.href : 'SSR',
+            userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'SSR',
           },
         }),
       });

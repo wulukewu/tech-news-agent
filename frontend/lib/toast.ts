@@ -1,41 +1,26 @@
-import { toast as sonnerToast } from 'sonner';
-
+// Placeholder toast functions to replace Sonner during SSR fix
 export const toast = {
-  success: (message: string, options?: { description?: string; duration?: number }) => {
-    sonnerToast.success(message, {
-      duration: options?.duration || 3000,
-      position: 'top-right',
-      description: options?.description,
-    });
+  success: async (message: string, options?: { description?: string; duration?: number }) => {
+    console.log('Toast (success):', message, options);
+    return '';
   },
 
-  error: (message: string) => {
-    sonnerToast.error(message, {
-      duration: 5000,
-      position: 'top-right',
-      action: {
-        label: 'Dismiss',
-        onClick: () => {},
-      },
-    });
+  error: async (message: string) => {
+    console.log('Toast (error):', message);
+    return '';
   },
 
-  info: (message: string, options?: { description?: string; duration?: number }) => {
-    sonnerToast.info(message, {
-      duration: options?.duration || 3000,
-      position: 'top-right',
-      description: options?.description,
-    });
+  info: async (message: string, options?: { description?: string; duration?: number }) => {
+    console.log('Toast (info):', message, options);
+    return '';
   },
 
-  loading: (message: string, options?: { description?: string }) => {
-    return sonnerToast.loading(message, {
-      position: 'top-right',
-      description: options?.description,
-    });
+  loading: async (message: string, options?: { description?: string }) => {
+    console.log('Toast (loading):', message, options);
+    return '';
   },
 
-  promise: <T>(
+  promise: async <T>(
     promise: Promise<T>,
     messages: {
       loading: string;
@@ -43,10 +28,11 @@ export const toast = {
       error: string;
     }
   ) => {
-    return sonnerToast.promise(promise, messages);
+    console.log('Toast (promise):', messages);
+    return promise;
   },
 
-  dismiss: (toastId?: string | number) => {
-    sonnerToast.dismiss(toastId);
+  dismiss: async (toastId?: string | number) => {
+    console.log('Toast (dismiss):', toastId);
   },
 };

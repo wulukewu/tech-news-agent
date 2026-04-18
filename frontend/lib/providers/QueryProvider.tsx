@@ -20,9 +20,18 @@
  */
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { createOptimizedQueryClient, PrefetchStrategy, MemoryManager } from '../cache/strategies';
+
+// Dynamically import ReactQueryDevtools to prevent SSR issues
+const ReactQueryDevtools = dynamic(
+  () => import('@tanstack/react-query-devtools').then((mod) => mod.ReactQueryDevtools),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
 
 /**
  * QueryProvider Component
@@ -119,7 +128,7 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      {/* Enhanced DevTools with performance insights */}
+      {/* Enhanced DevTools with performance insights - SSR-safe */}
       {process.env.NODE_ENV === 'development' && <ReactQueryDevtools initialIsOpen={false} />}
     </QueryClientProvider>
   );

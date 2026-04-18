@@ -36,9 +36,13 @@ export function useSchedulerNotifications(status: SchedulerStatus | null) {
 
     // Scheduler just started
     if (isRunning && !wasRunning) {
-      toastIdRef.current = toast.loading('正在抓取文章...', {
-        description: '排程器執行中，請稍候',
-      });
+      toast
+        .loading('正在抓取文章...', {
+          description: '排程器執行中，請稍候',
+        })
+        .then((toastId) => {
+          toastIdRef.current = toastId;
+        });
     }
 
     // Scheduler just completed
