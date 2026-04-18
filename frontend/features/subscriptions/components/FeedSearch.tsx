@@ -7,7 +7,7 @@
  * - THE Feed_Management_Dashboard SHALL provide search functionality across all available feeds
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,12 @@ export interface FeedSearchProps {
 
 export function FeedSearch({ feeds, onFilteredFeedsChange, className = '' }: FeedSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const callbackRef = useRef(onFilteredFeedsChange);
+
+  // Keep callback ref up to date
+  useEffect(() => {
+    callbackRef.current = onFilteredFeedsChange;
+  }, [onFilteredFeedsChange]);
 
   const filteredFeeds = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -39,9 +45,9 @@ export function FeedSearch({ feeds, onFilteredFeedsChange, className = '' }: Fee
   }, [feeds, searchQuery]);
 
   // Notify parent of filtered feeds whenever they change
-  useMemo(() => {
-    onFilteredFeedsChange(filteredFeeds);
-  }, [filteredFeeds, onFilteredFeedsChange]);
+  useEffect(() => {
+    callbackRef.current(filteredFeeds);
+  }, [filteredFeeds]);
 
   const handleClear = () => {
     setSearchQuery('');

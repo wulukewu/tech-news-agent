@@ -272,7 +272,20 @@ export default function SubscriptionsPage() {
   };
 
   const handleFilteredFeedsChange = useCallback((filtered: Feed[]) => {
-    setFilteredFeeds(filtered);
+    setFilteredFeeds((prev) => {
+      // Only update if the filtered feeds actually changed
+      if (prev.length !== filtered.length) {
+        return filtered;
+      }
+      // Check if the feed IDs are the same
+      const prevIds = prev.map((f) => f.id).join(',');
+      const filteredIds = filtered.map((f) => f.id).join(',');
+      if (prevIds !== filteredIds) {
+        return filtered;
+      }
+      // No change, return previous state to prevent re-render
+      return prev;
+    });
   }, []);
 
   const toggleNotification = async (feedId: string, currentState: boolean) => {

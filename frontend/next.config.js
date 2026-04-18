@@ -23,18 +23,6 @@ const nextConfig = {
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
   },
 
-  // Enable hot reloading in Docker (dev only)
-  ...(process.env.NODE_ENV !== 'production' && {
-    webpackDevMiddleware: (config) => {
-      config.watchOptions = {
-        poll: 1000,
-        aggregateTimeout: 300,
-        ignored: /node_modules/,
-      };
-      return config;
-    },
-  }),
-
   // Optimize for development and production
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {
