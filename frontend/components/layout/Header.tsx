@@ -60,7 +60,7 @@ export function Header({
       {/* Logo and brand */}
       <div className="flex items-center gap-4">
         <Link
-          href="/dashboard"
+          href="/dashboard/articles"
           className="flex items-center gap-2 font-bold text-lg hover:opacity-80 transition-opacity"
         >
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -135,7 +135,7 @@ export function Header({
                 <Link href="/settings/notifications">通知設定</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/settings">設定</Link>
+                <Link href="/dashboard/settings">設定</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={logout} className="text-red-600 focus:text-red-600">

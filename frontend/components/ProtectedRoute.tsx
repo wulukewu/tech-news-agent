@@ -94,7 +94,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
       sessionStorage.setItem('redirectAfterLogin', pathname);
 
       // Redirect to login page
-      router.push('/');
+      router.push('/login');
     }
   }, [isAuthenticated, loading, pathname, router]);
 

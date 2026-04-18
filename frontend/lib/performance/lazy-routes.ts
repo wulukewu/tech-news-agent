@@ -14,7 +14,7 @@ import { createLazyRoute } from './code-splitting';
  * Articles Page - Main article browsing interface
  */
 export const LazyArticlesPage = createLazyRoute(
-  () => import('@/app/(dashboard)/articles/page'),
+  () => import('@/app/dashboard/articles/page'),
   'Articles'
 );
 
@@ -30,7 +30,7 @@ export const LazyRecommendationsPage = createLazyRoute(
  * Analytics Page - User analytics dashboard
  */
 export const LazyAnalyticsPage = createLazyRoute(
-  () => import('@/app/(dashboard)/analytics/page'),
+  () => import('@/app/dashboard/analytics/page'),
   'Analytics'
 );
 
@@ -38,7 +38,7 @@ export const LazyAnalyticsPage = createLazyRoute(
  * Subscriptions Page - Feed management
  */
 export const LazySubscriptionsPage = createLazyRoute(
-  () => import('@/app/subscriptions/page'),
+  () => import('@/app/dashboard/subscriptions/page'),
   'Subscriptions'
 );
 
@@ -46,20 +46,23 @@ export const LazySubscriptionsPage = createLazyRoute(
  * System Status Page - System monitoring
  */
 export const LazySystemStatusPage = createLazyRoute(
-  () => import('@/app/system-status/page'),
+  () => import('@/app/dashboard/system-status/page'),
   'System Status'
 );
 
 /**
- * Settings Page - User settings (commented out - route doesn't exist)
+ * Settings Page - User settings
  */
-// export const LazySettingsPage = createLazyRoute(() => import('@/app/settings/page'), 'Settings');
+export const LazySettingsPage = createLazyRoute(
+  () => import('@/app/dashboard/settings/page'),
+  'Settings'
+);
 
 /**
- * Reading List Page - User's saved articles
+ * Reading List - Saved articles
  */
 export const LazyReadingListPage = createLazyRoute(
-  () => import('@/app/reading-list/page'),
+  () => import('@/app/dashboard/reading-list/page'),
   'Reading List'
 );
 

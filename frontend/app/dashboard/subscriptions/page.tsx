@@ -41,7 +41,7 @@ export default function SubscriptionsPage() {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.push('/');
+      router.push('/login');
     }
   }, [isAuthenticated, authLoading, router]);
 
@@ -358,7 +358,11 @@ export default function SubscriptionsPage() {
     <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4">
       <div className="max-w-6xl mx-auto py-8">
         <div className="mb-8">
-          <Button variant="outline" onClick={() => router.push('/dashboard')} className="mb-4">
+          <Button
+            variant="outline"
+            onClick={() => router.push('/dashboard/articles')}
+            className="mb-4"
+          >
             ← 返回 Dashboard
           </Button>
 

@@ -35,7 +35,7 @@ export function DashboardHeader({
         <h1 className="text-3xl font-bold">Your Articles</h1>
         <div className="flex gap-2">
           <TriggerSchedulerButton />
-          <Button variant="outline" onClick={() => router.push('/subscriptions')}>
+          <Button variant="outline" onClick={() => router.push('/dashboard/subscriptions')}>
             管理訂閱
           </Button>
         </div>

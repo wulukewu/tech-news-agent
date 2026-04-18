@@ -41,7 +41,7 @@ import { checkAuthStatus, logout as logoutApi } from '@/lib/api/auth';
 export interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
-  login: () => void;
+  login: (redirectPath?: string) => void;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
@@ -52,7 +52,7 @@ export interface AuthContextType {
  * Provides authentication state and methods to all child components.
  * Should not be used directly - use the useAuth hook instead.
  */
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 /**
  * AuthProvider Component
@@ -94,9 +94,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    *
    * Redirects the user to the FastAPI Discord OAuth2 login endpoint.
    * The backend will handle the OAuth2 flow and redirect back to the callback page.
+   *
+   * @param redirectPath - Optional path to redirect to after successful login
    */
-  const login = useCallback(() => {
+  const login = useCallback((redirectPath?: string) => {
     const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+    // Store redirect path in sessionStorage so callback page can retrieve it
+    if (redirectPath) {
+      sessionStorage.setItem('auth_redirect', redirectPath);
+    } else {
+      sessionStorage.removeItem('auth_redirect');
+    }
+
     window.location.href = `${apiBaseUrl}/api/auth/discord/login`;
   }, []);
 
@@ -115,13 +125,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await logoutApi();
     } catch (error) {
-      console.error('Logout API call failed:', error);
-      // Continue with logout even if API call fails
+      // Logout API call failed, continue with logout anyway
     } finally {
       // Clear authentication state
       setIsAuthenticated(false);
       // Redirect to login page
-      router.push('/');
+      router.push('/login');
     }
   }, [router]);
 
@@ -150,7 +159,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleUnauthorized = () => {
       setIsAuthenticated(false);
-      router.push('/');
+      router.push('/login');
     };
 
     window.addEventListener('unauthorized', handleUnauthorized);

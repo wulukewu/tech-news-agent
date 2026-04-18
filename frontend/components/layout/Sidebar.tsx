@@ -28,9 +28,9 @@ interface SidebarProps {
 }
 
 const defaultNavigation: NavigationItem[] = [
-  { href: '/dashboard', label: 'Dashboard', icon: Home, shortcut: 'D' },
-  { href: '/reading-list', label: 'Reading List', icon: BookMarked, shortcut: 'R' },
-  { href: '/subscriptions', label: 'Subscriptions', icon: Rss, shortcut: 'S' },
+  { href: '/dashboard/articles', label: 'Dashboard', icon: Home, shortcut: 'D' },
+  { href: '/dashboard/reading-list', label: 'Reading List', icon: BookMarked, shortcut: 'R' },
+  { href: '/dashboard/subscriptions', label: 'Subscriptions', icon: Rss, shortcut: 'S' },
   { href: '/settings', label: 'Settings', icon: Bell, shortcut: 'N' },
 ];
 
@@ -43,7 +43,7 @@ const defaultNavigation: NavigationItem[] = [
 export function Sidebar({
   navigation = defaultNavigation,
   collapsed = false,
-  onToggle,
+  onToggle: _onToggle,
   className,
 }: SidebarProps) {
   const pathname = usePathname();
@@ -97,7 +97,7 @@ export function Sidebar({
             collapsed ? 'justify-center p-3' : 'justify-between p-4'
           )}
         >
-          <Link href="/dashboard" className="hover:opacity-80 transition-opacity">
+          <Link href="/dashboard/articles" className="hover:opacity-80 transition-opacity">
             <Logo
               size={collapsed ? 24 : 28}
               showText={!collapsed}

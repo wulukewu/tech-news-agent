@@ -22,7 +22,9 @@ interface BreadcrumbProps {
  * Provides hierarchical navigation with accessibility support
  */
 export function Breadcrumb({ items, className, showHome = true }: BreadcrumbProps) {
-  const allItems = showHome ? [{ label: 'Dashboard', href: '/dashboard' }, ...items] : items;
+  const allItems = showHome
+    ? [{ label: 'Dashboard', href: '/dashboard/articles' }, ...items]
+    : items;
 
   return (
     <nav

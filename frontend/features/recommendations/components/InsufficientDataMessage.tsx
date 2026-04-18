@@ -68,7 +68,7 @@ export function InsufficientDataMessage({
 
           {userRatingCount > 0 && (
             <Button asChild variant="outline" size="lg">
-              <Link href="/reading-list">查看已評分文章</Link>
+              <Link href="/app/reading-list">查看已評分文章</Link>
             </Button>
           )}
         </div>

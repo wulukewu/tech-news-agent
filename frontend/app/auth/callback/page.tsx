@@ -29,6 +29,7 @@
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { AuthGuard } from '@/components/AuthGuard';
 import { setToken } from '@/lib/api/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -95,6 +96,14 @@ function ErrorDisplay({ error, onRetry }: { error: string; onRetry: () => void }
  * This component uses useSearchParams and must be wrapped in Suspense.
  */
 function CallbackPageInner() {
+  return (
+    <AuthGuard fallback={<LoadingSpinner />}>
+      <CallbackPageContent />
+    </AuthGuard>
+  );
+}
+
+function CallbackPageContent() {
   const { checkAuth } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -149,33 +158,31 @@ function CallbackPageInner() {
           return;
         }
 
-        console.log('Received token from URL:', token.substring(0, 20) + '...');
-
         // Store token in localStorage
         setToken(token);
-        console.log('Token stored in localStorage');
-
-        // Verify token was stored
-        const storedToken = localStorage.getItem('auth_token');
-        console.log(
-          'Verified stored token:',
-          storedToken ? storedToken.substring(0, 20) + '...' : 'none'
-        );
 
         // Verify the token and update frontend state
         // Requirement 4.2 & 4.3: Extract token and store user info
         await checkAuth();
-        console.log('checkAuth successful');
 
         // Requirement 4.4: Redirect to dashboard on success
-        router.push('/dashboard');
+        // Requirement 2.5: Redirect to original path after login
+        // Check for redirect path in URL query parameter or sessionStorage
+        const redirectParam = searchParams.get('redirect');
+        const storedRedirect =
+          typeof window !== 'undefined' ? sessionStorage.getItem('auth_redirect') : null;
+
+        const redirectPath = redirectParam || storedRedirect || '/dashboard/articles';
+
+        // Clear stored redirect after using it
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem('auth_redirect');
+        }
+
+        router.push(redirectPath);
       } catch (err) {
         // Requirement 4.5: Display error message on failure
-        console.error('Authentication callback error:', {
-          timestamp: new Date().toISOString(),
-          error: err,
-          url: window.location.href,
-        });
+        // Authentication callback error occurred
 
         setError('無法完成身份驗證。請確認您的網路連線正常，然後重試。');
         setIsProcessing(false);
@@ -191,7 +198,7 @@ function CallbackPageInner() {
    * Redirects user back to login page to retry authentication.
    */
   const handleRetry = () => {
-    router.push('/');
+    router.push('/login');
   };
 
   // Requirement 4.7: Display loading indicator

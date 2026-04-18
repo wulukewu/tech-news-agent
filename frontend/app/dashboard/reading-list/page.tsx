@@ -76,7 +76,7 @@ export default function ReadingListPage() {
             icon={<BookMarked className="h-12 w-12" />}
             action={
               <Link
-                href="/dashboard"
+                href="/dashboard/articles"
                 className={cn(
                   'inline-flex items-center px-4 py-2 rounded-md',
                   'bg-primary text-primary-foreground',
