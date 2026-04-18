@@ -2,15 +2,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies
-COPY package.json package-lock.json* ./
-RUN npm ci
-
-# Copy project files (will be overridden by volume mount in dev)
-COPY . .
-
 # Expose the Next.js port
 EXPOSE 3000
 
 # Start Next.js in development mode with hot reload
+# Dependencies are provided via volume mount from host
 CMD ["npm", "run", "dev"]
