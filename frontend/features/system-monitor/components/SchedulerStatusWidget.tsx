@@ -163,7 +163,7 @@ export function SchedulerStatusWidget({
         )}
 
         {/* Health Issues */}
-        {status.issues.length > 0 && (
+        {status.issues && status.issues.length > 0 && (
           <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium text-destructive">
               <AlertCircle className="h-4 w-4" />

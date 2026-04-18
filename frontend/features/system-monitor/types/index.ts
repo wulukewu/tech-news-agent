@@ -23,8 +23,8 @@ export interface SchedulerStatus {
   totalOperations: number;
   /** Whether the scheduler is healthy */
   isHealthy: boolean;
-  /** List of health issues */
-  issues: string[];
+  /** List of health issues (optional, defaults to empty array) */
+  issues?: string[];
 }
 
 /**

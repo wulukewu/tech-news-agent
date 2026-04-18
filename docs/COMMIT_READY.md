@@ -92,10 +92,12 @@ git commit --no-verify -m "your message"
 4. **JSON check** - Validates JSON files ✅
 5. **Black** (Python) - Auto-formats backend code ✅
 6. **Ruff** (Python) - Lints backend code ✅
-7. **Mypy** (Python) - Type checks backend code ✅
+7. **Mypy** (Python) - Type checks backend code ⚠️ (CI disabled, pre-commit still active)
 8. **Prettier** (Frontend) - Auto-formats frontend code ✅
 9. **ESLint** (Frontend) - Lints frontend code (warnings allowed) ✅
 10. **TypeScript** - ⏸️ Temporarily disabled
+
+**Note**: Mypy is still active in pre-commit hooks but has been disabled in CI due to 545 type errors. See [CI_STATUS.md](../CI_STATUS.md) for details.
 
 ## Next Steps
 

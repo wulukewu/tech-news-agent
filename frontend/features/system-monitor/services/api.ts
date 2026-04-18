@@ -33,8 +33,10 @@ interface SchedulerStatusResponse {
  * Requirements: 5.1, 5.2
  */
 export async function getSchedulerStatus(): Promise<SchedulerStatus> {
-  const response = await apiClient.get<SchedulerStatusResponse>('/api/scheduler/status');
-  const data = response.data;
+  const response = await apiClient.get<{ success: boolean; data: SchedulerStatusResponse }>(
+    '/api/scheduler/status'
+  );
+  const data = response.data.data; // Extract data from success_response wrapper
 
   return {
     isRunning: false, // TODO: Add real-time status from backend
@@ -44,7 +46,7 @@ export async function getSchedulerStatus(): Promise<SchedulerStatus> {
     failedOperations: data.failed_operations,
     totalOperations: data.total_operations,
     isHealthy: data.is_healthy,
-    issues: data.issues,
+    issues: data.issues || [], // Provide default empty array
   };
 }
 

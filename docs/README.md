@@ -41,6 +41,7 @@ Complete documentation for the Tech News Agent project.
 
 - [Deployment Guide](./deployment/DEPLOYMENT.md) - Production deployment steps
 - [Deployment Checklist](./deployment/deployment-checklist.md) - Complete Netlify + Render deployment guide
+- [Render Deployment Guide](./deployment/render-deployment.md) - 🚀 Complete Render deployment with memory optimization
 - [OAuth Redirect Fix](./deployment/oauth-redirect-fix.md) - 🔧 Fix Discord OAuth redirect to localhost issue
 - [Render Environment Setup](./deployment/render-env-setup.md) - Quick environment variable setup for Render
 - [Netlify Deployment Complete](./deployment/netlify-deployment-complete.md) - ✅ Current deployment status & next steps
@@ -137,6 +138,9 @@ docs/
 
 **Deploy to production (免費版)**
 → [Netlify + Render 完整指南](./deployment/deployment-checklist.md)
+
+**Fix Render memory issues**
+→ [Render Deployment Guide](./deployment/render-deployment.md)
 
 **Fix OAuth redirect to localhost**
 → [OAuth Redirect Fix](./deployment/oauth-redirect-fix.md)
