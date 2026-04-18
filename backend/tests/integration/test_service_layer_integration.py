@@ -722,19 +722,21 @@ class TestServiceLayerLoggingIntegration:
         user_id = UUID(test_user["id"])
 
         # Act - Patch repository to cause error and capture logs
-        with patch.object(
-            onboarding_service.user_preferences_repo,
-            "get_by_user_id",
-            side_effect=DatabaseError("Database error", error_code="DB_ERROR"),
+        with (
+            patch.object(
+                onboarding_service.user_preferences_repo,
+                "get_by_user_id",
+                side_effect=DatabaseError("Database error", error_code="DB_ERROR"),
+            ),
+            patch.object(onboarding_service.logger, "error") as mock_error,
         ):
-            with patch.object(onboarding_service.logger, "error") as mock_error:
-                with pytest.raises(ServiceError):
-                    await onboarding_service.get_onboarding_status(user_id)
+            with pytest.raises(ServiceError):
+                await onboarding_service.get_onboarding_status(user_id)
 
-                # Assert - Verify error was logged
-                assert mock_error.call_count >= 1
+            # Assert - Verify error was logged
+            assert mock_error.call_count >= 1
 
-                # Check that error log includes context
-                call_args, call_kwargs = mock_error.call_args
-                assert "exc_info" in call_kwargs
-                assert call_kwargs["exc_info"] is True
+            # Check that error log includes context
+            call_args, call_kwargs = mock_error.call_args
+            assert "exc_info" in call_kwargs
+            assert call_kwargs["exc_info"] is True

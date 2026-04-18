@@ -8,7 +8,7 @@ Requirements: 5.4
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -25,10 +25,10 @@ class FrontendLogEntry(BaseModel):
     timestamp: str = Field(..., description="ISO 8601 timestamp")
     level: str = Field(..., description="Log level (DEBUG, INFO, WARN, ERROR)")
     message: str = Field(..., description="Log message")
-    context: Optional[dict[str, Any]] = Field(None, description="Additional context")
-    userAgent: Optional[str] = Field(None, description="User agent string")
-    url: Optional[str] = Field(None, description="Page URL")
-    userId: Optional[str] = Field(None, description="User ID")
+    context: dict[str, Any] | None = Field(None, description="Additional context")
+    userAgent: str | None = Field(None, description="User agent string")
+    url: str | None = Field(None, description="Page URL")
+    userId: str | None = Field(None, description="User ID")
 
 
 class FrontendLogsRequest(BaseModel):

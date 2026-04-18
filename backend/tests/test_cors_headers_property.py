@@ -287,12 +287,11 @@ def test_cors_multiple_origins_property(origin, endpoint):
                 assert (
                     allow_origin == origin or allow_origin == "*"
                 ), f"Access-Control-Allow-Origin should be '{origin}' or '*', got: {allow_origin}"
-            else:
-                # For disallowed origins, the header should not match
-                if allow_origin != "*":
-                    assert (
-                        allow_origin != origin
-                    ), f"Access-Control-Allow-Origin should not reflect disallowed origin {origin}"
+            # For disallowed origins, the header should not match
+            elif allow_origin != "*":
+                assert (
+                    allow_origin != origin
+                ), f"Access-Control-Allow-Origin should not reflect disallowed origin {origin}"
 
 
 # Feature: web-api-oauth-authentication, Property 13: CORS Headers Presence (Disallowed Origin)

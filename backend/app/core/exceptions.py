@@ -11,8 +11,6 @@ For new error handling, import from app.core.errors:
     )
 """
 
-from typing import Optional
-
 from app.core.errors import (
     AppException,
     DatabaseError,
@@ -91,8 +89,8 @@ class SupabaseServiceError(Exception):
     def __init__(
         self,
         message: str,
-        original_error: Optional[Exception] = None,
-        context: Optional[dict] = None,
+        original_error: Exception | None = None,
+        context: dict | None = None,
     ):
         """初始化例外
 

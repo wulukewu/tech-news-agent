@@ -189,12 +189,11 @@ async def test_property_3_batch_processing_resilience(
                     failed_articles.append(
                         {"url": article_dict["url"], "error": "Simulated database error"}
                     )
+                # Database success (randomly choose insert or update)
+                elif article_index % 2 == 0:
+                    inserted += 1
                 else:
-                    # Database success (randomly choose insert or update)
-                    if article_index % 2 == 0:
-                        inserted += 1
-                    else:
-                        updated += 1
+                    updated += 1
 
             return BatchResult(
                 inserted_count=inserted,

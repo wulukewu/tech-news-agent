@@ -1,7 +1,6 @@
 import asyncio
 import json
 import logging
-from typing import Optional
 
 from openai import AsyncOpenAI
 
@@ -159,7 +158,7 @@ class LLMService:
             # This will be handled by the caller (evaluate_batch)
             return None
 
-    async def generate_summary(self, article: ArticleSchema) -> Optional[str]:
+    async def generate_summary(self, article: ArticleSchema) -> str | None:
         """
         Generate ai_summary for a single article using a powerful LLM.
 
@@ -408,7 +407,7 @@ class LLMService:
 
     async def generate_weekly_newsletter(
         self, hardcore_articles: list[ArticleSchema]
-    ) -> Optional[str]:
+    ) -> str | None:
         """Group top 7 hardcore articles into a beautiful Discord-ready Markdown."""
         if not hardcore_articles:
             return "本週沒有足夠硬核的技術資訊 🥲"
@@ -480,9 +479,7 @@ class LLMService:
         categories_text = "、".join(sorted(set(categories)))
 
         user_prompt = (
-            f"以下是使用者近期評分 4 星以上的高評分文章：\n\n"
-            f"文章標題：\n{titles_text}\n\n"
-            f"涵蓋分類：{categories_text}"
+            f"以下是使用者近期評分 4 星以上的高評分文章：\n\n" f"文章標題：\n{titles_text}\n\n" f"涵蓋分類：{categories_text}"
         )
 
         system_prompt = (

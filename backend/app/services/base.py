@@ -32,7 +32,7 @@ Validates: Requirements 3.1, 3.3, 3.5
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Optional, TypeVar
+from typing import Any, TypeVar
 
 from app.core.errors import ErrorCode
 from app.core.logger import get_logger
@@ -163,7 +163,7 @@ class BaseService(IService):
         error: Exception,
         message: str,
         error_code: ErrorCode = ErrorCode.INTERNAL_ERROR,
-        context: Optional[dict[str, Any]] = None,
+        context: dict[str, Any] | None = None,
     ) -> None:
         """
         Handle and wrap service errors consistently.

@@ -13,7 +13,7 @@ Validates: Requirements 3.1, 3.2, 3.3
 """
 
 from datetime import UTC, datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from app.core.errors import ErrorCode
@@ -69,7 +69,7 @@ class AnalyticsService(BaseService):
         self.logger = get_logger(f"{__name__}.AnalyticsService")
 
     async def log_event(
-        self, user_id: UUID, event_type: str, event_data: Optional[dict[str, Any]] = None
+        self, user_id: UUID, event_type: str, event_data: dict[str, Any] | None = None
     ) -> None:
         """
         Log an analytics event to the analytics_events table.

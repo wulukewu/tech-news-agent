@@ -184,7 +184,7 @@ async def test_pagination_boundary_conditions(page, page_size, total_count):
     """
     # Only test cases where page is beyond available data
     offset = (page - 1) * page_size
-    assume(offset >= total_count and total_count > 0)
+    assume(offset >= total_count > 0)
 
     # Create mock subscriptions
     mock_subscriptions = []

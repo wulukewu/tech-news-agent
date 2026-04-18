@@ -404,13 +404,29 @@ All interactive elements persist across bot restarts, meaning buttons and menus 
 
 ### Quick CI Verification
 
-Before pushing code, run this to verify all CI checks will pass:
+Before pushing code, **always** run these commands:
 
 ```bash
-./scripts/verify-ci.sh
+# 1. Auto-fix formatting and linting issues
+./scripts/ci-fix.sh
+
+# 2. Run all CI checks locally (mirrors GitHub Actions)
+./scripts/ci-local-test.sh
 ```
 
-See [Quick CI Guide](./QUICK_CI_GUIDE.md) for troubleshooting and common fixes.
+**CI Documentation:**
+
+- 📖 [Quick Start Guide](./docs/ci/QUICK_START.md) - Essential commands and common fixes
+- 📚 [Complete CI Guide](./docs/ci/CI_GUIDE.md) - Detailed documentation and troubleshooting
+- 🔄 [CI Redesign Summary](./docs/ci/CI_REDESIGN_SUMMARY.md) - Architecture and improvements
+
+**CI Checks:**
+
+- ✅ Code formatting (Black, Prettier)
+- ✅ Linting (Ruff, ESLint)
+- ✅ Type checking (mypy, TypeScript)
+- ✅ Test coverage (≥70% backend, ≥70% frontend)
+- ✅ Build verification
 
 ### Backend Tests
 

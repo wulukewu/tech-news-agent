@@ -5,7 +5,6 @@ Pydantic schemas for reading list API requests and responses.
 """
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field, HttpUrl, validator
@@ -20,7 +19,7 @@ class AddToReadingListRequest(BaseModel):
 class UpdateRatingRequest(BaseModel):
     """更新評分請求"""
 
-    rating: Optional[int] = Field(None, ge=1, le=5, description="評分（1-5）或 null 清除評分")
+    rating: int | None = Field(None, ge=1, le=5, description="評分（1-5）或 null 清除評分")
 
     @validator("rating")
     def validate_rating(cls, v):
@@ -54,7 +53,7 @@ class ReadingListItemResponse(BaseModel):
     url: HttpUrl = Field(..., description="文章 URL")
     category: str = Field(..., description="分類")
     status: str = Field(..., description="閱讀狀態")
-    rating: Optional[int] = Field(None, description="評分（1-5）")
+    rating: int | None = Field(None, description="評分（1-5）")
     added_at: datetime = Field(..., description="加入時間", alias="addedAt")
     updated_at: datetime = Field(..., description="更新時間", alias="updatedAt")
 
@@ -79,9 +78,9 @@ class MessageResponse(BaseModel):
     """通用訊息回應"""
 
     message: str = Field(..., description="回應訊息")
-    article_id: Optional[UUID] = Field(None, description="文章 UUID", alias="articleId")
-    rating: Optional[int] = Field(None, description="評分")
-    status: Optional[str] = Field(None, description="狀態")
+    article_id: UUID | None = Field(None, description="文章 UUID", alias="articleId")
+    rating: int | None = Field(None, description="評分")
+    status: str | None = Field(None, description="狀態")
 
     class Config:
         populate_by_name = True

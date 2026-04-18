@@ -8,7 +8,7 @@ Validates: Requirements 3.2, 3.4, 14.2, 14.3, 15.4
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from supabase import Client
@@ -28,11 +28,11 @@ class ReadingListItem:
         user_id: UUID,
         article_id: UUID,
         status: str,
-        rating: Optional[int] = None,
-        added_at: Optional[datetime] = None,
-        updated_at: Optional[datetime] = None,
-        modified_by: Optional[str] = None,
-        deleted_at: Optional[datetime] = None,
+        rating: int | None = None,
+        added_at: datetime | None = None,
+        updated_at: datetime | None = None,
+        modified_by: str | None = None,
+        deleted_at: datetime | None = None,
     ):
         self.id = id
         self.user_id = user_id
@@ -228,7 +228,7 @@ class ReadingListRepository(BaseRepository[ReadingListItem]):
 
     async def get_by_user_and_article(
         self, user_id: UUID, article_id: UUID
-    ) -> Optional[ReadingListItem]:
+    ) -> ReadingListItem | None:
         """
         Retrieve a reading list item by user and article.
 
@@ -290,9 +290,9 @@ class ReadingListRepository(BaseRepository[ReadingListItem]):
         user_id: UUID,
         page: int = 1,
         page_size: int = 20,
-        status: Optional[str] = None,
-        rating: Optional[int] = None,
-        order_by: Optional[str] = None,
+        status: str | None = None,
+        rating: int | None = None,
+        order_by: str | None = None,
         ascending: bool = False,
     ) -> tuple[list[ReadingListItem], PaginationMetadata]:
         """
@@ -434,7 +434,7 @@ class ReadingListRepository(BaseRepository[ReadingListItem]):
         return await self.update(item.id, {"status": status})
 
     async def update_rating(
-        self, user_id: UUID, article_id: UUID, rating: Optional[int]
+        self, user_id: UUID, article_id: UUID, rating: int | None
     ) -> ReadingListItem:
         """
         Update the rating of a reading list item.

@@ -10,7 +10,7 @@ Validates: Requirements 4.1, 4.2, 4.4, 4.5
 import asyncio
 from collections.abc import Callable
 from enum import Enum
-from typing import Any, Optional, TypeVar, Union
+from typing import Any, TypeVar
 
 from fastapi import Request, status
 from fastapi.exceptions import RequestValidationError
@@ -103,8 +103,8 @@ class AppException(Exception):
         message: str,
         error_code: ErrorCode,
         status_code: int = status.HTTP_500_INTERNAL_SERVER_ERROR,
-        details: Optional[dict[str, Any]] = None,
-        original_error: Optional[Exception] = None,
+        details: dict[str, Any] | None = None,
+        original_error: Exception | None = None,
     ):
         """
         Initialize application exception.
@@ -159,8 +159,8 @@ class AuthenticationError(AppException):
         self,
         message: str = "Authentication failed",
         error_code: ErrorCode = ErrorCode.AUTH_INVALID_TOKEN,
-        details: Optional[dict[str, Any]] = None,
-        original_error: Optional[Exception] = None,
+        details: dict[str, Any] | None = None,
+        original_error: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -178,8 +178,8 @@ class AuthorizationError(AppException):
         self,
         message: str = "Insufficient permissions",
         error_code: ErrorCode = ErrorCode.AUTH_INSUFFICIENT_PERMISSIONS,
-        details: Optional[dict[str, Any]] = None,
-        original_error: Optional[Exception] = None,
+        details: dict[str, Any] | None = None,
+        original_error: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -197,8 +197,8 @@ class NotFoundError(AppException):
         self,
         message: str = "Resource not found",
         error_code: ErrorCode = ErrorCode.RESOURCE_NOT_FOUND,
-        details: Optional[dict[str, Any]] = None,
-        original_error: Optional[Exception] = None,
+        details: dict[str, Any] | None = None,
+        original_error: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -216,8 +216,8 @@ class ValidationError(AppException):
         self,
         message: str = "Validation failed",
         error_code: ErrorCode = ErrorCode.VALIDATION_FAILED,
-        details: Optional[dict[str, Any]] = None,
-        original_error: Optional[Exception] = None,
+        details: dict[str, Any] | None = None,
+        original_error: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -235,8 +235,8 @@ class DatabaseError(AppException):
         self,
         message: str = "Database operation failed",
         error_code: ErrorCode = ErrorCode.DB_QUERY_FAILED,
-        details: Optional[dict[str, Any]] = None,
-        original_error: Optional[Exception] = None,
+        details: dict[str, Any] | None = None,
+        original_error: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -255,8 +255,8 @@ class ExternalServiceError(AppException):
         message: str = "External service unavailable",
         error_code: ErrorCode = ErrorCode.EXTERNAL_SERVICE_UNAVAILABLE,
         status_code: int = status.HTTP_503_SERVICE_UNAVAILABLE,
-        details: Optional[dict[str, Any]] = None,
-        original_error: Optional[Exception] = None,
+        details: dict[str, Any] | None = None,
+        original_error: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -274,8 +274,8 @@ class RateLimitError(AppException):
         self,
         message: str = "Rate limit exceeded",
         error_code: ErrorCode = ErrorCode.RATE_LIMIT_EXCEEDED,
-        details: Optional[dict[str, Any]] = None,
-        original_error: Optional[Exception] = None,
+        details: dict[str, Any] | None = None,
+        original_error: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -293,8 +293,8 @@ class ConfigurationError(AppException):
         self,
         message: str = "Configuration error",
         error_code: ErrorCode = ErrorCode.CONFIG_INVALID,
-        details: Optional[dict[str, Any]] = None,
-        original_error: Optional[Exception] = None,
+        details: dict[str, Any] | None = None,
+        original_error: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -312,8 +312,8 @@ class ServiceError(AppException):
         self,
         message: str = "Service operation failed",
         error_code: ErrorCode = ErrorCode.INTERNAL_ERROR,
-        details: Optional[dict[str, Any]] = None,
-        original_error: Optional[Exception] = None,
+        details: dict[str, Any] | None = None,
+        original_error: Exception | None = None,
     ):
         super().__init__(
             message=message,
@@ -589,7 +589,7 @@ class FallbackStrategy:
     Validates: Requirements 4.5
     """
 
-    def __init__(self, fallback: Union[Any, Callable], fallback_on: tuple = (AppException,)):
+    def __init__(self, fallback: Any | Callable, fallback_on: tuple = (AppException,)):
         """
         Initialize fallback strategy.
 
@@ -673,7 +673,7 @@ def with_retry(
     return decorator
 
 
-def with_fallback(fallback: Union[Any, Callable], fallback_on: tuple = (AppException,)):
+def with_fallback(fallback: Any | Callable, fallback_on: tuple = (AppException,)):
     """
     Decorator for adding fallback logic to functions.
 

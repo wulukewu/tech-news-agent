@@ -8,7 +8,6 @@ Validates: Requirements 1.1, 1.3, 1.6, 6.1, 6.7, 13.1, 13.2, 13.3
 """
 
 import logging
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -124,7 +123,7 @@ async def add_to_reading_list(
 async def get_reading_list(
     page: int = Query(1, ge=1, description="頁碼（從 1 開始）"),
     page_size: int = Query(20, ge=1, le=100, description="每頁項目數（1-100）"),
-    status: Optional[str] = Query(None, description="狀態篩選（Unread, Read, Archived）"),
+    status: str | None = Query(None, description="狀態篩選（Unread, Read, Archived）"),
     current_user: dict = Depends(get_current_user),
 ):
     """

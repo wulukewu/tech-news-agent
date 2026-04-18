@@ -9,8 +9,6 @@ The tests validate that database exceptions are properly wrapped with
 descriptive messages and that original error context is preserved.
 """
 
-from typing import Optional
-
 import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
@@ -83,7 +81,7 @@ def original_exceptions(draw):
 )
 @settings(max_examples=5, deadline=None)
 def test_property_27_exception_wrapping_preserves_original_error(
-    message: str, original_error: Optional[Exception], context: Optional[dict]
+    message: str, original_error: Exception | None, context: dict | None
 ):
     """
     **Validates: Requirements 13.8**
@@ -254,7 +252,7 @@ def test_property_27_exception_wrapping_handles_missing_context(message: str):
 )
 @settings(max_examples=5, deadline=None)
 def test_property_27_exception_wrapping_string_representation_format(
-    message: str, original_error: Optional[Exception], context: Optional[dict]
+    message: str, original_error: Exception | None, context: dict | None
 ):
     """
     **Validates: Requirements 13.8**

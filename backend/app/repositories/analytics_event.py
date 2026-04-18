@@ -8,7 +8,7 @@ Validates: Requirements 3.2, 3.4, 14.2, 14.3
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from supabase import Client
@@ -26,10 +26,10 @@ class AnalyticsEvent:
         user_id: UUID,
         event_type: str,
         event_data: dict[str, Any],
-        created_at: Optional[datetime] = None,
-        updated_at: Optional[datetime] = None,
-        modified_by: Optional[str] = None,
-        deleted_at: Optional[datetime] = None,
+        created_at: datetime | None = None,
+        updated_at: datetime | None = None,
+        modified_by: str | None = None,
+        deleted_at: datetime | None = None,
     ):
         self.id = id
         self.user_id = user_id
@@ -156,11 +156,11 @@ class AnalyticsEventRepository(BaseRepository[AnalyticsEvent]):
     async def list_by_user(
         self,
         user_id: UUID,
-        event_type: Optional[str] = None,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
+        event_type: str | None = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> list[AnalyticsEvent]:
         """
         List analytics events for a user with optional filters.
@@ -241,10 +241,10 @@ class AnalyticsEventRepository(BaseRepository[AnalyticsEvent]):
     async def list_by_event_type(
         self,
         event_type: str,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> list[AnalyticsEvent]:
         """
         List analytics events by event type with optional date filters.
@@ -320,8 +320,8 @@ class AnalyticsEventRepository(BaseRepository[AnalyticsEvent]):
     async def count_by_event_type(
         self,
         event_type: str,
-        start_date: Optional[datetime] = None,
-        end_date: Optional[datetime] = None,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
     ) -> int:
         """
         Count analytics events by event type with optional date filters.

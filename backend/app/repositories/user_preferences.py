@@ -8,7 +8,7 @@ Validates: Requirements 3.2, 3.4, 14.2, 14.3
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from supabase import Client
@@ -24,17 +24,17 @@ class UserPreferences:
         self,
         user_id: UUID,
         onboarding_completed: bool = False,
-        onboarding_step: Optional[str] = None,
+        onboarding_step: str | None = None,
         onboarding_skipped: bool = False,
-        onboarding_started_at: Optional[datetime] = None,
-        onboarding_completed_at: Optional[datetime] = None,
+        onboarding_started_at: datetime | None = None,
+        onboarding_completed_at: datetime | None = None,
         tooltip_tour_completed: bool = False,
         tooltip_tour_skipped: bool = False,
         preferred_language: str = "zh-TW",
-        created_at: Optional[datetime] = None,
-        updated_at: Optional[datetime] = None,
-        modified_by: Optional[str] = None,
-        deleted_at: Optional[datetime] = None,
+        created_at: datetime | None = None,
+        updated_at: datetime | None = None,
+        modified_by: str | None = None,
+        deleted_at: datetime | None = None,
     ):
         self.user_id = user_id
         self.onboarding_completed = onboarding_completed
@@ -201,7 +201,7 @@ class UserPreferencesRepository(BaseRepository[UserPreferences]):
 
         return validated_data
 
-    async def get_by_user_id(self, user_id: UUID) -> Optional[UserPreferences]:
+    async def get_by_user_id(self, user_id: UUID) -> UserPreferences | None:
         """
         Retrieve user preferences by user ID.
 

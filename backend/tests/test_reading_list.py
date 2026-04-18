@@ -4,7 +4,6 @@ Uses Hypothesis to verify correctness properties defined in design.md.
 """
 
 import asyncio
-from typing import Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -21,8 +20,8 @@ from app.services.notion_service import NotionService
 
 
 def reading_list_item_strategy(
-    status: Optional[str] = None,
-    rating: Optional[int] = None,
+    status: str | None = None,
+    rating: int | None = None,
     null_rating: bool = False,
 ):
     """Build a strategy that generates ReadingListItem instances."""
@@ -57,7 +56,7 @@ def reading_list_item_strategy(
 
 
 def make_notion_page(
-    page_id: str, title: str, url: str, category: str, status: str, rating: Optional[int]
+    page_id: str, title: str, url: str, category: str, status: str, rating: int | None
 ) -> dict:
     """Build a minimal Notion page dict that _parse_reading_list_item can consume."""
     rating_prop = {"number": rating} if rating is not None else {"number": None}

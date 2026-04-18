@@ -11,7 +11,6 @@ Requirements: 2.1, 2.2, 4.1, 12.1, 12.4
 Validates: Requirements 3.1, 3.2, 3.3
 """
 
-from typing import Optional
 from uuid import UUID
 
 from app.core.errors import ErrorCode, ValidationError
@@ -58,7 +57,7 @@ class RecommendationService(BaseService):
         self.user_subscription_repo = user_subscription_repo
         self.logger = get_logger(f"{__name__}.RecommendationService")
 
-    async def get_recommended_feeds(self, user_id: Optional[UUID] = None) -> list[RecommendedFeed]:
+    async def get_recommended_feeds(self, user_id: UUID | None = None) -> list[RecommendedFeed]:
         """
         Get all recommended feeds sorted by recommendation_priority.
 
@@ -120,7 +119,7 @@ class RecommendationService(BaseService):
             )
 
     async def get_feeds_by_category(
-        self, category: str, user_id: Optional[UUID] = None
+        self, category: str, user_id: UUID | None = None
     ) -> FeedsByCategoryResponse:
         """
         Get all feeds in a specific category, sorted by recommendation_priority.

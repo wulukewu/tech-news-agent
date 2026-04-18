@@ -6,7 +6,7 @@ JWT 認證工具模組
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import Any, Optional
+from typing import Any
 from urllib.parse import urlencode
 from uuid import UUID
 
@@ -27,7 +27,7 @@ token_blacklist = None
 
 
 def create_access_token(
-    user_id: UUID, discord_id: str, expires_delta: Optional[timedelta] = None
+    user_id: UUID, discord_id: str, expires_delta: timedelta | None = None
 ) -> str:
     """
     生成 JWT Access Token
@@ -233,9 +233,9 @@ async def discord_login():
 
 @router.get("/discord/callback")
 async def discord_callback(
-    code: Optional[str] = Query(None),
-    error: Optional[str] = Query(None),
-    error_description: Optional[str] = Query(None),
+    code: str | None = Query(None),
+    error: str | None = Query(None),
+    error_description: str | None = Query(None),
 ):
     """
     處理 Discord OAuth2 授權回調
@@ -375,7 +375,7 @@ async def discord_callback(
 
 
 async def get_current_user(
-    authorization: Optional[str] = Header(None), access_token: Optional[str] = Cookie(None)
+    authorization: str | None = Header(None), access_token: str | None = Cookie(None)
 ) -> dict[str, Any]:
     """
     驗證 JWT Token 並返回當前使用者資訊
@@ -525,7 +525,7 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
 
 @router.post("/refresh")
 async def refresh_token(
-    current_user: dict = Depends(get_current_user), access_token: Optional[str] = Cookie(None)
+    current_user: dict = Depends(get_current_user), access_token: str | None = Cookie(None)
 ):
     """
     刷新 JWT Token
@@ -573,7 +573,7 @@ async def refresh_token(
 
 @router.post("/logout")
 async def logout(
-    current_user: dict = Depends(get_current_user), access_token: Optional[str] = Cookie(None)
+    current_user: dict = Depends(get_current_user), access_token: str | None = Cookie(None)
 ):
     """
     登出並撤銷 Token

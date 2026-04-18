@@ -13,15 +13,15 @@ import sys
 from contextvars import ContextVar
 from datetime import datetime
 from logging import LogRecord
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
 # Context variables for request-scoped data
-request_id_var: ContextVar[Optional[str]] = ContextVar("request_id", default=None)
-user_id_var: ContextVar[Optional[str]] = ContextVar("user_id", default=None)
+request_id_var: ContextVar[str | None] = ContextVar("request_id", default=None)
+user_id_var: ContextVar[str | None] = ContextVar("user_id", default=None)
 
 
 class StructuredFormatter(logging.Formatter):
@@ -209,7 +209,7 @@ class StructuredLogger:
         self.logger.setLevel(level)
 
 
-def get_logger(name: str, level: Optional[int] = None) -> StructuredLogger:
+def get_logger(name: str, level: int | None = None) -> StructuredLogger:
     """
     Get or create a structured logger.
 
@@ -242,7 +242,7 @@ def set_global_log_level(level: int):
 
 
 # Convenience function to get request context
-def get_request_context() -> dict[str, Optional[str]]:
+def get_request_context() -> dict[str, str | None]:
     """
     Get current request context.
 

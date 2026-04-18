@@ -9,7 +9,7 @@ Validates: Requirements 14.2, 14.3
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from app.core.errors import ErrorCode, ValidationError
@@ -58,7 +58,7 @@ class BusinessRuleValidator:
 
     @staticmethod
     def validate_string_length(
-        value: str, field: str, min_length: int = 1, max_length: Optional[int] = None
+        value: str, field: str, min_length: int = 1, max_length: int | None = None
     ) -> None:
         """
         Validate string length constraints.
@@ -88,7 +88,7 @@ class BusinessRuleValidator:
 
     @staticmethod
     def validate_integer_range(
-        value: int, field: str, min_value: Optional[int] = None, max_value: Optional[int] = None
+        value: int, field: str, min_value: int | None = None, max_value: int | None = None
     ) -> None:
         """
         Validate integer range constraints.

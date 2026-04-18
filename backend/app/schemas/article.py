@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_serializer
@@ -17,7 +16,7 @@ class AIAnalysis(BaseModel):
     reason: str = Field(
         description="A one-sentence explanation of why it was recommended or discarded"
     )
-    actionable_takeaway: Optional[str] = Field(
+    actionable_takeaway: str | None = Field(
         default="", description="The actionable value extracted (can be empty if discarded)"
     )
     tinkering_index: int = Field(
@@ -29,10 +28,10 @@ class ArticleSchema(BaseModel):
     """文章資料模型（更新以匹配 Supabase 結構）"""
 
     # 基本資訊
-    id: Optional[UUID] = None  # 新增：文章 UUID（從資料庫查詢時使用）
+    id: UUID | None = None  # 新增：文章 UUID（從資料庫查詢時使用）
     title: str = Field(..., max_length=2000)
     url: HttpUrl
-    image_url: Optional[HttpUrl] = None  # 新增：文章縮圖/封面圖片 URL
+    image_url: HttpUrl | None = None  # 新增：文章縮圖/封面圖片 URL
 
     # 來源資訊（重新命名）
     feed_id: UUID  # 新增：關聯到 feeds 表
@@ -40,16 +39,16 @@ class ArticleSchema(BaseModel):
     category: str  # 重新命名自 source_category
 
     # 時間資訊
-    published_at: Optional[datetime] = None  # 新增：文章發布時間
+    published_at: datetime | None = None  # 新增：文章發布時間
     created_at: datetime = Field(default_factory=datetime.utcnow)  # 新增：系統建立時間
 
     # AI 分析結果
-    tinkering_index: Optional[int] = Field(None, ge=1, le=5)  # 移至頂層
-    ai_summary: Optional[str] = Field(None, max_length=5000)  # 新增：AI 摘要
-    ai_analysis: Optional[AIAnalysis] = None  # 保留：完整 AI 分析
+    tinkering_index: int | None = Field(None, ge=1, le=5)  # 移至頂層
+    ai_summary: str | None = Field(None, max_length=5000)  # 新增：AI 摘要
+    ai_analysis: AIAnalysis | None = None  # 保留：完整 AI 分析
 
     # 向量嵌入
-    embedding: Optional[list[float]] = None  # 新增：用於語義搜尋
+    embedding: list[float] | None = None  # 新增：用於語義搜尋
 
     # 移除的欄位：
     # - content_preview: 不再需要，使用 ai_summary 替代
@@ -70,7 +69,7 @@ class ReadingListItem(BaseModel):
     url: HttpUrl  # 文章 URL
     category: str  # 分類（重新命名自 source_category）
     status: str  # 閱讀狀態（Unread, Read, Archived）
-    rating: Optional[int] = None  # 評分（1–5，未評分為 None）
+    rating: int | None = None  # 評分（1–5，未評分為 None）
     added_at: datetime  # 新增時間
     updated_at: datetime  # 更新時間
 
@@ -81,9 +80,7 @@ class BatchResult(BaseModel):
     inserted_count: int = Field(description="成功插入的記錄數")
     updated_count: int = Field(description="成功更新的記錄數")
     failed_count: int = Field(description="失敗的記錄數")
-    failed_articles: list[dict] = Field(
-        default_factory=list, description="失敗的文章資訊（包含錯誤原因）"
-    )
+    failed_articles: list[dict] = Field(default_factory=list, description="失敗的文章資訊（包含錯誤原因）")
 
     @property
     def total_processed(self) -> int:
@@ -114,16 +111,14 @@ class ArticleResponse(BaseModel):
     id: UUID = Field(..., description="文章 UUID")
     title: str = Field(..., description="文章標題")
     url: HttpUrl = Field(..., description="文章 URL")
-    image_url: Optional[HttpUrl] = Field(
-        None, description="文章縮圖 URL", serialization_alias="imageUrl"
-    )
-    published_at: Optional[datetime] = Field(
+    image_url: HttpUrl | None = Field(None, description="文章縮圖 URL", serialization_alias="imageUrl")
+    published_at: datetime | None = Field(
         None, description="發布時間", serialization_alias="publishedAt"
     )
     tinkering_index: int = Field(
         ..., ge=1, le=5, description="技術複雜度（1-5）", serialization_alias="tinkeringIndex"
     )
-    ai_summary: Optional[str] = Field(None, description="AI 摘要", serialization_alias="aiSummary")
+    ai_summary: str | None = Field(None, description="AI 摘要", serialization_alias="aiSummary")
     feed_name: str = Field(..., description="來源名稱", serialization_alias="feedName")
     category: str = Field(..., description="分類")
     is_in_reading_list: bool = Field(
@@ -133,7 +128,7 @@ class ArticleResponse(BaseModel):
     model_config = ConfigDict(populate_by_name=True, by_alias=True)
 
     @field_serializer("published_at")
-    def serialize_published_at(self, value: Optional[datetime], _info) -> Optional[str]:
+    def serialize_published_at(self, value: datetime | None, _info) -> str | None:
         """確保 published_at 序列化為 ISO 8601 格式"""
         return value.isoformat() if value else None
 
@@ -143,9 +138,7 @@ class ArticleListResponse(BaseModel):
 
     articles: list[ArticleResponse] = Field(..., description="文章列表")
     page: int = Field(..., ge=1, description="當前頁碼")
-    page_size: int = Field(
-        ..., ge=1, le=100, description="每頁文章數", serialization_alias="pageSize"
-    )
+    page_size: int = Field(..., ge=1, le=100, description="每頁文章數", serialization_alias="pageSize")
     total_count: int = Field(..., ge=0, description="總文章數", serialization_alias="totalCount")
     has_next_page: bool = Field(..., description="是否有下一頁", serialization_alias="hasNextPage")
 

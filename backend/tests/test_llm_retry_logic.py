@@ -98,9 +98,8 @@ class TestRetryLogic:
             call_count += 1
             raise Exception("Error")
 
-        with patch("asyncio.sleep", side_effect=mock_sleep):
-            with pytest.raises(Exception):
-                await service._call_api_with_retry(mock_api_call, "test_context")
+        with patch("asyncio.sleep", side_effect=mock_sleep), pytest.raises(Exception):
+            await service._call_api_with_retry(mock_api_call, "test_context")
 
         assert delays_used == RETRY_DELAYS  # [2, 4]
 
@@ -128,9 +127,8 @@ class TestRetryLogic:
             error.response.headers = {"Retry-After": "10"}
             raise error
 
-        with patch("asyncio.sleep", side_effect=mock_sleep):
-            with pytest.raises(Exception):
-                await service._call_api_with_retry(mock_api_call, "test_context")
+        with patch("asyncio.sleep", side_effect=mock_sleep), pytest.raises(Exception):
+            await service._call_api_with_retry(mock_api_call, "test_context")
 
         # Should use Retry-After values instead of exponential backoff
         assert delays_used == [10.0, 10.0]

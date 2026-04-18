@@ -8,7 +8,6 @@ Requirements: 2.1, 2.2, 4.1, 12.1, 12.4
 """
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_serializer
@@ -26,9 +25,7 @@ class RecommendedFeed(BaseModel):
     name: str = Field(..., description="Feed name")
     url: str = Field(..., description="Feed RSS URL")
     category: str = Field(..., description="Feed category (AI, Web Development, Security, etc.)")
-    description: Optional[str] = Field(
-        None, description="User-facing description of the feed content"
-    )
+    description: str | None = Field(None, description="User-facing description of the feed content")
     is_recommended: bool = Field(..., description="Whether this feed is recommended for new users")
     recommendation_priority: int = Field(
         ..., description="Priority for ordering (higher = more important)"
@@ -159,7 +156,7 @@ class ArticleRecommendation(BaseModel):
     url: HttpUrl = Field(..., description="Article URL")
     feed_name: str = Field(..., description="Source feed name", serialization_alias="feedName")
     category: str = Field(..., description="Article category")
-    published_at: Optional[datetime] = Field(
+    published_at: datetime | None = Field(
         None, description="Publication date", serialization_alias="publishedAt"
     )
     tinkering_index: int = Field(
@@ -169,7 +166,7 @@ class ArticleRecommendation(BaseModel):
         description="Technical complexity (1-5)",
         serialization_alias="tinkeringIndex",
     )
-    ai_summary: Optional[str] = Field(
+    ai_summary: str | None = Field(
         None, description="AI-generated summary", serialization_alias="aiSummary"
     )
     reason: str = Field(..., description="AI-generated recommendation reason")
@@ -182,7 +179,7 @@ class ArticleRecommendation(BaseModel):
     model_config = ConfigDict(populate_by_name=True, by_alias=True)
 
     @field_serializer("published_at", "generated_at")
-    def serialize_datetime(self, value: Optional[datetime], _info) -> Optional[str]:
+    def serialize_datetime(self, value: datetime | None, _info) -> str | None:
         """Serialize datetime to ISO 8601 format"""
         return value.isoformat() if value else None
 
@@ -220,7 +217,7 @@ class RefreshRecommendationsRequest(BaseModel):
     Request model for refreshing recommendations
     """
 
-    limit: Optional[int] = Field(
+    limit: int | None = Field(
         default=10, ge=1, le=50, description="Maximum number of recommendations"
     )
 

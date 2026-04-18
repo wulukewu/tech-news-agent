@@ -8,7 +8,7 @@ Validates: Requirements 3.2, 3.4, 14.2, 14.3
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from supabase import Client
@@ -25,10 +25,10 @@ class UserSubscription:
         id: UUID,
         user_id: UUID,
         feed_id: UUID,
-        created_at: Optional[datetime] = None,
-        updated_at: Optional[datetime] = None,
-        modified_by: Optional[str] = None,
-        deleted_at: Optional[datetime] = None,
+        created_at: datetime | None = None,
+        updated_at: datetime | None = None,
+        modified_by: str | None = None,
+        deleted_at: datetime | None = None,
     ):
         self.id = id
         self.user_id = user_id
@@ -131,9 +131,7 @@ class UserSubscriptionRepository(BaseRepository[UserSubscription]):
         # Only audit fields can be updated
         return {}
 
-    async def get_by_user_and_feed(
-        self, user_id: UUID, feed_id: UUID
-    ) -> Optional[UserSubscription]:
+    async def get_by_user_and_feed(self, user_id: UUID, feed_id: UUID) -> UserSubscription | None:
         """
         Retrieve a subscription by user ID and feed ID.
 
@@ -191,7 +189,7 @@ class UserSubscriptionRepository(BaseRepository[UserSubscription]):
             )
 
     async def list_by_user(
-        self, user_id: UUID, limit: Optional[int] = None, offset: Optional[int] = None
+        self, user_id: UUID, limit: int | None = None, offset: int | None = None
     ) -> list[UserSubscription]:
         """
         List all subscriptions for a user.

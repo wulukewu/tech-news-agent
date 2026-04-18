@@ -6,7 +6,6 @@ API requests and responses.
 """
 
 from datetime import datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -22,12 +21,12 @@ class QuietHours(BaseModel):
 class FeedNotificationSettings(BaseModel):
     """Notification settings for a specific feed or category"""
 
-    feed_id: Optional[str] = Field(
+    feed_id: str | None = Field(
         None, description="Feed ID (if feed-specific)", serialization_alias="feedId"
     )
-    category: Optional[str] = Field(None, description="Category name (if category-specific)")
+    category: str | None = Field(None, description="Category name (if category-specific)")
     enabled: bool = Field(..., description="Whether notifications are enabled")
-    min_tinkering_index: Optional[int] = Field(
+    min_tinkering_index: int | None = Field(
         None,
         ge=1,
         le=5,
@@ -82,7 +81,7 @@ class NotificationHistoryEntry(BaseModel):
     )
     channel: str = Field(..., description="Notification channel")
     status: str = Field(..., description="Delivery status (sent, failed, pending)")
-    error_message: Optional[str] = Field(
+    error_message: str | None = Field(
         None, description="Error message if failed", serialization_alias="errorMessage"
     )
 
@@ -98,7 +97,7 @@ class NotificationDeliveryStatus(BaseModel):
     total_failed: int = Field(
         ..., description="Total notifications failed", serialization_alias="totalFailed"
     )
-    last_sent_at: Optional[datetime] = Field(
+    last_sent_at: datetime | None = Field(
         None, description="Last notification sent time", serialization_alias="lastSentAt"
     )
     recent_history: list[NotificationHistoryEntry] = Field(
@@ -113,17 +112,17 @@ class NotificationDeliveryStatus(BaseModel):
 class UpdateNotificationSettingsRequest(BaseModel):
     """Request to update notification settings"""
 
-    enabled: Optional[bool] = None
-    dm_enabled: Optional[bool] = Field(None, serialization_alias="dmEnabled")
-    email_enabled: Optional[bool] = Field(None, serialization_alias="emailEnabled")
-    frequency: Optional[str] = None
-    quiet_hours: Optional[QuietHours] = Field(None, serialization_alias="quietHours")
-    min_tinkering_index: Optional[int] = Field(
+    enabled: bool | None = None
+    dm_enabled: bool | None = Field(None, serialization_alias="dmEnabled")
+    email_enabled: bool | None = Field(None, serialization_alias="emailEnabled")
+    frequency: str | None = None
+    quiet_hours: QuietHours | None = Field(None, serialization_alias="quietHours")
+    min_tinkering_index: int | None = Field(
         None, ge=1, le=5, serialization_alias="minTinkeringIndex"
     )
-    feed_settings: Optional[list[FeedNotificationSettings]] = Field(
+    feed_settings: list[FeedNotificationSettings] | None = Field(
         None, serialization_alias="feedSettings"
     )
-    channels: Optional[list[str]] = None
+    channels: list[str] | None = None
 
     model_config = ConfigDict(populate_by_name=True, by_alias=True)

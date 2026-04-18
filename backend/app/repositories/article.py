@@ -8,7 +8,7 @@ Validates: Requirements 3.2, 3.4, 14.2, 14.3, 15.4
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from supabase import Client
@@ -27,16 +27,16 @@ class Article:
         feed_id: UUID,
         title: str,
         url: str,
-        published_at: Optional[datetime] = None,
-        tinkering_index: Optional[int] = None,
-        ai_summary: Optional[str] = None,
-        deep_summary: Optional[str] = None,
-        deep_summary_generated_at: Optional[datetime] = None,
-        embedding: Optional[list[float]] = None,
-        created_at: Optional[datetime] = None,
-        updated_at: Optional[datetime] = None,
-        modified_by: Optional[str] = None,
-        deleted_at: Optional[datetime] = None,
+        published_at: datetime | None = None,
+        tinkering_index: int | None = None,
+        ai_summary: str | None = None,
+        deep_summary: str | None = None,
+        deep_summary_generated_at: datetime | None = None,
+        embedding: list[float] | None = None,
+        created_at: datetime | None = None,
+        updated_at: datetime | None = None,
+        modified_by: str | None = None,
+        deleted_at: datetime | None = None,
     ):
         self.id = id
         self.feed_id = feed_id
@@ -312,7 +312,7 @@ class ArticleRepository(BaseRepository[Article]):
 
         return validated_data
 
-    async def get_by_url(self, url: str) -> Optional[Article]:
+    async def get_by_url(self, url: str) -> Article | None:
         """
         Retrieve an article by its URL.
 
@@ -331,8 +331,8 @@ class ArticleRepository(BaseRepository[Article]):
         self,
         page: int = 1,
         page_size: int = 20,
-        filters: Optional[dict[str, Any]] = None,
-        order_by: Optional[str] = None,
+        filters: dict[str, Any] | None = None,
+        order_by: str | None = None,
         ascending: bool = False,
     ) -> tuple[list[Article], PaginationMetadata]:
         """
@@ -401,7 +401,7 @@ class ArticleRepository(BaseRepository[Article]):
         feed_id: UUID,
         page: int = 1,
         page_size: int = 20,
-        order_by: Optional[str] = None,
+        order_by: str | None = None,
         ascending: bool = False,
     ) -> tuple[list[Article], PaginationMetadata]:
         """

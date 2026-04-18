@@ -7,7 +7,7 @@ ensuring consistency across the application.
 Requirements: 15.1, 15.2, 15.3, 15.4
 """
 
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -52,7 +52,7 @@ class SuccessResponse(BaseModel, Generic[T]):
 
     success: bool = Field(True, description="Indicates successful operation")
     data: T = Field(..., description="Response data")
-    metadata: Optional[dict[str, Any]] = Field(None, description="Optional metadata")
+    metadata: dict[str, Any] | None = Field(None, description="Optional metadata")
 
     class Config:
         json_schema_extra = {
@@ -72,7 +72,7 @@ class PaginatedResponse(BaseModel, Generic[T]):
     success: bool = Field(True, description="Indicates successful operation")
     data: list[T] = Field(..., description="List of items")
     pagination: PaginationMetadata = Field(..., description="Pagination metadata")
-    metadata: Optional[dict[str, Any]] = Field(None, description="Optional metadata")
+    metadata: dict[str, Any] | None = Field(None, description="Optional metadata")
 
     class Config:
         json_schema_extra = {
@@ -99,9 +99,9 @@ class ErrorDetail(BaseModel):
     Validates: Requirement 15.3
     """
 
-    field: Optional[str] = Field(None, description="Field that caused the error")
+    field: str | None = Field(None, description="Field that caused the error")
     message: str = Field(..., description="Error message")
-    code: Optional[str] = Field(None, description="Error code")
+    code: str | None = Field(None, description="Error code")
 
 
 class ErrorResponse(BaseModel):
@@ -116,8 +116,8 @@ class ErrorResponse(BaseModel):
     success: bool = Field(False, description="Indicates failed operation")
     error: str = Field(..., description="Error message")
     error_code: str = Field(..., description="Machine-readable error code")
-    details: Optional[list[ErrorDetail]] = Field(None, description="Detailed error information")
-    metadata: Optional[dict[str, Any]] = Field(None, description="Optional metadata")
+    details: list[ErrorDetail] | None = Field(None, description="Detailed error information")
+    metadata: dict[str, Any] | None = Field(None, description="Optional metadata")
 
     class Config:
         json_schema_extra = {
@@ -136,7 +136,7 @@ class ErrorResponse(BaseModel):
 # Response wrapper utilities
 
 
-def success_response(data: T, metadata: Optional[dict[str, Any]] = None) -> SuccessResponse[T]:
+def success_response(data: T, metadata: dict[str, Any] | None = None) -> SuccessResponse[T]:
     """
     Create a standardized success response.
 
@@ -155,7 +155,7 @@ def paginated_response(
     total_count: int,
     page: int,
     page_size: int,
-    metadata: Optional[dict[str, Any]] = None,
+    metadata: dict[str, Any] | None = None,
 ) -> PaginatedResponse[T]:
     """
     Create a standardized paginated response.
@@ -189,8 +189,8 @@ def paginated_response(
 def error_response(
     error: str,
     error_code: str,
-    details: Optional[list[ErrorDetail]] = None,
-    metadata: Optional[dict[str, Any]] = None,
+    details: list[ErrorDetail] | None = None,
+    metadata: dict[str, Any] | None = None,
 ) -> ErrorResponse:
     """
     Create a standardized error response.

@@ -10,7 +10,7 @@ Validates: Requirements 3.1, 3.2, 3.4
 
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Any, Generic, Optional, TypeVar
+from typing import Any, Generic, TypeVar
 from uuid import UUID
 
 from supabase import Client
@@ -54,7 +54,7 @@ class IRepository(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    async def get_by_id(self, entity_id: UUID) -> Optional[T]:
+    async def get_by_id(self, entity_id: UUID) -> T | None:
         """
         Retrieve an entity by its ID.
 
@@ -70,7 +70,7 @@ class IRepository(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    async def get_by_field(self, field: str, value: Any) -> Optional[T]:
+    async def get_by_field(self, field: str, value: Any) -> T | None:
         """
         Retrieve an entity by a specific field value.
 
@@ -89,10 +89,10 @@ class IRepository(ABC, Generic[T]):
     @abstractmethod
     async def list(
         self,
-        filters: Optional[dict[str, Any]] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        order_by: Optional[str] = None,
+        filters: dict[str, Any] | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        order_by: str | None = None,
         ascending: bool = True,
     ) -> list[T]:
         """
@@ -165,7 +165,7 @@ class IRepository(ABC, Generic[T]):
         pass
 
     @abstractmethod
-    async def count(self, filters: Optional[dict[str, Any]] = None) -> int:
+    async def count(self, filters: dict[str, Any] | None = None) -> int:
         """
         Count entities matching the given filters.
 
@@ -215,10 +215,10 @@ class BaseRepository(IRepository[T]):
         self.table_name = table_name
         self.enable_audit_trail = enable_audit_trail
         self.enable_soft_delete = enable_soft_delete
-        self._current_user_id: Optional[str] = None
+        self._current_user_id: str | None = None
         self.logger = get_logger(f"{__name__}.{self.__class__.__name__}")
 
-    def set_current_user(self, user_id: Optional[str]) -> None:
+    def set_current_user(self, user_id: str | None) -> None:
         """
         Set the current user for audit trail tracking.
 
@@ -230,7 +230,7 @@ class BaseRepository(IRepository[T]):
         """
         self._current_user_id = user_id
 
-    def get_current_user(self) -> Optional[str]:
+    def get_current_user(self) -> str | None:
         """
         Get the current user for audit trail tracking.
 
@@ -344,7 +344,7 @@ class BaseRepository(IRepository[T]):
             )
             self._handle_database_error(e, {"operation": "create", "data": data})
 
-    async def get_by_id(self, entity_id: UUID) -> Optional[T]:
+    async def get_by_id(self, entity_id: UUID) -> T | None:
         """
         Retrieve an entity by its ID.
 
@@ -400,7 +400,7 @@ class BaseRepository(IRepository[T]):
             )
             self._handle_database_error(e, {"operation": "get_by_id", "entity_id": str(entity_id)})
 
-    async def get_by_field(self, field: str, value: Any) -> Optional[T]:
+    async def get_by_field(self, field: str, value: Any) -> T | None:
         """
         Retrieve an entity by a specific field value.
 
@@ -462,10 +462,10 @@ class BaseRepository(IRepository[T]):
 
     async def list(
         self,
-        filters: Optional[dict[str, Any]] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
-        order_by: Optional[str] = None,
+        filters: dict[str, Any] | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+        order_by: str | None = None,
         ascending: bool = True,
     ) -> list[T]:
         """
@@ -758,7 +758,7 @@ class BaseRepository(IRepository[T]):
             )
             self._handle_database_error(e, {"operation": "exists", "entity_id": str(entity_id)})
 
-    async def count(self, filters: Optional[dict[str, Any]] = None) -> int:
+    async def count(self, filters: dict[str, Any] | None = None) -> int:
         """
         Count entities matching the given filters.
 

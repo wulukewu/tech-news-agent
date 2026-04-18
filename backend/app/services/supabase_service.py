@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 class SupabaseService:
     """Supabase 資料存取層服務"""
 
-    def __init__(self, client: Optional[Client] = None, validate_connection: bool = True):
+    def __init__(self, client: Client | None = None, validate_connection: bool = True):
         """初始化 Supabase 服務
 
         Args:
@@ -832,9 +832,7 @@ class SupabaseService:
                     error_info = {
                         "article": {
                             "url": article.get("url", "unknown"),
-                            "title": article.get("title", "unknown")[
-                                :100
-                            ],  # 截斷標題以避免日誌過長
+                            "title": article.get("title", "unknown")[:100],  # 截斷標題以避免日誌過長
                         },
                         "error": str(e),
                         "error_type": type(e).__name__,
@@ -1181,7 +1179,7 @@ class SupabaseService:
             )
 
     async def get_reading_list(
-        self, discord_id: str, status: Optional[str] = None
+        self, discord_id: str, status: str | None = None
     ) -> list["ReadingListItem"]:
         """查詢使用者的閱讀清單
 

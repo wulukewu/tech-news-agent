@@ -8,7 +8,7 @@ Validates: Requirements 3.2, 3.4, 14.2, 14.3
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from supabase import Client
@@ -26,10 +26,10 @@ class User:
         id: UUID,
         discord_id: str,
         dm_notifications_enabled: bool = True,
-        created_at: Optional[datetime] = None,
-        updated_at: Optional[datetime] = None,
-        modified_by: Optional[str] = None,
-        deleted_at: Optional[datetime] = None,
+        created_at: datetime | None = None,
+        updated_at: datetime | None = None,
+        modified_by: str | None = None,
+        deleted_at: datetime | None = None,
     ):
         self.id = id
         self.discord_id = discord_id
@@ -188,7 +188,7 @@ class UserRepository(BaseRepository[User]):
 
         return validated_data
 
-    async def get_by_discord_id(self, discord_id: str) -> Optional[User]:
+    async def get_by_discord_id(self, discord_id: str) -> User | None:
         """
         Retrieve a user by their Discord ID.
 

@@ -401,13 +401,29 @@ GET /health/scheduler           # Scheduler 健康度
 
 ### 快速 CI 驗證
 
-在推送程式碼前，執行此命令以驗證所有 CI 檢查是否通過：
+在推送程式碼前，**務必**執行以下命令：
 
 ```bash
-./scripts/verify-ci.sh
+# 1. 自動修復格式和 linting 問題
+./scripts/ci-fix.sh
+
+# 2. 在本地執行所有 CI 檢查（完全模擬 GitHub Actions）
+./scripts/ci-local-test.sh
 ```
 
-查看 [快速 CI 指南](./QUICK_CI_GUIDE.md) 了解故障排除和常見修復方法。
+**CI 文件：**
+
+- 📖 [快速開始指南](./docs/ci/QUICK_START.md) - 必要命令和常見修復
+- 📚 [完整 CI 指南](./docs/ci/CI_GUIDE.md) - 詳細文件和故障排除
+- 🔄 [CI 重新設計總結](./docs/ci/CI_REDESIGN_SUMMARY.md) - 架構和改進
+
+**CI 檢查項目：**
+
+- ✅ 程式碼格式化（Black、Prettier）
+- ✅ Linting（Ruff、ESLint）
+- ✅ 類型檢查（mypy、TypeScript）
+- ✅ 測試覆蓋率（後端 ≥70%、前端 ≥70%）
+- ✅ 建置驗證
 
 ### 後端測試
 

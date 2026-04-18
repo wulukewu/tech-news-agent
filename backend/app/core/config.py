@@ -9,7 +9,7 @@ Validates: Requirements 6.1, 6.3, 6.4
 
 import os
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal
 
 from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -39,7 +39,7 @@ class Settings(BaseSettings):
 
     # Discord Configuration (Required)
     discord_token: str
-    discord_channel_id: Optional[int] = None  # Optional: DM notifications used instead
+    discord_channel_id: int | None = None  # Optional: DM notifications used instead
 
     # Discord OAuth2 Configuration (Required for authentication)
     discord_client_id: str
@@ -57,10 +57,10 @@ class Settings(BaseSettings):
 
     # Scheduler Configuration
     scheduler_cron: str = "0 */6 * * *"  # Every 6 hours by default
-    scheduler_timezone: Optional[str] = None  # Defaults to timezone if not set
+    scheduler_timezone: str | None = None  # Defaults to timezone if not set
 
     # DM Notification Configuration
-    dm_notification_cron: Optional[str] = "10 */6 * * *"  # 10 minutes after fetch job
+    dm_notification_cron: str | None = "10 */6 * * *"  # 10 minutes after fetch job
 
     # Batch Processing Configuration
     batch_size: int = 50  # Maximum articles per batch

@@ -8,7 +8,7 @@ Validates: Requirements 3.2, 3.4, 14.2, 14.3
 """
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 from uuid import UUID
 
 from supabase import Client
@@ -28,13 +28,13 @@ class Feed:
         url: str,
         category: str,
         is_active: bool = True,
-        description: Optional[str] = None,
+        description: str | None = None,
         is_recommended: bool = False,
         recommendation_priority: int = 0,
-        created_at: Optional[datetime] = None,
-        updated_at: Optional[datetime] = None,
-        modified_by: Optional[str] = None,
-        deleted_at: Optional[datetime] = None,
+        created_at: datetime | None = None,
+        updated_at: datetime | None = None,
+        modified_by: str | None = None,
+        deleted_at: datetime | None = None,
     ):
         self.id = id
         self.name = name
@@ -261,7 +261,7 @@ class FeedRepository(BaseRepository[Feed]):
 
         return validated_data
 
-    async def get_by_url(self, url: str) -> Optional[Feed]:
+    async def get_by_url(self, url: str) -> Feed | None:
         """
         Retrieve a feed by its URL.
 
@@ -278,9 +278,9 @@ class FeedRepository(BaseRepository[Feed]):
 
     async def list_active_feeds(
         self,
-        category: Optional[str] = None,
-        limit: Optional[int] = None,
-        offset: Optional[int] = None,
+        category: str | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
     ) -> list[Feed]:
         """
         List active feeds, optionally filtered by category.
@@ -325,7 +325,7 @@ class FeedRepository(BaseRepository[Feed]):
         return await self.list(filters=filters, order_by="name", ascending=True)
 
     async def list_recommended_feeds(
-        self, limit: Optional[int] = None, offset: Optional[int] = None
+        self, limit: int | None = None, offset: int | None = None
     ) -> list[Feed]:
         """
         List recommended feeds sorted by recommendation_priority.

@@ -6,7 +6,6 @@ API requests and responses.
 """
 
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -23,7 +22,7 @@ class OnboardingStatus(BaseModel):
     onboarding_completed: bool = Field(
         ..., description="Whether user has completed the onboarding flow"
     )
-    onboarding_step: Optional[str] = Field(
+    onboarding_step: str | None = Field(
         None, description="Current step in onboarding flow (welcome, recommendations, complete)"
     )
     onboarding_skipped: bool = Field(..., description="Whether user skipped the onboarding flow")
@@ -72,14 +71,14 @@ class UserPreferences(BaseModel):
     onboarding_completed: bool = Field(
         default=False, description="Whether user has completed the onboarding flow"
     )
-    onboarding_step: Optional[str] = Field(None, description="Current step in onboarding flow")
+    onboarding_step: str | None = Field(None, description="Current step in onboarding flow")
     onboarding_skipped: bool = Field(
         default=False, description="Whether user skipped the onboarding flow"
     )
-    onboarding_started_at: Optional[datetime] = Field(
+    onboarding_started_at: datetime | None = Field(
         None, description="Timestamp when user started onboarding"
     )
-    onboarding_completed_at: Optional[datetime] = Field(
+    onboarding_completed_at: datetime | None = Field(
         None, description="Timestamp when user completed onboarding"
     )
     tooltip_tour_completed: bool = Field(
