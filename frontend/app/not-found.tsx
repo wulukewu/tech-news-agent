@@ -81,7 +81,7 @@ export default function NotFound() {
                 回到首頁
               </Button>
             </Link>
-            <Link href="/dashboard">
+            <Link href="/app/articles">
               <Button
                 size="lg"
                 variant="outline"

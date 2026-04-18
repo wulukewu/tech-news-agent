@@ -34,14 +34,12 @@ apiClient.interceptors.response.use(
   (error: AxiosError) => {
     // Handle 401 errors (unauthorized)
     if (error.response?.status === 401) {
-      // Clear auth token and redirect to login
+      // Clear auth token
       if (typeof window !== 'undefined') {
         localStorage.removeItem('auth_token');
 
-        // Only redirect if not already on login page
-        if (window.location.pathname !== '/') {
-          window.location.href = '/';
-        }
+        // Dispatch unauthorized event for AuthContext to handle
+        window.dispatchEvent(new CustomEvent('unauthorized'));
       }
     }
 
