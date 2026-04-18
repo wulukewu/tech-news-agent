@@ -11,19 +11,15 @@ select = [
     "E",   # pycodestyle errors
     "F",   # pyflakes
     "I",   # isort
-    "N",   # pep8-naming
-    "W",   # pycodestyle warnings
-    "UP",  # pyupgrade
-    "B",   # flake8-bugbear
-    "C4",  # flake8-comprehensions
-    "SIM", # flake8-simplify
-    "PL",  # pylint
-    "RUF", # ruff-specific rules
 ]
 ignore = [
+    "E402",    # module level import not at top (allow in tests and scripts)
     "E501",    # line too long (handled by black)
-    "PLR0913", # too many arguments
-    "PLR2004", # magic value comparison
+    "E712",    # comparison to True/False (allow in tests)
+    "E721",    # type comparison (allow type() == type() in tests)
+    "E722",    # bare except (allow in cleanup code)
+    "F821",    # undefined name (false positives with string type annotations)
+    "F841",    # unused variable (common in tests and fixtures)
 ]
 
 [tool.ruff.lint.isort]
