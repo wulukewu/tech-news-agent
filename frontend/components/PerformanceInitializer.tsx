@@ -173,8 +173,12 @@ export function CriticalResourcePreloader() {
       const hasToken = localStorage.getItem('auth_token');
 
       if (hasToken) {
-        // Prefetch likely next pages (these are routes, not files, so they should work)
-        const prefetchUrls = ['/articles', '/recommendations', '/reading-list'];
+        // Prefetch likely next pages with correct dashboard paths
+        const prefetchUrls = [
+          '/dashboard/articles',
+          '/dashboard/recommendations',
+          '/dashboard/reading-list',
+        ];
 
         prefetchUrls.forEach((url) => {
           const link = document.createElement('link');

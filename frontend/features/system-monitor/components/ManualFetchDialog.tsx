@@ -61,18 +61,20 @@ export function ManualFetchDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>確認手動觸發抓取</DialogTitle>
-          <DialogDescription className="space-y-2">
-            <p>此操作將立即觸發文章抓取任務，從所有訂閱的 RSS 來源獲取最新文章。</p>
-            <div className="mt-4">
-              <p className="text-sm font-medium">注意事項：</p>
-              <ul className="list-disc list-inside text-sm space-y-1 ml-2 mt-2">
-                <li>抓取過程可能需要數分鐘時間</li>
-                <li>頻繁觸發可能影響系統效能</li>
-                <li>建議等待當前任務完成後再次觸發</li>
-              </ul>
-            </div>
+          <DialogDescription>
+            此操作將立即觸發文章抓取任務，從所有訂閱的 RSS 來源獲取最新文章。
           </DialogDescription>
         </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm font-medium text-foreground">注意事項：</p>
+            <ul className="list-disc list-inside text-sm space-y-1 ml-2 mt-2 text-muted-foreground">
+              <li>抓取過程可能需要數分鐘時間</li>
+              <li>頻繁觸發可能影響系統效能</li>
+              <li>建議等待當前任務完成後再次觸發</li>
+            </ul>
+          </div>
+        </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
             取消
