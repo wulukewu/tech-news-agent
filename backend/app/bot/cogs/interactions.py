@@ -155,7 +155,9 @@ class FilterSelect(discord.ui.Select):
                     "error_type": type(e).__name__,
                 },
             )
-            await interaction.response.send_message("❌ 篩選時發生錯誤，請稍後再試。", ephemeral=True)
+            await interaction.response.send_message(
+                "❌ 篩選時發生錯誤，請稍後再試。", ephemeral=True
+            )
 
 
 class FilterView(discord.ui.View):
@@ -206,7 +208,9 @@ class DeepDiveButton(discord.ui.Button):
                     "error_type": "LLMServiceError",
                 },
             )
-            await interaction.followup.send("❌ 生成深度摘要時發生錯誤，請稍後再試。", ephemeral=True)
+            await interaction.followup.send(
+                "❌ 生成深度摘要時發生錯誤，請稍後再試。", ephemeral=True
+            )
         except Exception as e:
             logger.error(
                 f"Unexpected error in DeepDiveButton for user {interaction.user.id}: {e}",

@@ -18,7 +18,9 @@ class AdminCommands(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @app_commands.command(name="trigger_fetch", description="手動觸發文章抓取任務 (立即執行 scheduler)")
+    @app_commands.command(
+        name="trigger_fetch", description="手動觸發文章抓取任務 (立即執行 scheduler)"
+    )
     async def trigger_fetch(self, interaction: discord.Interaction):
         """
         Manually trigger the background fetch job to fetch new articles immediately.
@@ -120,7 +122,9 @@ class AdminCommands(commands.Cog):
             else:
                 embed.add_field(name="上次執行時間", value="尚未執行", inline=True)
 
-            embed.add_field(name="處理文章數", value=str(health_data["articles_processed"]), inline=True)
+            embed.add_field(
+                name="處理文章數", value=str(health_data["articles_processed"]), inline=True
+            )
 
             if health_data["total_operations"] > 0:
                 success_rate = (

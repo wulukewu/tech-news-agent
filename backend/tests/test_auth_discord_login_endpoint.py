@@ -102,7 +102,9 @@ def test_discord_login_missing_redirect_uri(client):
         response = client.get("/api/auth/discord/login")
 
         assert response.status_code == 500, "應返回 500 錯誤"
-        assert "DISCORD_REDIRECT_URI" in response.json()["detail"], "錯誤訊息應提及 DISCORD_REDIRECT_URI"
+        assert (
+            "DISCORD_REDIRECT_URI" in response.json()["detail"]
+        ), "錯誤訊息應提及 DISCORD_REDIRECT_URI"
 
 
 def test_discord_login_url_encoding(client):

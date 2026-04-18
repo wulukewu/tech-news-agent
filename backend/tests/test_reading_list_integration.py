@@ -223,7 +223,9 @@ class TestReadingListRecommendIntegration:
             supabase_instance.get_highly_rated_articles = AsyncMock(return_value=high_rated_items)
 
             llm_instance = MockLLM.return_value
-            llm_instance.generate_reading_recommendation = AsyncMock(return_value="這是個人化推薦摘要")
+            llm_instance.generate_reading_recommendation = AsyncMock(
+                return_value="這是個人化推薦摘要"
+            )
 
             await group.recommend.callback(group, interaction)
 

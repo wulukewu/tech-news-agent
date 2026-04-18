@@ -96,7 +96,8 @@ class NotificationSettings(commands.Cog):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 更新通知設定時發生錯誤，請稍後再試。\n" "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
+                "❌ 更新通知設定時發生錯誤，請稍後再試。\n"
+                "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
                 ephemeral=True,
             )
         except Exception as e:
@@ -109,7 +110,8 @@ class NotificationSettings(commands.Cog):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 發生未預期的錯誤，請稍後再試。\n" "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
+                "❌ 發生未預期的錯誤，請稍後再試。\n"
+                "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
                 ephemeral=True,
             )
 
@@ -169,7 +171,8 @@ class NotificationSettings(commands.Cog):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 查詢通知設定時發生錯誤，請稍後再試。\n" "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
+                "❌ 查詢通知設定時發生錯誤，請稍後再試。\n"
+                "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
                 ephemeral=True,
             )
         except Exception as e:
@@ -182,7 +185,8 @@ class NotificationSettings(commands.Cog):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 發生未預期的錯誤，請稍後再試。\n" "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
+                "❌ 發生未預期的錯誤，請稍後再試。\n"
+                "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
                 ephemeral=True,
             )
 

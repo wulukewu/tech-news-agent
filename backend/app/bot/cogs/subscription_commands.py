@@ -31,7 +31,9 @@ class SubscriptionCommands(commands.Cog):
         logger.info("SubscriptionCommands cog initialized")
 
     @app_commands.command(name="add_feed", description="訂閱一個 RSS 來源")
-    @app_commands.describe(name="訂閱源名稱", url="RSS/Atom 網址", category="分類（例如：AI、Web、Security）")
+    @app_commands.describe(
+        name="訂閱源名稱", url="RSS/Atom 網址", category="分類（例如：AI、Web、Security）"
+    )
     async def add_feed(self, interaction: discord.Interaction, name: str, url: str, category: str):
         """
         訂閱一個 RSS 來源
@@ -152,7 +154,8 @@ class SubscriptionCommands(commands.Cog):
 
             # 6. Send confirmation message
             await interaction.followup.send(
-                f"✅ 已成功訂閱 **{sanitized_name}** ({sanitized_category})\n" f"🔗 {validated_url}",
+                f"✅ 已成功訂閱 **{sanitized_name}** ({sanitized_category})\n"
+                f"🔗 {validated_url}",
                 ephemeral=True,
             )
 
@@ -185,7 +188,8 @@ class SubscriptionCommands(commands.Cog):
                 await interaction.followup.send(f"ℹ️ 你已經訂閱過 **{name}** 了！", ephemeral=True)
             else:
                 await interaction.followup.send(
-                    "❌ 訂閱失敗，請稍後再試。\n" "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
+                    "❌ 訂閱失敗，請稍後再試。\n"
+                    "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
                     ephemeral=True,
                 )
 
@@ -200,7 +204,8 @@ class SubscriptionCommands(commands.Cog):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 發生未預期的錯誤，請稍後再試。\n" "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
+                "❌ 發生未預期的錯誤，請稍後再試。\n"
+                "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
                 ephemeral=True,
             )
 
@@ -284,7 +289,8 @@ class SubscriptionCommands(commands.Cog):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 無法取得訂閱清單，請稍後再試。\n" "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
+                "❌ 無法取得訂閱清單，請稍後再試。\n"
+                "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
                 ephemeral=True,
             )
 
@@ -299,7 +305,8 @@ class SubscriptionCommands(commands.Cog):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 發生未預期的錯誤，請稍後再試。\n" "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
+                "❌ 發生未預期的錯誤，請稍後再試。\n"
+                "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
                 ephemeral=True,
             )
 
@@ -372,7 +379,8 @@ class SubscriptionCommands(commands.Cog):
                     feed_identifier=feed_identifier,
                 )
                 await interaction.followup.send(
-                    f"❌ 找不到訂閱源：**{feed_identifier}**\n" f"💡 建議：請使用 `/list_feeds` 查看你的訂閱清單。",
+                    f"❌ 找不到訂閱源：**{feed_identifier}**\n"
+                    f"💡 建議：請使用 `/list_feeds` 查看你的訂閱清單。",
                     ephemeral=True,
                 )
                 return
@@ -403,7 +411,8 @@ class SubscriptionCommands(commands.Cog):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 取消訂閱失敗，請稍後再試。\n" "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
+                "❌ 取消訂閱失敗，請稍後再試。\n"
+                "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
                 ephemeral=True,
             )
 
@@ -418,7 +427,8 @@ class SubscriptionCommands(commands.Cog):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 發生未預期的錯誤，請稍後再試。\n" "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
+                "❌ 發生未預期的錯誤，請稍後再試。\n"
+                "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
                 ephemeral=True,
             )
 

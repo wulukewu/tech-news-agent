@@ -139,7 +139,9 @@ class TestMarkReadButtonCallback:
 
             await btn.callback(interaction)
 
-            interaction.followup.send.assert_called_once_with("❌ 標記失敗，請稍後再試", ephemeral=True)
+            interaction.followup.send.assert_called_once_with(
+                "❌ 標記失敗，請稍後再試", ephemeral=True
+            )
 
     @pytest.mark.asyncio
     async def test_button_disabled_after_success(self):

@@ -63,7 +63,9 @@ class MarkAsReadButton(discord.ui.Button):
                 )
                 pass  # Handle Discord API errors gracefully
 
-            await interaction.followup.send(f"✅ 已將《{self.item.title}》標記為已讀！", ephemeral=True)
+            await interaction.followup.send(
+                f"✅ 已將《{self.item.title}》標記為已讀！", ephemeral=True
+            )
             logger.info(
                 "Successfully marked article as read",
                 user_id=str(interaction.user.id),
@@ -80,7 +82,8 @@ class MarkAsReadButton(discord.ui.Button):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 標記已讀時發生錯誤，請稍後再試。\n" "💡 建議：資料庫連線可能暫時中斷，請稍後再試。",
+                "❌ 標記已讀時發生錯誤，請稍後再試。\n"
+                "💡 建議：資料庫連線可能暫時中斷，請稍後再試。",
                 ephemeral=True,
             )
         except Exception as e:
@@ -260,7 +263,9 @@ class PaginationView(discord.ui.View):
     def build_page_content(self) -> str:
         page_items = self._current_page_items()
         total_pages = (len(self.items) + self.page_size - 1) // self.page_size
-        lines = [f"📚 **待讀清單**（第 {self.page + 1} / {total_pages} 頁，共 {len(self.items)} 篇）\n"]
+        lines = [
+            f"📚 **待讀清單**（第 {self.page + 1} / {total_pages} 頁，共 {len(self.items)} 篇）\n"
+        ]
         for i, item in enumerate(page_items, start=1):
             rating_str = "⭐" * item.rating if item.rating else "未評分"
             lines.append(f"**{i}. {item.title}**")
@@ -319,7 +324,8 @@ class ReadingListGroup(app_commands.Group):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 無法取得待讀清單，請稍後再試。\n" "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
+                "❌ 無法取得待讀清單，請稍後再試。\n"
+                "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
                 ephemeral=True,
             )
         except Exception as e:
@@ -332,7 +338,8 @@ class ReadingListGroup(app_commands.Group):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 發生未預期的錯誤，請稍後再試。\n" "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
+                "❌ 發生未預期的錯誤，請稍後再試。\n"
+                "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
                 ephemeral=True,
             )
 
@@ -353,7 +360,9 @@ class ReadingListGroup(app_commands.Group):
 
             if not high_rated:
                 logger.info("User has no highly rated articles", user_id=str(interaction.user.id))
-                await interaction.followup.send("尚無足夠的高評分文章，請先對文章評分（4 星以上）後再試。", ephemeral=True)
+                await interaction.followup.send(
+                    "尚無足夠的高評分文章，請先對文章評分（4 星以上）後再試。", ephemeral=True
+                )
                 return
 
             titles = [item.title for item in high_rated]
@@ -385,7 +394,8 @@ class ReadingListGroup(app_commands.Group):
                     exc_info=True,
                 )
                 await interaction.followup.send(
-                    "❌ 推薦功能暫時無法使用，請稍後再試。\n" "💡 建議：AI 服務可能暫時無法連線，請稍後再試。",
+                    "❌ 推薦功能暫時無法使用，請稍後再試。\n"
+                    "💡 建議：AI 服務可能暫時無法連線，請稍後再試。",
                     ephemeral=True,
                 )
 
@@ -398,7 +408,8 @@ class ReadingListGroup(app_commands.Group):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 無法取得高評分文章，請稍後再試。\n" "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
+                "❌ 無法取得高評分文章，請稍後再試。\n"
+                "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
                 ephemeral=True,
             )
         except Exception as e:
@@ -411,7 +422,8 @@ class ReadingListGroup(app_commands.Group):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 發生未預期的錯誤，請稍後再試。\n" "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
+                "❌ 發生未預期的錯誤，請稍後再試。\n"
+                "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
                 ephemeral=True,
             )
 

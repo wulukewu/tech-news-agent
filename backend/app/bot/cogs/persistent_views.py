@@ -488,7 +488,9 @@ class PersistentDeepDiveButton(discord.ui.Button):
                 success=False,
                 error=error_msg,
             )
-            await interaction.followup.send("❌ 生成深度摘要時發生錯誤，請稍後再試。", ephemeral=True)
+            await interaction.followup.send(
+                "❌ 生成深度摘要時發生錯誤，請稍後再試。", ephemeral=True
+            )
 
 
 class PersistentInteractionView(discord.ui.View):
