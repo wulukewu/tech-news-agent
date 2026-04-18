@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useMemo, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ArticleGrid } from '@/components/ArticleGrid';
 import { ArticleListSkeleton } from '@/components/LoadingSkeleton';
 import { useInfiniteScroll } from '@/lib/hooks/useInfiniteScroll';
@@ -136,19 +135,17 @@ function DashboardContent() {
 
 export default function DashboardPage() {
   return (
-    <ProtectedRoute>
-      <Suspense
-        fallback={
-          <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6 lg:px-8">
-            <header className="mb-6">
-              <h1 className="text-3xl font-bold">Your Articles</h1>
-            </header>
-            <ArticleListSkeleton />
-          </div>
-        }
-      >
-        <DashboardContent />
-      </Suspense>
-    </ProtectedRoute>
+    <Suspense
+      fallback={
+        <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6 lg:px-8">
+          <header className="mb-6">
+            <h1 className="text-3xl font-bold">Your Articles</h1>
+          </header>
+          <ArticleListSkeleton />
+        </div>
+      }
+    >
+      <DashboardContent />
+    </Suspense>
   );
 }

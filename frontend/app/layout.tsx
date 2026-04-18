@@ -1,13 +1,12 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AuthProvider, UserProvider } from '@/contexts';
-import { Navigation } from '@/components/Navigation';
 import { Toaster } from '@/components/ui/sonner';
 import { Providers } from '@/providers';
-import { AppLayout } from '@/components/layout';
 import { PWAProvider } from '@/providers/PWAProvider';
 import { PerformanceProvider } from '@/components/PerformanceInitializer';
 import { ThemeColorMeta } from '@/components/ThemeColorMeta';
+import { ConditionalLayout } from '@/components/ConditionalLayout';
 
 export const metadata: Metadata = {
   title: 'Tech News Agent',
@@ -110,7 +109,7 @@ export default function RootLayout({
                 >
                   跳至主要內容
                 </a>
-                <AppLayout header={<Navigation />}>{children}</AppLayout>
+                <ConditionalLayout>{children}</ConditionalLayout>
                 <Toaster />
               </UserProvider>
             </AuthProvider>

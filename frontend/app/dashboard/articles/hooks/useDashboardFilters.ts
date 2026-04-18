@@ -41,7 +41,7 @@ export function useDashboardFilters({ categories }: UseDashboardFiltersProps) {
     }
 
     const queryString = params.toString();
-    const newURL = queryString ? `/dashboard?${queryString}` : '/dashboard';
+    const newURL = queryString ? `/dashboard/articles?${queryString}` : '/dashboard/articles';
     router.replace(newURL, { scroll: false });
   };
 

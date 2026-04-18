@@ -22,7 +22,7 @@ export const LazyArticlesPage = createLazyRoute(
  * Recommendations Page - AI-powered recommendations
  */
 export const LazyRecommendationsPage = createLazyRoute(
-  () => import('@/app/(dashboard)/recommendations/page'),
+  () => import('@/app/dashboard/recommendations/page'),
   'Recommendations'
 );
 

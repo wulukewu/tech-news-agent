@@ -97,7 +97,7 @@ export function Sidebar({
             collapsed ? 'justify-center p-3' : 'justify-between p-4'
           )}
         >
-          <Link href="/dashboard/articles" className="hover:opacity-80 transition-opacity">
+          <Link href="/" className="hover:opacity-80 transition-opacity">
             <Logo
               size={collapsed ? 24 : 28}
               showText={!collapsed}

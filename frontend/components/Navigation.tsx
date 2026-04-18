@@ -31,14 +31,13 @@ export function Navigation() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   const navItems = [
-    { href: '/dashboard/articles', label: 'Dashboard', icon: Home },
-    { href: '/articles', label: 'Articles', icon: Rss },
+    { href: '/dashboard/articles', label: 'Articles', icon: Home },
     { href: '/dashboard/reading-list', label: 'Reading List', icon: BookMarked },
-    { href: '/recommendations', label: 'Recommendations', icon: Heart },
-    { href: '/subscriptions', label: 'Subscriptions', icon: Rss },
-    { href: '/analytics', label: 'Analytics', icon: BarChart3 },
-    { href: '/system-status', label: 'System Status', icon: Monitor },
-    { href: '/settings', label: 'Settings', icon: Settings },
+    { href: '/dashboard/subscriptions', label: 'Subscriptions', icon: Rss },
+    { href: '/dashboard/recommendations', label: 'Recommendations', icon: Heart },
+    { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
+    { href: '/dashboard/settings', label: 'Settings', icon: Settings },
+    { href: '/dashboard/system-status', label: 'System Status', icon: Monitor },
   ];
 
   // Prevent body scrolling when drawer is open (Req 3.3, 23.5)
@@ -73,10 +72,7 @@ export function Navigation() {
       <nav className="container mx-auto px-4" aria-label="Main navigation">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-4 lg:gap-6">
-            <Link
-              href="/dashboard/articles"
-              className="hover:opacity-80 transition-opacity flex-shrink-0"
-            >
+            <Link href="/" className="hover:opacity-80 transition-opacity flex-shrink-0">
               <Logo size={28} showText={true} textClassName="hidden sm:inline text-xl" />
             </Link>
 

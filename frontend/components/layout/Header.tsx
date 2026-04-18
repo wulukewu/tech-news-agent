@@ -60,7 +60,7 @@ export function Header({
       {/* Logo and brand */}
       <div className="flex items-center gap-4">
         <Link
-          href="/dashboard/articles"
+          href="/"
           className="flex items-center gap-2 font-bold text-lg hover:opacity-80 transition-opacity"
         >
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">

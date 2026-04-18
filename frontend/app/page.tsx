@@ -17,7 +17,6 @@
  */
 
 import { useAuth } from '@/contexts/AuthContext';
-import { AuthGuard } from '@/components/AuthGuard';
 import {
   LandingNav,
   HeroSection,
@@ -28,26 +27,14 @@ import {
 } from '@/components/landing';
 
 export default function LandingPage() {
-  return (
-    <AuthGuard fallback={<LandingPageFallback />}>
-      <LandingPageInner />
-    </AuthGuard>
-  );
-}
-
-function LandingPageFallback() {
-  return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-    </div>
-  );
-}
-
-function LandingPageInner() {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return <LandingPageFallback />;
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return (

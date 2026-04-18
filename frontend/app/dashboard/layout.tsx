@@ -79,133 +79,16 @@ function ErrorScreen({ onRetry }: { onRetry: () => void }) {
 /**
  * App Layout Component
  *
- * Protects all routes under /app/* and provides shared layout.
+ * Protects all routes under /dashboard/* and provides shared layout.
+ * Auth protection is handled by ConditionalLayout + AuthGuard at the root level.
+ * This layout only provides the visual container for dashboard pages.
  *
- * Requirement 13.1: Check authentication before rendering
- * Requirement 13.2: Redirect unauthenticated users to /login
- * Requirement 13.4: Handle authentication errors gracefully
- * Requirement 13.5: Don't render protected content until auth confirmed
+ * Requirement 13.1: Check authentication before rendering (handled by AuthGuard)
+ * Requirement 13.2: Redirect unauthenticated users to /login (handled by AuthGuard)
+ * Requirement 13.5: Don't render protected content until auth confirmed (handled by AuthGuard)
  */
 export default function AppLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <AuthGuard fallback={<LoadingScreen />}>
-      <AppLayoutInner>{children}</AppLayoutInner>
-    </AuthGuard>
-  );
-}
-
-/**
- * Inner App Layout Component
- *
- * Contains the actual layout logic that uses useAuth.
- * This is wrapped by AuthGuard to ensure context is available.
- */
-function AppLayoutInner({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading, checkAuth } = useAuth();
-  const router = useRouter();
-  const pathname = usePathname();
-  const [authError, setAuthError] = useState(false);
-  const [, setRetryCount] = useState(0);
-
-  /**
-   * Handle authentication check with error handling
-   *
-   * Requirement 13.4: Handle authentication errors gracefully
-   */
-  useEffect(() => {
-    const handleAuthCheck = async () => {
-      // Skip if already authenticated or still loading
-      if (isAuthenticated || loading) {
-        setAuthError(false);
-        return;
-      }
-
-      // If not authenticated and not loading, redirect to login
-      if (!loading && !isAuthenticated) {
-        // Small delay to prevent flash of error screen
-        const timer = setTimeout(() => {
-          router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
-        }, 100);
-
-        return () => clearTimeout(timer);
-      }
-    };
-
-    handleAuthCheck();
-  }, [isAuthenticated, loading, pathname, router]);
-
-  /**
-   * Listen for authentication errors
-   *
-   * Requirement 13.4: Handle authentication errors gracefully
-   */
-  useEffect(() => {
-    const handleAuthError = () => {
-      setAuthError(true);
-    };
-
-    window.addEventListener('auth-error', handleAuthError);
-
-    return () => {
-      window.removeEventListener('auth-error', handleAuthError);
-    };
-  }, []);
-
-  /**
-   * Retry authentication check
-   *
-   * Requirement 13.4: Handle authentication errors gracefully
-   */
-  const handleRetry = async () => {
-    setAuthError(false);
-    setRetryCount((prev) => prev + 1);
-    try {
-      await checkAuth();
-    } catch (error) {
-      // Auth retry failed
-      setAuthError(true);
-    }
-  };
-
-  /**
-   * Show error screen if authentication check failed
-   *
-   * Requirement 13.4: Handle authentication errors gracefully
-   */
-  if (authError) {
-    return <ErrorScreen onRetry={handleRetry} />;
-  }
-
-  /**
-   * Show loading screen while checking auth
-   *
-   * Requirement 13.3: Display loading screen
-   */
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
-  /**
-   * Don't render if not authenticated (will redirect)
-   *
-   * Requirement 13.5: Don't render protected content
-   */
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  /**
-   * Render protected content with shared layout
-   *
-   * Note: Navigation will be added in Phase 3
-   * For now, just render children with basic container
-   */
-  return (
-    <div className="min-h-screen bg-background">
-      {/* TODO: Add AppNavigation component in Phase 3 */}
-      <main id="main-content" className="container mx-auto px-4 py-6">
-        {children}
-      </main>
-    </div>
-  );
+  // No auth checks here - ConditionalLayout + AuthGuard handle it at root level
+  // This prevents duplicate auth checks that cause infinite reloads
+  return <div className="min-h-screen bg-background">{children}</div>;
 }
