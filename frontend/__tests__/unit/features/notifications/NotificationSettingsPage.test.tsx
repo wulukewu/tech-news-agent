@@ -9,7 +9,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import NotificationSettingsPage from '@/app/settings/notifications/page';
+import NotificationSettingsPage from '@/app/dashboard/settings/notifications/page';
 import * as notificationApi from '@/lib/api/notifications';
 import { DEFAULT_NOTIFICATION_SETTINGS } from '@/types/notification';
 

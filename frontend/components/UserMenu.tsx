@@ -91,7 +91,7 @@ export function UserMenu() {
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild>
-          <Link href="/settings/notifications" className="cursor-pointer">
+          <Link href="/dashboard/settings/notifications" className="cursor-pointer">
             <Bell className="mr-2 h-4 w-4" aria-hidden="true" />
             <span>Notifications</span>
           </Link>

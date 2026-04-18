@@ -31,7 +31,7 @@ export default function SettingsPage() {
                   <CardDescription>管理您的通知偏好和頻率設定</CardDescription>
                 </div>
               </div>
-              <Link href="/settings/notifications">
+              <Link href="/dashboard/settings/notifications">
                 <Button variant="ghost" size="sm">
                   設定
                   <ChevronRight className="ml-2 h-4 w-4" />

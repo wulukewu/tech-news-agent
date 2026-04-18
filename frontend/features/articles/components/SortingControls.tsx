@@ -119,10 +119,7 @@ export function SortingControls({
                   <SelectItem key={option.value} value={option.value}>
                     <div className="flex items-center gap-2">
                       <Icon className="h-4 w-4" />
-                      <div className="flex flex-col">
-                        <span>{option.label}</span>
-                        <span className="text-xs text-muted-foreground">{option.description}</span>
-                      </div>
+                      <span>{option.label}</span>
                     </div>
                   </SelectItem>
                 );
@@ -143,10 +140,7 @@ export function SortingControls({
                 <SelectItem key={option.value} value={option.value}>
                   <div className="flex items-center gap-2">
                     <ArrowUpDown className="h-4 w-4" />
-                    <div className="flex flex-col">
-                      <span>{option.label}</span>
-                      <span className="text-xs text-muted-foreground">{option.description}</span>
-                    </div>
+                    <span>{option.label}</span>
                   </div>
                 </SelectItem>
               ))}

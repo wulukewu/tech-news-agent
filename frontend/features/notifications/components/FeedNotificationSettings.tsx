@@ -99,11 +99,13 @@ export function FeedNotificationSettings({
               return (
                 <div
                   key={setting.feedId}
-                  className="flex items-center justify-between rounded-lg border p-4"
+                  className="rounded-lg border p-4 space-y-3 hover:bg-accent/50 transition-colors"
                 >
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Label className="font-medium">{getFeedName(setting.feedId)}</Label>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 flex-1">
+                      <Label className="font-medium cursor-pointer">
+                        {getFeedName(setting.feedId)}
+                      </Label>
                       {getFeedCategory(setting.feedId) && (
                         <Badge variant="secondary" className="text-xs">
                           {getFeedCategory(setting.feedId)}
@@ -111,45 +113,46 @@ export function FeedNotificationSettings({
                       )}
                     </div>
 
-                    {setting.enabled && setting.minTinkeringIndex !== undefined && (
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>最低技術深度:</span>
-                          <div className="flex items-center gap-1">
-                            {Array.from({ length: setting.minTinkeringIndex }).map((_, i) => (
-                              <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                            ))}
-                          </div>
-                        </div>
-                        <Slider
-                          value={[setting.minTinkeringIndex]}
-                          onValueChange={([value]) => handleUpdateThreshold(setting.feedId!, value)}
-                          min={1}
-                          max={5}
-                          step={1}
-                          disabled={disabled}
-                          className="w-full sm:max-w-xs"
-                        />
-                      </div>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        checked={setting.enabled}
+                        onCheckedChange={(checked) => handleToggleFeed(setting.feedId!, checked)}
+                        disabled={disabled}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveFeed(setting.feedId!)}
+                        disabled={disabled}
+                        className="h-9 w-9"
+                        title="移除此來源設定"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      checked={setting.enabled}
-                      onCheckedChange={(checked) => handleToggleFeed(setting.feedId!, checked)}
-                      disabled={disabled}
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveFeed(setting.feedId!)}
-                      disabled={disabled}
-                      className="min-h-[44px] min-w-[44px]"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  {setting.enabled && setting.minTinkeringIndex !== undefined && (
+                    <div className="space-y-2 pl-1">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>最低技術深度:</span>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: setting.minTinkeringIndex }).map((_, i) => (
+                            <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                          ))}
+                        </div>
+                      </div>
+                      <Slider
+                        value={[setting.minTinkeringIndex]}
+                        onValueChange={([value]) => handleUpdateThreshold(setting.feedId!, value)}
+                        min={1}
+                        max={5}
+                        step={1}
+                        disabled={disabled}
+                        className="w-full max-w-xs"
+                      />
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -157,62 +160,72 @@ export function FeedNotificationSettings({
         ) : (
           <div className="text-center py-8 text-muted-foreground">
             <Rss className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p>尚未設定個別來源通知</p>
-            <p className="text-sm">點擊下方按鈕新增來源</p>
+            <p className="font-medium">尚未設定個別來源通知</p>
+            <p className="text-sm mt-1">點擊下方按鈕新增來源</p>
           </div>
         )}
 
         {/* Add Feed Dialog */}
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="w-full min-h-[48px]" disabled={disabled}>
+            <Button variant="outline" className="w-full" disabled={disabled}>
               <Plus className="mr-2 h-4 w-4" />
               新增來源通知設定
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
             <DialogHeader>
               <DialogTitle>選擇 RSS 來源</DialogTitle>
               <DialogDescription>為特定來源設定通知偏好</DialogDescription>
             </DialogHeader>
 
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <LoadingSpinner size="lg" />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {Array.isArray(availableFeeds) &&
-                  availableFeeds.map((feed) => {
-                    const isConfigured = safeFeedSettings.some((s) => s.feedId === feed.id);
+            <div className="flex-1 overflow-y-auto pr-2">
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <LoadingSpinner size="lg" />
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {Array.isArray(availableFeeds) && availableFeeds.length > 0 ? (
+                    availableFeeds.map((feed) => {
+                      const isConfigured = safeFeedSettings.some((s) => s.feedId === feed.id);
 
-                    return (
-                      <div
-                        key={feed.id}
-                        className="flex items-center justify-between rounded-lg border p-3 hover:bg-accent/50 transition-colors"
-                      >
-                        <div className="flex-1">
-                          <p className="font-medium">{feed.name}</p>
-                          <p className="text-sm text-muted-foreground">{feed.category}</p>
-                        </div>
-                        <Button
-                          variant={isConfigured ? 'secondary' : 'default'}
-                          size="sm"
-                          onClick={() => {
-                            if (!isConfigured) {
-                              handleToggleFeed(feed.id, true);
-                            }
-                            setIsDialogOpen(false);
-                          }}
-                          disabled={isConfigured}
+                      return (
+                        <div
+                          key={feed.id}
+                          className="flex items-center justify-between rounded-lg border p-3 hover:bg-accent/50 transition-colors"
                         >
-                          {isConfigured ? '已設定' : '新增'}
-                        </Button>
-                      </div>
-                    );
-                  })}
-              </div>
-            )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{feed.name}</p>
+                            {feed.category && (
+                              <p className="text-sm text-muted-foreground">{feed.category}</p>
+                            )}
+                          </div>
+                          <Button
+                            variant={isConfigured ? 'secondary' : 'default'}
+                            size="sm"
+                            onClick={() => {
+                              if (!isConfigured) {
+                                handleToggleFeed(feed.id, true);
+                              }
+                              setIsDialogOpen(false);
+                            }}
+                            disabled={isConfigured}
+                          >
+                            {isConfigured ? '已設定' : '新增'}
+                          </Button>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Rss className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                      <p>目前沒有可用的 RSS 來源</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </DialogContent>
         </Dialog>
       </CardContent>

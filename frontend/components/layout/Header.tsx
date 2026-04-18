@@ -132,7 +132,7 @@ export function Header({
                 <Link href="/settings/profile">個人資料</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/settings/notifications">通知設定</Link>
+                <Link href="/dashboard/settings/notifications">通知設定</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/dashboard/settings">設定</Link>

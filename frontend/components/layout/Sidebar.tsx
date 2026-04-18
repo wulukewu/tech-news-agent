@@ -31,7 +31,7 @@ const defaultNavigation: NavigationItem[] = [
   { href: '/dashboard/articles', label: 'Dashboard', icon: Home, shortcut: 'D' },
   { href: '/dashboard/reading-list', label: 'Reading List', icon: BookMarked, shortcut: 'R' },
   { href: '/dashboard/subscriptions', label: 'Subscriptions', icon: Rss, shortcut: 'S' },
-  { href: '/settings', label: 'Settings', icon: Bell, shortcut: 'N' },
+  { href: '/dashboard/settings', label: 'Settings', icon: Bell, shortcut: 'N' },
 ];
 
 /**

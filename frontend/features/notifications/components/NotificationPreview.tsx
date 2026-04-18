@@ -110,24 +110,51 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Notification Status */}
-        <div className="flex items-center gap-2 p-3 rounded-lg bg-muted">
-          <div className={`h-2 w-2 rounded-full ${shouldSend ? 'bg-green-500' : 'bg-red-500'}`} />
-          <span className="text-sm font-medium">
-            {shouldSend ? '此文章會觸發通知' : '此文章不會觸發通知'}
+        <div
+          className={`flex items-center gap-3 p-4 rounded-lg ${
+            shouldSend
+              ? 'bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900'
+              : 'bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900'
+          }`}
+        >
+          <div
+            className={`h-3 w-3 rounded-full flex-shrink-0 ${
+              shouldSend ? 'bg-green-500' : 'bg-red-500'
+            }`}
+          />
+          <span
+            className={`text-sm font-medium ${
+              shouldSend ? 'text-green-900 dark:text-green-100' : 'text-red-900 dark:text-red-100'
+            }`}
+          >
+            {shouldSend ? '✓ 此文章會觸發通知' : '✗ 此文章不會觸發通知'}
           </span>
         </div>
 
         {!shouldSend && (
-          <div className="text-sm text-muted-foreground space-y-1">
-            <p>原因：</p>
-            <ul className="list-disc list-inside space-y-1 ml-2">
-              {!settings.enabled && <li>全域通知已停用</li>}
-              {settings.enabled && mockArticle.tinkeringIndex < settings.minTinkeringIndex && (
-                <li>
-                  技術深度 ({mockArticle.tinkeringIndex}) 低於閾值 ({settings.minTinkeringIndex})
+          <div className="text-sm space-y-2 p-4 rounded-lg bg-muted/50">
+            <p className="font-medium">原因：</p>
+            <ul className="space-y-1.5 ml-2">
+              {!settings.enabled && (
+                <li className="flex items-start gap-2">
+                  <span className="text-muted-foreground mt-0.5">•</span>
+                  <span>全域通知已停用</span>
                 </li>
               )}
-              {settings.enabled && settings.quietHours.enabled && <li>目前在勿擾時段內</li>}
+              {settings.enabled && mockArticle.tinkeringIndex < settings.minTinkeringIndex && (
+                <li className="flex items-start gap-2">
+                  <span className="text-muted-foreground mt-0.5">•</span>
+                  <span>
+                    技術深度 ({mockArticle.tinkeringIndex}) 低於閾值 ({settings.minTinkeringIndex})
+                  </span>
+                </li>
+              )}
+              {settings.enabled && settings.quietHours.enabled && (
+                <li className="flex items-start gap-2">
+                  <span className="text-muted-foreground mt-0.5">•</span>
+                  <span>目前在勿擾時段內</span>
+                </li>
+              )}
             </ul>
           </div>
         )}

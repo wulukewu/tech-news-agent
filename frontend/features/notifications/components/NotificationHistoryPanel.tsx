@@ -82,13 +82,13 @@ export function NotificationHistoryPanel() {
         ) : (
           <div className="space-y-4">
             {/* Summary Stats */}
-            <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-muted">
-              <div>
-                <p className="text-sm text-muted-foreground">總發送數</p>
+            <div className="grid grid-cols-2 gap-4 p-4 rounded-lg bg-muted/50">
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground mb-1">總發送數</p>
                 <p className="text-2xl font-bold">{data.totalSent}</p>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">失敗數</p>
+              <div className="text-center">
+                <p className="text-sm text-muted-foreground mb-1">失敗數</p>
                 <p className="text-2xl font-bold text-red-600">{data.totalFailed}</p>
               </div>
             </div>
@@ -96,24 +96,24 @@ export function NotificationHistoryPanel() {
             {/* Recent History */}
             <div className="space-y-2">
               <p className="text-sm font-medium">最近通知</p>
-              <div className="space-y-2">
+              <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
                 {data.recentHistory.map((entry) => (
                   <div
                     key={entry.id}
                     className="flex items-start gap-3 rounded-lg border p-3 hover:bg-accent/50 transition-colors"
                   >
-                    <div className="mt-1">{getStatusIcon(entry.status)}</div>
+                    <div className="mt-1 flex-shrink-0">{getStatusIcon(entry.status)}</div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-medium truncate">{entry.articleTitle}</p>
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <p className="font-medium truncate flex-1 min-w-0">{entry.articleTitle}</p>
                         {getStatusBadge(entry.status)}
                       </div>
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
                         <div className="flex items-center gap-1">
                           {getChannelIcon(entry.channel)}
                           <span className="capitalize">{entry.channel}</span>
                         </div>
-                        <span>•</span>
+                        <span className="hidden sm:inline">•</span>
                         <span>
                           {formatDistanceToNow(new Date(entry.sentAt), {
                             addSuffix: true,
@@ -122,7 +122,9 @@ export function NotificationHistoryPanel() {
                         </span>
                       </div>
                       {entry.errorMessage && (
-                        <p className="text-sm text-red-600 mt-1">{entry.errorMessage}</p>
+                        <p className="text-sm text-red-600 mt-2 p-2 bg-red-50 dark:bg-red-950/20 rounded">
+                          {entry.errorMessage}
+                        </p>
                       )}
                     </div>
                   </div>

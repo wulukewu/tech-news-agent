@@ -114,56 +114,29 @@ export default function NotificationSettingsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">通知偏好設定</h1>
-          <p className="text-muted-foreground">管理您的通知偏好和頻率設定</p>
-        </div>
-        <Button
-          variant="outline"
-          onClick={() => testMutation.mutate()}
-          disabled={testMutation.isPending || !settings.enabled}
-        >
-          {testMutation.isPending ? (
-            <>
-              <LoadingSpinner size="sm" className="mr-2" />
-              發送中...
-            </>
-          ) : (
-            <>
-              <Bell className="mr-2 h-4 w-4" />
-              發送測試通知
-            </>
-          )}
-        </Button>
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">通知偏好設定</h1>
+        <p className="text-muted-foreground">管理您的通知偏好和頻率設定</p>
       </div>
 
-      {/* Global Notification Status */}
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold mb-2">全域設定</h2>
-          <p className="text-sm text-muted-foreground mb-4">控制所有通知的主要開關</p>
-        </div>
-
+      {/* Main Settings Grid */}
+      <div className="grid gap-6">
+        {/* Global Status Card */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {settings.enabled ? (
-                <Bell className="h-5 w-5 text-green-600" />
-              ) : (
-                <BellOff className="h-5 w-5 text-muted-foreground" />
-              )}
-              通知狀態
-            </CardTitle>
-            <CardDescription>
-              {settings.enabled ? '通知功能已啟用' : '通知功能已停用'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="notifications-enabled">啟用通知</Label>
-                <p className="text-sm text-muted-foreground">接收新文章和更新的通知</p>
+              <div className="flex items-center gap-3">
+                {settings.enabled ? (
+                  <Bell className="h-5 w-5 text-green-600" />
+                ) : (
+                  <BellOff className="h-5 w-5 text-muted-foreground" />
+                )}
+                <div>
+                  <CardTitle>通知狀態</CardTitle>
+                  <CardDescription>
+                    {settings.enabled ? '通知功能已啟用' : '通知功能已停用'}
+                  </CardDescription>
+                </div>
               </div>
               <Switch
                 id="notifications-enabled"
@@ -172,18 +145,10 @@ export default function NotificationSettingsPage() {
                 disabled={isSaving}
               />
             </div>
-          </CardContent>
+          </CardHeader>
         </Card>
-      </div>
 
-      {/* Delivery Preferences */}
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold mb-2">傳送偏好設定</h2>
-          <p className="text-sm text-muted-foreground mb-4">設定通知的傳送方式和時間</p>
-        </div>
-
-        {/* Notification Channels */}
+        {/* Notification Channels Card */}
         <Card>
           <CardHeader>
             <CardTitle>通知渠道</CardTitle>
@@ -191,10 +156,12 @@ export default function NotificationSettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="space-y-0.5 flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              <div className="flex items-center gap-3">
+                <MessageSquare className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <Label htmlFor="dm-enabled">Discord DM 通知</Label>
+                  <Label htmlFor="dm-enabled" className="font-medium">
+                    Discord DM 通知
+                  </Label>
                   <p className="text-sm text-muted-foreground">透過 Discord 私訊接收通知</p>
                 </div>
               </div>
@@ -207,10 +174,12 @@ export default function NotificationSettingsPage() {
             </div>
 
             <div className="flex items-center justify-between">
-              <div className="space-y-0.5 flex items-center gap-2">
-                <Mail className="h-4 w-4 text-muted-foreground" />
+              <div className="flex items-center gap-3">
+                <Mail className="h-5 w-5 text-muted-foreground" />
                 <div>
-                  <Label htmlFor="email-enabled">電子郵件通知</Label>
+                  <Label htmlFor="email-enabled" className="font-medium">
+                    電子郵件通知
+                  </Label>
                   <p className="text-sm text-muted-foreground">透過電子郵件接收通知</p>
                 </div>
               </div>
@@ -220,6 +189,27 @@ export default function NotificationSettingsPage() {
                 onCheckedChange={(checked) => handleToggle('emailEnabled', checked)}
                 disabled={isSaving || !settings.enabled}
               />
+            </div>
+
+            <div className="pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => testMutation.mutate()}
+                disabled={testMutation.isPending || !settings.enabled}
+                className="w-full"
+              >
+                {testMutation.isPending ? (
+                  <>
+                    <LoadingSpinner size="sm" className="mr-2" />
+                    發送中...
+                  </>
+                ) : (
+                  <>
+                    <Bell className="mr-2 h-4 w-4" />
+                    發送測試通知
+                  </>
+                )}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -237,14 +227,6 @@ export default function NotificationSettingsPage() {
           onQuietHoursChange={(quietHours) => handleUpdate({ quietHours })}
           disabled={isSaving || !settings.enabled}
         />
-      </div>
-
-      {/* Content Filtering */}
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold mb-2">內容篩選</h2>
-          <p className="text-sm text-muted-foreground mb-4">設定接收通知的內容條件</p>
-        </div>
 
         {/* Tinkering Index Threshold */}
         <TinkeringIndexThreshold
@@ -252,14 +234,6 @@ export default function NotificationSettingsPage() {
           onThresholdChange={(minTinkeringIndex) => handleUpdate({ minTinkeringIndex })}
           disabled={isSaving || !settings.enabled}
         />
-      </div>
-
-      {/* Feed-Specific Settings */}
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold mb-2">個別來源設定</h2>
-          <p className="text-sm text-muted-foreground mb-4">為特定 RSS 來源自訂通知偏好</p>
-        </div>
 
         {/* Feed-specific Notification Settings */}
         <FeedNotificationSettings
@@ -267,13 +241,13 @@ export default function NotificationSettingsPage() {
           onFeedSettingsChange={(feedSettings) => handleUpdate({ feedSettings })}
           disabled={isSaving || !settings.enabled}
         />
+
+        {/* Notification Preview */}
+        <NotificationPreview settings={settings} />
+
+        {/* Notification History */}
+        <NotificationHistoryPanel />
       </div>
-
-      {/* Notification Preview */}
-      <NotificationPreview settings={settings} />
-
-      {/* Notification History */}
-      <NotificationHistoryPanel />
     </div>
   );
 }
