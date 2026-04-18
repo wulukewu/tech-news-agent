@@ -134,7 +134,6 @@ animation: {
 ## Files Modified
 
 1. **frontend/components/ui/dialog.tsx**
-
    - Updated `DialogOverlay` backdrop opacity from 80% to 50%
    - Updated `DialogContent` with responsive mobile/desktop layouts
    - Added safe area padding for notched devices
@@ -149,13 +148,11 @@ animation: {
 ## Files Created
 
 1. **frontend/**tests**/unit/components/Dialog.test.tsx**
-
    - Comprehensive test suite with 12 test cases
    - Tests for rendering, interactions, accessibility, and responsive behavior
    - All tests passing ✅
 
 2. **frontend/components/ui/dialog.example.tsx**
-
    - 6 example implementations demonstrating various use cases
    - Basic dialog, controlled dialog, scrollable content, forms, confirmations
    - Includes detailed documentation of responsive behavior

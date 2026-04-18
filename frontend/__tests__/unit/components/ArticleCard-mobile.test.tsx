@@ -163,8 +163,8 @@ describe('ArticleCard - Mobile Vertical Layout', () => {
       // Should have 5 star icons
       const stars = container.querySelectorAll('svg');
       // Filter for star icons (they should be in the tinkering index section)
-      const starIcons = Array.from(stars).filter(
-        (svg) => svg.parentElement?.getAttribute('aria-label')?.includes('Tinkering index')
+      const starIcons = Array.from(stars).filter((svg) =>
+        svg.parentElement?.getAttribute('aria-label')?.includes('Tinkering index')
       );
       expect(starIcons.length).toBeGreaterThanOrEqual(5);
     });

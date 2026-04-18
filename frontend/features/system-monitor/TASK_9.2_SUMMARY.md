@@ -209,13 +209,11 @@ The API service functions are implemented with placeholder data:
 The following backend endpoints need to be implemented:
 
 1. **GET /api/system/health**
-
    - Returns database connection status and response time
    - Returns API response time metrics (avg, p95, p99)
    - Returns error rate statistics
 
 2. **GET /api/system/statistics**
-
    - Returns 24h fetch statistics
    - Returns success rate and processing times
 
@@ -229,13 +227,11 @@ The following backend endpoints need to be implemented:
 ### Unit Tests Needed
 
 1. **SystemHealthCard**:
-
    - Color coding logic for response times
    - Color coding logic for error rates
    - Date formatting
 
 2. **FetchStatisticsCard**:
-
    - Success rate calculation
    - Processing time formatting
    - Color coding logic

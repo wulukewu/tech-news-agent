@@ -176,13 +176,11 @@ If both exist, query parameter takes precedence because:
 ## Security Considerations
 
 1. **sessionStorage vs localStorage:**
-
    - sessionStorage is cleared when tab closes
    - Reduces risk of stale redirect data
    - More secure than localStorage for temporary data
 
 2. **Redirect Validation:**
-
    - Currently accepts any path
    - Future enhancement: validate redirect is internal path
    - Prevent open redirect vulnerabilities
@@ -203,7 +201,6 @@ If both exist, query parameter takes precedence because:
    ```
 
 2. **Backend Support:**
-
    - Add `state` parameter to OAuth flow
    - Pass redirect path through OAuth state
    - More robust than sessionStorage

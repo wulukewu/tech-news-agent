@@ -326,19 +326,16 @@ Tests:       15 passed, 15 total
 To complete the React Query integration:
 
 1. **Migrate existing components** to use the new query hooks
-
    - Dashboard article list
    - Reading list page
    - Subscriptions page
 
 2. **Remove old state management** code from migrated components
-
    - Remove manual `useState` for server data
    - Remove manual `useEffect` for data fetching
    - Remove manual cache invalidation
 
 3. **Add more query hooks** as needed
-
    - User profile queries
    - Conversation queries
    - Any other server data

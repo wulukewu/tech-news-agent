@@ -160,7 +160,6 @@ const handleToggleCategory = (category: string) => {
 The component has comprehensive test coverage:
 
 - **Unit tests**: `__tests__/unit/components/CategoryFilter.test.tsx`
-
   - Rendering with different states
   - Selection state management
   - User interactions (click, keyboard)

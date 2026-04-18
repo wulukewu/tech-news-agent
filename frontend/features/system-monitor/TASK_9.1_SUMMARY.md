@@ -116,7 +116,6 @@ Features:
 Created comprehensive unit tests for:
 
 1. **SchedulerStatusWidget** (17 tests):
-
    - Status display and badges
    - Execution information rendering
    - Statistics display

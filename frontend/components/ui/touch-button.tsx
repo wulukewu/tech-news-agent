@@ -43,8 +43,7 @@ const touchButtonVariants = cva(
 );
 
 export interface TouchButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof touchButtonVariants> {
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof touchButtonVariants> {
   asChild?: boolean;
   hapticFeedback?: boolean;
 }

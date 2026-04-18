@@ -201,39 +201,32 @@ Backend Endpoints
 ### Page Component Tests (18 tests)
 
 1. **Rendering Tests** (4 tests):
-
    - Page title and description display
    - Loading state handling
    - All setting sections rendering
    - Error state handling
 
 2. **Global Toggle Tests** (2 tests):
-
    - Global notification toggle functionality
    - Conditional rendering when disabled
 
 3. **Channel Toggle Tests** (2 tests):
-
    - DM notification toggle
    - Email notification toggle
 
 4. **Test Notification** (2 tests):
-
    - Test notification sending
    - Button disabled when notifications off
 
 5. **Auto-save Tests** (2 tests):
-
    - Unsaved changes indicator
    - Manual save button appearance
 
 6. **Error Handling** (2 tests):
-
    - Settings load error display
    - Update error handling
 
 7. **Accessibility Tests** (2 tests):
-
    - Form control labels
    - Heading structure
 
@@ -244,13 +237,11 @@ Backend Endpoints
 ### Hooks Tests (9 tests)
 
 1. **useNotificationSettings** (3 tests):
-
    - Successful data fetching
    - Error handling
    - Query key validation
 
 2. **useUpdateNotificationSettings** (3 tests):
-
    - Successful updates
    - Error handling
    - Success callback execution

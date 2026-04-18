@@ -113,20 +113,16 @@ Executable script for running validation against real backend:
 #### Tested Endpoints
 
 1. **Articles API**
-
    - `/api/articles/categories` - Category list
    - `/api/articles/me` - User articles with pagination
 
 2. **Auth API**
-
    - `/api/auth/me` - Current user info
 
 3. **Feeds API**
-
    - `/api/feeds` - Feed list
 
 4. **Reading List API**
-
    - `/api/reading-list` - Reading list with pagination
 
 5. **Scheduler API**

@@ -228,20 +228,17 @@ npm test -- --watch
 The following directories are ready for new tests:
 
 1. **Unit Tests**:
-
    - `unit/contexts/` - Context provider tests
    - `unit/components/` - Component unit tests
    - `unit/lib/` - Utility function tests
 
 2. **Integration Tests**:
-
    - `integration/api/` - API integration tests
    - `integration/state/` - State management integration
    - `integration/features/` - Feature integration tests
    - `integration/workflows/` - Multi-step workflows
 
 3. **E2E Tests**:
-
    - `e2e/auth/` - Authentication flows
    - `e2e/articles/` - Article browsing flows
    - `e2e/reading-list/` - Reading list management

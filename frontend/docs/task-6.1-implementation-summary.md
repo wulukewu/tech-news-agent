@@ -175,19 +175,16 @@ This documentation file.
 ## Accessibility Features
 
 1. **ARIA Labels**: All interactive elements have proper ARIA labels
-
    - Buttons: "Add to reading list", "Mark as read"
    - Tinkering index: "Tinkering index: 3 out of 5"
 
 2. **Semantic HTML**:
-
    - `<article>` for card wrapper
    - `<h3>` for title
    - `<time>` with datetime attribute for dates
    - `<a>` with proper rel attributes for external links
 
 3. **Keyboard Navigation**:
-
    - All buttons are keyboard accessible
    - Proper focus indicators (inherited from shadcn/ui)
 
@@ -286,13 +283,11 @@ Tests  25 passed (25)
 ## Performance Considerations
 
 1. **Image Optimization**:
-
    - next/image handles automatic optimization
    - Lazy loading for below-fold images
    - Responsive sizes reduce bandwidth on mobile
 
 2. **Layout Shifts**:
-
    - Fixed aspect ratio (aspect-video) prevents CLS
    - Reserved space for images before loading
 

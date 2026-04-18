@@ -118,7 +118,6 @@ Moving the profile to the bottom provides:
 To verify the implementation:
 
 1. **Desktop Sidebar (>= 1024px)**
-
    - [ ] Logo appears at top of sidebar
    - [ ] Sidebar is 256px wide when expanded
    - [ ] Sidebar is 64px wide when collapsed
@@ -128,7 +127,6 @@ To verify the implementation:
    - [ ] Smooth transitions between collapsed/expanded states
 
 2. **Navigation Items**
-
    - [ ] All navigation items render correctly
    - [ ] Active state has left border (primary color)
    - [ ] Hover states work smoothly

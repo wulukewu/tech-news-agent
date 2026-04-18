@@ -375,14 +375,12 @@ Response format:
 ### Unit Tests Needed
 
 1. **SystemResourcesCard**:
-
    - Color coding logic for different usage levels
    - Byte formatting function
    - Unavailable state rendering
    - Progress bar rendering
 
 2. **PermissionGuard**:
-
    - Loading state rendering
    - Not authenticated state rendering
    - Error state rendering

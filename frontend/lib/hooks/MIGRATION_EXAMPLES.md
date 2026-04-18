@@ -508,7 +508,9 @@ function ArticleDetails({ articleId }: { articleId: string }) {
   return (
     <div>
       <h1>{article?.title}</h1>
-      {comments?.map((comment) => <Comment key={comment.id} comment={comment} />)}
+      {comments?.map((comment) => (
+        <Comment key={comment.id} comment={comment} />
+      ))}
     </div>
   );
 }

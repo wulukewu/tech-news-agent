@@ -188,13 +188,11 @@ Examples:
 **Answer:**
 
 1. **Unit test** in `unit/components/ArticleCard.test.tsx`
-
    - Test rendering with different props
    - Test user interactions (clicks, hovers)
    - Test edge cases (null data, missing fields)
 
 2. **Integration test** (optional) in `integration/features/article-display.test.tsx`
-
    - Test ArticleCard with real data fetching
    - Test ArticleCard with reading list actions
 
@@ -208,13 +206,11 @@ Examples:
 **Answer:**
 
 1. **Unit test** in `unit/api/articles.test.ts`
-
    - Test request formatting
    - Test response parsing
    - Test error handling
 
 2. **Integration test** in `integration/api/articles-with-cache.test.tsx`
-
    - Test API + React Query caching
    - Test API + component integration
 
@@ -229,7 +225,6 @@ Examples:
 **Answer:**
 
 1. **Unit test** in `unit/hooks/useArticleFilters.test.tsx`
-
    - Test hook logic in isolation
    - Test state updates
    - Test return values
@@ -245,7 +240,6 @@ Examples:
 **Answer:**
 
 1. **Property test** in `property/bugfix/undefined-article-id.property.test.ts`
-
    - Exploration test: Verify bug exists in unfixed code
    - Preservation test: Verify fix works and doesn't break valid cases
 
@@ -259,7 +253,6 @@ Examples:
 **Answer:**
 
 1. **E2E test** in `e2e/reading-list/add-article.spec.ts`
-
    - Test complete user journey
    - Navigate, click, verify
 

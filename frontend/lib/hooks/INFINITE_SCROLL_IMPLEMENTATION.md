@@ -291,7 +291,6 @@ export default function DashboardPage() {
 ### Manual Testing Checklist
 
 1. **Infinite Scroll**
-
    - [ ] Scroll to bottom of article list
    - [ ] Verify loading spinner appears
    - [ ] Verify new articles load automatically
@@ -299,14 +298,12 @@ export default function DashboardPage() {
    - [ ] Verify no duplicate requests during loading
 
 2. **Scroll Restoration**
-
    - [ ] Scroll down the dashboard page
    - [ ] Navigate to another page
    - [ ] Click browser back button
    - [ ] Verify scroll position is restored
 
 3. **Browser Back/Forward**
-
    - [ ] Scroll down the dashboard
    - [ ] Navigate forward to another page
    - [ ] Use browser back button
