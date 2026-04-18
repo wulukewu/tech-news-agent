@@ -70,35 +70,35 @@ export function UserMenu() {
 
         {/* Secondary navigation items (Req 4.3) */}
         <DropdownMenuItem asChild>
-          <Link href="/dashboard/profile" className="cursor-pointer">
+          <Link href="/app/profile" className="cursor-pointer">
             <User className="mr-2 h-4 w-4" aria-hidden="true" />
             <span>Profile</span>
           </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild>
-          <Link href="/dashboard/analytics" className="cursor-pointer">
+          <Link href="/app/analytics" className="cursor-pointer">
             <BarChart3 className="mr-2 h-4 w-4" aria-hidden="true" />
             <span>Analytics</span>
           </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild>
-          <Link href="/dashboard/settings" className="cursor-pointer">
+          <Link href="/app/settings" className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" aria-hidden="true" />
             <span>Settings</span>
           </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild>
-          <Link href="/dashboard/settings/notifications" className="cursor-pointer">
+          <Link href="/app/settings/notifications" className="cursor-pointer">
             <Bell className="mr-2 h-4 w-4" aria-hidden="true" />
             <span>Notifications</span>
           </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild>
-          <Link href="/dashboard/system-status" className="cursor-pointer">
+          <Link href="/app/system-status" className="cursor-pointer">
             <Monitor className="mr-2 h-4 w-4" aria-hidden="true" />
             <span>System Status</span>
           </Link>

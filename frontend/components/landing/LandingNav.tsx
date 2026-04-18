@@ -63,7 +63,7 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
               </a>
             ))}
             {isAuthenticated ? (
-              <Link href="/dashboard/articles">
+              <Link href="/app/articles">
                 <Button>Enter App</Button>
               </Link>
             ) : (
@@ -118,7 +118,7 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
 
             <div className="pt-4 border-t">
               {isAuthenticated ? (
-                <Link href="/dashboard/articles" className="block">
+                <Link href="/app/articles" className="block">
                   <Button className="w-full">Enter App</Button>
                 </Link>
               ) : (

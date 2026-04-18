@@ -7,7 +7,7 @@
  * - Landing page (/): No navigation, no layout, no auth
  * - Login page (/login): No navigation, no layout, no auth
  * - Auth callback (/auth/callback): No navigation, no layout, no auth
- * - Dashboard pages (/dashboard/*): Navigation + AppLayout + Auth protection
+ * - App pages (/app/*): Navigation + AppLayout + Auth protection
  */
 
 import { usePathname, useRouter } from 'next/navigation';
@@ -45,9 +45,9 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const publicRoutes = ['/', '/login', '/auth/callback'];
   const isPublicRoute = publicRoutes.includes(pathname);
 
-  // Check if this is a protected route (dashboard, recommendations, etc.)
+  // Check if this is a protected route (app, recommendations, etc.)
   // Note: 404 pages should not be treated as protected routes
-  const isProtectedRoute = !isPublicRoute && !isNotFound && pathname.startsWith('/dashboard');
+  const isProtectedRoute = !isPublicRoute && !isNotFound && pathname.startsWith('/app');
 
   // Handle auth redirect for protected routes
   useEffect(() => {

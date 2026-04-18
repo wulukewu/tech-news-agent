@@ -33,17 +33,17 @@ export function Navigation() {
 
   // Main navigation items (3 core features - Req 4.1)
   const mainNavItems = [
-    { href: '/dashboard/articles', label: 'Articles', icon: Home },
-    { href: '/dashboard/reading-list', label: 'Reading List', icon: BookMarked },
-    { href: '/dashboard/subscriptions', label: 'Subscriptions', icon: Rss },
+    { href: '/app/articles', label: 'Articles', icon: Home },
+    { href: '/app/reading-list', label: 'Reading List', icon: BookMarked },
+    { href: '/app/subscriptions', label: 'Subscriptions', icon: Rss },
   ];
 
   // Secondary items moved to user menu (Req 4.2)
   const secondaryNavItems = [
-    { href: '/dashboard/recommendations', label: 'Recommendations', icon: Heart },
-    { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
-    { href: '/dashboard/settings', label: 'Settings', icon: Settings },
-    { href: '/dashboard/system-status', label: 'System Status', icon: Monitor },
+    { href: '/app/recommendations', label: 'Recommendations', icon: Heart },
+    { href: '/app/analytics', label: 'Analytics', icon: BarChart3 },
+    { href: '/app/settings', label: 'Settings', icon: Settings },
+    { href: '/app/system-status', label: 'System Status', icon: Monitor },
   ];
 
   // Prevent body scrolling when drawer is open (Req 3.3, 23.5)

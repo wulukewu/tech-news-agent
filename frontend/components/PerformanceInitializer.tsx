@@ -173,12 +173,8 @@ export function CriticalResourcePreloader() {
       const hasToken = localStorage.getItem('auth_token');
 
       if (hasToken) {
-        // Prefetch likely next pages with correct dashboard paths
-        const prefetchUrls = [
-          '/dashboard/articles',
-          '/dashboard/recommendations',
-          '/dashboard/reading-list',
-        ];
+        // Prefetch likely next pages with correct app paths
+        const prefetchUrls = ['/app/articles', '/app/recommendations', '/app/reading-list'];
 
         prefetchUrls.forEach((url) => {
           const link = document.createElement('link');

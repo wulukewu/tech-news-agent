@@ -28,10 +28,10 @@ interface SidebarProps {
 }
 
 const defaultNavigation: NavigationItem[] = [
-  { href: '/dashboard/articles', label: 'Dashboard', icon: Home, shortcut: 'D' },
-  { href: '/dashboard/reading-list', label: 'Reading List', icon: BookMarked, shortcut: 'R' },
-  { href: '/dashboard/subscriptions', label: 'Subscriptions', icon: Rss, shortcut: 'S' },
-  { href: '/dashboard/settings', label: 'Settings', icon: Bell, shortcut: 'N' },
+  { href: '/app/articles', label: 'Dashboard', icon: Home, shortcut: 'D' },
+  { href: '/app/reading-list', label: 'Reading List', icon: BookMarked, shortcut: 'R' },
+  { href: '/app/subscriptions', label: 'Subscriptions', icon: Rss, shortcut: 'S' },
+  { href: '/app/settings', label: 'Settings', icon: Bell, shortcut: 'N' },
 ];
 
 /**

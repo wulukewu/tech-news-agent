@@ -22,7 +22,7 @@ export const LazyArticlesPage = createLazyRoute(
  * Recommendations Page - AI-powered recommendations
  */
 export const LazyRecommendationsPage = createLazyRoute(
-  () => import('@/app/dashboard/recommendations/page'),
+  () => import('@/app/app/recommendations/page'),
   'Recommendations'
 );
 
@@ -38,7 +38,7 @@ export const LazyAnalyticsPage = createLazyRoute(
  * Subscriptions Page - Feed management
  */
 export const LazySubscriptionsPage = createLazyRoute(
-  () => import('@/app/dashboard/subscriptions/page'),
+  () => import('@/app/app/subscriptions/page'),
   'Subscriptions'
 );
 
@@ -46,7 +46,7 @@ export const LazySubscriptionsPage = createLazyRoute(
  * System Status Page - System monitoring
  */
 export const LazySystemStatusPage = createLazyRoute(
-  () => import('@/app/dashboard/system-status/page'),
+  () => import('@/app/app/system-status/page'),
   'System Status'
 );
 
@@ -62,7 +62,7 @@ export const LazySettingsPage = createLazyRoute(
  * Reading List - Saved articles
  */
 export const LazyReadingListPage = createLazyRoute(
-  () => import('@/app/dashboard/reading-list/page'),
+  () => import('@/app/app/reading-list/page'),
   'Reading List'
 );
 
