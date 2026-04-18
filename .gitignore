@@ -60,5 +60,13 @@ logs/
 .hypothesis/
 backend/.hypothesis/
 
+# Coverage reports
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+*.cover
+.pytest_cache/
+
 # Playwright test reports
 frontend/playwright-report/
