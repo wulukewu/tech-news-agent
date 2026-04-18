@@ -18,6 +18,7 @@ export interface User {
   discord_id: string;
   username?: string;
   avatar?: string;
+  email?: string;
 }
 
 /**

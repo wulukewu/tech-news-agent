@@ -399,6 +399,16 @@ GET /health/scheduler           # Scheduler 健康度
 
 ## 🧪 測試
 
+### 快速 CI 驗證
+
+在推送程式碼前，執行此命令以驗證所有 CI 檢查是否通過：
+
+```bash
+./scripts/verify-ci.sh
+```
+
+查看 [快速 CI 指南](./QUICK_CI_GUIDE.md) 了解故障排除和常見修復方法。
+
 ### 後端測試
 
 ```bash

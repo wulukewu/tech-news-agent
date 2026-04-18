@@ -39,6 +39,7 @@ export interface User {
   discordId: string;
   username?: string;
   avatar?: string;
+  email?: string;
 }
 
 /**

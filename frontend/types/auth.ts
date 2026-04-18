@@ -12,12 +12,14 @@
  * @property discordId - Discord user ID
  * @property username - Discord username (optional)
  * @property avatar - Discord avatar URL (optional)
+ * @property email - User email address (optional)
  */
 export interface User {
   id: string;
   discordId: string;
   username?: string;
   avatar?: string;
+  email?: string;
 }
 
 /**

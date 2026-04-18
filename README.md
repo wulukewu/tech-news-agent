@@ -402,6 +402,16 @@ All interactive elements persist across bot restarts, meaning buttons and menus 
 
 ## 🧪 Testing
 
+### Quick CI Verification
+
+Before pushing code, run this to verify all CI checks will pass:
+
+```bash
+./scripts/verify-ci.sh
+```
+
+See [Quick CI Guide](./QUICK_CI_GUIDE.md) for troubleshooting and common fixes.
+
 ### Backend Tests
 
 ```bash
