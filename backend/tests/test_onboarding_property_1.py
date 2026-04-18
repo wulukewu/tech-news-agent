@@ -12,7 +12,6 @@ This test uses Hypothesis to generate random onboarding actions and verify that
 all state changes are correctly persisted and retrievable.
 """
 
-
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st

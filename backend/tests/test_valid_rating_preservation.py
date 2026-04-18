@@ -33,7 +33,6 @@ EXPECTED OUTCOME ON FIXED CODE: PASS (confirms no regression)
 Validates: Requirements 3.6, 3.7
 """
 
-
 import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st

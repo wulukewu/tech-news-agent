@@ -12,7 +12,6 @@ mark_onboarding_skipped(), the onboarding_skipped flag is True and the onboardin
 flow should not be shown.
 """
 
-
 import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st

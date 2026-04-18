@@ -6,7 +6,6 @@ Property 16: Rate Limit Enforcement
 For any endpoint, when the rate limit is exceeded, the server should return 429.
 """
 
-
 import pytest
 from fastapi.testclient import TestClient
 from hypothesis import HealthCheck, given, settings

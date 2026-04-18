@@ -7,7 +7,6 @@ For any JWT Token set as a cookie, the cookie should have httponly=True,
 secure=True (in production), samesite="lax", and max_age=604800.
 """
 
-
 import pytest
 from fastapi.responses import JSONResponse
 from hypothesis import given

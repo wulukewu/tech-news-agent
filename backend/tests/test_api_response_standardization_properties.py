@@ -7,7 +7,6 @@ using Hypothesis for property-based testing.
 **Validates: Requirements 15.1, 15.2, 15.3, 15.4**
 """
 
-
 import pytest
 from hypothesis import assume, given, settings
 from hypothesis import strategies as st

@@ -24,7 +24,6 @@ Or apply the migration manually using psql or Supabase Dashboard SQL Editor:
   psql $DATABASE_URL -f scripts/migrations/002_create_user_preferences_table.sql
 """
 
-
 import pytest
 from hypothesis import HealthCheck, given, settings
 from hypothesis import strategies as st
