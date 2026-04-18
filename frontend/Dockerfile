@@ -24,14 +24,15 @@ ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL \
     NEXT_PUBLIC_APP_NAME=$NEXT_PUBLIC_APP_NAME \
     NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL \
     NEXT_TELEMETRY_DISABLED=1 \
-    DOCKER_BUILD=true
+    DOCKER_BUILD=true \
+    NODE_OPTIONS="--max-old-space-size=4096"
 
 # Copy dependencies and source
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build application
-RUN npm run build
+# Build application with increased memory
+RUN NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
 # Production stage - minimal runtime image
 FROM base AS runner
