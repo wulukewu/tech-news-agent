@@ -479,7 +479,9 @@ class LLMService:
         categories_text = "、".join(sorted(set(categories)))
 
         user_prompt = (
-            f"以下是使用者近期評分 4 星以上的高評分文章：\n\n" f"文章標題：\n{titles_text}\n\n" f"涵蓋分類：{categories_text}"
+            f"以下是使用者近期評分 4 星以上的高評分文章：\n\n"
+            f"文章標題：\n{titles_text}\n\n"
+            f"涵蓋分類：{categories_text}"
         )
 
         system_prompt = (
