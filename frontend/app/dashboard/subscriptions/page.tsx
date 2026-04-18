@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ChevronDown, ChevronRight, Star, Bell, BellOff } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { FeedHealthIndicator } from '@/features/subscriptions/components/FeedHealthIndicator';
@@ -26,6 +27,7 @@ export default function SubscriptionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toggling, setToggling] = useState<Set<string>>(new Set());
+  const [currentTab, setCurrentTab] = useState<'subscriptions' | 'explore'>('subscriptions');
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(() => {
     // Load collapsed state from localStorage
     if (typeof window !== 'undefined') {
@@ -299,8 +301,13 @@ export default function SubscriptionsPage() {
     return null;
   }
 
-  // Group feeds by category
-  const feedsByCategory = (filteredFeeds || []).reduce(
+  // Group feeds by category - filter based on current tab
+  const displayFeeds =
+    currentTab === 'subscriptions'
+      ? (filteredFeeds || []).filter((f) => f.is_subscribed)
+      : filteredFeeds || [];
+
+  const feedsByCategory = displayFeeds.reduce(
     (acc, feed) => {
       if (!acc[feed.category]) {
         acc[feed.category] = [];
@@ -376,128 +383,228 @@ export default function SubscriptionsPage() {
               </div>
             </div>
 
-            {/* Overall Statistics */}
-            <FeedStatistics
-              totalArticles={totalArticles}
-              articlesThisWeek={totalArticlesThisWeek}
-              averageTinkeringIndex={avgTinkeringIndex}
-            />
+            {/* Tabs */}
+            <Tabs
+              value={currentTab}
+              onValueChange={(value) => setCurrentTab(value as 'subscriptions' | 'explore')}
+            >
+              <TabsList>
+                <TabsTrigger value="subscriptions">My Subscriptions</TabsTrigger>
+                <TabsTrigger value="explore">Explore</TabsTrigger>
+              </TabsList>
 
-            {/* Health Statistics Summary */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Card className="border-green-200 dark:border-green-800">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                    <div>
-                      <div className="text-xs text-muted-foreground">健康</div>
-                      <div className="text-lg font-semibold text-green-600 dark:text-green-400">
-                        {feeds.filter((f) => f.health_status === 'healthy').length}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-yellow-200 dark:border-yellow-800">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <div>
-                      <div className="text-xs text-muted-foreground">過時</div>
-                      <div className="text-lg font-semibold text-yellow-600 dark:text-yellow-400">
-                        {feeds.filter((f) => f.health_status === 'warning').length}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-red-200 dark:border-red-800">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                    <div>
-                      <div className="text-xs text-muted-foreground">錯誤</div>
-                      <div className="text-lg font-semibold text-red-600 dark:text-red-400">
-                        {feeds.filter((f) => f.health_status === 'error').length}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-gray-200 dark:border-gray-800">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-gray-500"></div>
-                    <div>
-                      <div className="text-xs text-muted-foreground">未知</div>
-                      <div className="text-lg font-semibold text-gray-600 dark:text-gray-400">
-                        {
-                          feeds.filter((f) => f.health_status === 'unknown' || !f.health_status)
-                            .length
-                        }
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
+              <TabsContent value="subscriptions" className="space-y-4 mt-4">
+                {/* Overall Statistics */}
+                <FeedStatistics
+                  totalArticles={totalArticles}
+                  articlesThisWeek={totalArticlesThisWeek}
+                  averageTinkeringIndex={avgTinkeringIndex}
+                />
 
-            {/* Action Bar */}
-            <div className="flex flex-wrap items-center gap-2">
-              <Button
-                variant="default"
-                onClick={handleSubscribeRecommended}
-                disabled={allRecommendedSubscribed || toggling.size > 0}
-                className="gap-2"
-              >
-                <Star className="w-4 h-4" />
-                訂閱所有推薦
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleToggleAll(true)}
-                disabled={allSubscribed || toggling.size > 0}
-              >
-                全部訂閱
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => handleToggleAll(false)}
-                disabled={noneSubscribed || toggling.size > 0}
-              >
-                全部取消
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleRetryFailedFeeds}
-                disabled={
-                  feeds.filter((f) => f.health_status === 'error').length === 0 || toggling.size > 0
-                }
-                className="gap-2"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                {/* Health Statistics Summary */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <Card className="border-green-200 dark:border-green-800">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                        <div>
+                          <div className="text-xs text-muted-foreground">健康</div>
+                          <div className="text-lg font-semibold text-green-600 dark:text-green-400">
+                            {
+                              feeds.filter((f) => f.is_subscribed && f.health_status === 'healthy')
+                                .length
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-yellow-200 dark:border-yellow-800">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div>
+                          <div className="text-xs text-muted-foreground">過時</div>
+                          <div className="text-lg font-semibold text-yellow-600 dark:text-yellow-400">
+                            {
+                              feeds.filter((f) => f.is_subscribed && f.health_status === 'warning')
+                                .length
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-red-200 dark:border-red-800">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div>
+                          <div className="text-xs text-muted-foreground">錯誤</div>
+                          <div className="text-lg font-semibold text-red-600 dark:text-red-400">
+                            {
+                              feeds.filter((f) => f.is_subscribed && f.health_status === 'error')
+                                .length
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-gray-200 dark:border-gray-800">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+                        <div>
+                          <div className="text-xs text-muted-foreground">未知</div>
+                          <div className="text-lg font-semibold text-gray-600 dark:text-gray-400">
+                            {
+                              feeds.filter(
+                                (f) =>
+                                  f.is_subscribed &&
+                                  (f.health_status === 'unknown' || !f.health_status)
+                              ).length
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Search Bar */}
+                <FeedSearch
+                  feeds={feeds.filter((f) => f.is_subscribed)}
+                  onFilteredFeedsChange={handleFilteredFeedsChange}
+                />
+              </TabsContent>
+
+              <TabsContent value="explore" className="space-y-4 mt-4">
+                {/* Overall Statistics */}
+                <FeedStatistics
+                  totalArticles={totalArticles}
+                  articlesThisWeek={totalArticlesThisWeek}
+                  averageTinkeringIndex={avgTinkeringIndex}
+                />
+
+                {/* Health Statistics Summary */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <Card className="border-green-200 dark:border-green-800">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                        <div>
+                          <div className="text-xs text-muted-foreground">健康</div>
+                          <div className="text-lg font-semibold text-green-600 dark:text-green-400">
+                            {feeds.filter((f) => f.health_status === 'healthy').length}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-yellow-200 dark:border-yellow-800">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div>
+                          <div className="text-xs text-muted-foreground">過時</div>
+                          <div className="text-lg font-semibold text-yellow-600 dark:text-yellow-400">
+                            {feeds.filter((f) => f.health_status === 'warning').length}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-red-200 dark:border-red-800">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div>
+                          <div className="text-xs text-muted-foreground">錯誤</div>
+                          <div className="text-lg font-semibold text-red-600 dark:text-red-400">
+                            {feeds.filter((f) => f.health_status === 'error').length}
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-gray-200 dark:border-gray-800">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-gray-500"></div>
+                        <div>
+                          <div className="text-xs text-muted-foreground">未知</div>
+                          <div className="text-lg font-semibold text-gray-600 dark:text-gray-400">
+                            {
+                              feeds.filter((f) => f.health_status === 'unknown' || !f.health_status)
+                                .length
+                            }
+                          </div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Action Bar */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="default"
+                    onClick={handleSubscribeRecommended}
+                    disabled={allRecommendedSubscribed || toggling.size > 0}
+                    className="gap-2"
+                  >
+                    <Star className="w-4 h-4" />
+                    訂閱所有推薦
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleToggleAll(true)}
+                    disabled={allSubscribed || toggling.size > 0}
+                  >
+                    全部訂閱
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleToggleAll(false)}
+                    disabled={noneSubscribed || toggling.size > 0}
+                  >
+                    全部取消
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={handleRetryFailedFeeds}
+                    disabled={
+                      feeds.filter((f) => f.health_status === 'error').length === 0 ||
+                      toggling.size > 0
+                    }
+                    className="gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                      />
+                    </svg>
+                    重試失敗來源
+                  </Button>
+
+                  <div className="flex-1" />
+
+                  <AddCustomFeedDialog
+                    onAddFeed={handleAddCustomFeed}
+                    onPreviewFeed={handlePreviewFeed}
                   />
-                </svg>
-                重試失敗來源
-              </Button>
 
-              <div className="flex-1" />
+                  <OPMLImportExport feeds={feeds} onImport={handleOPMLImport} />
+                </div>
 
-              <AddCustomFeedDialog
-                onAddFeed={handleAddCustomFeed}
-                onPreviewFeed={handlePreviewFeed}
-              />
-
-              <OPMLImportExport feeds={feeds} onImport={handleOPMLImport} />
-            </div>
-
-            {/* Search Bar */}
-            <FeedSearch feeds={feeds} onFilteredFeedsChange={handleFilteredFeedsChange} />
+                {/* Search Bar */}
+                <FeedSearch feeds={feeds} onFilteredFeedsChange={handleFilteredFeedsChange} />
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
 

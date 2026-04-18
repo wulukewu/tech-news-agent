@@ -397,6 +397,33 @@
       transform: translateX(0);
     }
   }
+
+  /* Mobile drawer animations (Req 5.5 - 300ms) */
+  .animate-fade-in {
+    animation: fadeInBackdrop 0.3s ease-in-out;
+  }
+
+  @keyframes fadeInBackdrop {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .animate-slide-in-from-left {
+    animation: slideInFromLeft 0.3s ease-out;
+  }
+
+  @keyframes slideInFromLeft {
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
 }
 
 /* Print styles */

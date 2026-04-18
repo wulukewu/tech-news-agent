@@ -14,9 +14,11 @@ import {
   useRemoveFromReadingList,
 } from '@/lib/hooks/useReadingList';
 import type { ReadingListStatus } from '@/types/readingList';
-import { BookMarked } from 'lucide-react';
+import { BookMarked, CheckSquare, Square, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 
 /**
  * Main reading list page component
@@ -24,6 +26,8 @@ import { cn } from '@/lib/utils';
  */
 export default function ReadingListPage() {
   const [selectedStatus, setSelectedStatus] = useState<ReadingListStatus | null>(null);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
 
   // Use infinite scroll hook for articles
   const { articles, loading, loadingMore, hasNextPage, totalCount, handleLoadMore } =
@@ -37,7 +41,46 @@ export default function ReadingListPage() {
   // Handle status filter change
   const handleStatusChange = useCallback((status: ReadingListStatus | null) => {
     setSelectedStatus(status);
+    setSelectedItems(new Set()); // Clear selection when changing status
   }, []);
+
+  // Handle item selection
+  const toggleItemSelection = (articleId: string) => {
+    setSelectedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(articleId)) {
+        next.delete(articleId);
+      } else {
+        next.add(articleId);
+      }
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    setSelectedItems(new Set(articles.map((item) => item.articleId)));
+  };
+
+  const deselectAll = () => {
+    setSelectedItems(new Set());
+  };
+
+  // Batch operations
+  const handleBatchMarkAsRead = async () => {
+    for (const articleId of selectedItems) {
+      await updateStatus.mutateAsync({ articleId, status: 'Read' });
+    }
+    setSelectedItems(new Set());
+    setIsSelectionMode(false);
+  };
+
+  const handleBatchRemove = async () => {
+    for (const articleId of selectedItems) {
+      await removeItem.mutateAsync(articleId);
+    }
+    setSelectedItems(new Set());
+    setIsSelectionMode(false);
+  };
 
   // Infinite scroll sentinel
   const sentinelRef = useInfiniteScroll({
@@ -96,29 +139,99 @@ export default function ReadingListPage() {
   return (
     <ProtectedRoute>
       <div className="container mx-auto py-8 px-4 max-w-6xl">
-        <h1 className="text-3xl font-bold mb-6">Reading List</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-3xl font-bold">Reading List</h1>
+          {articles && articles.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsSelectionMode(!isSelectionMode);
+                setSelectedItems(new Set());
+              }}
+            >
+              {isSelectionMode ? 'Cancel' : 'Select'}
+            </Button>
+          )}
+        </div>
 
         {/* Status Filter Tabs */}
         <div className="mb-6">
           <StatusFilterTabs selectedStatus={selectedStatus} onStatusChange={handleStatusChange} />
         </div>
 
+        {/* Batch Actions Bar */}
+        {isSelectionMode && articles && articles.length > 0 && (
+          <div className="mb-4 p-4 bg-muted rounded-lg flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={selectedItems.size === articles.length ? deselectAll : selectAll}
+              >
+                {selectedItems.size === articles.length ? (
+                  <>
+                    <CheckSquare className="h-4 w-4 mr-2" />
+                    Deselect All
+                  </>
+                ) : (
+                  <>
+                    <Square className="h-4 w-4 mr-2" />
+                    Select All
+                  </>
+                )}
+              </Button>
+              <span className="text-sm text-muted-foreground">{selectedItems.size} selected</span>
+            </div>
+            {selectedItems.size > 0 && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleBatchMarkAsRead}
+                  disabled={updateStatus.isPending}
+                >
+                  Mark as Read
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleBatchRemove}
+                  disabled={removeItem.isPending}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Remove
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Reading List Items */}
         <div className="space-y-4">
           {articles.map((item) => (
-            <ReadingListItem
-              key={item.articleId}
-              item={item}
-              onStatusChange={(articleId, status) => {
-                updateStatus.mutate({ articleId, status });
-              }}
-              onRatingChange={(articleId, rating) => {
-                updateRating.mutate({ articleId, rating });
-              }}
-              onRemove={(articleId) => {
-                removeItem.mutate(articleId);
-              }}
-            />
+            <div key={item.articleId} className="flex items-start gap-3">
+              {isSelectionMode && (
+                <Checkbox
+                  checked={selectedItems.has(item.articleId)}
+                  onCheckedChange={() => toggleItemSelection(item.articleId)}
+                  className="mt-6"
+                />
+              )}
+              <div className="flex-1">
+                <ReadingListItem
+                  item={item}
+                  onStatusChange={(articleId, status) => {
+                    updateStatus.mutate({ articleId, status });
+                  }}
+                  onRatingChange={(articleId, rating) => {
+                    updateRating.mutate({ articleId, rating });
+                  }}
+                  onRemove={(articleId) => {
+                    removeItem.mutate(articleId);
+                  }}
+                />
+              </div>
+            </div>
           ))}
         </div>
 

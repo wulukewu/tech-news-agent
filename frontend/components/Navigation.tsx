@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Logo } from '@/components/Logo';
+import { UserMenu } from '@/components/UserMenu';
 import { cn } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 
@@ -30,10 +31,15 @@ export function Navigation() {
   const pathname = usePathname();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  const navItems = [
+  // Main navigation items (3 core features - Req 4.1)
+  const mainNavItems = [
     { href: '/dashboard/articles', label: 'Articles', icon: Home },
     { href: '/dashboard/reading-list', label: 'Reading List', icon: BookMarked },
     { href: '/dashboard/subscriptions', label: 'Subscriptions', icon: Rss },
+  ];
+
+  // Secondary items moved to user menu (Req 4.2)
+  const secondaryNavItems = [
     { href: '/dashboard/recommendations', label: 'Recommendations', icon: Heart },
     { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
     { href: '/dashboard/settings', label: 'Settings', icon: Settings },
@@ -78,7 +84,7 @@ export function Navigation() {
 
             {/* Desktop navigation - only show main items */}
             <div className="hidden md:flex gap-1.5 lg:gap-2">
-              {navItems.slice(0, 4).map((item) => {
+              {mainNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
                 return (
@@ -89,6 +95,7 @@ export function Navigation() {
                       'flex items-center gap-1.5 px-2.5 lg:px-3 py-2 rounded-md transition-colors cursor-pointer',
                       'hover:bg-accent hover:text-accent-foreground',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                      'min-h-[44px] min-w-[44px]', // Touch-friendly targets (Req 9.2)
                       isActive
                         ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground'
                         : 'text-foreground'
@@ -104,32 +111,10 @@ export function Navigation() {
           </div>
 
           <div className="flex items-center gap-2">
-            {user && (
-              <div className="hidden lg:flex items-center gap-2 mr-2">
-                <Avatar className="h-7 w-7">
-                  {user.avatar && <AvatarImage src={user.avatar} alt={user.username || 'User'} />}
-                  <AvatarFallback className="text-xs">
-                    {user.username?.[0]?.toUpperCase() || 'U'}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm max-w-[100px] truncate">{user.username}</span>
-              </div>
-            )}
-
             <ThemeToggle variant="dropdown" />
 
-            {user && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLogout}
-                className="hidden md:flex gap-1.5 px-2.5"
-                title="Logout"
-              >
-                <LogOut className="h-4 w-4" aria-hidden="true" />
-                <span className="text-sm">Logout</span>
-              </Button>
-            )}
+            {/* User menu for desktop (Req 4.1, 4.2, 4.3, 4.4) */}
+            {user && <UserMenu />}
 
             {/* Hamburger menu button - visible below 768px (Req 23.1) */}
             <Button
@@ -186,7 +171,7 @@ export function Navigation() {
 
             {/* Navigation items with full-width touch targets (Req 3.7, 23.6) */}
             <div className="py-4 space-y-1 overflow-y-auto max-h-[calc(100vh-200px)]">
-              {navItems.map((item) => {
+              {[...mainNavItems, ...secondaryNavItems].map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
                 return (
@@ -194,7 +179,7 @@ export function Navigation() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      'flex items-center gap-3 px-4 py-3 min-h-56 w-full cursor-pointer transition-colors',
+                      'flex items-center gap-3 px-4 py-3 min-h-[56px] w-full cursor-pointer transition-colors',
                       'hover:bg-accent hover:text-accent-foreground',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                       isActive && 'bg-primary text-primary-foreground relative',
