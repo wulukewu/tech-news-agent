@@ -62,7 +62,7 @@ const SUPPORTED_LOCALES: Locale[] = ['zh-TW', 'en-US'];
  */
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>('en-US');
-  const [translations, setTranslations] = useState<Record<string, any>>({});
+  const [translations, setTranslations] = useState<Record<string, unknown>>({});
   const [isLoading, setIsLoading] = useState(true);
 
   /**
@@ -113,7 +113,6 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       const response = await import(`@/locales/${targetLocale}.json`);
       setTranslations(response.default || response);
     } catch (error) {
-      console.error(`Failed to load translations for ${targetLocale}:`, error);
       // Fallback to empty object - application continues to function
       setTranslations({});
     }
@@ -144,17 +143,14 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   const t: TranslationFunction = useCallback(
     (key, variables) => {
       const keys = key.split('.');
-      let value: any = translations;
+      let value: unknown = translations;
 
       // Traverse nested object structure
       for (const k of keys) {
         if (value && typeof value === 'object' && k in value) {
-          value = value[k];
+          value = (value as Record<string, unknown>)[k];
         } else {
           // Fallback: return key if translation not found
-          if (process.env.NODE_ENV === 'development') {
-            console.warn(`Translation key not found: ${key}`);
-          }
           return key;
         }
       }
@@ -172,16 +168,83 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
   );
 
   /**
+   * Announce language change to screen readers
+   *
+   * Creates a temporary ARIA live region to announce the language change.
+   * The announcement is in the NEW language (not the old one) so screen readers
+   * can properly announce it with the correct pronunciation.
+   *
+   * The element is visually hidden but accessible to screen readers, and is
+   * automatically removed after 1 second to keep the DOM clean.
+   *
+   * @param newLocale - The locale that was just switched to
+   * @param newTranslations - The translations for the new locale
+   *
+   * @see Requirement 9.2: Screen reader announcements for language changes
+   */
+  const announceLanguageChange = useCallback(
+    (newLocale: Locale, newTranslations: Record<string, unknown>) => {
+      if (typeof document === 'undefined') return;
+
+      // Get the announcement text in the NEW language
+      const announcementKey =
+        newLocale === 'zh-TW' ? 'language.changed-to-chinese' : 'language.changed-to-english';
+
+      // Traverse the translation object to get the announcement text
+      const keys = announcementKey.split('.');
+      let announcementText: unknown = newTranslations;
+      for (const k of keys) {
+        if (announcementText && typeof announcementText === 'object' && k in announcementText) {
+          announcementText = (announcementText as Record<string, unknown>)[k];
+        } else {
+          announcementText = announcementKey; // Fallback to key
+          break;
+        }
+      }
+
+      // Create a visually hidden live region
+      const announcement = document.createElement('div');
+      announcement.setAttribute('role', 'status');
+      announcement.setAttribute('aria-live', 'polite');
+      announcement.setAttribute('aria-atomic', 'true');
+      announcement.className = 'sr-only'; // Tailwind's screen-reader-only class
+      announcement.style.position = 'absolute';
+      announcement.style.width = '1px';
+      announcement.style.height = '1px';
+      announcement.style.padding = '0';
+      announcement.style.margin = '-1px';
+      announcement.style.overflow = 'hidden';
+      announcement.style.clip = 'rect(0, 0, 0, 0)';
+      announcement.style.whiteSpace = 'nowrap';
+      announcement.style.border = '0';
+      announcement.textContent = announcementText;
+
+      // Append to body
+      document.body.appendChild(announcement);
+
+      // Remove after 1 second
+      setTimeout(() => {
+        if (document.body.contains(announcement)) {
+          document.body.removeChild(announcement);
+        }
+      }, 1000);
+    },
+    []
+  );
+
+  /**
    * Set locale with persistence
    *
    * Changes the active locale, loads corresponding translations, and persists preference.
    * Updates HTML lang attribute for accessibility and screen readers.
+   * Announces the language change to screen readers.
    * Completes within 200ms for smooth user experience.
    *
    * @param newLocale - Locale to switch to
    *
    * @see Requirement 2.1-2.4: Language persistence
    * @see Requirement 3.2: Language switching within 200ms
+   * @see Requirement 9.2: Screen reader announcements for language changes
    * @see Requirement 9.5: Update HTML lang attribute
    */
   const setLocale = useCallback(
@@ -197,18 +260,24 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       // Persist to localStorage
       try {
         localStorage.setItem(LANGUAGE_STORAGE_KEY, newLocale);
-      } catch (error) {
+      } catch {
         // Handle localStorage unavailability gracefully (e.g., private browsing)
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('Failed to persist language preference:', error);
-        }
+        // Silently fail - application continues to function
       }
 
       // Load translations
       await loadTranslations(newLocale);
+
+      // Get the newly loaded translations for the announcement
+      const response = await import(`@/locales/${newLocale}.json`);
+      const newTranslations = response.default || response;
+
+      // Announce language change to screen readers (in the NEW language)
+      announceLanguageChange(newLocale, newTranslations);
+
       setIsLoading(false);
     },
-    [loadTranslations]
+    [loadTranslations, announceLanguageChange]
   );
 
   /**

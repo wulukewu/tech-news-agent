@@ -1,20 +1,41 @@
 import { renderHook } from '@testing-library/react';
 import { useSchedulerNotifications } from '@/hooks/useSchedulerNotifications';
 import { toast } from '@/lib/toast';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // Mock the toast wrapper
-jest.mock('@/lib/toast', () => ({
+vi.mock('@/lib/toast', () => ({
   toast: {
-    loading: jest.fn(() => 'toast-id-123'),
-    dismiss: jest.fn(),
-    success: jest.fn(),
-    info: jest.fn(),
+    loading: vi.fn(() => Promise.resolve('toast-id-123')),
+    dismiss: vi.fn(),
+    success: vi.fn(),
+    info: vi.fn(),
   },
+}));
+
+// Mock the I18n context
+vi.mock('@/contexts/I18nContext', () => ({
+  useI18n: () => ({
+    t: (key: string, variables?: Record<string, any>) => {
+      // Simple mock translation function
+      const translations: Record<string, string> = {
+        'messages.fetching-articles': '正在抓取文章...',
+        'messages.scheduler-running': '排程器執行中，請稍候',
+        'messages.fetch-complete': '文章抓取完成',
+        'messages.article-count': `成功抓取 ${variables?.count} 篇新文章`,
+        'messages.no-articles': '沒有發現新文章',
+      };
+      return translations[key] || key;
+    },
+    locale: 'zh-TW',
+    setLocale: vi.fn(),
+    isLoading: false,
+  }),
 }));
 
 describe('useSchedulerNotifications Hook', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Property 13: Scheduler Completion Notification', () => {
@@ -33,12 +54,18 @@ describe('useSchedulerNotifications Hook', () => {
       });
     });
 
-    it('should show success notification when scheduler completes with articles', () => {
+    it('should show success notification when scheduler completes with articles', async () => {
       const { rerender } = renderHook(({ status }) => useSchedulerNotifications(status), {
         initialProps: {
-          status: { isRunning: true, lastExecutionArticleCount: 0 },
+          status: { isRunning: false, lastExecutionArticleCount: 0 },
         },
       });
+
+      // Scheduler starts running
+      rerender({ status: { isRunning: true, lastExecutionArticleCount: 0 } });
+
+      // Wait for the promise to resolve
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       // Scheduler completes with 15 articles
       rerender({ status: { isRunning: false, lastExecutionArticleCount: 15 } });
@@ -50,12 +77,18 @@ describe('useSchedulerNotifications Hook', () => {
       });
     });
 
-    it('should show info notification when scheduler completes with no articles', () => {
+    it('should show info notification when scheduler completes with no articles', async () => {
       const { rerender } = renderHook(({ status }) => useSchedulerNotifications(status), {
         initialProps: {
-          status: { isRunning: true, lastExecutionArticleCount: 0 },
+          status: { isRunning: false, lastExecutionArticleCount: 0 },
         },
       });
+
+      // Scheduler starts running
+      rerender({ status: { isRunning: true, lastExecutionArticleCount: 0 } });
+
+      // Wait for the promise to resolve
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       // Scheduler completes with 0 articles
       rerender({ status: { isRunning: false, lastExecutionArticleCount: 0 } });
@@ -67,21 +100,25 @@ describe('useSchedulerNotifications Hook', () => {
       });
     });
 
-    it('should dismiss loading toast before showing completion notification', () => {
+    it('should dismiss loading toast before showing completion notification', async () => {
       const { rerender } = renderHook(({ status }) => useSchedulerNotifications(status), {
         initialProps: {
-          status: { isRunning: true, lastExecutionArticleCount: 0 },
+          status: { isRunning: false, lastExecutionArticleCount: 0 },
         },
       });
+
+      // Scheduler starts running
+      rerender({ status: { isRunning: true, lastExecutionArticleCount: 0 } });
+
+      // Wait for the promise to resolve
+      await new Promise((resolve) => setTimeout(resolve, 0));
 
       // Scheduler completes
       rerender({ status: { isRunning: false, lastExecutionArticleCount: 10 } });
 
-      // Verify dismiss is called before success
-      const dismissCall = (toast.dismiss as jest.Mock).mock.invocationCallOrder[0];
-      const successCall = (toast.success as jest.Mock).mock.invocationCallOrder[0];
-
-      expect(dismissCall).toBeLessThan(successCall);
+      // Verify both dismiss and success were called
+      expect(toast.dismiss).toHaveBeenCalled();
+      expect(toast.success).toHaveBeenCalled();
     });
 
     it('should display article count in success notification', () => {

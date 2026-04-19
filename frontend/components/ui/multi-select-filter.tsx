@@ -192,7 +192,9 @@ export function MultiSelectFilter<T = string>({
             ) : selected.length === 1 ? (
               <span className="truncate">{selectedLabels[0]}</span>
             ) : (
-              <span className="truncate">已選擇 {selected.length} 個項目</span>
+              <span className="truncate">
+                {t('forms.messages.selected-count', { count: selected.length })}
+              </span>
             )}
           </div>
           <div className="flex items-center gap-1 ml-2">
@@ -205,7 +207,7 @@ export function MultiSelectFilter<T = string>({
                   e.stopPropagation();
                   handleClear();
                 }}
-                aria-label="清除所有選項"
+                aria-label={t('buttons.clear-all')}
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -226,7 +228,7 @@ export function MultiSelectFilter<T = string>({
             <div className="flex items-center border-b px-3 py-2">
               <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
               <Input
-                placeholder="搜尋選項..."
+                placeholder={t('forms.placeholders.search-options')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="border-0 p-0 focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -243,7 +245,9 @@ export function MultiSelectFilter<T = string>({
           {/* Bulk actions */}
           {showBulkActions && filteredOptions.length > 0 && (
             <div className="flex items-center justify-between p-2 border-b bg-muted/30">
-              <span className="text-xs text-muted-foreground">{filteredOptions.length} 個選項</span>
+              <span className="text-xs text-muted-foreground">
+                {t('forms.messages.options-count', { count: filteredOptions.length })}
+              </span>
               <div className="flex gap-1">
                 <Button
                   variant="ghost"
@@ -269,7 +273,7 @@ export function MultiSelectFilter<T = string>({
           {selected.length > 0 && (
             <div className="border-b p-3">
               <div className="text-xs font-medium text-muted-foreground mb-2">
-                已選擇 ({selected.length})
+                {t('forms.messages.selected-items', { count: selected.length })}
               </div>
               <div className="flex flex-wrap gap-1">
                 {selectedLabels.map((label, index) => (
@@ -280,7 +284,7 @@ export function MultiSelectFilter<T = string>({
                       size="icon"
                       className="h-3 w-3 p-0 ml-1 hover:bg-transparent"
                       onClick={() => handleRemoveItem(selected[index])}
-                      aria-label={`移除 ${label}`}
+                      aria-label={`${t('buttons.remove')} ${label}`}
                     >
                       <X className="h-2 w-2" />
                     </Button>

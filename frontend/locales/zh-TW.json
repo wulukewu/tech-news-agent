@@ -11,6 +11,10 @@
     "language": "語言",
     "theme": "主題"
   },
+  "language": {
+    "changed-to-chinese": "語言已切換為繁體中文",
+    "changed-to-english": "語言已切換為英文"
+  },
   "buttons": {
     "save": "儲存",
     "cancel": "取消",
@@ -44,7 +48,8 @@
     "article-count": "成功抓取 {count} 篇新文章",
     "no-articles": "沒有發現新文章",
     "fetching-articles": "正在抓取文章...",
-    "scheduler-running": "排程器執行中，請稍候"
+    "scheduler-running": "排程器執行中，請稍候",
+    "fetch-complete": "文章抓取完成"
   },
   "errors": {
     "network-error": "網路連線異常，請檢查您的網路設定",
@@ -55,7 +60,8 @@
     "server-error": "伺服器發生錯誤，請稍後再試",
     "not-found": "找不到請求的資源",
     "unauthorized": "請先登入後再進行此操作",
-    "logout-failed": "登出失敗"
+    "logout-failed": "登出失敗",
+    "scheduler-trigger-failed": "觸發失敗，請稍後再試"
   },
   "success": {
     "article-saved": "文章已加入閱讀清單",
@@ -64,7 +70,8 @@
     "analysis-copied": "分析內容已複製到剪貼簿",
     "subscription-added": "訂閱已新增",
     "subscription-removed": "訂閱已移除",
-    "logout": "登出成功"
+    "logout": "登出成功",
+    "scheduler-triggered": "已觸發文章抓取任務，請稍後重新整理頁面查看新文章"
   },
   "tinkering-index": {
     "level-1": "入門",
@@ -87,13 +94,22 @@
   "theme": {
     "light": "淺色模式",
     "dark": "深色模式",
-    "system": "跟隨系統"
+    "system": "跟隨系統",
+    "toggle": "切換主題",
+    "select": "選擇主題",
+    "switch-to": "切換至{mode}模式"
   },
   "notification-frequency": {
     "immediate": "即時通知",
+    "immediate-desc": "新文章發布時立即通知",
     "daily": "每日摘要",
+    "daily-desc": "每天一次彙整通知",
     "weekly": "每週摘要",
-    "disabled": "關閉通知"
+    "weekly-desc": "每週一次彙整通知",
+    "disabled": "關閉通知",
+    "disabled-desc": "不接收任何通知",
+    "title": "通知頻率",
+    "description": "選擇您希望接收通知的頻率"
   },
   "dialogs": {
     "manual-fetch": {
@@ -105,6 +121,86 @@
       "note-3": "建議等待當前任務完成後再次觸發",
       "confirm-button": "確認觸發",
       "confirming-button": "觸發中..."
+    }
+  },
+  "forms": {
+    "placeholders": {
+      "search-categories": "搜尋分類...",
+      "select-sort-by": "選擇排序方式...",
+      "select-order": "選擇順序...",
+      "select-min": "選擇最低...",
+      "select-max": "選擇最高...",
+      "search-feed": "搜尋 Feed 名稱、分類、標籤或 URL...",
+      "feed-url": "https://example.com/feed.xml",
+      "feed-name": "自動從 Feed 中取得",
+      "feed-category": "例如: Tech, AI, Web Development",
+      "search-options": "搜尋選項...",
+      "select-options": "選擇選項..."
+    },
+    "labels": {
+      "sort-by": "排序方式",
+      "sort-field": "排序依據",
+      "sort-order": "排序順序",
+      "tinkering-filter": "技術深度篩選",
+      "min-depth": "最低深度",
+      "max-depth": "最高深度",
+      "feed-url": "RSS Feed URL",
+      "feed-name": "Feed 名稱",
+      "feed-category": "分類",
+      "optional": "選填",
+      "required": "必填"
+    },
+    "messages": {
+      "loading-categories": "載入分類中...",
+      "loading-failed": "載入分類失敗",
+      "no-categories": "沒有可用的分類",
+      "no-results": "找不到相關分類",
+      "show-all": "顯示全部",
+      "show-less": "顯示較少",
+      "selected-count": "已選擇 {count} 個項目",
+      "selected-categories": "已選擇 {count} 個分類",
+      "clear-filters": "清除全部",
+      "sort-summary": "按 {field} {order}",
+      "filter-summary-equal": "顯示深度等級 {level} 星的文章",
+      "filter-summary-range": "顯示深度等級{min}{max}的文章",
+      "filter-summary-min": " {level} 星以上",
+      "filter-summary-max": " {level} 星以下",
+      "filter-summary-separator": "，",
+      "search-results": "找到 {count} 個結果",
+      "no-options": "沒有找到選項",
+      "options-count": "{count} 個選項",
+      "selected-items": "已選擇 ({count})"
+    },
+    "sort-options": {
+      "date": "發布日期",
+      "date-desc": "按文章發布時間排序",
+      "tinkering-index": "技術深度",
+      "tinkering-index-desc": "按技術深度評分排序",
+      "category": "分類",
+      "category-desc": "按文章分類排序"
+    },
+    "order-options": {
+      "asc": "升序",
+      "asc-desc": "從低到高 / 從舊到新",
+      "desc": "降序",
+      "desc-desc": "從高到低 / 從新到舊"
+    },
+    "feed-dialog": {
+      "title": "新增自訂 RSS Feed",
+      "description": "輸入 RSS Feed URL 以新增自訂來源。您可以先預覽 Feed 內容再決定是否新增。",
+      "preview-success": "預覽載入成功",
+      "preview-failed": "無法載入 Feed 預覽，請檢查 URL 是否正確",
+      "preview-error": "預覽失敗，請檢查 URL 是否為有效的 RSS Feed",
+      "add-success": "自訂 Feed 新增成功",
+      "add-failed": "新增 Feed 失敗，請稍後再試",
+      "url-required": "請輸入 RSS Feed URL",
+      "url-invalid": "請輸入有效的 URL (必須以 http:// 或 https:// 開頭)",
+      "preview-not-implemented": "預覽功能尚未實作",
+      "adding": "新增中...",
+      "add-feed": "新增 Feed",
+      "category-label": "分類",
+      "article-count": "文章數",
+      "last-updated": "最後更新"
     }
   }
 }

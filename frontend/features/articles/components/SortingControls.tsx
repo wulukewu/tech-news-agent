@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   Select,
   SelectContent,
@@ -11,6 +11,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { ArrowUpDown, Calendar, Star, Tag } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/contexts/I18nContext';
 
 export type SortField = 'date' | 'tinkering_index' | 'category';
 export type SortOrder = 'asc' | 'desc';
@@ -85,8 +86,35 @@ export function SortingControls({
   disabled = false,
   className,
 }: SortingControlsProps) {
-  const currentSortOption = SORT_OPTIONS.find((option) => option.value === sortBy);
-  const currentOrderOption = ORDER_OPTIONS.find((option) => option.value === sortOrder);
+  const { t } = useI18n();
+
+  // Memoize translated sort options to prevent re-translation on every render
+  // Requirements: 8.6 - Performance optimization with useMemo
+  const translatedSortOptions = useMemo(
+    () =>
+      SORT_OPTIONS.map((option) => {
+        // Map value to translation key (tinkering_index -> tinkering-index)
+        const translationKey = option.value.replace('_', '-');
+        return {
+          ...option,
+          translatedLabel: t(`forms.sort-options.${translationKey}`),
+        };
+      }),
+    [t]
+  );
+
+  // Memoize translated order options
+  const translatedOrderOptions = useMemo(
+    () =>
+      ORDER_OPTIONS.map((option) => ({
+        ...option,
+        translatedLabel: t(`forms.order-options.${option.value}`),
+      })),
+    [t]
+  );
+
+  const currentSortOption = translatedSortOptions.find((option) => option.value === sortBy);
+  const currentOrderOption = translatedOrderOptions.find((option) => option.value === sortOrder);
 
   const handleSortByChange = (value: string) => {
     onSortByChange(value as SortField);
@@ -96,30 +124,26 @@ export function SortingControls({
     onSortOrderChange(value as SortOrder);
   };
 
-  const toggleSortOrder = () => {
-    onSortOrderChange(sortOrder === 'asc' ? 'desc' : 'asc');
-  };
-
   return (
     <div className={cn('space-y-3', className)}>
-      <Label className="text-sm font-medium">排序方式</Label>
+      <Label className="text-sm font-medium">{t('forms.labels.sort-by')}</Label>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {/* Sort Field Selection */}
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">排序依據</Label>
+          <Label className="text-xs text-muted-foreground">{t('forms.labels.sort-field')}</Label>
           <Select value={sortBy} onValueChange={handleSortByChange} disabled={disabled}>
             <SelectTrigger className="h-9">
-              <SelectValue placeholder="選擇排序方式..." />
+              <SelectValue placeholder={t('forms.placeholders.select-sort-by')} />
             </SelectTrigger>
             <SelectContent>
-              {SORT_OPTIONS.map((option) => {
+              {translatedSortOptions.map((option) => {
                 const Icon = option.icon;
                 return (
                   <SelectItem key={option.value} value={option.value}>
                     <div className="flex items-center gap-2">
                       <Icon className="h-4 w-4" />
-                      <span>{option.label}</span>
+                      <span>{option.translatedLabel}</span>
                     </div>
                   </SelectItem>
                 );
@@ -130,17 +154,17 @@ export function SortingControls({
 
         {/* Sort Order Selection */}
         <div className="space-y-2">
-          <Label className="text-xs text-muted-foreground">排序順序</Label>
+          <Label className="text-xs text-muted-foreground">{t('forms.labels.sort-order')}</Label>
           <Select value={sortOrder} onValueChange={handleSortOrderChange} disabled={disabled}>
             <SelectTrigger className="h-9">
-              <SelectValue placeholder="選擇順序..." />
+              <SelectValue placeholder={t('forms.placeholders.select-order')} />
             </SelectTrigger>
             <SelectContent>
-              {ORDER_OPTIONS.map((option) => (
+              {translatedOrderOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   <div className="flex items-center gap-2">
                     <ArrowUpDown className="h-4 w-4" />
-                    <span>{option.label}</span>
+                    <span>{option.translatedLabel}</span>
                   </div>
                 </SelectItem>
               ))}
@@ -152,7 +176,10 @@ export function SortingControls({
       {/* Current Sort Summary */}
       <div className="text-xs text-muted-foreground">
         <span>
-          按 {currentSortOption?.label} {currentOrderOption?.label}
+          {t('forms.messages.sort-summary', {
+            field: currentSortOption?.translatedLabel || '',
+            order: currentOrderOption?.translatedLabel || '',
+          })}
         </span>
       </div>
     </div>

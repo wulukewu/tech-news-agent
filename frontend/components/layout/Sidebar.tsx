@@ -8,6 +8,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/contexts/UserContext';
 import { useI18n } from '@/contexts/I18nContext';
+import type { TranslationKey } from '@/types/i18n';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Logo } from '@/components/Logo';
@@ -15,7 +16,7 @@ import { Logo } from '@/components/Logo';
 export interface NavigationItem {
   href: string;
   label?: string; // Deprecated: use labelKey instead
-  labelKey?: string; // Translation key for the label
+  labelKey?: TranslationKey; // Translation key for the label
   icon: React.ComponentType<{ className?: string }>;
   badge?: string | number;
   disabled?: boolean;
@@ -53,6 +54,17 @@ export function Sidebar({
   const { t } = useI18n();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  // Memoize translated navigation items to prevent re-translation on every render
+  // Requirements: 8.6 - Performance optimization with useMemo
+  const translatedNavigation = React.useMemo(
+    () =>
+      navigation.map((item) => ({
+        ...item,
+        translatedLabel: item.labelKey ? t(item.labelKey) : item.label || '',
+      })),
+    [navigation, t]
+  );
+
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 
   // Keyboard shortcuts
@@ -66,7 +78,7 @@ export function Sidebar({
       // Handle Cmd/Ctrl + key combinations
       if (event.metaKey || event.ctrlKey) {
         const shortcut = event.key.toLowerCase();
-        const item = navigation.find((nav) => nav.shortcut?.toLowerCase() === shortcut);
+        const item = translatedNavigation.find((nav) => nav.shortcut?.toLowerCase() === shortcut);
 
         if (item && !item.disabled) {
           event.preventDefault();
@@ -82,7 +94,7 @@ export function Sidebar({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [navigation, mobileMenuOpen]);
+  }, [translatedNavigation, mobileMenuOpen]);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -111,10 +123,10 @@ export function Sidebar({
 
         {/* Navigation items - Req 3.1, 3.4 */}
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto" aria-label="Sidebar navigation">
-          {navigation.map((item) => {
+          {translatedNavigation.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
-            const label = item.labelKey ? t(item.labelKey) : item.label || '';
+            const label = item.translatedLabel;
 
             return (
               <Link
@@ -270,10 +282,10 @@ export function Sidebar({
 
             {/* Mobile navigation */}
             <nav className="flex-1 p-4 space-y-1 overflow-y-auto" aria-label="Mobile navigation">
-              {navigation.map((item) => {
+              {translatedNavigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
-                const label = item.labelKey ? t(item.labelKey) : item.label || '';
+                const label = item.translatedLabel;
 
                 return (
                   <Link
@@ -307,10 +319,10 @@ export function Sidebar({
         {/* Mobile bottom navigation */}
         <div className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur border-t lg:hidden safe-area-pb">
           <nav className="flex justify-around py-2" aria-label="Bottom navigation">
-            {navigation.slice(0, 5).map((item) => {
+            {translatedNavigation.slice(0, 5).map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
-              const label = item.labelKey ? t(item.labelKey) : item.label || '';
+              const label = item.translatedLabel;
 
               return (
                 <Link

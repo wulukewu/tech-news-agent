@@ -34,6 +34,10 @@ const mockZhTWTranslations = {
   errors: {
     'network-error': '網路連線異常',
   },
+  language: {
+    'changed-to-chinese': '語言已切換為繁體中文',
+    'changed-to-english': '語言已切換為英文',
+  },
 };
 
 const mockEnUSTranslations = {
@@ -51,6 +55,10 @@ const mockEnUSTranslations = {
   },
   errors: {
     'network-error': 'Network connection error',
+  },
+  language: {
+    'changed-to-chinese': 'Language changed to Traditional Chinese',
+    'changed-to-english': 'Language changed to English',
   },
 };
 
@@ -307,6 +315,75 @@ describe('I18nContext', () => {
       });
 
       expect(document.documentElement.lang).toBe('en-US');
+    });
+
+    it('should announce language change to screen readers', async () => {
+      // Requirement 9.2: Screen reader announcements for language changes
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // Switch to Chinese
+      await act(async () => {
+        await result.current.setLocale('zh-TW');
+      });
+
+      // Check that announcement element was created
+      const announcements = document.querySelectorAll('[role="status"][aria-live="polite"]');
+      expect(announcements.length).toBeGreaterThan(0);
+
+      // Check that the announcement has the correct text (in the NEW language)
+      const announcement = announcements[announcements.length - 1];
+      expect(announcement.textContent).toContain('語言已切換為繁體中文');
+
+      // Check that the element is visually hidden but accessible
+      expect(announcement.className).toBe('sr-only');
+      expect(announcement.getAttribute('aria-atomic')).toBe('true');
+
+      // Wait for the announcement to be removed (after 1 second)
+      await waitFor(
+        () => {
+          expect(document.body.contains(announcement)).toBe(false);
+        },
+        { timeout: 1500 }
+      );
+    });
+
+    it('should announce in the NEW language when switching', async () => {
+      // Requirement 9.2: Announcement should be in the NEW language
+      localStorage.setItem('language', 'en-US');
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // Switch from English to Chinese
+      await act(async () => {
+        await result.current.setLocale('zh-TW');
+      });
+
+      // Announcement should be in Chinese (the NEW language)
+      const announcements = document.querySelectorAll('[role="status"][aria-live="polite"]');
+      const announcement = announcements[announcements.length - 1];
+      expect(announcement.textContent).toBe('語言已切換為繁體中文');
+
+      // Switch from Chinese to English
+      await act(async () => {
+        await result.current.setLocale('en-US');
+      });
+
+      // Announcement should be in English (the NEW language)
+      const newAnnouncements = document.querySelectorAll('[role="status"][aria-live="polite"]');
+      const newAnnouncement = newAnnouncements[newAnnouncements.length - 1];
+      expect(newAnnouncement.textContent).toBe('Language changed to English');
     });
 
     it('should handle localStorage unavailability gracefully', async () => {

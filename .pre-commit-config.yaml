@@ -81,3 +81,13 @@ repos:
   #       language: system
   #       files: ^frontend/.*\.tsx?$
   #       pass_filenames: false
+
+  # Frontend: Translation validation
+  - repo: local
+    hooks:
+      - id: validate-translations
+        name: Validate translations completeness
+        entry: bash -c 'cd frontend && npm run find:missing-translations'
+        language: system
+        files: ^frontend/locales/.*\.json$
+        pass_filenames: false

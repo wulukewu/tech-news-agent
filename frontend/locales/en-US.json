@@ -11,6 +11,10 @@
     "language": "Language",
     "theme": "Theme"
   },
+  "language": {
+    "changed-to-chinese": "Language changed to Traditional Chinese",
+    "changed-to-english": "Language changed to English"
+  },
   "buttons": {
     "save": "Save",
     "cancel": "Cancel",
@@ -44,7 +48,8 @@
     "article-count": "Successfully fetched {count} new articles",
     "no-articles": "No new articles found",
     "fetching-articles": "Fetching articles...",
-    "scheduler-running": "Scheduler is running, please wait"
+    "scheduler-running": "Scheduler is running, please wait",
+    "fetch-complete": "Article fetch complete"
   },
   "errors": {
     "network-error": "Network connection error. Please check your network settings",
@@ -55,7 +60,8 @@
     "server-error": "Server error occurred. Please try again later",
     "not-found": "The requested resource was not found",
     "unauthorized": "Please log in to perform this action",
-    "logout-failed": "Failed to logout"
+    "logout-failed": "Failed to logout",
+    "scheduler-trigger-failed": "Trigger failed. Please try again later"
   },
   "success": {
     "article-saved": "Article added to reading list",
@@ -64,7 +70,8 @@
     "analysis-copied": "Analysis content copied to clipboard",
     "subscription-added": "Subscription added",
     "subscription-removed": "Subscription removed",
-    "logout": "Logged out successfully"
+    "logout": "Logged out successfully",
+    "scheduler-triggered": "Article fetch task triggered. Please refresh the page later to see new articles"
   },
   "tinkering-index": {
     "level-1": "Beginner",
@@ -87,13 +94,22 @@
   "theme": {
     "light": "Light Mode",
     "dark": "Dark Mode",
-    "system": "System Default"
+    "system": "System Default",
+    "toggle": "Toggle theme",
+    "select": "Select theme",
+    "switch-to": "Switch to {mode} mode"
   },
   "notification-frequency": {
     "immediate": "Immediate",
+    "immediate-desc": "Notify immediately when new articles are published",
     "daily": "Daily Digest",
+    "daily-desc": "Consolidated notification once per day",
     "weekly": "Weekly Digest",
-    "disabled": "Disabled"
+    "weekly-desc": "Consolidated notification once per week",
+    "disabled": "Disabled",
+    "disabled-desc": "Do not receive any notifications",
+    "title": "Notification Frequency",
+    "description": "Choose how often you want to receive notifications"
   },
   "dialogs": {
     "manual-fetch": {
@@ -105,6 +121,86 @@
       "note-3": "It is recommended to wait for the current task to complete before triggering again",
       "confirm-button": "Confirm Fetch",
       "confirming-button": "Fetching..."
+    }
+  },
+  "forms": {
+    "placeholders": {
+      "search-categories": "Search categories...",
+      "select-sort-by": "Select sort method...",
+      "select-order": "Select order...",
+      "select-min": "Select minimum...",
+      "select-max": "Select maximum...",
+      "search-feed": "Search feed name, category, tags or URL...",
+      "feed-url": "https://example.com/feed.xml",
+      "feed-name": "Auto-detected from feed",
+      "feed-category": "e.g., Tech, AI, Web Development",
+      "search-options": "Search options...",
+      "select-options": "Select options..."
+    },
+    "labels": {
+      "sort-by": "Sort By",
+      "sort-field": "Sort Field",
+      "sort-order": "Sort Order",
+      "tinkering-filter": "Technical Depth Filter",
+      "min-depth": "Minimum Depth",
+      "max-depth": "Maximum Depth",
+      "feed-url": "RSS Feed URL",
+      "feed-name": "Feed Name",
+      "feed-category": "Category",
+      "optional": "Optional",
+      "required": "Required"
+    },
+    "messages": {
+      "loading-categories": "Loading categories...",
+      "loading-failed": "Failed to load categories",
+      "no-categories": "No categories available",
+      "no-results": "No matching categories found",
+      "show-all": "Show All",
+      "show-less": "Show Less",
+      "selected-count": "{count} items selected",
+      "selected-categories": "{count} categories selected",
+      "clear-filters": "Clear All",
+      "sort-summary": "Sort by {field} {order}",
+      "filter-summary-equal": "Showing articles with depth level {level} stars",
+      "filter-summary-range": "Showing articles with depth level{min}{max}",
+      "filter-summary-min": " {level} stars and above",
+      "filter-summary-max": " {level} stars and below",
+      "filter-summary-separator": " and",
+      "search-results": "Found {count} results",
+      "no-options": "No options found",
+      "options-count": "{count} options",
+      "selected-items": "Selected ({count})"
+    },
+    "sort-options": {
+      "date": "Published Date",
+      "date-desc": "Sort by article publication time",
+      "tinkering-index": "Technical Depth",
+      "tinkering-index-desc": "Sort by technical depth rating",
+      "category": "Category",
+      "category-desc": "Sort by article category"
+    },
+    "order-options": {
+      "asc": "Ascending",
+      "asc-desc": "Low to High / Old to New",
+      "desc": "Descending",
+      "desc-desc": "High to Low / New to Old"
+    },
+    "feed-dialog": {
+      "title": "Add Custom RSS Feed",
+      "description": "Enter an RSS feed URL to add a custom source. You can preview the feed content before adding.",
+      "preview-success": "Preview loaded successfully",
+      "preview-failed": "Unable to load feed preview. Please check if the URL is correct",
+      "preview-error": "Preview failed. Please check if the URL is a valid RSS feed",
+      "add-success": "Custom feed added successfully",
+      "add-failed": "Failed to add feed. Please try again later",
+      "url-required": "Please enter an RSS feed URL",
+      "url-invalid": "Please enter a valid URL (must start with http:// or https://)",
+      "preview-not-implemented": "Preview feature not yet implemented",
+      "adding": "Adding...",
+      "add-feed": "Add Feed",
+      "category-label": "Category",
+      "article-count": "Article Count",
+      "last-updated": "Last Updated"
     }
   }
 }

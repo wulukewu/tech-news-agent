@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HTML Lang Attribute Verification</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        max-width: 800px;
+        margin: 50px auto;
+        padding: 20px;
+        line-height: 1.6;
+      }
+      .test-section {
+        background: #f5f5f5;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+      button {
+        padding: 10px 20px;
+        margin: 5px;
+        font-size: 16px;
+        cursor: pointer;
+        border: 2px solid #333;
+        background: white;
+        border-radius: 4px;
+      }
+      button:hover {
+        background: #f0f0f0;
+      }
+      .current-lang {
+        font-size: 24px;
+        font-weight: bold;
+        color: #0066cc;
+        margin: 20px 0;
+      }
+      .info {
+        background: #e3f2fd;
+        padding: 15px;
+        border-left: 4px solid #2196f3;
+        margin: 20px 0;
+      }
+      .success {
+        background: #e8f5e9;
+        padding: 15px;
+        border-left: 4px solid #4caf50;
+        margin: 20px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>HTML Lang Attribute Verification Test</h1>
+
+    <div class="info">
+      <strong>Purpose:</strong> This manual test verifies that the HTML lang attribute is correctly
+      updated when the language changes in the I18nContext. <br /><br />
+      <strong>Requirement:</strong> 9.5 - WHEN the language changes, THE I18n_System SHALL update
+      the HTML lang attribute on the document root
+    </div>
+
+    <div class="test-section">
+      <h2>Current HTML Lang Attribute:</h2>
+      <div class="current-lang" id="current-lang">en-US</div>
+
+      <h3>Change Language:</h3>
+      <button onclick="setLanguage('zh-TW')">繁體中文 (zh-TW)</button>
+      <button onclick="setLanguage('en-US')">English (en-US)</button>
+    </div>
+
+    <div class="test-section">
+      <h2>Test Results:</h2>
+      <div id="test-results"></div>
+    </div>
+
+    <div class="success">
+      <h3>✓ Verification Steps:</h3>
+      <ol>
+        <li>Open browser DevTools (F12)</li>
+        <li>Go to Elements/Inspector tab</li>
+        <li>Look at the <code>&lt;html&gt;</code> tag</li>
+        <li>Click the language buttons above</li>
+        <li>Observe the <code>lang</code> attribute changing in real-time</li>
+        <li>Verify the attribute matches the selected language</li>
+      </ol>
+    </div>
+
+    <script>
+      // Simulate the I18nContext setLocale behavior
+      function setLanguage(locale) {
+        // Update HTML lang attribute (this is what I18nContext does)
+        document.documentElement.lang = locale;
+
+        // Update display
+        document.getElementById('current-lang').textContent = locale;
+
+        // Log test result
+        const timestamp = new Date().toLocaleTimeString();
+        const result = document.createElement('div');
+        result.style.padding = '10px';
+        result.style.margin = '5px 0';
+        result.style.background = 'white';
+        result.style.borderRadius = '4px';
+        result.innerHTML = `
+                <strong>[${timestamp}]</strong>
+                Language changed to <strong>${locale}</strong>
+                <br>
+                <code>document.documentElement.lang = "${document.documentElement.lang}"</code>
+            `;
+
+        const resultsDiv = document.getElementById('test-results');
+        resultsDiv.insertBefore(result, resultsDiv.firstChild);
+
+        // Verify
+        if (document.documentElement.lang === locale) {
+          console.log(`✓ SUCCESS: HTML lang attribute correctly set to "${locale}"`);
+        } else {
+          console.error(`✗ FAILED: Expected "${locale}", got "${document.documentElement.lang}"`);
+        }
+      }
+
+      // Initialize display
+      document.getElementById('current-lang').textContent = document.documentElement.lang;
+
+      // Log initial state
+      console.log('Initial HTML lang attribute:', document.documentElement.lang);
+    </script>
+  </body>
+</html>

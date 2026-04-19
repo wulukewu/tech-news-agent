@@ -7,18 +7,16 @@
  * @see Requirements 5.1, 5.2, 5.3, 7.1, 7.2, 7.3
  */
 
+// Import and re-export auto-generated translation keys
+import type { TranslationKey } from './i18n.generated';
+export type { TranslationKey };
+
 /**
  * Supported locales in the application
  * - zh-TW: Traditional Chinese (Taiwan)
  * - en-US: English (United States)
  */
 export type Locale = 'zh-TW' | 'en-US';
-
-/**
- * Translation key paths for accessing translations
- * Uses dot notation for nested keys (e.g., 'nav.articles', 'errors.network-error')
- */
-export type TranslationKey = string;
 
 /**
  * Variables for interpolation in translation strings

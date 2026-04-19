@@ -5,18 +5,20 @@ import { Button } from '@/components/ui/button';
 import { triggerScheduler } from '@/lib/api/scheduler';
 import { toast } from '@/lib/toast';
 import { RefreshCw } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 export function TriggerSchedulerButton() {
   const [isTriggering, setIsTriggering] = useState(false);
+  const { t } = useI18n();
 
   const handleTrigger = async () => {
     try {
       setIsTriggering(true);
       await triggerScheduler();
-      toast.success('已觸發文章抓取任務，請稍後重新整理頁面查看新文章');
+      toast.success(t('success.scheduler-triggered'));
     } catch (error) {
       console.error('Failed to trigger scheduler:', error);
-      toast.error('觸發失敗，請稍後再試');
+      toast.error(t('errors.scheduler-trigger-failed'));
     } finally {
       setIsTriggering(false);
     }

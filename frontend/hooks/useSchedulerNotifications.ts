@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { toast } from '@/lib/toast';
+import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * Scheduler status for notifications
@@ -27,6 +28,7 @@ export interface SchedulerStatus {
 export function useSchedulerNotifications(status: SchedulerStatus | null) {
   const previousRunningRef = useRef<boolean>(false);
   const toastIdRef = useRef<string | number | null>(null);
+  const { t } = useI18n();
 
   useEffect(() => {
     if (!status) return;
@@ -37,8 +39,8 @@ export function useSchedulerNotifications(status: SchedulerStatus | null) {
     // Scheduler just started
     if (isRunning && !wasRunning) {
       toast
-        .loading('正在抓取文章...', {
-          description: '排程器執行中，請稍候',
+        .loading(t('messages.fetching-articles'), {
+          description: t('messages.scheduler-running'),
         })
         .then((toastId) => {
           toastIdRef.current = toastId;
@@ -55,20 +57,20 @@ export function useSchedulerNotifications(status: SchedulerStatus | null) {
 
       // Show success notification
       if (lastExecutionArticleCount > 0) {
-        toast.success('文章抓取完成', {
-          description: `成功抓取 ${lastExecutionArticleCount} 篇新文章`,
+        toast.success(t('messages.fetch-complete'), {
+          description: t('messages.article-count', { count: lastExecutionArticleCount }),
           duration: 5000,
         });
       } else {
-        toast.info('文章抓取完成', {
-          description: '沒有發現新文章',
+        toast.info(t('messages.fetch-complete'), {
+          description: t('messages.no-articles'),
           duration: 3000,
         });
       }
     }
 
     previousRunningRef.current = isRunning;
-  }, [status]);
+  }, [status, t]);
 
   return null;
 }

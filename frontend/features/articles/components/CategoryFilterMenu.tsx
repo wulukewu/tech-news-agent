@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useCategories } from '@/lib/hooks/useArticles';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface CategoryFilterMenuProps {
   /** Currently selected categories */
@@ -46,6 +47,7 @@ export function CategoryFilterMenu({
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAll, setShowAll] = useState(false);
+  const { t } = useI18n();
 
   // Fetch categories using the hook
   const { data: categories, isLoading, error } = useCategories();
@@ -102,12 +104,12 @@ export function CategoryFilterMenu({
   // Get display text for trigger button
   const getDisplayText = () => {
     if (selectedCategories.length === 0) {
-      return '顯示全部';
+      return t('forms.messages.show-all');
     }
     if (selectedCategories.length === 1) {
       return selectedCategories[0];
     }
-    return `已選擇 ${selectedCategories.length} 個項目`;
+    return t('forms.messages.selected-count', { count: selectedCategories.length });
   };
 
   // Handle loading state
@@ -119,7 +121,7 @@ export function CategoryFilterMenu({
           disabled={true}
           className="w-full justify-between text-muted-foreground"
         >
-          載入分類中...
+          {t('forms.messages.loading-categories')}
           <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </div>
@@ -135,7 +137,7 @@ export function CategoryFilterMenu({
           disabled={true}
           className="w-full justify-between text-destructive"
         >
-          載入分類失敗
+          {t('forms.messages.loading-failed')}
           <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
         </Button>
         <div className="text-xs text-destructive mt-1">{error.message}</div>
@@ -152,7 +154,7 @@ export function CategoryFilterMenu({
           disabled={true}
           className="w-full justify-between text-muted-foreground"
         >
-          沒有可用的分類
+          {t('forms.messages.no-categories')}
           <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </div>
@@ -190,7 +192,7 @@ export function CategoryFilterMenu({
             <div className="flex items-center border-b px-3 py-2">
               <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
               <Input
-                placeholder="搜尋分類..."
+                placeholder={t('forms.placeholders.search-categories')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="border-0 focus-visible:ring-0 focus-visible:ring-offset-0"
@@ -201,7 +203,7 @@ export function CategoryFilterMenu({
             {selectedCategories.length > 0 && (
               <div className="flex items-center justify-between p-3 border-b bg-muted/50">
                 <span className="text-sm text-muted-foreground">
-                  已選擇 {selectedCategories.length} 個分類
+                  {t('forms.messages.selected-categories', { count: selectedCategories.length })}
                 </span>
                 <Button
                   variant="ghost"
@@ -210,7 +212,7 @@ export function CategoryFilterMenu({
                   className="h-6 px-2 text-xs"
                 >
                   <X className="h-3 w-3 mr-1" />
-                  清除全部
+                  {t('forms.messages.clear-filters')}
                 </Button>
               </div>
             )}
@@ -218,7 +220,9 @@ export function CategoryFilterMenu({
             {/* Categories List */}
             <div className="flex-1 overflow-y-auto p-1">
               {filteredCategories.length === 0 ? (
-                <div className="py-6 text-center text-sm text-muted-foreground">找不到相關分類</div>
+                <div className="py-6 text-center text-sm text-muted-foreground">
+                  {t('forms.messages.no-results')}
+                </div>
               ) : (
                 <>
                   {/* Show All option */}
@@ -242,7 +246,7 @@ export function CategoryFilterMenu({
                       >
                         <Check className="h-3 w-3" />
                       </div>
-                      <span className="truncate">顯示全部</span>
+                      <span className="truncate">{t('forms.messages.show-all')}</span>
                     </div>
                   </div>
 
@@ -286,7 +290,9 @@ export function CategoryFilterMenu({
                         onClick={handleToggleShowAll}
                         className="w-full text-xs"
                       >
-                        {showAll ? '顯示較少' : `顯示全部 (${categories.length})`}
+                        {showAll
+                          ? t('forms.messages.show-less')
+                          : `${t('forms.messages.show-all')} (${categories.length})`}
                       </Button>
                     </div>
                   )}

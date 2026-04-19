@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -18,6 +18,7 @@ import {
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useUser } from '@/contexts/UserContext';
 import { useI18n } from '@/contexts/I18nContext';
+import type { TranslationKey } from '@/types/i18n';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -27,6 +28,27 @@ import { UserMenu } from '@/components/UserMenu';
 import { cn } from '@/lib/utils';
 import { toast } from '@/lib/toast';
 
+interface NavItem {
+  href: string;
+  labelKey: TranslationKey;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+// Main navigation items (3 core features - Req 4.1)
+const mainNavItems: NavItem[] = [
+  { href: '/app/articles', labelKey: 'nav.articles', icon: Home },
+  { href: '/app/reading-list', labelKey: 'nav.reading-list', icon: BookMarked },
+  { href: '/app/subscriptions', labelKey: 'nav.subscriptions', icon: Rss },
+];
+
+// Secondary items moved to user menu (Req 4.2)
+const secondaryNavItems: NavItem[] = [
+  { href: '/app/recommendations', labelKey: 'nav.recommendations', icon: Heart },
+  { href: '/app/analytics', labelKey: 'nav.analytics', icon: BarChart3 },
+  { href: '/app/settings', labelKey: 'nav.settings', icon: Settings },
+  { href: '/app/system-status', labelKey: 'nav.system-status', icon: Monitor },
+];
+
 export function Navigation() {
   const { logout } = useAuth();
   const { user } = useUser();
@@ -34,20 +56,25 @@ export function Navigation() {
   const pathname = usePathname();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  // Main navigation items (3 core features - Req 4.1)
-  const mainNavItems = [
-    { href: '/app/articles', labelKey: 'nav.articles', icon: Home },
-    { href: '/app/reading-list', labelKey: 'nav.reading-list', icon: BookMarked },
-    { href: '/app/subscriptions', labelKey: 'nav.subscriptions', icon: Rss },
-  ];
+  // Memoize translated navigation items to prevent re-translation on every render
+  // Requirements: 8.6 - Performance optimization with useMemo
+  const translatedMainNavItems = React.useMemo(
+    () =>
+      mainNavItems.map((item) => ({
+        ...item,
+        translatedLabel: t(item.labelKey),
+      })),
+    [t]
+  );
 
-  // Secondary items moved to user menu (Req 4.2)
-  const secondaryNavItems = [
-    { href: '/app/recommendations', labelKey: 'nav.recommendations', icon: Heart },
-    { href: '/app/analytics', labelKey: 'nav.analytics', icon: BarChart3 },
-    { href: '/app/settings', labelKey: 'nav.settings', icon: Settings },
-    { href: '/app/system-status', labelKey: 'nav.system-status', icon: Monitor },
-  ];
+  const translatedSecondaryNavItems = React.useMemo(
+    () =>
+      secondaryNavItems.map((item) => ({
+        ...item,
+        translatedLabel: t(item.labelKey),
+      })),
+    [t]
+  );
 
   // Prevent body scrolling when drawer is open (Req 3.3, 23.5)
   useEffect(() => {
@@ -87,7 +114,7 @@ export function Navigation() {
 
             {/* Desktop navigation - only show main items */}
             <div className="hidden md:flex gap-1.5 lg:gap-2">
-              {mainNavItems.map((item) => {
+              {translatedMainNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
                 return (
@@ -107,7 +134,7 @@ export function Navigation() {
                   >
                     <Icon className="h-4 w-4" aria-hidden="true" />
                     <span className="text-sm font-medium whitespace-nowrap">
-                      {t(item.labelKey)}
+                      {item.translatedLabel}
                     </span>
                   </Link>
                 );
@@ -177,7 +204,7 @@ export function Navigation() {
 
             {/* Navigation items with full-width touch targets (Req 3.7, 23.6) */}
             <div className="py-4 space-y-1 overflow-y-auto max-h-[calc(100vh-200px)]">
-              {[...mainNavItems, ...secondaryNavItems].map((item) => {
+              {[...translatedMainNavItems, ...translatedSecondaryNavItems].map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
                 return (
@@ -196,7 +223,7 @@ export function Navigation() {
                     aria-current={isActive ? 'page' : undefined}
                   >
                     <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-                    <span className="text-sm font-medium">{t(item.labelKey)}</span>
+                    <span className="text-sm font-medium">{item.translatedLabel}</span>
                   </Link>
                 );
               })}

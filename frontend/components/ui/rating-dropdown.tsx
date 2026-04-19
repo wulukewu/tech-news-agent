@@ -12,6 +12,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from '@/components/ui/dropdown-menu';
+import { useI18n } from '@/contexts/I18nContext';
+import { TINKERING_INDEX_LEVELS } from '@/lib/constants';
 
 interface RatingDropdownProps {
   value?: number;
@@ -22,22 +24,6 @@ interface RatingDropdownProps {
   showClear?: boolean;
   className?: string;
 }
-
-const RATING_LABELS = {
-  1: '入門',
-  2: '基礎',
-  3: '中級',
-  4: '進階',
-  5: '專家',
-} as const;
-
-const RATING_DESCRIPTIONS = {
-  1: '適合初學者',
-  2: '需要基本知識',
-  3: '需要一定經驗',
-  4: '需要深度理解',
-  5: '需要專業知識',
-} as const;
 
 /**
  * RatingDropdown - Enhanced star rating dropdown with hover effects
@@ -63,7 +49,31 @@ export function RatingDropdown({
   showClear = true,
   className,
 }: RatingDropdownProps) {
+  const { t } = useI18n();
   const [hoveredRating, setHoveredRating] = React.useState<number | null>(null);
+
+  // Memoize translated rating levels to prevent re-translation on every render
+  // Requirements: 8.6 - Performance optimization with useMemo
+  const translatedLevels = React.useMemo(
+    () =>
+      TINKERING_INDEX_LEVELS.map((level) => ({
+        value: level.value,
+        label: t(level.labelKey),
+        description: t(level.descriptionKey),
+      })),
+    [t]
+  );
+
+  // Get label and description for a rating value
+  const getRatingLabel = (rating: number) => {
+    const level = translatedLevels.find((l) => l.value === rating);
+    return level ? level.label : '';
+  };
+
+  const getRatingDescription = (rating: number) => {
+    const level = translatedLevels.find((l) => l.value === rating);
+    return level ? level.description : '';
+  };
 
   const sizeClasses = {
     sm: 'h-8 text-sm',
@@ -141,9 +151,7 @@ export function RatingDropdown({
                 <div className="flex items-center gap-1">
                   {renderStars(value, false, hoveredRating === value)}
                 </div>
-                <span className="transition-colors duration-200">
-                  {RATING_LABELS[value as keyof typeof RATING_LABELS]}
-                </span>
+                <span className="transition-colors duration-200">{getRatingLabel(value)}</span>
               </>
             ) : (
               <span>{placeholder}</span>
@@ -155,7 +163,7 @@ export function RatingDropdown({
 
       <DropdownMenuContent align="start" className="w-64 p-1">
         <DropdownMenuLabel className="px-2 py-1.5 text-sm font-medium">
-          技術深度評分
+          {t('forms.labels.tinkering-filter')}
         </DropdownMenuLabel>
 
         {[1, 2, 3, 4, 5].map((rating) => (
@@ -174,11 +182,9 @@ export function RatingDropdown({
           >
             <div className="flex items-center gap-1 min-w-[120px]">{renderStars(rating, true)}</div>
             <div className="flex flex-col flex-1">
-              <span className="font-medium text-sm">
-                {RATING_LABELS[rating as keyof typeof RATING_LABELS]}
-              </span>
+              <span className="font-medium text-sm">{getRatingLabel(rating)}</span>
               <span className="text-xs text-muted-foreground leading-tight">
-                {RATING_DESCRIPTIONS[rating as keyof typeof RATING_DESCRIPTIONS]}
+                {getRatingDescription(rating)}
               </span>
             </div>
             {value === rating && (
@@ -191,7 +197,7 @@ export function RatingDropdown({
           <>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleClear} className="text-muted-foreground">
-              清除評分
+              {t('forms.messages.clear-filters')}
             </DropdownMenuItem>
           </>
         )}

@@ -4,6 +4,7 @@ import React from 'react';
 import { RatingDropdown } from '@/components/ui/rating-dropdown';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface TinkeringIndexFilterProps {
   /** Minimum tinkering index (1-5) */
@@ -41,6 +42,8 @@ export function TinkeringIndexFilter({
   disabled = false,
   className,
 }: TinkeringIndexFilterProps) {
+  const { t } = useI18n();
+
   // Handle minimum value change with validation
   const handleMinChange = (value: number | undefined) => {
     if (value && maxValue && value > maxValue) {
@@ -70,14 +73,14 @@ export function TinkeringIndexFilter({
   return (
     <div className={cn('space-y-3', className)}>
       <div className="flex items-center justify-between">
-        <Label className="text-sm font-medium">技術深度篩選</Label>
+        <Label className="text-sm font-medium">{t('forms.labels.tinkering-filter')}</Label>
         {hasFilters && (
           <button
             onClick={handleClearAll}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors"
             disabled={disabled}
           >
-            清除全部
+            {t('forms.messages.clear-filters')}
           </button>
         )}
       </div>
@@ -85,12 +88,12 @@ export function TinkeringIndexFilter({
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
           <Label htmlFor="min-tinkering" className="text-xs text-muted-foreground">
-            最低深度
+            {t('forms.labels.min-depth')}
           </Label>
           <RatingDropdown
             value={minValue}
             onChange={handleMinChange}
-            placeholder="選擇最低..."
+            placeholder={t('forms.placeholders.select-min')}
             disabled={disabled}
             size="sm"
             showClear={true}
@@ -99,12 +102,12 @@ export function TinkeringIndexFilter({
 
         <div className="space-y-2">
           <Label htmlFor="max-tinkering" className="text-xs text-muted-foreground">
-            最高深度
+            {t('forms.labels.max-depth')}
           </Label>
           <RatingDropdown
             value={maxValue}
             onChange={handleMaxChange}
-            placeholder="選擇最高..."
+            placeholder={t('forms.placeholders.select-max')}
             disabled={disabled}
             size="sm"
             showClear={true}
@@ -116,14 +119,13 @@ export function TinkeringIndexFilter({
       {hasFilters && (
         <div className="text-xs text-muted-foreground">
           {minValue && maxValue && minValue === maxValue ? (
-            <span>顯示深度等級 {minValue} 星的文章</span>
+            <span>{t('forms.messages.filter-summary-equal', { level: minValue })}</span>
           ) : (
             <span>
-              顯示深度等級
-              {minValue && ` ${minValue} 星以上`}
-              {minValue && maxValue && '，'}
-              {maxValue && ` ${maxValue} 星以下`}
-              的文章
+              {t('forms.messages.filter-summary-range', {
+                min: minValue ? t('forms.messages.filter-summary-min', { level: minValue }) : '',
+                max: maxValue ? t('forms.messages.filter-summary-max', { level: maxValue }) : '',
+              })}
             </span>
           )}
         </div>

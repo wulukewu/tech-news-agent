@@ -41,7 +41,30 @@
     "react-hooks/exhaustive-deps": "warn",
     "react-hooks/rules-of-hooks": "error",
     "react/no-unescaped-entities": "warn",
-    "react/display-name": "warn"
+    "react/display-name": "warn",
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "JSXText[value=/[\\u4e00-\\u9fa5]/]",
+        "message": "Hardcoded Chinese text detected in JSX. Use translation keys with useI18n hook instead: const { t } = useI18n(); <element>{t('translation.key')}</element>"
+      },
+      {
+        "selector": "JSXAttribute[name.name='placeholder'] Literal[value=/[\\u4e00-\\u9fa5]/]",
+        "message": "Hardcoded Chinese text detected in placeholder attribute. Use translation keys: placeholder={t('translation.key')}"
+      },
+      {
+        "selector": "JSXAttribute[name.name='title'] Literal[value=/[\\u4e00-\\u9fa5]/]",
+        "message": "Hardcoded Chinese text detected in title attribute. Use translation keys: title={t('translation.key')}"
+      },
+      {
+        "selector": "JSXAttribute[name.name='aria-label'] Literal[value=/[\\u4e00-\\u9fa5]/]",
+        "message": "Hardcoded Chinese text detected in aria-label attribute. Use translation keys: aria-label={t('translation.key')}"
+      },
+      {
+        "selector": "JSXAttribute[name.name='alt'] Literal[value=/[\\u4e00-\\u9fa5]/]",
+        "message": "Hardcoded Chinese text detected in alt attribute. Use translation keys: alt={t('translation.key')}"
+      }
+    ]
   },
   "overrides": [
     {

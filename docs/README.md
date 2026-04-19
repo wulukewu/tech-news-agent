@@ -25,6 +25,13 @@ Complete documentation for the Tech News Agent project.
 - [API Contracts](./API_CONTRACTS.md) - API specifications
 - [Code Quality](./CODE_QUALITY.md) - Code standards and best practices
 
+### Internationalization (i18n)
+
+- [i18n Developer Guide](./i18n-guide.md) - 📖 Complete guide to using the bilingual UI system
+- [Translation Validation Hook](./translation-validation-hook.md) - 🔒 Pre-commit hook for translation completeness
+- [ESLint I18n Rules](./eslint-i18n-rules.md) - ESLint rules to prevent hardcoded UI text
+- [ESLint I18n Violations Examples](./eslint-i18n-violations-example.md) - Examples of detected violations
+
 ### Development Workflows
 
 - [Development Workflows](./DEVELOPMENT_WORKFLOWS.md) - Common development tasks
@@ -162,6 +169,18 @@ docs/
 
 **Contribute code**
 → [Developer Guide](./DEVELOPER_GUIDE.md) and [Code Quality](./CODE_QUALITY.md)
+
+**Prevent hardcoded UI text**
+→ [ESLint I18n Rules](./eslint-i18n-rules.md)
+
+**Use the i18n system**
+→ [i18n Developer Guide](./i18n-guide.md)
+
+**Validate translations before commit**
+→ [Translation Validation Hook](./translation-validation-hook.md)
+
+**Fix hardcoded text violations**
+→ [ESLint I18n Violations Examples](./eslint-i18n-violations-example.md)
 
 ## 📝 Documentation Standards
 

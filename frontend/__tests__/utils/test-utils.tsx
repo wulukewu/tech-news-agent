@@ -7,6 +7,7 @@ import React from 'react';
 import { render, RenderOptions } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from '@/components/ThemeProvider';
+import { I18nProvider } from '@/contexts/I18nContext';
 import { vi } from 'vitest';
 
 // Re-export testing library utilities for convenience
@@ -59,9 +60,11 @@ export function TestWrapper({ children, queryClient, theme = 'light' }: TestWrap
 
   return (
     <QueryClientProvider client={client}>
-      <ThemeProvider attribute="class" defaultTheme={theme} enableSystem={false}>
-        {children}
-      </ThemeProvider>
+      <I18nProvider>
+        <ThemeProvider attribute="class" defaultTheme={theme} enableSystem={false}>
+          {children}
+        </ThemeProvider>
+      </I18nProvider>
     </QueryClientProvider>
   );
 }

@@ -12,6 +12,7 @@ import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import type { Feed } from '@/types/feed';
+import { useI18n } from '@/contexts/I18nContext';
 
 export interface FeedSearchProps {
   feeds: Feed[];
@@ -22,6 +23,7 @@ export interface FeedSearchProps {
 export function FeedSearch({ feeds, onFilteredFeedsChange, className = '' }: FeedSearchProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const callbackRef = useRef(onFilteredFeedsChange);
+  const { t } = useI18n();
 
   // Keep callback ref up to date
   useEffect(() => {
@@ -58,7 +60,7 @@ export function FeedSearch({ feeds, onFilteredFeedsChange, className = '' }: Fee
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
       <Input
         type="text"
-        placeholder="搜尋 Feed 名稱、分類、標籤或 URL..."
+        placeholder={t('forms.placeholders.search-feed')}
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         className="pl-9 pr-9"
@@ -75,7 +77,7 @@ export function FeedSearch({ feeds, onFilteredFeedsChange, className = '' }: Fee
       )}
       {searchQuery && (
         <div className="absolute left-0 right-0 top-full mt-1 text-xs text-muted-foreground">
-          找到 {filteredFeeds.length} 個結果
+          {t('forms.messages.search-results', { count: filteredFeeds.length })}
         </div>
       )}
     </div>

@@ -105,6 +105,20 @@ pre-commit install
 - **Command**: `npm run type-check`
 - **Runs**: Only when TypeScript files change
 
+#### 4. Translation Validation
+
+- **Purpose**: Ensures translation completeness across all supported languages
+- **Configuration**: `frontend/scripts/find-missing-translations.js`
+- **Command**: `npm run find:missing-translations`
+- **Runs**: When translation files (`frontend/locales/*.json`) are modified
+- **Validates**:
+  - All keys exist in both `en-US.json` and `zh-TW.json`
+  - No empty translation values
+  - Translation structure consistency
+- **Exit codes**:
+  - `0`: All translations complete
+  - `1`: Missing or empty translations found (blocks commit)
+
 ## Running Hooks Manually
 
 ### Run all hooks on all files
@@ -126,6 +140,7 @@ pre-commit run black --all-files
 pre-commit run ruff --all-files
 pre-commit run eslint --all-files
 pre-commit run prettier --all-files
+pre-commit run validate-translations --all-files
 ```
 
 ### Run hooks on specific files
@@ -193,6 +208,21 @@ cd frontend
 npm run type-check
 ```
 
+### Translation validation fails
+
+If the translation validation hook fails:
+
+1. Review the output to see which keys are missing or empty
+2. Add missing translations to the appropriate locale file
+3. Ensure both `frontend/locales/en-US.json` and `frontend/locales/zh-TW.json` have matching keys
+4. Run manually to verify: `cd frontend && npm run find:missing-translations`
+
+**Common issues**:
+
+- Missing keys: Add the key to both language files
+- Empty values: Fill in the translation text
+- Nested structure mismatch: Ensure object structure matches across files
+
 ## CI Integration
 
 Pre-commit hooks are also run in the CI pipeline (GitHub Actions) to ensure all commits meet quality standards, even if hooks were bypassed locally.
@@ -205,6 +235,10 @@ This pre-commit setup validates:
 - **Requirement 12.4**: Maximum function complexity limits are enforced
   - Backend: Max 12 branches, 50 statements (Ruff/Pylint)
   - Frontend: Max cyclomatic complexity 10 (ESLint)
+- **Requirement 11.5**: Translation validation prevents commits with incomplete translations
+  - Validates all keys exist in both language files
+  - Ensures no empty translation values
+  - Maintains translation structure consistency
 
 ## Additional Resources
 

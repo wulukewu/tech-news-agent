@@ -62,7 +62,7 @@ const LANGUAGE_OPTIONS: Array<{
 ];
 
 /**
- * LanguageSwitcher Component
+ * LanguageSwitcher Component (Internal)
  *
  * Renders a button group for language selection with full accessibility support.
  * Integrates with I18nContext to manage language state.
@@ -75,7 +75,7 @@ const LANGUAGE_OPTIONS: Array<{
  * @see Requirement 3.6: Keyboard navigation support
  * @see Requirement 9.1-9.4: Accessibility compliance
  */
-export function LanguageSwitcher() {
+function LanguageSwitcherComponent() {
   const { locale, setLocale } = useI18n();
 
   /**
@@ -145,3 +145,16 @@ export function LanguageSwitcher() {
     </div>
   );
 }
+
+/**
+ * LanguageSwitcher Component (Memoized)
+ *
+ * Optimized version wrapped with React.memo to prevent unnecessary re-renders
+ * when parent components update but the LanguageSwitcher's props haven't changed.
+ *
+ * Since this component has no props and only depends on I18nContext,
+ * React.memo ensures it only re-renders when the context values change.
+ *
+ * @see Requirement 8.6: Performance optimization with React.memo
+ */
+export const LanguageSwitcher = React.memo(LanguageSwitcherComponent);

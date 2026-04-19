@@ -25,6 +25,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/lib/toast';
+import { useI18n } from '@/contexts/I18nContext';
 
 export interface FeedPreview {
   title: string;
@@ -48,6 +49,7 @@ export function AddCustomFeedDialog({ onAddFeed, onPreviewFeed }: AddCustomFeedD
   const [preview, setPreview] = useState<FeedPreview | null>(null);
   const [loading, setLoading] = useState(false);
   const [previewing, setPreviewing] = useState(false);
+  const { t } = useI18n();
 
   const validateUrl = (url: string): boolean => {
     try {
@@ -60,17 +62,17 @@ export function AddCustomFeedDialog({ onAddFeed, onPreviewFeed }: AddCustomFeedD
 
   const handlePreview = async () => {
     if (!url.trim()) {
-      toast.error('請輸入 RSS Feed URL');
+      toast.error(t('forms.feed-dialog.url-required'));
       return;
     }
 
     if (!validateUrl(url)) {
-      toast.error('請輸入有效的 URL (必須以 http:// 或 https:// 開頭)');
+      toast.error(t('forms.feed-dialog.url-invalid'));
       return;
     }
 
     if (!onPreviewFeed) {
-      toast.info('預覽功能尚未實作');
+      toast.info(t('forms.feed-dialog.preview-not-implemented'));
       return;
     }
 
@@ -87,13 +89,12 @@ export function AddCustomFeedDialog({ onAddFeed, onPreviewFeed }: AddCustomFeedD
         if (!category && previewData.category) {
           setCategory(previewData.category);
         }
-        toast.success('預覽載入成功');
+        toast.success(t('forms.feed-dialog.preview-success'));
       } else {
-        toast.error('無法載入 Feed 預覽，請檢查 URL 是否正確');
+        toast.error(t('forms.feed-dialog.preview-failed'));
       }
-    } catch (error) {
-      console.error('Preview error:', error);
-      toast.error('預覽失敗，請檢查 URL 是否為有效的 RSS Feed');
+    } catch {
+      toast.error(t('forms.feed-dialog.preview-error'));
     } finally {
       setPreviewing(false);
     }
@@ -101,19 +102,19 @@ export function AddCustomFeedDialog({ onAddFeed, onPreviewFeed }: AddCustomFeedD
 
   const handleAdd = async () => {
     if (!url.trim()) {
-      toast.error('請輸入 RSS Feed URL');
+      toast.error(t('forms.feed-dialog.url-required'));
       return;
     }
 
     if (!validateUrl(url)) {
-      toast.error('請輸入有效的 URL');
+      toast.error(t('forms.feed-dialog.url-invalid'));
       return;
     }
 
     try {
       setLoading(true);
       await onAddFeed(url, name || undefined, category || undefined);
-      toast.success('自訂 Feed 新增成功');
+      toast.success(t('forms.feed-dialog.add-success'));
 
       // Reset form
       setUrl('');
@@ -121,9 +122,8 @@ export function AddCustomFeedDialog({ onAddFeed, onPreviewFeed }: AddCustomFeedD
       setCategory('');
       setPreview(null);
       setOpen(false);
-    } catch (error) {
-      console.error('Add feed error:', error);
-      toast.error('新增 Feed 失敗，請稍後再試');
+    } catch {
+      toast.error(t('forms.feed-dialog.add-failed'));
     } finally {
       setLoading(false);
     }
@@ -142,24 +142,22 @@ export function AddCustomFeedDialog({ onAddFeed, onPreviewFeed }: AddCustomFeedD
       <DialogTrigger asChild>
         <Button variant="outline" className="gap-2">
           <Plus className="w-4 h-4" />
-          新增自訂 Feed
+          {t('buttons.add')} {t('forms.labels.feed-name')}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>新增自訂 RSS Feed</DialogTitle>
-          <DialogDescription>
-            輸入 RSS Feed URL 以新增自訂來源。您可以先預覽 Feed 內容再決定是否新增。
-          </DialogDescription>
+          <DialogTitle>{t('forms.feed-dialog.title')}</DialogTitle>
+          <DialogDescription>{t('forms.feed-dialog.description')}</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="feed-url">RSS Feed URL *</Label>
+            <Label htmlFor="feed-url">{t('forms.labels.feed-url')} *</Label>
             <div className="flex gap-2">
               <Input
                 id="feed-url"
-                placeholder="https://example.com/feed.xml"
+                placeholder={t('forms.placeholders.feed-url')}
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 disabled={loading || previewing}
@@ -172,10 +170,10 @@ export function AddCustomFeedDialog({ onAddFeed, onPreviewFeed }: AddCustomFeedD
                 {previewing ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    預覽中
+                    {t('buttons.previewing')}
                   </>
                 ) : (
-                  '預覽'
+                  t('buttons.preview')
                 )}
               </Button>
             </div>
@@ -203,12 +201,20 @@ export function AddCustomFeedDialog({ onAddFeed, onPreviewFeed }: AddCustomFeedD
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
-                  {preview.category && <Badge variant="secondary">分類: {preview.category}</Badge>}
+                  {preview.category && (
+                    <Badge variant="secondary">
+                      {t('forms.feed-dialog.category-label')}: {preview.category}
+                    </Badge>
+                  )}
                   {preview.articleCount !== undefined && (
-                    <Badge variant="outline">文章數: {preview.articleCount}</Badge>
+                    <Badge variant="outline">
+                      {t('forms.feed-dialog.article-count')}: {preview.articleCount}
+                    </Badge>
                   )}
                   {preview.lastUpdated && (
-                    <Badge variant="outline">最後更新: {preview.lastUpdated}</Badge>
+                    <Badge variant="outline">
+                      {t('forms.feed-dialog.last-updated')}: {preview.lastUpdated}
+                    </Badge>
                   )}
                 </div>
               </CardContent>
@@ -216,10 +222,12 @@ export function AddCustomFeedDialog({ onAddFeed, onPreviewFeed }: AddCustomFeedD
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="feed-name">Feed 名稱 (選填)</Label>
+            <Label htmlFor="feed-name">
+              {t('forms.labels.feed-name')} ({t('forms.labels.optional')})
+            </Label>
             <Input
               id="feed-name"
-              placeholder="自動從 Feed 中取得"
+              placeholder={t('forms.placeholders.feed-name')}
               value={name}
               onChange={(e) => setName(e.target.value)}
               disabled={loading || previewing}
@@ -227,10 +235,12 @@ export function AddCustomFeedDialog({ onAddFeed, onPreviewFeed }: AddCustomFeedD
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="feed-category">分類 (選填)</Label>
+            <Label htmlFor="feed-category">
+              {t('forms.labels.feed-category')} ({t('forms.labels.optional')})
+            </Label>
             <Input
               id="feed-category"
-              placeholder="例如: Tech, AI, Web Development"
+              placeholder={t('forms.placeholders.feed-category')}
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               disabled={loading || previewing}
@@ -240,16 +250,16 @@ export function AddCustomFeedDialog({ onAddFeed, onPreviewFeed }: AddCustomFeedD
 
         <DialogFooter>
           <Button variant="outline" onClick={handleClose} disabled={loading}>
-            取消
+            {t('buttons.cancel')}
           </Button>
           <Button onClick={handleAdd} disabled={!url.trim() || loading || previewing}>
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                新增中...
+                {t('forms.feed-dialog.adding')}
               </>
             ) : (
-              '新增 Feed'
+              t('forms.feed-dialog.add-feed')
             )}
           </Button>
         </DialogFooter>

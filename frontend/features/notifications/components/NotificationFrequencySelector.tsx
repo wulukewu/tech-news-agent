@@ -1,10 +1,13 @@
 'use client';
 
+import { useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { NotificationFrequency } from '@/types/notification';
-import { Clock, Zap, Calendar, CalendarDays } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
+import type { TranslationKey } from '@/types/i18n';
+import { Clock, Zap, Calendar, CalendarDays, BellOff } from 'lucide-react';
 
 interface NotificationFrequencySelectorProps {
   frequency: NotificationFrequency;
@@ -12,24 +15,37 @@ interface NotificationFrequencySelectorProps {
   disabled?: boolean;
 }
 
-const frequencyOptions = [
+interface FrequencyOption {
+  value: NotificationFrequency;
+  labelKey: TranslationKey;
+  descriptionKey: TranslationKey;
+  icon: React.ComponentType<{ className?: string }>;
+}
+
+const frequencyOptions: FrequencyOption[] = [
   {
     value: 'immediate' as NotificationFrequency,
-    label: '即時通知',
-    description: '新文章發布時立即通知',
+    labelKey: 'notification-frequency.immediate',
+    descriptionKey: 'notification-frequency.immediate-desc',
     icon: Zap,
   },
   {
     value: 'daily' as NotificationFrequency,
-    label: '每日摘要',
-    description: '每天一次彙整通知',
+    labelKey: 'notification-frequency.daily',
+    descriptionKey: 'notification-frequency.daily-desc',
     icon: Calendar,
   },
   {
     value: 'weekly' as NotificationFrequency,
-    label: '每週摘要',
-    description: '每週一次彙整通知',
+    labelKey: 'notification-frequency.weekly',
+    descriptionKey: 'notification-frequency.weekly-desc',
     icon: CalendarDays,
+  },
+  {
+    value: 'disabled' as NotificationFrequency,
+    labelKey: 'notification-frequency.disabled',
+    descriptionKey: 'notification-frequency.disabled-desc',
+    icon: BellOff,
   },
 ];
 
@@ -38,14 +54,28 @@ export function NotificationFrequencySelector({
   onFrequencyChange,
   disabled = false,
 }: NotificationFrequencySelectorProps) {
+  const { t } = useI18n();
+
+  // Memoize translated frequency options to prevent re-translation on every render
+  // Requirements: 8.6 - Performance optimization with useMemo
+  const translatedFrequencyOptions = useMemo(
+    () =>
+      frequencyOptions.map((option) => ({
+        ...option,
+        translatedLabel: t(option.labelKey),
+        translatedDescription: t(option.descriptionKey),
+      })),
+    [t]
+  );
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Clock className="h-5 w-5" />
-          通知頻率
+          {t('notification-frequency.title')}
         </CardTitle>
-        <CardDescription>選擇您希望接收通知的頻率</CardDescription>
+        <CardDescription>{t('notification-frequency.description')}</CardDescription>
       </CardHeader>
       <CardContent>
         <RadioGroup
@@ -54,7 +84,7 @@ export function NotificationFrequencySelector({
           disabled={disabled}
           className="space-y-3"
         >
-          {frequencyOptions.map((option) => {
+          {translatedFrequencyOptions.map((option) => {
             const Icon = option.icon;
             return (
               <div
@@ -68,8 +98,8 @@ export function NotificationFrequencySelector({
                 >
                   <Icon className="h-5 w-5 mt-0.5 text-muted-foreground" />
                   <div className="space-y-1">
-                    <p className="font-medium leading-none">{option.label}</p>
-                    <p className="text-sm text-muted-foreground">{option.description}</p>
+                    <p className="font-medium leading-none">{option.translatedLabel}</p>
+                    <p className="text-sm text-muted-foreground">{option.translatedDescription}</p>
                   </div>
                 </Label>
               </div>

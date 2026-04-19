@@ -8,7 +8,7 @@
 /**
  * Notification frequency options
  */
-export type NotificationFrequency = 'immediate' | 'daily' | 'weekly';
+export type NotificationFrequency = 'immediate' | 'daily' | 'weekly' | 'disabled';
 
 /**
  * Notification channel types

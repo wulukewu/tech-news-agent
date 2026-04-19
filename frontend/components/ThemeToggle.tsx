@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Moon, Sun, Monitor, Palette } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { useI18n } from '@/contexts/I18nContext';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -24,7 +25,8 @@ export function ThemeToggle({
   size = 'default',
   showLabel = false,
 }: ThemeToggleProps) {
-  const { theme, setTheme, systemTheme, themes } = useTheme();
+  const { theme, setTheme, systemTheme } = useTheme();
+  const { t } = useI18n();
   const [mounted, setMounted] = React.useState(false);
 
   // useEffect only runs on the client, so now we can safely show the UI
@@ -60,11 +62,11 @@ export function ThemeToggle({
   const getThemeLabel = (themeName: string) => {
     switch (themeName) {
       case 'dark':
-        return '深色模式';
+        return t('theme.dark');
       case 'light':
-        return '淺色模式';
+        return t('theme.light');
       case 'system':
-        return '跟隨系統';
+        return t('theme.system');
       default:
         return themeName;
     }
@@ -77,14 +79,14 @@ export function ThemeToggle({
           <Button
             variant="ghost"
             size="icon"
-            aria-label="切換主題"
+            aria-label={t('theme.toggle')}
             className="transition-all duration-200 hover:scale-105"
           >
             {currentTheme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuLabel>選擇主題</DropdownMenuLabel>
+          <DropdownMenuLabel>{t('theme.select')}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {['light', 'dark', 'system'].map((themeName) => (
             <DropdownMenuItem
@@ -105,11 +107,12 @@ export function ThemeToggle({
   }
 
   if (showLabel) {
+    const targetMode = currentTheme === 'dark' ? t('theme.light') : t('theme.dark');
     return (
       <Button
         variant="ghost"
         onClick={() => setTheme(currentTheme === 'dark' ? 'light' : 'dark')}
-        aria-label={`切換至${currentTheme === 'dark' ? '淺色' : '深色'}模式`}
+        aria-label={t('theme.switch-to', { mode: targetMode })}
         className="transition-all duration-200 hover:scale-105 gap-2"
         size={size}
       >
@@ -120,12 +123,13 @@ export function ThemeToggle({
     );
   }
 
+  const targetMode = currentTheme === 'dark' ? t('theme.light') : t('theme.dark');
   return (
     <Button
       variant="ghost"
       size="icon"
       onClick={() => setTheme(currentTheme === 'dark' ? 'light' : 'dark')}
-      aria-label={`切換至${currentTheme === 'dark' ? '淺色' : '深色'}模式`}
+      aria-label={t('theme.switch-to', { mode: targetMode })}
       className="transition-all duration-200 hover:scale-105"
     >
       <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />

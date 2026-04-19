@@ -4,11 +4,12 @@
  * Requirements: 4.2, 4.8, 17.1, 17.2, 17.3, 17.6, 17.7, 17.8
  */
 
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from 'next-themes';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ThemeColorMeta } from '@/components/ThemeColorMeta';
+import { renderWithProviders } from '@/__tests__/utils/test-utils';
 import { vi } from 'vitest';
 
 // Mock next-themes
@@ -26,13 +27,13 @@ vi.mock('next-themes', () => ({
 describe('Theme Switching', () => {
   describe('ThemeToggle Component', () => {
     it('should render theme toggle button', () => {
-      render(<ThemeToggle />);
+      renderWithProviders(<ThemeToggle />);
       const button = screen.getByRole('button');
       expect(button).toBeInTheDocument();
     });
 
     it('should have sun/moon icons', () => {
-      render(<ThemeToggle />);
+      renderWithProviders(<ThemeToggle />);
       const button = screen.getByRole('button');
       // Check for SVG icons (lucide-react renders SVGs)
       const svgs = button.querySelectorAll('svg');
@@ -40,19 +41,19 @@ describe('Theme Switching', () => {
     });
 
     it('should have proper aria-label for accessibility', () => {
-      render(<ThemeToggle />);
+      renderWithProviders(<ThemeToggle />);
       const button = screen.getByRole('button');
       expect(button).toHaveAttribute('aria-label');
     });
 
     it('should render dropdown variant', () => {
-      render(<ThemeToggle variant="dropdown" />);
+      renderWithProviders(<ThemeToggle variant="dropdown" />);
       const button = screen.getByRole('button');
       expect(button).toBeInTheDocument();
     });
 
     it('should render with label when showLabel is true', () => {
-      render(<ThemeToggle showLabel />);
+      renderWithProviders(<ThemeToggle showLabel />);
       const button = screen.getByRole('button');
       expect(button).toBeInTheDocument();
     });
@@ -60,13 +61,13 @@ describe('Theme Switching', () => {
 
   describe('ThemeColorMeta Component', () => {
     it('should render without errors', () => {
-      const { container } = render(<ThemeColorMeta />);
-      // ThemeColorMeta returns null, so container should be empty
-      expect(container.firstChild).toBeNull();
+      const { container } = renderWithProviders(<ThemeColorMeta />);
+      // ThemeColorMeta returns null, but renderWithProviders adds a wrapper div
+      expect(container.querySelector('meta[name="theme-color"]')).toBeFalsy();
     });
 
     it('should update meta theme-color tag', async () => {
-      render(<ThemeColorMeta />);
+      renderWithProviders(<ThemeColorMeta />);
 
       await waitFor(() => {
         const metaTag = document.querySelector('meta[name="theme-color"]');

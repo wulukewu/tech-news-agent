@@ -170,26 +170,26 @@ export const CATEGORY_ALIASES: Record<string, keyof typeof CATEGORY_COLORS> = {
 
 // Tinkering index levels
 export const TINKERING_INDEX_LEVELS = [
-  { value: 1, label: '入門', description: '適合初學者' },
-  { value: 2, label: '基礎', description: '需要基本知識' },
-  { value: 3, label: '中級', description: '需要一定經驗' },
-  { value: 4, label: '進階', description: '需要深度理解' },
-  { value: 5, label: '專家', description: '需要專業知識' },
+  { value: 1, labelKey: 'tinkering-index.level-1', descriptionKey: 'tinkering-index.level-1-desc' },
+  { value: 2, labelKey: 'tinkering-index.level-2', descriptionKey: 'tinkering-index.level-2-desc' },
+  { value: 3, labelKey: 'tinkering-index.level-3', descriptionKey: 'tinkering-index.level-3-desc' },
+  { value: 4, labelKey: 'tinkering-index.level-4', descriptionKey: 'tinkering-index.level-4-desc' },
+  { value: 5, labelKey: 'tinkering-index.level-5', descriptionKey: 'tinkering-index.level-5-desc' },
 ] as const;
 
 // Sort options
 export const SORT_OPTIONS = [
-  { value: 'date', label: '發布日期', order: 'desc' },
-  { value: 'tinkering_index', label: '技術深度', order: 'desc' },
-  { value: 'category', label: '分類', order: 'asc' },
-  { value: 'title', label: '標題', order: 'asc' },
+  { value: 'date', labelKey: 'sort.date', order: 'desc' },
+  { value: 'tinkering_index', labelKey: 'sort.tinkering-index', order: 'desc' },
+  { value: 'category', labelKey: 'sort.category', order: 'asc' },
+  { value: 'title', labelKey: 'sort.title', order: 'asc' },
 ] as const;
 
 // Theme options
 export const THEME_OPTIONS = [
-  { value: 'light', label: '淺色模式' },
-  { value: 'dark', label: '深色模式' },
-  { value: 'system', label: '跟隨系統' },
+  { value: 'light', labelKey: 'theme.light' },
+  { value: 'dark', labelKey: 'theme.dark' },
+  { value: 'system', labelKey: 'theme.system' },
 ] as const;
 
 // Language options
@@ -200,32 +200,32 @@ export const LANGUAGE_OPTIONS = [
 
 // Notification frequency options
 export const NOTIFICATION_FREQUENCY_OPTIONS = [
-  { value: 'immediate', label: '即時通知' },
-  { value: 'daily', label: '每日摘要' },
-  { value: 'weekly', label: '每週摘要' },
-  { value: 'disabled', label: '關閉通知' },
+  { value: 'immediate', labelKey: 'notification-frequency.immediate' },
+  { value: 'daily', labelKey: 'notification-frequency.daily' },
+  { value: 'weekly', labelKey: 'notification-frequency.weekly' },
+  { value: 'disabled', labelKey: 'notification-frequency.disabled' },
 ] as const;
 
-// Error messages
+// Error messages (translation keys)
 export const ERROR_MESSAGES = {
-  NETWORK_ERROR: '網路連線異常，請檢查您的網路設定',
-  ANALYSIS_TIMEOUT: 'AI 分析處理時間過長，請稍後再試',
-  INSUFFICIENT_PERMISSIONS: '您沒有執行此操作的權限',
-  RATE_LIMIT_EXCEEDED: '請求過於頻繁，請稍後再試',
-  INVALID_INPUT: '輸入資料格式不正確',
-  SERVER_ERROR: '伺服器發生錯誤，請稍後再試',
-  NOT_FOUND: '找不到請求的資源',
-  UNAUTHORIZED: '請先登入後再進行此操作',
+  NETWORK_ERROR: 'errors.network-error',
+  ANALYSIS_TIMEOUT: 'errors.analysis-timeout',
+  INSUFFICIENT_PERMISSIONS: 'errors.insufficient-permissions',
+  RATE_LIMIT_EXCEEDED: 'errors.rate-limit-exceeded',
+  INVALID_INPUT: 'errors.invalid-input',
+  SERVER_ERROR: 'errors.server-error',
+  NOT_FOUND: 'errors.not-found',
+  UNAUTHORIZED: 'errors.unauthorized',
 } as const;
 
-// Success messages
+// Success messages (translation keys)
 export const SUCCESS_MESSAGES = {
-  ARTICLE_SAVED: '文章已加入閱讀清單',
-  ARTICLE_REMOVED: '文章已從閱讀清單移除',
-  SETTINGS_SAVED: '設定已儲存',
-  ANALYSIS_COPIED: '分析內容已複製到剪貼簿',
-  SUBSCRIPTION_ADDED: '訂閱已新增',
-  SUBSCRIPTION_REMOVED: '訂閱已移除',
+  ARTICLE_SAVED: 'success.article-saved',
+  ARTICLE_REMOVED: 'success.article-removed',
+  SETTINGS_SAVED: 'success.settings-saved',
+  ANALYSIS_COPIED: 'success.analysis-copied',
+  SUBSCRIPTION_ADDED: 'success.subscription-added',
+  SUBSCRIPTION_REMOVED: 'success.subscription-removed',
 } as const;
 
 // Local storage keys
