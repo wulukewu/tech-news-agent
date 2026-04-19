@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface LandingNavProps {
   isAuthenticated?: boolean;
@@ -26,6 +27,7 @@ interface LandingNavProps {
 
 export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { t } = useI18n();
 
   const navLinks = [
     { href: '#features', label: 'Features' },
@@ -64,11 +66,11 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
             ))}
             {isAuthenticated ? (
               <Link href="/app/articles">
-                <Button>Enter App</Button>
+                <Button>{t('buttons.enter-app')}</Button>
               </Link>
             ) : (
               <Link href="/login">
-                <Button>Login</Button>
+                <Button>{t('buttons.login')}</Button>
               </Link>
             )}
           </div>
@@ -119,11 +121,11 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
             <div className="pt-4 border-t">
               {isAuthenticated ? (
                 <Link href="/app/articles" className="block">
-                  <Button className="w-full">Enter App</Button>
+                  <Button className="w-full">{t('buttons.enter-app')}</Button>
                 </Link>
               ) : (
                 <Link href="/login" className="block">
-                  <Button className="w-full">Login</Button>
+                  <Button className="w-full">{t('buttons.login')}</Button>
                 </Link>
               )}
             </div>

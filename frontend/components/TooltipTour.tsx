@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * Single tooltip step configuration
@@ -75,6 +76,7 @@ export function TooltipTour({
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
   const tooltipRef = useRef<HTMLDivElement>(null);
+  const { t } = useI18n();
 
   const currentStep = steps[currentStepIndex];
   const isLastStep = currentStepIndex === steps.length - 1;
@@ -223,7 +225,7 @@ export function TooltipTour({
               </div>
 
               <Button size="sm" onClick={nextStep}>
-                {isLastStep ? '完成' : '下一步'}
+                {isLastStep ? t('buttons.done') : t('buttons.next')}
               </Button>
             </div>
           </CardContent>

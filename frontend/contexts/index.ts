@@ -27,3 +27,6 @@ export { ThemeProvider, useTheme, type Theme, type ThemeContextType } from './Th
 
 // NotFoundContext exports
 export { NotFoundProvider, useNotFound } from './NotFoundContext';
+
+// I18nContext exports
+export { I18nProvider, useI18n } from './I18nContext';

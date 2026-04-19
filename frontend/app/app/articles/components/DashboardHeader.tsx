@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { TriggerSchedulerButton } from '@/components/TriggerSchedulerButton';
 import { SearchBar } from '@/components/SearchBar';
 import { CategoryFilter } from '@/components/CategoryFilter';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface DashboardHeaderProps {
   categories: string[];
@@ -28,6 +29,7 @@ export function DashboardHeader({
   onClearAll,
 }: DashboardHeaderProps) {
   const router = useRouter();
+  const { t } = useI18n();
 
   return (
     <header className="mb-6">
@@ -36,7 +38,7 @@ export function DashboardHeader({
         <div className="flex gap-2">
           <TriggerSchedulerButton />
           <Button variant="outline" onClick={() => router.push('/dashboard/subscriptions')}>
-            管理訂閱
+            {t('buttons.manage-subscriptions')}
           </Button>
         </div>
       </div>

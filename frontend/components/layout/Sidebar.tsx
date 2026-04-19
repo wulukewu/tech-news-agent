@@ -7,13 +7,15 @@ import { Home, Rss, BookMarked, Menu, X, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/contexts/UserContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Logo } from '@/components/Logo';
 
 export interface NavigationItem {
   href: string;
-  label: string;
+  label?: string; // Deprecated: use labelKey instead
+  labelKey?: string; // Translation key for the label
   icon: React.ComponentType<{ className?: string }>;
   badge?: string | number;
   disabled?: boolean;
@@ -28,10 +30,10 @@ interface SidebarProps {
 }
 
 const defaultNavigation: NavigationItem[] = [
-  { href: '/app/articles', label: 'Dashboard', icon: Home, shortcut: 'D' },
-  { href: '/app/reading-list', label: 'Reading List', icon: BookMarked, shortcut: 'R' },
-  { href: '/app/subscriptions', label: 'Subscriptions', icon: Rss, shortcut: 'S' },
-  { href: '/app/settings', label: 'Settings', icon: Bell, shortcut: 'N' },
+  { href: '/app/articles', labelKey: 'nav.articles', icon: Home, shortcut: 'D' },
+  { href: '/app/reading-list', labelKey: 'nav.reading-list', icon: BookMarked, shortcut: 'R' },
+  { href: '/app/subscriptions', labelKey: 'nav.subscriptions', icon: Rss, shortcut: 'S' },
+  { href: '/app/settings', labelKey: 'nav.settings', icon: Bell, shortcut: 'N' },
 ];
 
 /**
@@ -48,6 +50,7 @@ export function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const { user } = useUser();
+  const { t } = useI18n();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
@@ -111,6 +114,7 @@ export function Sidebar({
           {navigation.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
+            const label = item.labelKey ? t(item.labelKey) : item.label || '';
 
             return (
               <Link
@@ -128,12 +132,12 @@ export function Sidebar({
                 )}
                 aria-current={isActive ? 'page' : undefined}
                 aria-disabled={item.disabled}
-                title={collapsed ? `${item.label} (Cmd+${item.shortcut})` : undefined}
+                title={collapsed ? `${label} (Cmd+${item.shortcut})` : undefined}
               >
                 <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
                 {!collapsed && (
                   <>
-                    <span className="truncate flex-1">{item.label}</span>
+                    <span className="truncate flex-1">{label}</span>
                     <div className="flex items-center gap-2">
                       {item.badge && (
                         <span className="bg-muted text-muted-foreground text-xs px-2 py-0.5 rounded-full min-w-[20px] text-center">
@@ -153,7 +157,7 @@ export function Sidebar({
                 {/* Tooltip for collapsed state */}
                 {collapsed && (
                   <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-sm rounded-md shadow-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 whitespace-nowrap">
-                    {item.label}
+                    {label}
                     {item.shortcut && (
                       <span className="ml-2 text-xs text-muted-foreground">⌘{item.shortcut}</span>
                     )}
@@ -269,6 +273,7 @@ export function Sidebar({
               {navigation.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
+                const label = item.labelKey ? t(item.labelKey) : item.label || '';
 
                 return (
                   <Link
@@ -286,7 +291,7 @@ export function Sidebar({
                     aria-disabled={item.disabled}
                   >
                     <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-                    <span className="truncate flex-1">{item.label}</span>
+                    <span className="truncate flex-1">{label}</span>
                     {item.badge && (
                       <span className="bg-muted text-muted-foreground text-xs px-2 py-0.5 rounded-full">
                         {item.badge}
@@ -305,6 +310,7 @@ export function Sidebar({
             {navigation.slice(0, 5).map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
+              const label = item.labelKey ? t(item.labelKey) : item.label || '';
 
               return (
                 <Link
@@ -319,10 +325,10 @@ export function Sidebar({
                   )}
                   aria-current={isActive ? 'page' : undefined}
                   aria-disabled={item.disabled}
-                  aria-label={item.label}
+                  aria-label={label}
                 >
                   <Icon className="h-5 w-5" aria-hidden="true" />
-                  <span className="truncate max-w-[60px] leading-tight">{item.label}</span>
+                  <span className="truncate max-w-[60px] leading-tight">{label}</span>
                   {item.badge && (
                     <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs px-1.5 py-0.5 rounded-full min-w-[18px] h-[18px] flex items-center justify-center">
                       {item.badge}

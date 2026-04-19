@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
+import { useI18n } from '@/contexts/I18nContext';
 
 export interface FilterOption<T = string> {
   value: T;
@@ -69,6 +70,7 @@ export function MultiSelectFilter<T = string>({
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [focusedIndex, setFocusedIndex] = React.useState(-1);
+  const { t } = useI18n();
 
   // Sort and filter options based on search query and sort preference
   const filteredOptions = React.useMemo(() => {
@@ -249,7 +251,7 @@ export function MultiSelectFilter<T = string>({
                   onClick={handleSelectAll}
                   className="h-6 px-2 text-xs hover:bg-accent"
                 >
-                  全選
+                  {t('buttons.select-all')}
                 </Button>
                 <Button
                   variant="ghost"
@@ -257,7 +259,7 @@ export function MultiSelectFilter<T = string>({
                   onClick={handleDeselectAll}
                   className="h-6 px-2 text-xs hover:bg-accent"
                 >
-                  取消選擇
+                  {t('buttons.deselect-all')}
                 </Button>
               </div>
             </div>
@@ -350,10 +352,10 @@ export function MultiSelectFilter<T = string>({
           {selected.length > 0 && (
             <div className="border-t p-2 flex justify-between">
               <Button variant="ghost" size="sm" onClick={handleClear} className="text-xs">
-                清除全部
+                {t('buttons.clear-all')}
               </Button>
               <Button variant="ghost" size="sm" onClick={() => setOpen(false)} className="text-xs">
-                完成
+                {t('buttons.done')}
               </Button>
             </div>
           )}

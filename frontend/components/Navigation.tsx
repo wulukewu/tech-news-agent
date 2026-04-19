@@ -17,9 +17,11 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useUser } from '@/contexts/UserContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Logo } from '@/components/Logo';
 import { UserMenu } from '@/components/UserMenu';
 import { cn } from '@/lib/utils';
@@ -28,22 +30,23 @@ import { toast } from '@/lib/toast';
 export function Navigation() {
   const { logout } = useAuth();
   const { user } = useUser();
+  const { t } = useI18n();
   const pathname = usePathname();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Main navigation items (3 core features - Req 4.1)
   const mainNavItems = [
-    { href: '/app/articles', label: 'Articles', icon: Home },
-    { href: '/app/reading-list', label: 'Reading List', icon: BookMarked },
-    { href: '/app/subscriptions', label: 'Subscriptions', icon: Rss },
+    { href: '/app/articles', labelKey: 'nav.articles', icon: Home },
+    { href: '/app/reading-list', labelKey: 'nav.reading-list', icon: BookMarked },
+    { href: '/app/subscriptions', labelKey: 'nav.subscriptions', icon: Rss },
   ];
 
   // Secondary items moved to user menu (Req 4.2)
   const secondaryNavItems = [
-    { href: '/app/recommendations', label: 'Recommendations', icon: Heart },
-    { href: '/app/analytics', label: 'Analytics', icon: BarChart3 },
-    { href: '/app/settings', label: 'Settings', icon: Settings },
-    { href: '/app/system-status', label: 'System Status', icon: Monitor },
+    { href: '/app/recommendations', labelKey: 'nav.recommendations', icon: Heart },
+    { href: '/app/analytics', labelKey: 'nav.analytics', icon: BarChart3 },
+    { href: '/app/settings', labelKey: 'nav.settings', icon: Settings },
+    { href: '/app/system-status', labelKey: 'nav.system-status', icon: Monitor },
   ];
 
   // Prevent body scrolling when drawer is open (Req 3.3, 23.5)
@@ -63,9 +66,9 @@ export function Navigation() {
   const handleLogout = async () => {
     try {
       await logout();
-      toast.success('Logged out successfully');
+      toast.success(t('success.logout'));
     } catch (error) {
-      toast.error('Failed to logout');
+      toast.error(t('errors.logout-failed'));
     }
   };
 
@@ -103,7 +106,9 @@ export function Navigation() {
                     aria-current={isActive ? 'page' : undefined}
                   >
                     <Icon className="h-4 w-4" aria-hidden="true" />
-                    <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>
+                    <span className="text-sm font-medium whitespace-nowrap">
+                      {t(item.labelKey)}
+                    </span>
                   </Link>
                 );
               })}
@@ -111,6 +116,7 @@ export function Navigation() {
           </div>
 
           <div className="flex items-center gap-2">
+            <LanguageSwitcher />
             <ThemeToggle variant="dropdown" />
 
             {/* User menu for desktop (Req 4.1, 4.2, 4.3, 4.4) */}
@@ -190,17 +196,23 @@ export function Navigation() {
                     aria-current={isActive ? 'page' : undefined}
                   >
                     <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-                    <span className="text-sm font-medium">{item.label}</span>
+                    <span className="text-sm font-medium">{t(item.labelKey)}</span>
                   </Link>
                 );
               })}
             </div>
 
-            {/* Bottom section with theme toggle and logout */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-card space-y-2">
-              <div className="flex items-center justify-between px-2">
-                <span className="text-sm font-medium">Theme</span>
-                <ThemeToggle variant="dropdown" />
+            {/* Bottom section with language switcher, theme toggle and logout */}
+            <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-card space-y-3">
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between px-2">
+                  <span className="text-sm font-medium">{t('nav.language')}</span>
+                  <LanguageSwitcher />
+                </div>
+                <div className="flex items-center justify-between px-2">
+                  <span className="text-sm font-medium">{t('nav.theme')}</span>
+                  <ThemeToggle variant="dropdown" />
+                </div>
               </div>
               {user && (
                 <Button
@@ -213,7 +225,7 @@ export function Navigation() {
                   className="w-full justify-start touch-target cursor-pointer"
                 >
                   <LogOut className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Logout
+                  {t('nav.logout')}
                 </Button>
               )}
             </div>

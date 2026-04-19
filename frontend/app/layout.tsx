@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import { AuthProvider, UserProvider } from '@/contexts';
 import { NotFoundProvider } from '@/contexts/NotFoundContext';
+import { I18nProvider } from '@/contexts/I18nContext';
 import { Toaster } from '@/components/ui/sonner';
 import { Providers } from '@/providers';
 import { PWAProvider } from '@/providers/PWAProvider';
@@ -94,29 +95,31 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased">
         <Providers>
-          <PWAProvider>
-            <NotFoundProvider>
-              <AuthProvider>
-                <UserProvider>
-                  {/* Dynamic theme-color meta tag update - Req 17.8 */}
-                  <ThemeColorMeta />
+          <I18nProvider>
+            <PWAProvider>
+              <NotFoundProvider>
+                <AuthProvider>
+                  <UserProvider>
+                    {/* Dynamic theme-color meta tag update - Req 17.8 */}
+                    <ThemeColorMeta />
 
-                  {/* Performance optimization initialization */}
-                  <PerformanceProvider />
+                    {/* Performance optimization initialization */}
+                    <PerformanceProvider />
 
-                  {/* Skip to main content link for keyboard navigation - Req 15.4 */}
-                  <a
-                    href="#main-content"
-                    className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                  >
-                    跳至主要內容
-                  </a>
-                  <ConditionalLayout>{children}</ConditionalLayout>
-                  <Toaster />
-                </UserProvider>
-              </AuthProvider>
-            </NotFoundProvider>
-          </PWAProvider>
+                    {/* Skip to main content link for keyboard navigation - Req 15.4 */}
+                    <a
+                      href="#main-content"
+                      className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-50 focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                    >
+                      跳至主要內容
+                    </a>
+                    <ConditionalLayout>{children}</ConditionalLayout>
+                    <Toaster />
+                  </UserProvider>
+                </AuthProvider>
+              </NotFoundProvider>
+            </PWAProvider>
+          </I18nProvider>
         </Providers>
       </body>
     </html>

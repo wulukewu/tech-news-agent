@@ -1,0 +1,110 @@
+{
+  "nav": {
+    "articles": "Articles",
+    "reading-list": "Reading List",
+    "subscriptions": "Subscriptions",
+    "analytics": "Analytics",
+    "settings": "Settings",
+    "system-status": "System Status",
+    "recommendations": "Recommendations",
+    "logout": "Logout",
+    "language": "Language",
+    "theme": "Theme"
+  },
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "remove": "Remove",
+    "confirm": "Confirm",
+    "close": "Close",
+    "save-changes": "Save Changes",
+    "edit-profile": "Edit Profile",
+    "reload-page": "Reload Page",
+    "enter-app": "Enter App",
+    "login": "Login",
+    "done": "Done",
+    "next": "Next",
+    "manage-subscriptions": "Manage Subscriptions",
+    "trigger-scheduler": "Trigger Scheduler",
+    "confirming": "Confirming...",
+    "adding": "Adding...",
+    "import": "Import",
+    "importing": "Importing...",
+    "preview": "Preview",
+    "previewing": "Previewing...",
+    "select-all": "Select All",
+    "deselect-all": "Deselect All",
+    "clear-all": "Clear All"
+  },
+  "messages": {
+    "loading": "Loading...",
+    "article-count": "Successfully fetched {count} new articles",
+    "no-articles": "No new articles found",
+    "fetching-articles": "Fetching articles...",
+    "scheduler-running": "Scheduler is running, please wait"
+  },
+  "errors": {
+    "network-error": "Network connection error. Please check your network settings",
+    "analysis-timeout": "AI analysis is taking too long. Please try again later",
+    "insufficient-permissions": "You do not have permission to perform this action",
+    "rate-limit-exceeded": "Too many requests. Please try again later",
+    "invalid-input": "Invalid input format",
+    "server-error": "Server error occurred. Please try again later",
+    "not-found": "The requested resource was not found",
+    "unauthorized": "Please log in to perform this action",
+    "logout-failed": "Failed to logout"
+  },
+  "success": {
+    "article-saved": "Article added to reading list",
+    "article-removed": "Article removed from reading list",
+    "settings-saved": "Settings saved",
+    "analysis-copied": "Analysis content copied to clipboard",
+    "subscription-added": "Subscription added",
+    "subscription-removed": "Subscription removed",
+    "logout": "Logged out successfully"
+  },
+  "tinkering-index": {
+    "level-1": "Beginner",
+    "level-1-desc": "Suitable for beginners",
+    "level-2": "Basic",
+    "level-2-desc": "Requires basic knowledge",
+    "level-3": "Intermediate",
+    "level-3-desc": "Requires some experience",
+    "level-4": "Advanced",
+    "level-4-desc": "Requires deep understanding",
+    "level-5": "Expert",
+    "level-5-desc": "Requires professional knowledge"
+  },
+  "sort": {
+    "date": "Date",
+    "tinkering-index": "Technical Depth",
+    "category": "Category",
+    "title": "Title"
+  },
+  "theme": {
+    "light": "Light Mode",
+    "dark": "Dark Mode",
+    "system": "System Default"
+  },
+  "notification-frequency": {
+    "immediate": "Immediate",
+    "daily": "Daily Digest",
+    "weekly": "Weekly Digest",
+    "disabled": "Disabled"
+  },
+  "dialogs": {
+    "manual-fetch": {
+      "title": "Confirm Manual Fetch",
+      "description": "This operation will immediately trigger the article fetch task to retrieve the latest articles from all subscribed RSS sources.",
+      "notes-title": "Important Notes:",
+      "note-1": "The fetch process may take several minutes",
+      "note-2": "Frequent triggering may affect system performance",
+      "note-3": "It is recommended to wait for the current task to complete before triggering again",
+      "confirm-button": "Confirm Fetch",
+      "confirming-button": "Fetching..."
+    }
+  }
+}

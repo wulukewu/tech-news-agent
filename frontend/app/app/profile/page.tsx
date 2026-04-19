@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Settings, BookMarked, Rss, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/lib/toast';
+import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * Profile Page
@@ -19,6 +20,7 @@ import { toast } from '@/lib/toast';
  */
 export default function ProfilePage() {
   const { user } = useUser();
+  const { t } = useI18n();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     username: user?.username || '',
@@ -70,7 +72,9 @@ export default function ProfilePage() {
                 <CardTitle>Profile Information</CardTitle>
                 <CardDescription>Your personal information and account details</CardDescription>
               </div>
-              {!isEditing && <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>}
+              {!isEditing && (
+                <Button onClick={() => setIsEditing(true)}>{t('buttons.edit-profile')}</Button>
+              )}
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -111,9 +115,9 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div className="flex gap-2">
-                  <Button onClick={handleSave}>Save Changes</Button>
+                  <Button onClick={handleSave}>{t('buttons.save-changes')}</Button>
                   <Button variant="outline" onClick={handleCancel}>
-                    Cancel
+                    {t('buttons.cancel')}
                   </Button>
                 </div>
               </div>

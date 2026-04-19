@@ -21,6 +21,7 @@ import {
   useTrackRecommendationInteraction,
 } from '@/features/recommendations/hooks/useRecommendations';
 import { toast } from '@/lib/toast';
+import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * RecommendationsPage component
@@ -33,6 +34,7 @@ export default function RecommendationsPage() {
   const refreshMutation = useRefreshRecommendations();
   const dismissMutation = useDismissRecommendation();
   const trackInteraction = useTrackRecommendationInteraction();
+  const { t } = useI18n();
 
   // Track page view
   useEffect(() => {
@@ -140,7 +142,7 @@ export default function RecommendationsPage() {
         <div className="rounded-lg border bg-destructive/10 p-6 text-center">
           <p className="text-destructive">載入推薦時發生錯誤</p>
           <Button onClick={() => window.location.reload()} className="mt-4">
-            重新載入
+            {t('buttons.reload-page')}
           </Button>
         </div>
       </div>

@@ -17,6 +17,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/contexts/I18nContext';
 
 export interface ManualFetchDialogProps {
   /** Whether the dialog is open */
@@ -51,6 +52,8 @@ export function ManualFetchDialog({
   onConfirm,
   isLoading = false,
 }: ManualFetchDialogProps) {
+  const { t } = useI18n();
+
   const handleConfirm = () => {
     onConfirm();
     onOpenChange(false);
@@ -60,27 +63,29 @@ export function ManualFetchDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>確認手動觸發抓取</DialogTitle>
-          <DialogDescription>
-            此操作將立即觸發文章抓取任務，從所有訂閱的 RSS 來源獲取最新文章。
-          </DialogDescription>
+          <DialogTitle>{t('dialogs.manual-fetch.title')}</DialogTitle>
+          <DialogDescription>{t('dialogs.manual-fetch.description')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div>
-            <p className="text-sm font-medium text-foreground">注意事項：</p>
+            <p className="text-sm font-medium text-foreground">
+              {t('dialogs.manual-fetch.notes-title')}
+            </p>
             <ul className="list-disc list-inside text-sm space-y-1 ml-2 mt-2 text-muted-foreground">
-              <li>抓取過程可能需要數分鐘時間</li>
-              <li>頻繁觸發可能影響系統效能</li>
-              <li>建議等待當前任務完成後再次觸發</li>
+              <li>{t('dialogs.manual-fetch.note-1')}</li>
+              <li>{t('dialogs.manual-fetch.note-2')}</li>
+              <li>{t('dialogs.manual-fetch.note-3')}</li>
             </ul>
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-            取消
+            {t('buttons.cancel')}
           </Button>
           <Button onClick={handleConfirm} disabled={isLoading}>
-            {isLoading ? '觸發中...' : '確認觸發'}
+            {isLoading
+              ? t('dialogs.manual-fetch.confirming-button')
+              : t('dialogs.manual-fetch.confirm-button')}
           </Button>
         </DialogFooter>
       </DialogContent>
