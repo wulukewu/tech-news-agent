@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Star } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface TinkeringIndexThresholdProps {
   threshold: number;
@@ -11,19 +12,41 @@ interface TinkeringIndexThresholdProps {
   disabled?: boolean;
 }
 
-const thresholdLabels = [
-  { value: 1, label: '所有文章', description: '接收所有新文章通知' },
-  { value: 2, label: '基礎技術', description: '包含基礎技術內容' },
-  { value: 3, label: '中等深度', description: '需要一定技術背景' },
-  { value: 4, label: '進階技術', description: '深入的技術討論' },
-  { value: 5, label: '專家級', description: '僅限最深入的技術文章' },
-];
-
 export function TinkeringIndexThreshold({
   threshold,
   onThresholdChange,
   disabled = false,
 }: TinkeringIndexThresholdProps) {
+  const { t } = useI18n();
+
+  const thresholdLabels = [
+    {
+      value: 1,
+      label: t('settings.notifications.threshold-all'),
+      description: t('settings.notifications.threshold-all-desc'),
+    },
+    {
+      value: 2,
+      label: t('settings.notifications.threshold-basic'),
+      description: t('settings.notifications.threshold-basic-desc'),
+    },
+    {
+      value: 3,
+      label: t('settings.notifications.threshold-intermediate'),
+      description: t('settings.notifications.threshold-intermediate-desc'),
+    },
+    {
+      value: 4,
+      label: t('settings.notifications.threshold-advanced'),
+      description: t('settings.notifications.threshold-advanced-desc'),
+    },
+    {
+      value: 5,
+      label: t('settings.notifications.threshold-expert'),
+      description: t('settings.notifications.threshold-expert-desc'),
+    },
+  ];
+
   // Provide default value if threshold is undefined
   const safeThreshold = threshold || 3;
   const currentLabel = thresholdLabels.find((l) => l.value === safeThreshold) || thresholdLabels[2];
@@ -33,14 +56,14 @@ export function TinkeringIndexThreshold({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Star className="h-5 w-5" />
-          技術深度閾值
+          {t('settings.notifications.threshold-title')}
         </CardTitle>
-        <CardDescription>設定接收通知的最低技術深度要求</CardDescription>
+        <CardDescription>{t('settings.notifications.threshold-desc')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <Label>最低技術深度指數</Label>
+            <Label>{t('settings.notifications.min-threshold')}</Label>
             <div className="flex items-center gap-1">
               {Array.from({ length: safeThreshold }).map((_, i) => (
                 <Star
@@ -76,7 +99,7 @@ export function TinkeringIndexThreshold({
         </div>
 
         <div className="space-y-2">
-          <p className="text-sm font-medium">技術深度說明</p>
+          <p className="text-sm font-medium">{t('settings.notifications.threshold-explanation')}</p>
           <div className="space-y-1 text-sm text-muted-foreground">
             {thresholdLabels.map((label) => (
               <div key={label.value} className="flex items-center gap-2">

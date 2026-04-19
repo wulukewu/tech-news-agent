@@ -20,6 +20,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Slider } from '@/components/ui/slider';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface FeedNotificationSettingsProps {
   feedSettings?: FeedSettings[];
@@ -32,6 +33,7 @@ export function FeedNotificationSettings({
   onFeedSettingsChange,
   disabled = false,
 }: FeedNotificationSettingsProps) {
+  const { t } = useI18n();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Provide default value if feedSettings is undefined
@@ -85,9 +87,9 @@ export function FeedNotificationSettings({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Rss className="h-5 w-5" />
-          個別來源通知設定
+          {t('settings.notifications.feed-settings-title')}
         </CardTitle>
-        <CardDescription>為特定 RSS 來源或分類設定通知偏好</CardDescription>
+        <CardDescription>{t('settings.notifications.feed-settings-desc')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Configured Feeds */}
@@ -125,7 +127,7 @@ export function FeedNotificationSettings({
                         onClick={() => handleRemoveFeed(setting.feedId!)}
                         disabled={disabled}
                         className="h-9 w-9"
-                        title="移除此來源設定"
+                        title={t('settings.notifications.remove-feed-setting')}
                       >
                         <X className="h-4 w-4" />
                       </Button>
@@ -135,7 +137,7 @@ export function FeedNotificationSettings({
                   {setting.enabled && setting.minTinkeringIndex !== undefined && (
                     <div className="space-y-2 pl-1">
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>最低技術深度:</span>
+                        <span>{t('settings.notifications.min-technical-depth')}</span>
                         <div className="flex items-center gap-1">
                           {Array.from({ length: setting.minTinkeringIndex }).map((_, i) => (
                             <Star key={i} className="h-3 w-3 fill-yellow-400 text-yellow-400" />
@@ -160,8 +162,8 @@ export function FeedNotificationSettings({
         ) : (
           <div className="text-center py-8 text-muted-foreground">
             <Rss className="h-12 w-12 mx-auto mb-2 opacity-50" />
-            <p className="font-medium">尚未設定個別來源通知</p>
-            <p className="text-sm mt-1">點擊下方按鈕新增來源</p>
+            <p className="font-medium">{t('settings.notifications.no-feed-settings-title')}</p>
+            <p className="text-sm mt-1">{t('settings.notifications.no-feed-settings-desc')}</p>
           </div>
         )}
 
@@ -170,13 +172,15 @@ export function FeedNotificationSettings({
           <DialogTrigger asChild>
             <Button variant="outline" className="w-full" disabled={disabled}>
               <Plus className="mr-2 h-4 w-4" />
-              新增來源通知設定
+              {t('settings.notifications.add-feed-setting')}
             </Button>
           </DialogTrigger>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
             <DialogHeader>
-              <DialogTitle>選擇 RSS 來源</DialogTitle>
-              <DialogDescription>為特定來源設定通知偏好</DialogDescription>
+              <DialogTitle>{t('settings.notifications.select-rss-source')}</DialogTitle>
+              <DialogDescription>
+                {t('settings.notifications.select-source-desc')}
+              </DialogDescription>
             </DialogHeader>
 
             <div className="flex-1 overflow-y-auto pr-2">
@@ -212,7 +216,9 @@ export function FeedNotificationSettings({
                             }}
                             disabled={isConfigured}
                           >
-                            {isConfigured ? '已設定' : '新增'}
+                            {isConfigured
+                              ? t('settings.notifications.configured')
+                              : t('settings.notifications.add')}
                           </Button>
                         </div>
                       );
@@ -220,7 +226,7 @@ export function FeedNotificationSettings({
                   ) : (
                     <div className="text-center py-8 text-muted-foreground">
                       <Rss className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                      <p>目前沒有可用的 RSS 來源</p>
+                      <p>{t('settings.notifications.no-available-sources')}</p>
                     </div>
                   )}
                 </div>

@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Rss, FileText, BookMarked } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * Scheduler status information (optional)
@@ -116,6 +117,7 @@ export function EmptyState({
   schedulerStatus,
 }: EmptyStateProps) {
   const displayIcon = icon || getDefaultIcon(type);
+  const { t } = useI18n();
 
   return (
     <Card className="border-dashed">
@@ -130,12 +132,16 @@ export function EmptyState({
           <div className="mb-6 text-sm text-muted-foreground max-w-md">
             {schedulerStatus.lastExecutionTime && (
               <p>
-                上次執行時間：
+                {t('statistics.last-execution-time')}：
                 {new Date(schedulerStatus.lastExecutionTime).toLocaleString('zh-TW')}
               </p>
             )}
             {schedulerStatus.estimatedTimeUntilArticles && (
-              <p className="mt-1">預計 {schedulerStatus.estimatedTimeUntilArticles} 後會有新文章</p>
+              <p className="mt-1">
+                {t('statistics.estimated-time-until-articles', {
+                  time: schedulerStatus.estimatedTimeUntilArticles,
+                })}
+              </p>
             )}
           </div>
         )}

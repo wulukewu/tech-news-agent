@@ -18,6 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useI18n } from '@/contexts/I18nContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/lib/toast';
@@ -38,6 +39,7 @@ export interface OPMLImportExportProps {
 }
 
 export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImportExportProps) {
+  const { t } = useI18n();
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importing, setImporting] = useState(false);
   const [parsedFeeds, setParsedFeeds] = useState<OPMLOutline[]>([]);
@@ -48,7 +50,7 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
       const subscribedFeeds = feeds.filter((f) => f.is_subscribed);
 
       if (subscribedFeeds.length === 0) {
-        toast.info('沒有已訂閱的 Feed 可以匯出');
+        toast.info(t('errors.opml-no-feeds'));
         return;
       }
 
@@ -56,10 +58,10 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
       const filename = `tech-news-subscriptions-${new Date().toISOString().split('T')[0]}.opml`;
       downloadOPML(opmlContent, filename);
 
-      toast.success(`已匯出 ${subscribedFeeds.length} 個訂閱`);
+      toast.success(t('success.opml-exported', { count: subscribedFeeds.length }));
     } catch (error) {
       console.error('Export error:', error);
-      toast.error('匯出失敗，請稍後再試');
+      toast.error(t('errors.opml-export-failed'));
     }
   };
 
@@ -76,7 +78,7 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
       // Validate OPML
       const validation = validateOPML(content);
       if (!validation.valid) {
-        toast.error(`無效的 OPML 檔案: ${validation.error}`);
+        toast.error(t('errors.opml-invalid', { error: validation.error || 'Unknown error' }));
         return;
       }
 
@@ -84,16 +86,16 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
       const parsed = parseOPML(content);
 
       if (parsed.length === 0) {
-        toast.error('OPML 檔案中沒有找到任何 Feed');
+        toast.error(t('errors.opml-no-feeds'));
         return;
       }
 
       setParsedFeeds(parsed);
       setImportDialogOpen(true);
-      toast.success(`成功解析 ${parsed.length} 個 Feed`);
+      toast.success(t('success.opml-parsed', { count: parsed.length }));
     } catch (error) {
       console.error('Import error:', error);
-      toast.error('讀取 OPML 檔案失敗');
+      toast.error(t('errors.opml-read-failed'));
     } finally {
       setImporting(false);
       // Reset file input
@@ -107,12 +109,12 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
     try {
       setImporting(true);
       await onImport(parsedFeeds);
-      toast.success(`已匯入 ${parsedFeeds.length} 個 Feed`);
+      toast.success(t('success.opml-imported', { count: parsedFeeds.length }));
       setImportDialogOpen(false);
       setParsedFeeds([]);
     } catch (error) {
       console.error('Import confirm error:', error);
-      toast.error('匯入失敗，請稍後再試');
+      toast.error(t('errors.opml-import-failed'));
     } finally {
       setImporting(false);
     }
@@ -128,7 +130,7 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
       <div className={`flex gap-2 ${className}`}>
         <Button variant="outline" onClick={handleExport} className="gap-2">
           <Download className="w-4 h-4" />
-          匯出 OPML
+          {t('buttons.export-opml')}
         </Button>
 
         <Button
@@ -140,12 +142,12 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
           {importing ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              處理中...
+              {t('buttons.importing')}
             </>
           ) : (
             <>
               <Upload className="w-4 h-4" />
-              匯入 OPML
+              {t('buttons.import-opml')}
             </>
           )}
         </Button>
@@ -162,10 +164,9 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
       <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
-            <DialogTitle>確認匯入 OPML</DialogTitle>
+            <DialogTitle>{t('dialogs.opml-import.title')}</DialogTitle>
             <DialogDescription>
-              以下是從 OPML 檔案中解析出的 {parsedFeeds.length} 個 Feed。確認後將新增這些 Feed
-              到您的訂閱清單。
+              {t('dialogs.opml-import.description', { count: parsedFeeds.length })}
             </DialogDescription>
           </DialogHeader>
 
@@ -196,16 +197,16 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
 
           <DialogFooter>
             <Button variant="outline" onClick={handleImportCancel} disabled={importing}>
-              取消
+              {t('buttons.cancel')}
             </Button>
             <Button onClick={handleImportConfirm} disabled={importing}>
               {importing ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  匯入中...
+                  {t('buttons.importing')}
                 </>
               ) : (
-                `確認匯入 ${parsedFeeds.length} 個 Feed`
+                t('dialogs.opml-import.confirm-button', { count: parsedFeeds.length })
               )}
             </Button>
           </DialogFooter>

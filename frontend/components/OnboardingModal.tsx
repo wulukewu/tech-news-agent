@@ -93,7 +93,7 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
       }));
     } catch (error) {
       console.error('Error fetching recommended feeds:', error);
-      toast.error('無法載入推薦來源');
+      toast.error(t('errors.onboarding-load-failed'));
     }
   };
 
@@ -148,7 +148,7 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
 
   const handleComplete = async () => {
     if (state.selectedFeeds.length === 0) {
-      toast.error('請至少選擇一個訂閱來源');
+      toast.error(t('errors.onboarding-select-required'));
       return;
     }
 
@@ -202,7 +202,7 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
       }, 2000);
     } catch (error) {
       console.error('Error completing onboarding:', error);
-      toast.error('訂閱失敗，請稍後再試');
+      toast.error(t('errors.onboarding-subscribe-failed'));
       setState((prev) => ({ ...prev, isLoading: false }));
     }
   };

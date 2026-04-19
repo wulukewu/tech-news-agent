@@ -17,6 +17,7 @@ import type {
 } from '@/types/readingList';
 import { RatingSelector } from './RatingSelector';
 import { useState } from 'react';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ReadingListItemProps {
   item: ReadingListItemType;
@@ -36,6 +37,7 @@ export function ReadingListItem({
   onRemove,
 }: ReadingListItemProps) {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
+  const { t } = useI18n();
 
   const handleStatusChange = async (status: ReadingListStatus) => {
     if (!item.articleId) {
@@ -194,7 +196,7 @@ export function ReadingListItem({
               ) : (
                 <Check className="h-4 w-4" />
               )}
-              <span className="hidden sm:inline">Mark as Read</span>
+              <span className="hidden sm:inline">{t('buttons.mark-as-read')}</span>
             </button>
           )}
 
@@ -291,7 +293,7 @@ export function ReadingListItem({
             ) : (
               <Trash2 className="h-4 w-4" />
             )}
-            <span className="hidden sm:inline">Remove</span>
+            <span className="hidden sm:inline">{t('buttons.remove')}</span>
           </button>
         </div>
       </div>

@@ -30,10 +30,10 @@ export default function ProfilePage() {
   const handleSave = async () => {
     try {
       // TODO: Implement API call to update user profile
-      toast.success('Profile updated successfully');
+      toast.success(t('success.profile-updated'));
       setIsEditing(false);
     } catch (error) {
-      toast.error('Failed to update profile');
+      toast.error(t('errors.profile-update-failed'));
     }
   };
 
@@ -60,8 +60,8 @@ export default function ProfilePage() {
       <div className="space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold">Profile</h1>
-          <p className="text-muted-foreground">Manage your account information and preferences</p>
+          <h1 className="text-3xl font-bold">{t('pages.profile.title')}</h1>
+          <p className="text-muted-foreground">{t('pages.profile.description')}</p>
         </div>
 
         {/* Profile Information Card */}
@@ -69,8 +69,8 @@ export default function ProfilePage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Profile Information</CardTitle>
-                <CardDescription>Your personal information and account details</CardDescription>
+                <CardTitle>{t('pages.profile.profile-information')}</CardTitle>
+                <CardDescription>{t('pages.profile.profile-information-desc')}</CardDescription>
               </div>
               {!isEditing && (
                 <Button onClick={() => setIsEditing(true)}>{t('buttons.edit-profile')}</Button>
@@ -96,22 +96,22 @@ export default function ProfilePage() {
             {isEditing ? (
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
+                  <Label htmlFor="username">{t('pages.profile.username')}</Label>
                   <Input
                     id="username"
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    placeholder="Enter your username"
+                    placeholder={t('pages.profile.enter-username')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">{t('pages.profile.email')}</Label>
                   <Input
                     id="email"
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="Enter your email"
+                    placeholder={t('pages.profile.enter-email')}
                   />
                 </div>
                 <div className="flex gap-2">
@@ -124,11 +124,11 @@ export default function ProfilePage() {
             ) : (
               <div className="space-y-4">
                 <div>
-                  <Label className="text-muted-foreground">Username</Label>
+                  <Label className="text-muted-foreground">{t('pages.profile.username')}</Label>
                   <p className="text-lg">{user.username}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">Email</Label>
+                  <Label className="text-muted-foreground">{t('pages.profile.email')}</Label>
                   <p className="text-lg">{user.email}</p>
                 </div>
               </div>
@@ -139,8 +139,8 @@ export default function ProfilePage() {
         {/* Account Statistics */}
         <Card>
           <CardHeader>
-            <CardTitle>Account Statistics</CardTitle>
-            <CardDescription>Your activity and engagement metrics</CardDescription>
+            <CardTitle>{t('pages.profile.account-statistics')}</CardTitle>
+            <CardDescription>{t('pages.profile.account-statistics-desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -149,7 +149,7 @@ export default function ProfilePage() {
                   <BookMarked className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Reading List</p>
+                  <p className="text-sm text-muted-foreground">{t('pages.profile.reading-list')}</p>
                   <p className="text-2xl font-bold">0</p>
                 </div>
               </div>
@@ -158,7 +158,9 @@ export default function ProfilePage() {
                   <Rss className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Subscriptions</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t('pages.profile.subscriptions')}
+                  </p>
                   <p className="text-2xl font-bold">0</p>
                 </div>
               </div>
@@ -167,7 +169,9 @@ export default function ProfilePage() {
                   <BarChart3 className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Articles Read</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t('pages.profile.articles-read')}
+                  </p>
                   <p className="text-2xl font-bold">0</p>
                 </div>
               </div>
@@ -178,33 +182,33 @@ export default function ProfilePage() {
         {/* Quick Links */}
         <Card>
           <CardHeader>
-            <CardTitle>Quick Links</CardTitle>
-            <CardDescription>Access your account settings and preferences</CardDescription>
+            <CardTitle>{t('pages.profile.quick-links')}</CardTitle>
+            <CardDescription>{t('pages.profile.quick-links-desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <Link href="/dashboard/settings">
                 <Button variant="ghost" className="w-full justify-start gap-2">
                   <Settings className="h-4 w-4" />
-                  Settings
+                  {t('pages.profile.settings')}
                 </Button>
               </Link>
               <Link href="/dashboard/analytics">
                 <Button variant="ghost" className="w-full justify-start gap-2">
                   <BarChart3 className="h-4 w-4" />
-                  Analytics
+                  {t('pages.profile.analytics')}
                 </Button>
               </Link>
               <Link href="/dashboard/reading-list">
                 <Button variant="ghost" className="w-full justify-start gap-2">
                   <BookMarked className="h-4 w-4" />
-                  Reading List
+                  {t('pages.profile.reading-list')}
                 </Button>
               </Link>
               <Link href="/dashboard/subscriptions">
                 <Button variant="ghost" className="w-full justify-start gap-2">
                   <Rss className="h-4 w-4" />
-                  Subscriptions
+                  {t('pages.profile.subscriptions')}
                 </Button>
               </Link>
             </div>

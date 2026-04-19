@@ -12,6 +12,7 @@
 
 import { FileText, TrendingUp, Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { useI18n } from '@/contexts/I18nContext';
 
 export interface FeedStatisticsProps {
   totalArticles: number;
@@ -46,24 +47,26 @@ export function FeedStatistics({
   averageTinkeringIndex,
   className = '',
 }: FeedStatisticsProps) {
+  const { t } = useI18n();
+
   const stats = [
     {
       icon: FileText,
-      label: '總文章數',
+      label: t('statistics.total-articles'),
       value: totalArticles.toLocaleString(),
       color: 'text-blue-600 dark:text-blue-400',
       content: null,
     },
     {
       icon: TrendingUp,
-      label: '本週新增',
+      label: t('statistics.articles-this-week'),
       value: articlesThisWeek.toLocaleString(),
       color: 'text-green-600 dark:text-green-400',
       content: null,
     },
     {
       icon: Star,
-      label: '平均技術深度',
+      label: t('statistics.average-tinkering-index'),
       value: '',
       color: 'text-yellow-600 dark:text-yellow-400',
       content: <StarRating rating={averageTinkeringIndex} />,

@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import { BarChart3, Settings, Bell, Monitor, User, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/lib/toast';
+import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * UserMenu Component
@@ -29,15 +30,16 @@ import { toast } from '@/lib/toast';
 export function UserMenu() {
   const { user } = useUser();
   const { logout } = useAuth();
+  const { t } = useI18n();
 
   if (!user) return null;
 
   const handleLogout = async () => {
     try {
       await logout();
-      toast.success('Logged out successfully');
+      toast.success(t('success.logout'));
     } catch (error) {
-      toast.error('Failed to logout');
+      toast.error(t('errors.logout-failed'));
     }
   };
 

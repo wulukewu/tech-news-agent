@@ -5,13 +5,16 @@ import { Badge } from '@/components/ui/badge';
 import { NotificationSettings } from '@/types/notification';
 import { Bell, MessageSquare, Mail, Star, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { zhTW } from 'date-fns/locale';
+import { zhTW, enUS } from 'date-fns/locale';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface NotificationPreviewProps {
   settings: NotificationSettings;
 }
 
 export function NotificationPreview({ settings }: NotificationPreviewProps) {
+  const { t, locale } = useI18n();
+  const dateLocale = locale === 'zh-TW' ? zhTW : enUS;
   // Mock article data for preview
   const mockArticle = {
     title: 'Next.js 15 發布：全新的 App Router 功能與效能提升',
@@ -35,11 +38,11 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
   const getChannelName = (channel: string) => {
     switch (channel) {
       case 'dm':
-        return 'Discord DM';
+        return t('settings.notifications.channel-discord');
       case 'email':
-        return '電子郵件';
+        return t('settings.notifications.channel-email');
       default:
-        return '應用內通知';
+        return t('settings.notifications.channel-in-app');
     }
   };
 
@@ -104,9 +107,9 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Bell className="h-5 w-5" />
-          通知預覽
+          {t('settings.notifications.preview-title')}
         </CardTitle>
-        <CardDescription>根據您的設定，以下是通知的外觀預覽</CardDescription>
+        <CardDescription>{t('settings.notifications.preview-desc')}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Notification Status */}
@@ -127,32 +130,35 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
               shouldSend ? 'text-green-900 dark:text-green-100' : 'text-red-900 dark:text-red-100'
             }`}
           >
-            {shouldSend ? '✓ 此文章會觸發通知' : '✗ 此文章不會觸發通知'}
+            {shouldSend
+              ? `✓ ${t('settings.notifications.will-trigger')}`
+              : `✗ ${t('settings.notifications.will-not-trigger')}`}
           </span>
         </div>
 
         {!shouldSend && (
           <div className="text-sm space-y-2 p-4 rounded-lg bg-muted/50">
-            <p className="font-medium">原因：</p>
+            <p className="font-medium">{t('settings.notifications.reason')}</p>
             <ul className="space-y-1.5 ml-2">
               {!settings.enabled && (
                 <li className="flex items-start gap-2">
                   <span className="text-muted-foreground mt-0.5">•</span>
-                  <span>全域通知已停用</span>
+                  <span>{t('settings.notifications.global-disabled')}</span>
                 </li>
               )}
               {settings.enabled && mockArticle.tinkeringIndex < settings.minTinkeringIndex && (
                 <li className="flex items-start gap-2">
                   <span className="text-muted-foreground mt-0.5">•</span>
                   <span>
-                    技術深度 ({mockArticle.tinkeringIndex}) 低於閾值 ({settings.minTinkeringIndex})
+                    {t('settings.notifications.below-threshold')} ({mockArticle.tinkeringIndex})
+                    低於閾值 ({settings.minTinkeringIndex})
                   </span>
                 </li>
               )}
               {settings.enabled && settings.quietHours.enabled && (
                 <li className="flex items-start gap-2">
                   <span className="text-muted-foreground mt-0.5">•</span>
-                  <span>目前在勿擾時段內</span>
+                  <span>{t('settings.notifications.in-quiet-hours')}</span>
                 </li>
               )}
             </ul>
@@ -163,7 +169,9 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
           <div className="space-y-4">
             {/* Active Channels */}
             <div>
-              <p className="text-sm font-medium mb-2">發送渠道：</p>
+              <p className="text-sm font-medium mb-2">
+                {t('settings.notifications.send-channels')}
+              </p>
               <div className="flex gap-2">
                 {activeChannels.map((channel) => (
                   <div
@@ -175,7 +183,9 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
                   </div>
                 ))}
                 {activeChannels.length === 0 && (
-                  <span className="text-sm text-muted-foreground">無啟用的通知渠道</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t('settings.notifications.no-channels')}
+                  </span>
                 )}
               </div>
             </div>
@@ -188,13 +198,15 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
                 </div>
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center gap-2">
-                    <h4 className="font-semibold text-sm">新文章通知</h4>
+                    <h4 className="font-semibold text-sm">
+                      {t('settings.notifications.new-article')}
+                    </h4>
                     <Badge variant="secondary" className="text-xs">
                       {settings.frequency === 'immediate'
-                        ? '即時'
+                        ? t('settings.notifications.frequency-immediate')
                         : settings.frequency === 'daily'
-                          ? '每日摘要'
-                          : '每週摘要'}
+                          ? t('settings.notifications.frequency-daily')
+                          : t('settings.notifications.frequency-weekly')}
                     </Badge>
                   </div>
 
@@ -220,7 +232,7 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
                     <span>
                       {formatDistanceToNow(mockArticle.publishedAt, {
                         addSuffix: true,
-                        locale: zhTW,
+                        locale: dateLocale,
                       })}
                     </span>
                   </div>
@@ -231,9 +243,9 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
             {/* Frequency Info */}
             <div className="text-sm text-muted-foreground">
               <p>
-                {settings.frequency === 'immediate' && '通知將立即發送'}
-                {settings.frequency === 'daily' && '通知將包含在每日摘要中'}
-                {settings.frequency === 'weekly' && '通知將包含在每週摘要中'}
+                {settings.frequency === 'immediate' && t('settings.notifications.immediate-send')}
+                {settings.frequency === 'daily' && t('settings.notifications.daily-digest')}
+                {settings.frequency === 'weekly' && t('settings.notifications.weekly-digest')}
               </p>
             </div>
           </div>

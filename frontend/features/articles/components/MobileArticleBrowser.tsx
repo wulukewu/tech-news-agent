@@ -8,6 +8,7 @@ import { PullToRefresh } from '@/components/ui/pull-to-refresh';
 import { useTouchGestures } from '@/hooks/useTouchGestures';
 import { ArticleCard } from '@/components/ArticleCard';
 import { Article } from '@/types/article';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface MobileArticleBrowserProps {
   articles: Article[];
@@ -36,6 +37,7 @@ export function MobileArticleBrowser({
 }: MobileArticleBrowserProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const { t } = useI18n();
 
   // Handle swipe gestures for article navigation
   const { attachGestures } = useTouchGestures({
@@ -82,12 +84,12 @@ export function MobileArticleBrowser({
       <div className={cn('flex flex-col items-center justify-center p-8 text-center', className)}>
         <div className="text-muted-foreground mb-4">
           <Search className="h-12 w-12 mx-auto mb-2" />
-          <p className="text-lg font-medium">No articles found</p>
-          <p className="text-sm">Try adjusting your filters or refresh to see new content</p>
+          <p className="text-lg font-medium">{t('empty-states.no-articles-found')}</p>
+          <p className="text-sm">{t('empty-states.try-adjusting-filters')}</p>
         </div>
         {onRefresh && (
           <Button onClick={handleRefresh} disabled={isLoading}>
-            Refresh
+            {t('buttons.refresh')}
           </Button>
         )}
       </div>
@@ -123,7 +125,7 @@ export function MobileArticleBrowser({
 
         {/* Article counter */}
         <div className="text-sm text-muted-foreground">
-          {currentIndex + 1} of {articles.length}
+          {currentIndex + 1} {t('empty-states.of')} {articles.length}
         </div>
 
         {/* Navigation controls */}
@@ -166,7 +168,7 @@ export function MobileArticleBrowser({
           <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-10">
             <div className="flex items-center gap-1 bg-background/80 backdrop-blur px-3 py-1 rounded-full text-xs text-muted-foreground">
               <ChevronLeft className="h-3 w-3" />
-              <span>Swipe to navigate</span>
+              <span>{t('empty-states.swipe-to-navigate')}</span>
               <ChevronRight className="h-3 w-3" />
             </div>
           </div>
@@ -205,7 +207,7 @@ export function MobileArticleBrowser({
             variant="outline"
             className="w-full touch-target"
           >
-            {isLoading ? 'Loading...' : 'Load More Articles'}
+            {isLoading ? t('buttons.loading') : t('empty-states.load-more-articles')}
           </Button>
         </div>
       )}
@@ -226,7 +228,9 @@ export function MobileArticleBrowser({
           />
         ))}
         {articles.length > 10 && (
-          <span className="text-xs text-muted-foreground ml-2">+{articles.length - 10} more</span>
+          <span className="text-xs text-muted-foreground ml-2">
+            +{articles.length - 10} {t('empty-states.more')}
+          </span>
         )}
       </div>
     </div>

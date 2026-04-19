@@ -12,7 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Database, Activity, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react';
 import type { SystemHealth } from '../types';
 import { formatDistanceToNow } from 'date-fns';
-import { zhTW } from 'date-fns/locale';
+import { zhTW, enUS } from 'date-fns/locale';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface SystemHealthCardProps {
   health: SystemHealth;
@@ -45,6 +46,9 @@ function formatErrorRate(rate: number): { value: string; color: string } {
 }
 
 export function SystemHealthCard({ health }: SystemHealthCardProps) {
+  const { t, locale } = useI18n();
+  const dateLocale = locale === 'zh-TW' ? zhTW : enUS;
+
   const dbResponseTime = formatResponseTime(health.database.responseTime);
   const apiAvgResponseTime = formatResponseTime(health.api.averageResponseTime);
   const apiP95ResponseTime = formatResponseTime(health.api.p95ResponseTime);
@@ -56,9 +60,9 @@ export function SystemHealthCard({ health }: SystemHealthCardProps) {
       <CardHeader>
         <CardTitle className="text-xl flex items-center gap-2">
           <Activity className="h-5 w-5" />
-          系統健康度
+          {t('system.system-health')}
         </CardTitle>
-        <CardDescription>資料庫連線、API 回應時間、錯誤率等指標</CardDescription>
+        <CardDescription>{t('system.system-health-desc')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
@@ -67,32 +71,32 @@ export function SystemHealthCard({ health }: SystemHealthCardProps) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Database className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">資料庫連線</span>
+                <span className="text-sm font-medium">{t('system.database-connection')}</span>
               </div>
               {health.database.connected ? (
                 <Badge variant="default" className="bg-green-500 hover:bg-green-600">
                   <CheckCircle2 className="h-3 w-3 mr-1" />
-                  已連線
+                  {t('ui.connected')}
                 </Badge>
               ) : (
                 <Badge variant="destructive">
                   <XCircle className="h-3 w-3 mr-1" />
-                  未連線
+                  {t('ui.disconnected')}
                 </Badge>
               )}
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">回應時間</span>
+              <span className="text-muted-foreground">{t('system.response-time')}</span>
               <span className={`font-mono font-medium ${dbResponseTime.color}`}>
                 {dbResponseTime.value}
               </span>
             </div>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">最後檢查</span>
+              <span className="text-muted-foreground">{t('system.last-checked')}</span>
               <span className="text-muted-foreground">
                 {formatDistanceToNow(health.database.lastChecked, {
                   addSuffix: true,
-                  locale: zhTW,
+                  locale: dateLocale,
                 })}
               </span>
             </div>
@@ -104,11 +108,11 @@ export function SystemHealthCard({ health }: SystemHealthCardProps) {
           <div className="space-y-2">
             <div className="flex items-center gap-2 mb-3">
               <Activity className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">API 回應時間</span>
+              <span className="text-sm font-medium">{t('system.api-response-time')}</span>
             </div>
             <div className="grid grid-cols-3 gap-4">
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">平均</div>
+                <div className="text-xs text-muted-foreground">{t('system.average')}</div>
                 <div className={`text-lg font-mono font-semibold ${apiAvgResponseTime.color}`}>
                   {apiAvgResponseTime.value}
                 </div>
@@ -127,11 +131,11 @@ export function SystemHealthCard({ health }: SystemHealthCardProps) {
               </div>
             </div>
             <div className="flex items-center justify-between text-sm pt-2">
-              <span className="text-muted-foreground">最後檢查</span>
+              <span className="text-muted-foreground">{t('system.last-checked')}</span>
               <span className="text-muted-foreground">
                 {formatDistanceToNow(health.api.lastChecked, {
                   addSuffix: true,
-                  locale: zhTW,
+                  locale: dateLocale,
                 })}
               </span>
             </div>
@@ -143,27 +147,27 @@ export function SystemHealthCard({ health }: SystemHealthCardProps) {
           <div className="space-y-2">
             <div className="flex items-center gap-2 mb-3">
               <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">錯誤率</span>
+              <span className="text-sm font-medium">{t('system.error-rate')}</span>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">每分鐘錯誤數</div>
+                <div className="text-xs text-muted-foreground">{t('system.errors-per-minute')}</div>
                 <div className={`text-lg font-mono font-semibold ${errorRate.color}`}>
                   {errorRate.value}
                 </div>
               </div>
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">24 小時總錯誤</div>
+                <div className="text-xs text-muted-foreground">{t('system.total-errors-24h')}</div>
                 <div className="text-lg font-mono font-semibold">{health.errors.total24h}</div>
               </div>
             </div>
             {health.errors.lastError && (
               <div className="flex items-center justify-between text-sm pt-2">
-                <span className="text-muted-foreground">最後錯誤</span>
+                <span className="text-muted-foreground">{t('system.last-error')}</span>
                 <span className="text-muted-foreground">
                   {formatDistanceToNow(health.errors.lastError, {
                     addSuffix: true,
-                    locale: zhTW,
+                    locale: dateLocale,
                   })}
                 </span>
               </div>

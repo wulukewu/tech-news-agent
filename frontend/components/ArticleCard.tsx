@@ -46,7 +46,7 @@ export function ArticleCard({
   const handleAddToReadingList = async () => {
     if (!article.id) {
       console.error('Cannot add to reading list: article.id is undefined');
-      toast.error('Unable to add article: Invalid article data');
+      toast.error(t('errors.article-add-failed'));
       return;
     }
 
@@ -59,7 +59,7 @@ export function ArticleCard({
     try {
       await addToReadingList.mutateAsync(article.id);
       setIsAdded(true);
-      toast.success('Added to reading list');
+      toast.success(t('success.article-saved'));
     } catch (error) {
       // Error handling is done in the hook with toast
       console.error('Failed to add to reading list:', error);
@@ -203,7 +203,9 @@ export function ArticleCard({
                       ) : (
                         <BookmarkPlus className="h-4 w-4 mr-2" />
                       )}
-                      <span className="text-sm">{isAdded ? 'Saved' : 'Read Later'}</span>
+                      <span className="text-sm">
+                        {isAdded ? t('buttons.saved') : t('buttons.read-later')}
+                      </span>
                     </Button>
                   )}
                   <Button
@@ -214,7 +216,7 @@ export function ArticleCard({
                     className="flex-1 min-h-[44px] min-w-[44px]"
                   >
                     <CheckCircle className="h-4 w-4 mr-2" />
-                    <span className="text-sm">Mark as Read</span>
+                    <span className="text-sm">{t('buttons.mark-as-read')}</span>
                   </Button>
                 </div>
 
@@ -291,7 +293,7 @@ export function ArticleCard({
                     } else {
                       // Fallback: copy to clipboard
                       navigator.clipboard.writeText(article.url);
-                      toast.success('Link copied to clipboard');
+                      toast.success(t('success.link-copied'));
                     }
                   }}
                   aria-label="Share article"
@@ -375,7 +377,9 @@ export function ArticleCard({
                     ) : (
                       <BookmarkPlus className="h-4 w-4" />
                     )}
-                    <span className="ml-2 text-sm">{isAdded ? 'Saved' : 'Read Later'}</span>
+                    <span className="ml-2 text-sm">
+                      {isAdded ? t('buttons.saved') : t('buttons.read-later')}
+                    </span>
                   </Button>
                 )}
                 <Button
@@ -387,7 +391,7 @@ export function ArticleCard({
                   className="min-h-[44px] min-w-[44px] cursor-pointer"
                 >
                   <CheckCircle className="h-4 w-4" />
-                  <span className="ml-2 text-sm">Mark as Read</span>
+                  <span className="ml-2 text-sm">{t('buttons.mark-as-read')}</span>
                 </Button>
               </div>
 

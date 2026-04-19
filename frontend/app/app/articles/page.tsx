@@ -138,10 +138,10 @@ function DashboardContent() {
 
       <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
         <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="recommended">Recommended</TabsTrigger>
-          <TabsTrigger value="subscribed">Subscribed</TabsTrigger>
-          <TabsTrigger value="saved">Saved</TabsTrigger>
+          <TabsTrigger value="all">{t('ui.all')}</TabsTrigger>
+          <TabsTrigger value="recommended">{t('ui.recommended')}</TabsTrigger>
+          <TabsTrigger value="subscribed">{t('ui.subscribed')}</TabsTrigger>
+          <TabsTrigger value="saved">{t('ui.saved')}</TabsTrigger>
         </TabsList>
 
         {/* Filters and Controls */}

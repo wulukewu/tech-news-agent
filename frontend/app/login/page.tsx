@@ -25,6 +25,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Logo } from '@/components/Logo';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * Discord Icon Component
@@ -66,11 +67,13 @@ export default function LoginPage() {
 }
 
 function LoginPageFallback() {
+  const { t } = useI18n();
+
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-        <p className="mt-4 text-muted-foreground">Loading...</p>
+        <p className="mt-4 text-muted-foreground">{t('buttons.loading')}</p>
       </div>
     </div>
   );
@@ -81,6 +84,7 @@ function LoginPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/app/articles';
+  const { t } = useI18n();
 
   /**
    * Redirect authenticated users to their intended destination
@@ -134,7 +138,7 @@ function LoginPageInner() {
           <Link href="/">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
+              {t('pages.login.back-to-home')}
             </Button>
           </Link>
         </div>
@@ -148,14 +152,10 @@ function LoginPageInner() {
               <Logo size={64} />
             </div>
             <CardTitle className="text-3xl font-bold tracking-tight">
-              Login to Tech News Agent
+              {t('pages.login.title')}
             </CardTitle>
-            <CardDescription className="text-base">
-              Quick login with your Discord account
-            </CardDescription>
-            <CardDescription className="pt-2">
-              Don&apos;t have an account? Sign up instantly with Discord
-            </CardDescription>
+            <CardDescription className="text-base">{t('pages.login.description')}</CardDescription>
+            <CardDescription className="pt-2">{t('pages.login.no-account')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Button
@@ -164,11 +164,11 @@ function LoginPageInner() {
               size="lg"
             >
               <DiscordIcon className="mr-2 h-5 w-5" />
-              Login with Discord
+              {t('buttons.login-with-discord')}
             </Button>
 
             <div className="text-center text-sm text-muted-foreground">
-              <p>By logging in, you agree to our Terms of Service</p>
+              <p>{t('pages.login.terms-agreement')}</p>
             </div>
           </CardContent>
         </Card>

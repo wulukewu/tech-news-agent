@@ -4,6 +4,7 @@ import * as React from 'react';
 import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface PaginationProps {
   currentPage: number;
@@ -30,6 +31,7 @@ export function Pagination({
   className,
   disabled = false,
 }: PaginationProps) {
+  const { t } = useI18n();
   // Generate page numbers to display
   const getPageNumbers = () => {
     const delta = siblingCount;
@@ -93,7 +95,7 @@ export function Pagination({
   return (
     <nav
       role="navigation"
-      aria-label="分頁導航"
+      aria-label={t('ui.pagination-navigation')}
       className={cn('flex items-center justify-center gap-1', className)}
     >
       {/* First page button */}
@@ -103,10 +105,10 @@ export function Pagination({
           size="icon"
           onClick={() => handlePageChange(1)}
           disabled={disabled}
-          aria-label="第一頁"
+          aria-label={t('ui.pagination-first')}
           className="h-9 w-9"
         >
-          <span className="text-xs">首</span>
+          <span className="text-xs">{t('ui.pagination-first-short')}</span>
         </Button>
       )}
 
@@ -117,7 +119,7 @@ export function Pagination({
           size="icon"
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage <= 1 || disabled}
-          aria-label="上一頁"
+          aria-label={t('ui.pagination-previous')}
           className="h-9 w-9"
         >
           <ChevronLeft className="h-4 w-4" />
@@ -150,7 +152,7 @@ export function Pagination({
               onClick={() => handlePageChange(page)}
               onKeyDown={(e) => handleKeyDown(e, page)}
               disabled={disabled}
-              aria-label={`第 ${page} 頁`}
+              aria-label={t('ui.pagination-page', { page })}
               aria-current={isCurrentPage ? 'page' : undefined}
               className={cn('h-9 w-9', isCurrentPage && 'pointer-events-none')}
             >
@@ -167,7 +169,7 @@ export function Pagination({
           size="icon"
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage >= totalPages || disabled}
-          aria-label="下一頁"
+          aria-label={t('ui.pagination-next')}
           className="h-9 w-9"
         >
           <ChevronRight className="h-4 w-4" />
@@ -181,10 +183,10 @@ export function Pagination({
           size="icon"
           onClick={() => handlePageChange(totalPages)}
           disabled={disabled}
-          aria-label="最後一頁"
+          aria-label={t('ui.pagination-last')}
           className="h-9 w-9"
         >
-          <span className="text-xs">末</span>
+          <span className="text-xs">{t('ui.pagination-last-short')}</span>
         </Button>
       )}
     </nav>
@@ -207,15 +209,16 @@ export function PaginationInfo({
   itemsPerPage,
   className,
 }: PaginationInfoProps) {
+  const { t } = useI18n();
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
     <div className={cn('text-sm text-muted-foreground', className)}>
-      顯示第 {startItem} - {endItem} 項，共 {totalItems} 項結果
+      {t('ui.pagination-showing', { start: startItem, end: endItem, total: totalItems })}
       {totalPages > 1 && (
         <span className="ml-2">
-          (第 {currentPage} 頁，共 {totalPages} 頁)
+          {t('ui.pagination-page-info', { current: currentPage, total: totalPages })}
         </span>
       )}
     </div>

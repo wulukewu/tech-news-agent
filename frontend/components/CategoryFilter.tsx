@@ -3,6 +3,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface CategoryFilterProps {
   categories: string[];
@@ -21,11 +22,13 @@ export function CategoryFilter({
   onClearAll,
   loading = false,
 }: CategoryFilterProps) {
+  const { t } = useI18n();
+
   if (loading) {
     return (
       <div className="space-y-3">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">Filter by category:</span>
+          <span className="text-sm font-medium">{t('buttons.filter-by-category')}</span>
           <div className="h-7 w-20 animate-pulse rounded bg-muted" />
           <div className="h-7 w-20 animate-pulse rounded bg-muted" />
         </div>
@@ -45,7 +48,7 @@ export function CategoryFilter({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">Filter by category:</span>
+        <span className="text-sm font-medium">{t('buttons.filter-by-category')}</span>
         <Button
           variant="ghost"
           size="sm"
@@ -53,7 +56,7 @@ export function CategoryFilter({
           className="h-7 text-xs"
           disabled={selectedCategories.length === categories.length}
         >
-          Select All
+          {t('buttons.select-all')}
         </Button>
         <Button
           variant="ghost"
@@ -62,7 +65,7 @@ export function CategoryFilter({
           className="h-7 text-xs"
           disabled={selectedCategories.length === 0}
         >
-          Clear All
+          {t('buttons.clear-all')}
         </Button>
       </div>
 

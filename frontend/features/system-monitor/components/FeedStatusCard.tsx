@@ -21,7 +21,8 @@ import {
 } from 'lucide-react';
 import type { FeedStatus } from '../types';
 import { formatDistanceToNow } from 'date-fns';
-import { zhTW } from 'date-fns/locale';
+import { zhTW, enUS } from 'date-fns/locale';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface FeedStatusCardProps {
   feeds: FeedStatus[];
@@ -30,7 +31,7 @@ interface FeedStatusCardProps {
 /**
  * Get status icon and color based on feed health
  */
-function getStatusDisplay(status: FeedStatus['status']) {
+function getStatusDisplay(status: FeedStatus['status'], t: any) {
   switch (status) {
     case 'healthy':
       return {
@@ -38,7 +39,7 @@ function getStatusDisplay(status: FeedStatus['status']) {
         color: 'text-green-600 dark:text-green-400',
         bgColor: 'bg-green-50 dark:bg-green-950',
         badge: 'default',
-        label: '正常',
+        label: t('ui.healthy'),
       };
     case 'warning':
       return {
@@ -46,7 +47,7 @@ function getStatusDisplay(status: FeedStatus['status']) {
         color: 'text-yellow-600 dark:text-yellow-400',
         bgColor: 'bg-yellow-50 dark:bg-yellow-950',
         badge: 'secondary',
-        label: '警告',
+        label: t('ui.warning'),
       };
     case 'error':
       return {
@@ -54,7 +55,7 @@ function getStatusDisplay(status: FeedStatus['status']) {
         color: 'text-red-600 dark:text-red-400',
         bgColor: 'bg-red-50 dark:bg-red-950',
         badge: 'destructive',
-        label: '錯誤',
+        label: t('ui.error'),
       };
   }
 }
@@ -76,8 +77,8 @@ function formatProcessingTime(ms: number): { value: string; color: string } {
 /**
  * Individual feed status item
  */
-function FeedStatusItem({ feed }: { feed: FeedStatus }) {
-  const statusDisplay = getStatusDisplay(feed.status);
+function FeedStatusItem({ feed, t, locale }: { feed: FeedStatus; t: any; locale: any }) {
+  const statusDisplay = getStatusDisplay(feed.status, t);
   const StatusIcon = statusDisplay.icon;
   const processingTime = formatProcessingTime(feed.processingTime);
 
@@ -110,22 +111,22 @@ function FeedStatusItem({ feed }: { feed: FeedStatus }) {
         {/* Feed Metrics */}
         <div className="grid grid-cols-3 gap-3 text-xs">
           <div className="space-y-1">
-            <div className="text-muted-foreground">最後抓取</div>
+            <div className="text-muted-foreground">{t('ui.last-fetch')}</div>
             <div className="font-medium">
               {feed.lastFetch
-                ? formatDistanceToNow(feed.lastFetch, { addSuffix: true, locale: zhTW })
-                : '從未'}
+                ? formatDistanceToNow(feed.lastFetch, { addSuffix: true, locale })
+                : t('ui.never')}
             </div>
           </div>
           <div className="space-y-1">
-            <div className="text-muted-foreground">處理文章</div>
+            <div className="text-muted-foreground">{t('ui.articles-processed')}</div>
             <div className="font-medium flex items-center gap-1">
               <FileText className="h-3 w-3" />
               {feed.articlesProcessed}
             </div>
           </div>
           <div className="space-y-1">
-            <div className="text-muted-foreground">處理時間</div>
+            <div className="text-muted-foreground">{t('ui.processing-time')}</div>
             <div className={`font-medium font-mono ${processingTime.color}`}>
               {processingTime.value}
             </div>
@@ -137,7 +138,8 @@ function FeedStatusItem({ feed }: { feed: FeedStatus }) {
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Clock className="h-3 w-3" />
             <span>
-              下次抓取: {formatDistanceToNow(feed.nextFetch, { addSuffix: true, locale: zhTW })}
+              {t('ui.next-fetch')}:{' '}
+              {formatDistanceToNow(feed.nextFetch, { addSuffix: true, locale })}
             </span>
           </div>
         )}
@@ -145,7 +147,7 @@ function FeedStatusItem({ feed }: { feed: FeedStatus }) {
         {/* Error Message */}
         {feed.errorMessage && (
           <div className="rounded bg-destructive/10 p-2 text-xs text-destructive">
-            <div className="font-medium mb-1">錯誤訊息:</div>
+            <div className="font-medium mb-1">{t('ui.error-message')}:</div>
             <div className="break-words">{feed.errorMessage}</div>
           </div>
         )}
@@ -155,6 +157,9 @@ function FeedStatusItem({ feed }: { feed: FeedStatus }) {
 }
 
 export function FeedStatusCard({ feeds }: FeedStatusCardProps) {
+  const { t, locale } = useI18n();
+  const dateLocale = locale === 'zh-TW' ? zhTW : enUS;
+
   // Sort feeds by status (error > warning > healthy) and then by name
   const sortedFeeds = [...feeds].sort((a, b) => {
     const statusOrder = { error: 0, warning: 1, healthy: 2 };
@@ -179,19 +184,23 @@ export function FeedStatusCard({ feeds }: FeedStatusCardProps) {
           <div>
             <CardTitle className="text-xl flex items-center gap-2">
               <Rss className="h-5 w-5" />
-              訂閱源狀態
+              {t('ui.feed-status')}
             </CardTitle>
-            <CardDescription>各個 RSS 來源的抓取狀態和錯誤訊息</CardDescription>
+            <CardDescription>{t('ui.feed-status-desc')}</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Badge variant="default" className="bg-green-500 hover:bg-green-600">
-              {statusCounts.healthy} 正常
+              {statusCounts.healthy} {t('ui.healthy')}
             </Badge>
             {statusCounts.warning > 0 && (
-              <Badge variant="secondary">{statusCounts.warning} 警告</Badge>
+              <Badge variant="secondary">
+                {statusCounts.warning} {t('ui.warning')}
+              </Badge>
             )}
             {statusCounts.error > 0 && (
-              <Badge variant="destructive">{statusCounts.error} 錯誤</Badge>
+              <Badge variant="destructive">
+                {statusCounts.error} {t('ui.error')}
+              </Badge>
             )}
           </div>
         </div>
@@ -200,13 +209,13 @@ export function FeedStatusCard({ feeds }: FeedStatusCardProps) {
         {feeds.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground">
             <Rss className="h-12 w-12 mx-auto mb-3 opacity-50" />
-            <p>目前沒有訂閱源資料</p>
+            <p>{t('ui.no-feed-data')}</p>
           </div>
         ) : (
           <ScrollArea className="h-[600px] pr-4">
             <div className="space-y-3">
               {sortedFeeds.map((feed) => (
-                <FeedStatusItem key={feed.id} feed={feed} />
+                <FeedStatusItem key={feed.id} feed={feed} t={t} locale={dateLocale} />
               ))}
             </div>
           </ScrollArea>
