@@ -59,7 +59,7 @@ class NotificationSettingsService(BaseService):
         try:
             self.logger.info("Getting notification settings", user_id=str(user_id))
 
-            # Get user's Discord ID first
+            # Get user's data from database
             user_data = await self._get_user_data(user_id)
             discord_id = user_data.get("discord_id")
 
@@ -67,23 +67,33 @@ class NotificationSettingsService(BaseService):
                 # Return default settings if user not found
                 return self._get_default_settings()
 
-            # Get DM notification setting from existing service
-            dm_enabled = await self.supabase_service.get_notification_settings(discord_id)
+            # Get DM notification setting from database
+            dm_enabled = user_data.get("dm_notifications_enabled", True)
 
-            # For now, return basic settings based on existing DM setting
-            # In the future, this could be expanded to read from a dedicated user_notification_settings table
+            # Get additional settings from database (with defaults)
+            frequency = user_data.get("notification_frequency", "immediate")
+            min_tinkering_index = user_data.get("min_tinkering_index", 3)
+            quiet_hours_enabled = user_data.get("quiet_hours_enabled", False)
+            quiet_hours_start = user_data.get("quiet_hours_start", "22:00")
+            quiet_hours_end = user_data.get("quiet_hours_end", "08:00")
+
+            # Create settings based on actual database data
             settings = NotificationSettings(
-                enabled=dm_enabled,
+                enabled=True,  # Global toggle - always enabled for now
                 dm_enabled=dm_enabled,
                 email_enabled=False,  # Not implemented yet
-                frequency="immediate",
-                quiet_hours=QuietHours(enabled=False, start="22:00", end="08:00"),
-                min_tinkering_index=3,
+                frequency=frequency,
+                quiet_hours=QuietHours(
+                    enabled=quiet_hours_enabled, start=quiet_hours_start, end=quiet_hours_end
+                ),
+                min_tinkering_index=min_tinkering_index,
                 feed_settings=[],
                 channels=["dm", "in-app"] if dm_enabled else ["in-app"],
             )
 
-            self.logger.info("Retrieved notification settings", user_id=str(user_id))
+            self.logger.info(
+                "Retrieved notification settings", user_id=str(user_id), dm_enabled=dm_enabled
+            )
             return settings
 
         except Exception as e:
@@ -130,8 +140,50 @@ class NotificationSettingsService(BaseService):
                     discord_id, updates.dm_enabled
                 )
 
-            # For now, we only support DM notifications
-            # In the future, this could be expanded to support more settings
+            # Update other settings in the database
+            update_data = {}
+
+            if updates.frequency is not None:
+                update_data["notification_frequency"] = updates.frequency
+                self.logger.info(
+                    "Updating frequency setting", user_id=str(user_id), frequency=updates.frequency
+                )
+
+            if updates.quiet_hours is not None:
+                update_data["quiet_hours_enabled"] = updates.quiet_hours.enabled
+                update_data["quiet_hours_start"] = updates.quiet_hours.start
+                update_data["quiet_hours_end"] = updates.quiet_hours.end
+                self.logger.info(
+                    "Updating quiet hours setting",
+                    user_id=str(user_id),
+                    quiet_hours=updates.quiet_hours,
+                )
+
+            if updates.min_tinkering_index is not None:
+                update_data["min_tinkering_index"] = updates.min_tinkering_index
+                self.logger.info(
+                    "Updating min tinkering index",
+                    user_id=str(user_id),
+                    min_tinkering_index=updates.min_tinkering_index,
+                )
+
+            # Apply updates to database if there are any
+            if update_data:
+                response = (
+                    self.supabase_service.client.table("users")
+                    .update(update_data)
+                    .eq("id", str(user_id))
+                    .execute()
+                )
+
+                if not response.data:
+                    self.logger.warning("No rows updated", user_id=str(user_id))
+                else:
+                    self.logger.info(
+                        "Successfully updated user settings",
+                        user_id=str(user_id),
+                        updated_fields=list(update_data.keys()),
+                    )
 
             # Return updated settings
             updated_settings = await self.get_notification_settings(user_id)
@@ -204,16 +256,30 @@ class NotificationSettingsService(BaseService):
     async def _get_user_data(self, user_id: UUID) -> dict:
         """Get user data from database."""
         try:
-            # This would typically query the users table
-            # For now, we'll use a placeholder implementation
-            # In a real implementation, this would be:
-            # user = await self.user_repository.get_by_id(user_id)
+            # Query the users table to get actual user data
+            response = (
+                self.supabase_service.client.table("users")
+                .select(
+                    "id, discord_id, dm_notifications_enabled, notification_frequency, min_tinkering_index, quiet_hours_enabled, quiet_hours_start, quiet_hours_end"
+                )
+                .eq("id", str(user_id))
+                .execute()
+            )
 
-            # Placeholder: assume user exists with a Discord ID
-            # This should be replaced with actual database query
+            if not response.data:
+                self.logger.warning("User not found in database", user_id=str(user_id))
+                return {}
+
+            user_data = response.data[0]
             return {
-                "id": str(user_id),
-                "discord_id": f"discord_{user_id}",  # Placeholder
+                "id": user_data["id"],
+                "discord_id": user_data["discord_id"],
+                "dm_notifications_enabled": user_data.get("dm_notifications_enabled", True),
+                "notification_frequency": user_data.get("notification_frequency", "immediate"),
+                "min_tinkering_index": user_data.get("min_tinkering_index", 3),
+                "quiet_hours_enabled": user_data.get("quiet_hours_enabled", False),
+                "quiet_hours_start": user_data.get("quiet_hours_start", "22:00"),
+                "quiet_hours_end": user_data.get("quiet_hours_end", "08:00"),
             }
         except Exception as e:
             self.logger.warning("Failed to get user data", user_id=str(user_id), error=str(e))
@@ -222,7 +288,7 @@ class NotificationSettingsService(BaseService):
     def _get_default_settings(self) -> NotificationSettings:
         """Get default notification settings."""
         return NotificationSettings(
-            enabled=True,
+            enabled=True,  # Global toggle - always enabled for now
             dm_enabled=True,
             email_enabled=False,
             frequency="immediate",

@@ -21,7 +21,7 @@ import { TinkeringIndexThreshold } from '@/features/notifications/components/Tin
 import { FeedNotificationSettings } from '@/features/notifications/components/FeedNotificationSettings';
 import { NotificationHistoryPanel } from '@/features/notifications/components/NotificationHistoryPanel';
 import { NotificationPreview } from '@/features/notifications/components/NotificationPreview';
-import { Bell, BellOff, Mail, MessageSquare, Check } from 'lucide-react';
+import { Bell, Mail, MessageSquare } from 'lucide-react';
 
 import { useI18n } from '@/contexts/I18nContext';
 
@@ -120,26 +120,22 @@ export default function NotificationSettingsPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                {settings.enabled ? (
-                  <Bell className="h-5 w-5 text-green-600" />
-                ) : (
-                  <BellOff className="h-5 w-5 text-muted-foreground" />
-                )}
+                <Bell className="h-5 w-5 text-blue-600" />
                 <div>
                   <CardTitle>{t('settings.notifications.status')}</CardTitle>
-                  <CardDescription>
-                    {settings.enabled
-                      ? t('settings.notifications.enabled')
-                      : t('settings.notifications.disabled')}
-                  </CardDescription>
+                  <CardDescription>{t('settings.notifications.status-desc')}</CardDescription>
                 </div>
               </div>
-              <Switch
-                id="notifications-enabled"
-                checked={settings.enabled}
-                onCheckedChange={(checked) => handleToggle('enabled', checked)}
-                disabled={isSaving}
-              />
+              {/* Show overall notification status */}
+              <div
+                className={`text-sm font-medium ${
+                  settings.dmEnabled ? 'text-green-600' : 'text-gray-500'
+                }`}
+              >
+                {settings.dmEnabled
+                  ? t('settings.notifications.enabled')
+                  : t('settings.notifications.disabled')}
+              </div>
             </div>
           </CardHeader>
         </Card>
@@ -153,7 +149,11 @@ export default function NotificationSettingsPage() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <MessageSquare className="h-5 w-5 text-muted-foreground" />
+                {settings.dmEnabled ? (
+                  <MessageSquare className="h-5 w-5 text-green-600" />
+                ) : (
+                  <MessageSquare className="h-5 w-5 text-muted-foreground" />
+                )}
                 <div>
                   <Label htmlFor="dm-enabled" className="font-medium">
                     {t('settings.notifications.discord-dm')}
@@ -167,7 +167,7 @@ export default function NotificationSettingsPage() {
                 id="dm-enabled"
                 checked={settings.dmEnabled}
                 onCheckedChange={(checked) => handleToggle('dmEnabled', checked)}
-                disabled={isSaving || !settings.enabled}
+                disabled={isSaving}
               />
             </div>
 
@@ -177,25 +177,23 @@ export default function NotificationSettingsPage() {
                 <div>
                   <Label htmlFor="email-enabled" className="font-medium">
                     {t('settings.notifications.email')}
+                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                      {t('settings.notifications.coming-soon')}
+                    </span>
                   </Label>
                   <p className="text-sm text-muted-foreground">
                     {t('settings.notifications.email-desc')}
                   </p>
                 </div>
               </div>
-              <Switch
-                id="email-enabled"
-                checked={settings.emailEnabled}
-                onCheckedChange={(checked) => handleToggle('emailEnabled', checked)}
-                disabled={isSaving || !settings.enabled}
-              />
+              <Switch id="email-enabled" checked={false} disabled={true} />
             </div>
 
             <div className="pt-4 border-t">
               <Button
                 variant="outline"
                 onClick={() => testMutation.mutate()}
-                disabled={testMutation.isPending || !settings.enabled}
+                disabled={testMutation.isPending || !settings.dmEnabled}
                 className="w-full"
               >
                 {testMutation.isPending ? (
@@ -218,28 +216,28 @@ export default function NotificationSettingsPage() {
         <NotificationFrequencySelector
           frequency={settings.frequency}
           onFrequencyChange={(frequency) => handleUpdate({ frequency })}
-          disabled={isSaving || !settings.enabled}
+          disabled={isSaving || !settings.dmEnabled}
         />
 
         {/* Quiet Hours */}
         <QuietHoursSettings
           quietHours={settings.quietHours}
           onQuietHoursChange={(quietHours) => handleUpdate({ quietHours })}
-          disabled={isSaving || !settings.enabled}
+          disabled={isSaving || !settings.dmEnabled}
         />
 
         {/* Tinkering Index Threshold */}
         <TinkeringIndexThreshold
           threshold={settings.minTinkeringIndex}
           onThresholdChange={(minTinkeringIndex) => handleUpdate({ minTinkeringIndex })}
-          disabled={isSaving || !settings.enabled}
+          disabled={isSaving || !settings.dmEnabled}
         />
 
         {/* Feed-specific Notification Settings */}
         <FeedNotificationSettings
           feedSettings={settings.feedSettings}
           onFeedSettingsChange={(feedSettings) => handleUpdate({ feedSettings })}
-          disabled={isSaving || !settings.enabled}
+          disabled={isSaving || !settings.dmEnabled}
         />
 
         {/* Notification Preview */}

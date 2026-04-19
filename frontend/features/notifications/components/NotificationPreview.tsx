@@ -74,7 +74,7 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
 
   // Check if notification would be sent based on settings
   const wouldSendNotification = () => {
-    if (!settings.enabled) return false;
+    if (!settings.dmEnabled) return false;
     if (mockArticle.tinkeringIndex < settings.minTinkeringIndex) return false;
 
     // Check quiet hours
@@ -140,13 +140,13 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
           <div className="text-sm space-y-2 p-4 rounded-lg bg-muted/50">
             <p className="font-medium">{t('settings.notifications.reason')}</p>
             <ul className="space-y-1.5 ml-2">
-              {!settings.enabled && (
+              {!settings.dmEnabled && (
                 <li className="flex items-start gap-2">
                   <span className="text-muted-foreground mt-0.5">•</span>
                   <span>{t('settings.notifications.global-disabled')}</span>
                 </li>
               )}
-              {settings.enabled && mockArticle.tinkeringIndex < settings.minTinkeringIndex && (
+              {settings.dmEnabled && mockArticle.tinkeringIndex < settings.minTinkeringIndex && (
                 <li className="flex items-start gap-2">
                   <span className="text-muted-foreground mt-0.5">•</span>
                   <span>
@@ -155,7 +155,7 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
                   </span>
                 </li>
               )}
-              {settings.enabled && settings.quietHours.enabled && (
+              {settings.dmEnabled && settings.quietHours.enabled && (
                 <li className="flex items-start gap-2">
                   <span className="text-muted-foreground mt-0.5">•</span>
                   <span>{t('settings.notifications.in-quiet-hours')}</span>

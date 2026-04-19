@@ -93,7 +93,7 @@ function flattenKeys(
 
       if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
         // Recursively flatten nested objects
-        keys.push(...flattenKeys(value, fullKey, pathTracker));
+        keys.push(...flattenKeys(value as Record<string, unknown>, fullKey, pathTracker));
       } else {
         // Leaf node - add the key
         keys.push(fullKey);
@@ -109,11 +109,16 @@ function flattenKeys(
  */
 function getNestedValue(obj: Record<string, unknown>, key: string): unknown {
   const keys = key.split('.');
-  let value = obj;
+  let value: unknown = obj;
 
   for (const k of keys) {
-    if (value && typeof value === 'object' && k in value) {
-      value = value[k];
+    if (
+      value &&
+      typeof value === 'object' &&
+      value !== null &&
+      k in (value as Record<string, unknown>)
+    ) {
+      value = (value as Record<string, unknown>)[k];
     } else {
       return undefined;
     }
@@ -167,7 +172,7 @@ function findDuplicateKeys(obj: Record<string, unknown>, prefix = ''): string[] 
 
         const value = current[key];
         if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-          traverse(value, fullKey);
+          traverse(value as Record<string, unknown>, fullKey);
         }
       }
     }
@@ -268,8 +273,8 @@ function validateTranslations(): ValidationReport {
       } else {
         // Check interpolation variable consistency
         const zhTWValue = getNestedValue(zhTW, key);
-        const zhTWVars = extractInterpolationVariables(zhTWValue);
-        const enUSVars = extractInterpolationVariables(enUSValue);
+        const zhTWVars = extractInterpolationVariables(zhTWValue as string);
+        const enUSVars = extractInterpolationVariables(enUSValue as string);
 
         if (zhTWVars.length !== enUSVars.length || !zhTWVars.every((v) => enUSVars.includes(v))) {
           issues.push({
@@ -576,4 +581,5 @@ if (require.main === module) {
   main();
 }
 
-export { validateTranslations, ValidationReport, ValidationIssue };
+export { validateTranslations };
+export type { ValidationReport, ValidationIssue };
