@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { RefreshCw, Sparkles } from 'lucide-react';
 import { RecommendationCard } from '@/features/recommendations/components/RecommendationCard';
 import { InsufficientDataMessage } from '@/features/recommendations/components/InsufficientDataMessage';
+import { useI18n } from '@/contexts/I18nContext';
 import { ArticleListSkeleton } from '@/components/LoadingSkeleton';
 import {
   useRecommendations,
@@ -21,7 +22,6 @@ import {
   useTrackRecommendationInteraction,
 } from '@/features/recommendations/hooks/useRecommendations';
 import { toast } from '@/lib/toast';
-import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * RecommendationsPage component
@@ -60,14 +60,14 @@ export default function RecommendationsPage() {
       {},
       {
         onSuccess: () => {
-          toast.success('推薦已更新');
+          toast.success(t('recommendations.updated'));
         },
         onError: (error) => {
-          toast.error('更新推薦失敗');
+          toast.error(t('recommendations.update-failed'));
         },
       }
     );
-  }, [refreshMutation]);
+  }, [refreshMutation, t]);
 
   /**
    * Handle dismiss recommendation
@@ -88,15 +88,15 @@ export default function RecommendationsPage() {
         { recommendationId },
         {
           onSuccess: () => {
-            toast.success('已忽略此推薦');
+            toast.success(t('recommendations.dismissed'));
           },
           onError: (error) => {
-            toast.error('操作失敗');
+            toast.error(t('recommendations.operation-failed'));
           },
         }
       );
     },
-    [dismissMutation, trackInteraction]
+    [dismissMutation, trackInteraction, t]
   );
 
   /**
@@ -179,20 +179,20 @@ export default function RecommendationsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">智慧推薦</h1>
-            <p className="text-muted-foreground">基於您的評分歷史的個人化文章推薦</p>
+            <h1 className="text-3xl font-bold tracking-tight">{t('recommendations.title')}</h1>
+            <p className="text-muted-foreground">{t('recommendations.description')}</p>
           </div>
           <Button onClick={handleRefresh} disabled={refreshMutation.isPending} className="gap-2">
             <RefreshCw className={`h-4 w-4 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
-            重新整理
+            {t('recommendations.refresh')}
           </Button>
         </div>
         <div className="rounded-lg border bg-card p-6 text-center">
           <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-semibold mb-2">目前沒有新推薦</h3>
-          <p className="text-muted-foreground mb-4">請評分更多文章以獲得更精準的推薦</p>
+          <h3 className="text-lg font-semibold mb-2">{t('recommendations.no-recommendations')}</h3>
+          <p className="text-muted-foreground mb-4">{t('recommendations.rate-more-articles')}</p>
           <Button asChild>
-            <a href="/articles">前往文章列表</a>
+            <a href="/articles">{t('recommendations.go-to-articles')}</a>
           </Button>
         </div>
       </div>
@@ -204,12 +204,14 @@ export default function RecommendationsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">智慧推薦</h1>
-          <p className="text-muted-foreground">基於您的評分歷史為您推薦 {data.totalCount} 篇文章</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('recommendations.title')}</h1>
+          <p className="text-muted-foreground">
+            {t('recommendations.description-with-count', { count: data.totalCount })}
+          </p>
         </div>
         <Button onClick={handleRefresh} disabled={refreshMutation.isPending} className="gap-2">
           <RefreshCw className={`h-4 w-4 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
-          重新整理推薦
+          {t('recommendations.refresh-recommendations')}
         </Button>
       </div>
 

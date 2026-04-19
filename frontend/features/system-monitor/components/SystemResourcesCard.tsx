@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Cpu, HardDrive, MemoryStick } from 'lucide-react';
 import type { SystemResources } from '../types';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface SystemResourcesCardProps {
   resources?: SystemResources;
@@ -45,17 +46,19 @@ function getProgressColor(percentage: number): string {
 }
 
 export function SystemResourcesCard({ resources }: SystemResourcesCardProps) {
+  const { t } = useI18n();
+
   if (!resources) {
     return (
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Cpu className="h-5 w-5" />
-            系統資源使用情況
+            {t('system.resource-usage')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">系統資源資訊目前無法使用</p>
+          <p className="text-sm text-muted-foreground">{t('system.resource-unavailable')}</p>
         </CardContent>
       </Card>
     );
@@ -68,7 +71,7 @@ export function SystemResourcesCard({ resources }: SystemResourcesCardProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Cpu className="h-5 w-5" />
-          系統資源使用情況
+          {t('system.resource-usage')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -77,7 +80,7 @@ export function SystemResourcesCard({ resources }: SystemResourcesCardProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Cpu className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">CPU 使用率</span>
+              <span className="text-sm font-medium">{t('system.cpu-usage')}</span>
             </div>
             <span className={`text-sm font-semibold ${getUsageColor(cpu.usage)}`}>
               {cpu.usage.toFixed(1)}%
@@ -89,8 +92,12 @@ export function SystemResourcesCard({ resources }: SystemResourcesCardProps) {
             indicatorClassName={getProgressColor(cpu.usage)}
           />
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{cpu.cores} 核心</span>
-            <span>負載平均: {cpu.loadAverage.map((load) => load.toFixed(2)).join(', ')}</span>
+            <span>{t('system.cores', { count: cpu.cores })}</span>
+            <span>
+              {t('system.load-average', {
+                values: cpu.loadAverage.map((load) => load.toFixed(2)).join(', '),
+              })}
+            </span>
           </div>
         </div>
 
@@ -99,7 +106,7 @@ export function SystemResourcesCard({ resources }: SystemResourcesCardProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MemoryStick className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">記憶體使用率</span>
+              <span className="text-sm font-medium">{t('system.memory-usage')}</span>
             </div>
             <span className={`text-sm font-semibold ${getUsageColor(memory.usagePercentage)}`}>
               {memory.usagePercentage.toFixed(1)}%
@@ -111,8 +118,8 @@ export function SystemResourcesCard({ resources }: SystemResourcesCardProps) {
             indicatorClassName={getProgressColor(memory.usagePercentage)}
           />
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>已使用: {formatBytes(memory.used)}</span>
-            <span>總計: {formatBytes(memory.total)}</span>
+            <span>{t('system.used', { amount: formatBytes(memory.used) })}</span>
+            <span>{t('system.total', { amount: formatBytes(memory.total) })}</span>
           </div>
         </div>
 
@@ -121,7 +128,7 @@ export function SystemResourcesCard({ resources }: SystemResourcesCardProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <HardDrive className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm font-medium">磁碟使用率</span>
+              <span className="text-sm font-medium">{t('system.disk-usage')}</span>
             </div>
             <span className={`text-sm font-semibold ${getUsageColor(disk.usagePercentage)}`}>
               {disk.usagePercentage.toFixed(1)}%
@@ -133,15 +140,17 @@ export function SystemResourcesCard({ resources }: SystemResourcesCardProps) {
             indicatorClassName={getProgressColor(disk.usagePercentage)}
           />
           <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>已使用: {formatBytes(disk.used)}</span>
-            <span>總計: {formatBytes(disk.total)}</span>
+            <span>{t('system.used', { amount: formatBytes(disk.used) })}</span>
+            <span>{t('system.total', { amount: formatBytes(disk.total) })}</span>
           </div>
         </div>
 
         {/* Last Updated */}
         <div className="pt-2 border-t">
           <p className="text-xs text-muted-foreground">
-            最後更新: {new Date(resources.lastUpdated).toLocaleString('zh-TW')}
+            {t('system.last-updated', {
+              time: new Date(resources.lastUpdated).toLocaleString('zh-TW'),
+            })}
           </p>
         </div>
       </CardContent>

@@ -11,6 +11,7 @@ import { SortingControls, type SortField, type SortOrder } from './SortingContro
 import { useKeyboardNavigation, useFocusNavigation } from '@/lib/hooks/useUrlState';
 import { cn } from '@/lib/utils';
 import type { Article, ArticleFilters } from '@/types/article';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ArticleBrowserProps {
   /** Initial filter state for the browser */
@@ -78,6 +79,7 @@ export function ArticleBrowser({
   onFiltersChange,
 }: ArticleBrowserProps) {
   const [currentPage, setCurrentPage] = useState(1);
+  const { t } = useI18n();
   const [filters, setFilters] = useState<ArticleFilters>(initialFilters || {});
   const searchInputRef = useRef<HTMLInputElement>(null);
 
@@ -338,7 +340,7 @@ export function ArticleBrowser({
           {showAnalysisButtons && (
             <>
               <span className="mx-2">•</span>
-              <span className="text-xs">深度分析按鈕: 最多 5 個</span>
+              <span className="text-xs">{t('filters.depth-analysis-buttons', { max: 5 })}</span>
             </>
           )}
           {showReadingListButtons && (
@@ -353,23 +355,29 @@ export function ArticleBrowser({
         <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
           {filters.categories && filters.categories.length > 0 && (
             <span className="bg-muted px-2 py-1 rounded">
-              分類: {filters.categories.join(', ')}
+              {t('filters.category')}: {filters.categories.join(', ')}
             </span>
           )}
           {(filters.minTinkeringIndex || filters.maxTinkeringIndex) && (
             <span className="bg-muted px-2 py-1 rounded">
-              深度: {filters.minTinkeringIndex || 1}-{filters.maxTinkeringIndex || 5} 星
+              {t('filters.depth')}:{' '}
+              {t('filters.depth-range', {
+                min: filters.minTinkeringIndex || 1,
+                max: filters.maxTinkeringIndex || 5,
+              })}
             </span>
           )}
           {filters.sortBy && (
             <span className="bg-muted px-2 py-1 rounded">
-              排序:{' '}
+              {t('filters.sort')}:{' '}
               {filters.sortBy === 'date'
-                ? '日期'
+                ? t('filters.date')
                 : filters.sortBy === 'tinkering_index'
-                  ? '深度'
-                  : '分類'}
-              {filters.sortOrder === 'desc' ? ' ↓' : ' ↑'}
+                  ? t('filters.technical-depth')
+                  : t('filters.category-sort')}
+              {filters.sortOrder === 'desc'
+                ? ` ${t('filters.descending')}`
+                : ` ${t('filters.ascending')}`}
             </span>
           )}
         </div>

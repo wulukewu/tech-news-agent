@@ -18,10 +18,12 @@ import { AddCustomFeedDialog } from '@/features/subscriptions/components/AddCust
 import { OPMLImportExport } from '@/features/subscriptions/components/OPMLImportExport';
 import { FeedSearch } from '@/features/subscriptions/components/FeedSearch';
 import type { OPMLOutline } from '@/features/subscriptions/utils/opml';
+import { useI18n } from '@/contexts/I18nContext';
 
 export default function SubscriptionsPage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
+  const { t } = useI18n();
   const [feeds, setFeeds] = useState<Feed[]>([]);
   const [filteredFeeds, setFilteredFeeds] = useState<Feed[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,7 +70,7 @@ export default function SubscriptionsPage() {
       setCollapsedCategories(nonRecommendedCategories);
     } catch (err) {
       console.error('Failed to load feeds:', err);
-      setError('無法載入訂閱來源');
+      setError(t('errors.server-error'));
       setFeeds([]);
       setFilteredFeeds([]);
     } finally {
@@ -89,7 +91,7 @@ export default function SubscriptionsPage() {
       );
     } catch (err) {
       console.error('Failed to toggle subscription:', err);
-      toast.error('訂閱操作失敗');
+      toast.error(t('errors.server-error'));
     } finally {
       setToggling((prev) => {
         const next = new Set(prev);
@@ -122,10 +124,14 @@ export default function SubscriptionsPage() {
         )
       );
 
-      toast.success(`已${subscribe ? '訂閱' : '取消訂閱'} ${feedsToToggle.length} 個來源`);
+      toast.success(
+        subscribe
+          ? t('subscriptions.subscribed', { count: feedsToToggle.length })
+          : t('subscriptions.unsubscribed', { count: feedsToToggle.length })
+      );
     } catch (err) {
       console.error('Failed to toggle category:', err);
-      toast.error('批量操作失敗');
+      toast.error(t('subscriptions.batch-operation-failed'));
     } finally {
       setToggling((prev) => {
         const next = new Set(prev);
@@ -153,10 +159,14 @@ export default function SubscriptionsPage() {
       // Update local state
       setFeeds(feeds.map((feed) => ({ ...feed, is_subscribed: subscribe })));
 
-      toast.success(`已${subscribe ? '訂閱' : '取消訂閱'} ${feedsToToggle.length} 個來源`);
+      toast.success(
+        subscribe
+          ? t('subscriptions.subscribed', { count: feedsToToggle.length })
+          : t('subscriptions.unsubscribed', { count: feedsToToggle.length })
+      );
     } catch (err) {
       console.error('Failed to toggle all:', err);
-      toast.error('批量操作失敗');
+      toast.error(t('subscriptions.batch-operation-failed'));
     } finally {
       setToggling(new Set());
     }
@@ -166,7 +176,7 @@ export default function SubscriptionsPage() {
     const recommendedFeeds = feeds.filter((f) => f.is_recommended && !f.is_subscribed);
 
     if (recommendedFeeds.length === 0) {
-      toast.info('您已訂閱所有推薦來源');
+      toast.info(t('subscriptions.already-subscribed-all-recommended'));
       return;
     }
 
@@ -185,10 +195,10 @@ export default function SubscriptionsPage() {
         feeds.map((feed) => (feed.is_recommended ? { ...feed, is_subscribed: true } : feed))
       );
 
-      toast.success(`已訂閱 ${recommendedFeeds.length} 個推薦來源`);
+      toast.success(t('subscriptions.subscribed-recommended', { count: recommendedFeeds.length }));
     } catch (err) {
       console.error('Failed to subscribe recommended:', err);
-      toast.error('訂閱推薦來源失敗');
+      toast.error(t('subscriptions.subscribe-recommended-failed'));
     } finally {
       setToggling((prev) => {
         const next = new Set(prev);
@@ -202,7 +212,7 @@ export default function SubscriptionsPage() {
     const failedFeeds = feeds.filter((f) => f.health_status === 'error');
 
     if (failedFeeds.length === 0) {
-      toast.info('沒有需要重試的失敗來源');
+      toast.info(t('subscriptions.no-failed-feeds'));
       return;
     }
 
@@ -217,10 +227,10 @@ export default function SubscriptionsPage() {
       // For now, we'll simulate the retry by reloading feeds
       await loadFeeds();
 
-      toast.success(`已重試 ${failedFeeds.length} 個失敗的來源`);
+      toast.success(t('subscriptions.retried-feeds', { count: failedFeeds.length }));
     } catch (err) {
       console.error('Failed to retry feeds:', err);
-      toast.error('重試失敗來源時發生錯誤');
+      toast.error(t('subscriptions.retry-failed-error'));
     } finally {
       setToggling((prev) => {
         const next = new Set(prev);
@@ -296,7 +306,11 @@ export default function SubscriptionsPage() {
         feed.id === feedId ? { ...feed, notification_enabled: !currentState } : feed
       )
     );
-    toast.success(`已${!currentState ? '啟用' : '停用'}通知`);
+    toast.success(
+      t('subscriptions.notification-toggled', {
+        status: !currentState ? t('subscriptions.enabled') : t('subscriptions.disabled'),
+      })
+    );
   };
 
   if (authLoading || loading) {
@@ -304,7 +318,7 @@ export default function SubscriptionsPage() {
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">載入中...</p>
+          <p className="mt-4 text-muted-foreground">{t('messages.loading')}</p>
         </div>
       </div>
     );
@@ -383,15 +397,18 @@ export default function SubscriptionsPage() {
             onClick={() => router.push('/dashboard/articles')}
             className="mb-4"
           >
-            ← 返回 Dashboard
+            ← {t('subscriptions.back-to-dashboard')}
           </Button>
 
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-3xl font-bold">訂閱管理</h1>
+                <h1 className="text-3xl font-bold">{t('subscriptions.title')}</h1>
                 <p className="text-muted-foreground mt-2">
-                  選擇您想要訂閱的 RSS 來源 ({totalSubscribed} / {(feeds || []).length} 已訂閱)
+                  {t('subscriptions.description', {
+                    subscribed: totalSubscribed,
+                    total: (feeds || []).length,
+                  })}
                 </p>
               </div>
             </div>
@@ -402,8 +419,10 @@ export default function SubscriptionsPage() {
               onValueChange={(value) => setCurrentTab(value as 'subscriptions' | 'explore')}
             >
               <TabsList>
-                <TabsTrigger value="subscriptions">My Subscriptions</TabsTrigger>
-                <TabsTrigger value="explore">Explore</TabsTrigger>
+                <TabsTrigger value="subscriptions">
+                  {t('subscriptions.my-subscriptions')}
+                </TabsTrigger>
+                <TabsTrigger value="explore">{t('subscriptions.explore')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="subscriptions" className="space-y-4 mt-4">
@@ -421,7 +440,9 @@ export default function SubscriptionsPage() {
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-green-500"></div>
                         <div>
-                          <div className="text-xs text-muted-foreground">健康</div>
+                          <div className="text-xs text-muted-foreground">
+                            {t('ui.health-healthy')}
+                          </div>
                           <div className="text-lg font-semibold text-green-600 dark:text-green-400">
                             {
                               feeds.filter((f) => f.is_subscribed && f.health_status === 'healthy')
@@ -437,7 +458,9 @@ export default function SubscriptionsPage() {
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                         <div>
-                          <div className="text-xs text-muted-foreground">過時</div>
+                          <div className="text-xs text-muted-foreground">
+                            {t('ui.health-stale')}
+                          </div>
                           <div className="text-lg font-semibold text-yellow-600 dark:text-yellow-400">
                             {
                               feeds.filter((f) => f.is_subscribed && f.health_status === 'warning')
@@ -453,7 +476,9 @@ export default function SubscriptionsPage() {
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-red-500"></div>
                         <div>
-                          <div className="text-xs text-muted-foreground">錯誤</div>
+                          <div className="text-xs text-muted-foreground">
+                            {t('ui.health-error')}
+                          </div>
                           <div className="text-lg font-semibold text-red-600 dark:text-red-400">
                             {
                               feeds.filter((f) => f.is_subscribed && f.health_status === 'error')
@@ -469,7 +494,9 @@ export default function SubscriptionsPage() {
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-gray-500"></div>
                         <div>
-                          <div className="text-xs text-muted-foreground">未知</div>
+                          <div className="text-xs text-muted-foreground">
+                            {t('ui.health-unknown')}
+                          </div>
                           <div className="text-lg font-semibold text-gray-600 dark:text-gray-400">
                             {
                               feeds.filter(
@@ -507,7 +534,9 @@ export default function SubscriptionsPage() {
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-green-500"></div>
                         <div>
-                          <div className="text-xs text-muted-foreground">健康</div>
+                          <div className="text-xs text-muted-foreground">
+                            {t('ui.health-healthy')}
+                          </div>
                           <div className="text-lg font-semibold text-green-600 dark:text-green-400">
                             {feeds.filter((f) => f.health_status === 'healthy').length}
                           </div>
@@ -520,7 +549,9 @@ export default function SubscriptionsPage() {
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                         <div>
-                          <div className="text-xs text-muted-foreground">過時</div>
+                          <div className="text-xs text-muted-foreground">
+                            {t('ui.health-stale')}
+                          </div>
                           <div className="text-lg font-semibold text-yellow-600 dark:text-yellow-400">
                             {feeds.filter((f) => f.health_status === 'warning').length}
                           </div>
@@ -533,7 +564,9 @@ export default function SubscriptionsPage() {
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-red-500"></div>
                         <div>
-                          <div className="text-xs text-muted-foreground">錯誤</div>
+                          <div className="text-xs text-muted-foreground">
+                            {t('ui.health-error')}
+                          </div>
                           <div className="text-lg font-semibold text-red-600 dark:text-red-400">
                             {feeds.filter((f) => f.health_status === 'error').length}
                           </div>
@@ -546,7 +579,9 @@ export default function SubscriptionsPage() {
                       <div className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full bg-gray-500"></div>
                         <div>
-                          <div className="text-xs text-muted-foreground">未知</div>
+                          <div className="text-xs text-muted-foreground">
+                            {t('ui.health-unknown')}
+                          </div>
                           <div className="text-lg font-semibold text-gray-600 dark:text-gray-400">
                             {
                               feeds.filter((f) => f.health_status === 'unknown' || !f.health_status)
@@ -568,21 +603,21 @@ export default function SubscriptionsPage() {
                     className="gap-2"
                   >
                     <Star className="w-4 h-4" />
-                    訂閱所有推薦
+                    {t('subscriptions.subscribe-all-recommended')}
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => handleToggleAll(true)}
                     disabled={allSubscribed || toggling.size > 0}
                   >
-                    全部訂閱
+                    {t('subscriptions.subscribe-all')}
                   </Button>
                   <Button
                     variant="outline"
                     onClick={() => handleToggleAll(false)}
                     disabled={noneSubscribed || toggling.size > 0}
                   >
-                    全部取消
+                    {t('subscriptions.unsubscribe-all')}
                   </Button>
                   <Button
                     variant="outline"
@@ -601,7 +636,7 @@ export default function SubscriptionsPage() {
                         d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                       />
                     </svg>
-                    重試失敗來源
+                    {t('subscriptions.retry-failed')}
                   </Button>
 
                   <div className="flex-1" />
@@ -655,12 +690,13 @@ export default function SubscriptionsPage() {
                           {hasRecommended && (
                             <Badge variant="secondary" className="gap-1">
                               <Star className="w-3 h-3" />
-                              推薦
+                              {t('ui.recommended')}
                             </Badge>
                           )}
                         </div>
                         <CardDescription>
-                          {subscribedCount} / {categoryFeeds.length} 已訂閱
+                          {subscribedCount} / {categoryFeeds.length}{' '}
+                          {t('subscriptions.subscribed', { count: '' }).replace(' 個來源', '')}
                         </CardDescription>
                       </div>
                     </button>
@@ -672,7 +708,7 @@ export default function SubscriptionsPage() {
                           onClick={() => handleCategoryToggle(category, true)}
                           disabled={allCategorySubscribed || toggling.size > 0}
                         >
-                          全選
+                          {t('ui.select-all')}
                         </Button>
                         <Button
                           variant="ghost"
@@ -680,7 +716,7 @@ export default function SubscriptionsPage() {
                           onClick={() => handleCategoryToggle(category, false)}
                           disabled={noneCategorySubscribed || toggling.size > 0}
                         >
-                          全不選
+                          {t('ui.deselect-all')}
                         </Button>
                       </div>
                     )}
@@ -708,7 +744,7 @@ export default function SubscriptionsPage() {
                                   <span className="font-medium">{feed.name}</span>
                                   {feed.is_recommended && (
                                     <Badge variant="outline" className="text-xs">
-                                      推薦
+                                      {t('ui.recommended')}
                                     </Badge>
                                   )}
                                   {feed.tags && feed.tags.length > 0 && (
@@ -746,12 +782,14 @@ export default function SubscriptionsPage() {
                                     <div className="flex flex-wrap gap-2">
                                       {feed.total_articles !== undefined && (
                                         <Badge variant="outline" className="text-xs">
-                                          {feed.total_articles} 篇文章
+                                          {feed.total_articles} {t('ui.articles')}
                                         </Badge>
                                       )}
                                       {feed.articles_this_week !== undefined && (
                                         <Badge variant="outline" className="text-xs">
-                                          本週 {feed.articles_this_week} 篇
+                                          {t('ui.articles-this-week', {
+                                            count: feed.articles_this_week,
+                                          })}
                                         </Badge>
                                       )}
                                       {feed.average_tinkering_index !== undefined && (
@@ -790,12 +828,16 @@ export default function SubscriptionsPage() {
                                       {feed.notification_enabled ? (
                                         <>
                                           <Bell className="w-3 h-3" />
-                                          <span className="text-xs">通知已啟用</span>
+                                          <span className="text-xs">
+                                            {t('subscriptions.notification-enabled')}
+                                          </span>
                                         </>
                                       ) : (
                                         <>
                                           <BellOff className="w-3 h-3" />
-                                          <span className="text-xs">啟用通知</span>
+                                          <span className="text-xs">
+                                            {t('subscriptions.enable-notification')}
+                                          </span>
                                         </>
                                       )}
                                     </Button>
@@ -819,7 +861,7 @@ export default function SubscriptionsPage() {
 
         {filteredFeeds.length === 0 && !loading && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">沒有找到符合條件的 Feed</p>
+            <p className="text-muted-foreground">{t('subscriptions.no-feeds-found')}</p>
           </div>
         )}
       </div>

@@ -30,6 +30,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+import { useI18n } from '@/contexts/I18nContext';
+
 /**
  * System Status Page Component
  *
@@ -49,6 +51,7 @@ import { Button } from '@/components/ui/button';
  * Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.10
  */
 function SystemStatusPageContent() {
+  const { t } = useI18n();
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   // Fetch complete system status with auto-refresh every 30 seconds (Requirement 5.7)
@@ -83,19 +86,23 @@ function SystemStatusPageContent() {
         {/* Page Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">系統狀態</h1>
+            <h1 className="text-3xl font-bold tracking-tight">{t('nav.system-status')}</h1>
             <p className="text-muted-foreground">
-              監控系統健康度和排程器執行狀況
+              {t('scheduler.description')}
               {dataUpdatedAt && (
                 <span className="ml-2 text-xs">
-                  (最後更新: {new Date(dataUpdatedAt).toLocaleTimeString('zh-TW')})
+                  (
+                  {t('system.last-updated', {
+                    time: new Date(dataUpdatedAt).toLocaleTimeString('zh-TW'),
+                  })}
+                  )
                 </span>
               )}
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={handleManualRefresh} disabled={isLoading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-            手動重新整理
+            {t('buttons.reload-page')}
           </Button>
         </div>
 
@@ -116,7 +123,7 @@ function SystemStatusPageContent() {
               <CardContent className="pt-6">
                 <div className="flex items-center gap-2 text-destructive">
                   <AlertCircle className="h-5 w-5" />
-                  <p>無法載入系統狀態</p>
+                  <p>{t('errors.server-error')}</p>
                 </div>
               </CardContent>
             </Card>
@@ -148,7 +155,7 @@ function SystemStatusPageContent() {
         <div className="flex items-center justify-center">
           <p className="text-xs text-muted-foreground">
             <RefreshCw className="inline h-3 w-3 mr-1" />
-            自動更新每 30 秒執行一次
+            {t('system.auto-refresh')}
           </p>
         </div>
       </div>

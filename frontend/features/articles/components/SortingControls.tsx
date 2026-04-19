@@ -95,9 +95,25 @@ export function SortingControls({
       SORT_OPTIONS.map((option) => {
         // Map value to translation key (tinkering_index -> tinkering-index)
         const translationKey = option.value.replace('_', '-');
+        let translatedLabel: string;
+
+        switch (translationKey) {
+          case 'date':
+            translatedLabel = t('forms.sort-options.date');
+            break;
+          case 'tinkering-index':
+            translatedLabel = t('forms.sort-options.tinkering-index');
+            break;
+          case 'category':
+            translatedLabel = t('forms.sort-options.category');
+            break;
+          default:
+            translatedLabel = option.label;
+        }
+
         return {
           ...option,
-          translatedLabel: t(`forms.sort-options.${translationKey}`),
+          translatedLabel,
         };
       }),
     [t]

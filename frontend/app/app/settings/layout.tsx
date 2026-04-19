@@ -4,43 +4,45 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Bell, Palette, User, Settings as SettingsIcon } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface SettingsLayoutProps {
   children: React.ReactNode;
 }
 
-const settingsNav = [
-  {
-    title: '通知',
-    href: '/app/settings/notifications',
-    icon: Bell,
-  },
-  {
-    title: '外觀',
-    href: '/app/settings/appearance',
-    icon: Palette,
-  },
-  {
-    title: '帳戶',
-    href: '/app/settings/account',
-    icon: User,
-  },
-  {
-    title: '偏好',
-    href: '/app/settings/preferences',
-    icon: SettingsIcon,
-  },
-];
-
 export default function SettingsLayout({ children }: SettingsLayoutProps) {
   const pathname = usePathname();
+  const { t } = useI18n();
+
+  const settingsNav = [
+    {
+      title: t('nav.notifications'),
+      href: '/app/settings/notifications',
+      icon: Bell,
+    },
+    {
+      title: t('nav.appearance'),
+      href: '/app/settings/appearance',
+      icon: Palette,
+    },
+    {
+      title: t('nav.account'),
+      href: '/app/settings/account',
+      icon: User,
+    },
+    {
+      title: t('nav.preferences'),
+      href: '/app/settings/preferences',
+      icon: SettingsIcon,
+    },
+  ];
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">設定</h1>
-        <p className="text-muted-foreground">管理您的帳戶設定和個人偏好</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h1>
+        <p className="text-muted-foreground">{t('settings.description')}</p>
       </div>
 
       {/* Tabs Navigation */}

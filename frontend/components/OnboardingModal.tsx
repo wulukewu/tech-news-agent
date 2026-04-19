@@ -14,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Loader2, CheckCircle2, Sparkles } from 'lucide-react';
 import { toast } from '@/lib/toast';
+import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * OnboardingModal Component
@@ -53,6 +54,7 @@ interface OnboardingModalState {
 }
 
 export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModalProps) {
+  const { t } = useI18n();
   const [state, setState] = useState<OnboardingModalState>({
     currentStep: 'welcome',
     selectedFeeds: [],
@@ -312,11 +314,13 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
               <div className="flex items-center justify-center mb-4">
                 <CheckCircle2 className="h-16 w-16 text-green-500" />
               </div>
-              <DialogTitle className="text-2xl text-center">設定完成！</DialogTitle>
+              <DialogTitle className="text-2xl text-center">
+                {t('onboarding.setup-complete')}
+              </DialogTitle>
               <DialogDescription className="text-center text-base mt-4">
-                已成功訂閱 {state.selectedFeeds.length} 個來源
+                {t('onboarding.subscribed-sources', { count: state.selectedFeeds.length })}
                 <br />
-                系統將開始為你抓取文章
+                {t('onboarding.system-will-fetch')}
               </DialogDescription>
             </DialogHeader>
           </>

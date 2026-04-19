@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface HeaderProps {
   className?: string;
@@ -38,10 +39,11 @@ export function Header({
   showNotifications = true,
   showUserMenu = true,
   onSearch,
-  searchPlaceholder = '搜尋文章...',
+  searchPlaceholder,
 }: HeaderProps) {
   const { user } = useUser();
   const { logout } = useAuth();
+  const { t } = useI18n();
   const [searchQuery, setSearchQuery] = React.useState('');
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -77,11 +79,11 @@ export function Header({
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
-              placeholder={searchPlaceholder}
+              placeholder={searchPlaceholder || t('forms.placeholders.search-articles')}
               value={searchQuery}
               onChange={handleSearchChange}
               className="pl-10 pr-4"
-              aria-label="搜尋"
+              aria-label={t('ui.search')}
             />
           </form>
         </div>
@@ -94,7 +96,12 @@ export function Header({
 
         {/* Notifications */}
         {showNotifications && (
-          <Button variant="ghost" size="icon" className="relative" aria-label="通知">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative"
+            aria-label={t('ui.notifications')}
+          >
             <Bell className="h-5 w-5" />
             {/* Notification badge */}
             <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
@@ -108,7 +115,7 @@ export function Header({
               <Button
                 variant="ghost"
                 className="relative h-9 w-9 rounded-full"
-                aria-label="使用者選單"
+                aria-label={t('ui.user-menu')}
               >
                 <Avatar className="h-9 w-9">
                   {user.avatar && <AvatarImage src={user.avatar} alt={user.username || 'User'} />}
@@ -129,17 +136,17 @@ export function Header({
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/settings/profile">個人資料</Link>
+                <Link href="/settings/profile">{t('ui.profile')}</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/app/settings/notifications">通知設定</Link>
+                <Link href="/app/settings/notifications">{t('ui.notification-settings')}</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/app/settings">設定</Link>
+                <Link href="/app/settings">{t('nav.settings')}</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={logout} className="text-red-600 focus:text-red-600">
-                登出
+                {t('nav.logout')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -148,7 +155,7 @@ export function Header({
         {/* Login button for non-authenticated users */}
         {showUserMenu && !user && (
           <Button asChild variant="default" size="sm">
-            <Link href="/">登入</Link>
+            <Link href="/">{t('buttons.login')}</Link>
           </Button>
         )}
       </div>

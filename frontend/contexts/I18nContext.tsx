@@ -217,7 +217,8 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
       announcement.style.clip = 'rect(0, 0, 0, 0)';
       announcement.style.whiteSpace = 'nowrap';
       announcement.style.border = '0';
-      announcement.textContent = announcementText;
+      announcement.textContent =
+        typeof announcementText === 'string' ? announcementText : announcementKey;
 
       // Append to body
       document.body.appendChild(announcement);

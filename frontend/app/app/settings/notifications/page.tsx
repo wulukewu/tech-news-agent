@@ -23,7 +23,10 @@ import { NotificationHistoryPanel } from '@/features/notifications/components/No
 import { NotificationPreview } from '@/features/notifications/components/NotificationPreview';
 import { Bell, BellOff, Mail, MessageSquare, Check } from 'lucide-react';
 
+import { useI18n } from '@/contexts/I18nContext';
+
 export default function NotificationSettingsPage() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
 
@@ -46,10 +49,10 @@ export default function NotificationSettingsPage() {
     },
     onSuccess: (updatedSettings) => {
       queryClient.setQueryData(['notificationSettings'], updatedSettings);
-      toast.success('設定已儲存');
+      toast.success(t('success.settings-saved'));
     },
     onError: (error: any) => {
-      toast.error('儲存失敗');
+      toast.error(t('errors.server-error'));
     },
     onSettled: () => {
       setIsSaving(false);
@@ -60,10 +63,10 @@ export default function NotificationSettingsPage() {
   const testMutation = useMutation({
     mutationFn: sendTestNotification,
     onSuccess: () => {
-      toast.success('測試通知已發送');
+      toast.success(t('settings.notifications.test-sent'));
     },
     onError: (error: any) => {
-      toast.error('發送失敗');
+      toast.error(t('settings.notifications.send-failed'));
     },
   });
 
@@ -87,11 +90,11 @@ export default function NotificationSettingsPage() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">通知偏好設定</h1>
-          <p className="text-muted-foreground">管理您的通知偏好和頻率設定</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('settings.notifications.title')}</h1>
+          <p className="text-muted-foreground">{t('settings.notifications.description')}</p>
         </div>
         <ErrorMessage
-          message={(error as Error).message || '無法載入通知設定'}
+          message={(error as Error).message || t('errors.server-error')}
           onRetry={() => queryClient.invalidateQueries({ queryKey: ['notificationSettings'] })}
         />
       </div>
@@ -106,8 +109,8 @@ export default function NotificationSettingsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">通知偏好設定</h1>
-        <p className="text-muted-foreground">管理您的通知偏好和頻率設定</p>
+        <h1 className="text-3xl font-bold tracking-tight">{t('settings.notifications.title')}</h1>
+        <p className="text-muted-foreground">{t('settings.notifications.description')}</p>
       </div>
 
       {/* Main Settings Grid */}
@@ -123,9 +126,11 @@ export default function NotificationSettingsPage() {
                   <BellOff className="h-5 w-5 text-muted-foreground" />
                 )}
                 <div>
-                  <CardTitle>通知狀態</CardTitle>
+                  <CardTitle>{t('settings.notifications.status')}</CardTitle>
                   <CardDescription>
-                    {settings.enabled ? '通知功能已啟用' : '通知功能已停用'}
+                    {settings.enabled
+                      ? t('settings.notifications.enabled')
+                      : t('settings.notifications.disabled')}
                   </CardDescription>
                 </div>
               </div>
@@ -142,8 +147,8 @@ export default function NotificationSettingsPage() {
         {/* Notification Channels Card */}
         <Card>
           <CardHeader>
-            <CardTitle>通知渠道</CardTitle>
-            <CardDescription>選擇您希望接收通知的方式</CardDescription>
+            <CardTitle>{t('settings.notifications.channels')}</CardTitle>
+            <CardDescription>{t('settings.notifications.channels-desc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
@@ -151,9 +156,11 @@ export default function NotificationSettingsPage() {
                 <MessageSquare className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <Label htmlFor="dm-enabled" className="font-medium">
-                    Discord DM 通知
+                    {t('settings.notifications.discord-dm')}
                   </Label>
-                  <p className="text-sm text-muted-foreground">透過 Discord 私訊接收通知</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t('settings.notifications.discord-dm-desc')}
+                  </p>
                 </div>
               </div>
               <Switch
@@ -169,9 +176,11 @@ export default function NotificationSettingsPage() {
                 <Mail className="h-5 w-5 text-muted-foreground" />
                 <div>
                   <Label htmlFor="email-enabled" className="font-medium">
-                    電子郵件通知
+                    {t('settings.notifications.email')}
                   </Label>
-                  <p className="text-sm text-muted-foreground">透過電子郵件接收通知</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t('settings.notifications.email-desc')}
+                  </p>
                 </div>
               </div>
               <Switch
@@ -192,12 +201,12 @@ export default function NotificationSettingsPage() {
                 {testMutation.isPending ? (
                   <>
                     <LoadingSpinner size="sm" className="mr-2" />
-                    發送中...
+                    {t('settings.notifications.sending')}
                   </>
                 ) : (
                   <>
                     <Bell className="mr-2 h-4 w-4" />
-                    發送測試通知
+                    {t('settings.notifications.send-test')}
                   </>
                 )}
               </Button>

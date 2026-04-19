@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 import type { SchedulerStatus } from '../types';
+import { useI18n } from '@/contexts/I18nContext';
 
 export interface SchedulerStatusWidgetProps {
   /** Scheduler status data */
@@ -25,59 +26,42 @@ export interface SchedulerStatusWidgetProps {
   onTrigger?: () => void;
 }
 
-/**
- * Format date to relative time string in Chinese
- */
-function formatRelativeTime(date: Date | null): string {
-  if (!date) return '未知';
-
-  try {
-    return formatDistanceToNow(date, {
-      addSuffix: true,
-      locale: zhTW,
-    });
-  } catch {
-    return '未知';
-  }
-}
-
-/**
- * Get status badge variant based on health
- */
-function getStatusBadge(isHealthy: boolean, isRunning: boolean) {
-  if (isRunning) {
-    return { variant: 'default' as const, text: '執行中', icon: RefreshCw };
-  }
-  if (isHealthy) {
-    return { variant: 'default' as const, text: '正常', icon: CheckCircle };
-  }
-  return { variant: 'destructive' as const, text: '異常', icon: AlertCircle };
-}
-
-/**
- * SchedulerStatusWidget Component
- *
- * Displays scheduler execution status with:
- * - Current running status
- * - Last execution time and article count
- * - Next scheduled execution time
- * - Health status and issues
- * - Manual trigger button
- *
- * @example
- * ```tsx
- * <SchedulerStatusWidget
- *   status={schedulerStatus}
- *   isTriggering={false}
- *   onTrigger={handleTrigger}
- * />
- * ```
- */
 export function SchedulerStatusWidget({
   status,
   isTriggering = false,
   onTrigger,
 }: SchedulerStatusWidgetProps) {
+  const { t } = useI18n();
+
+  /**
+   * Format date to relative time string in Chinese
+   */
+  function formatRelativeTime(date: Date | null): string {
+    if (!date) return t('ui.unknown');
+
+    try {
+      return formatDistanceToNow(date, {
+        addSuffix: true,
+        locale: zhTW,
+      });
+    } catch {
+      return t('ui.unknown');
+    }
+  }
+
+  /**
+   * Get status badge variant based on health
+   */
+  function getStatusBadge(isHealthy: boolean, isRunning: boolean) {
+    if (isRunning) {
+      return { variant: 'default' as const, text: t('scheduler.running'), icon: RefreshCw };
+    }
+    if (isHealthy) {
+      return { variant: 'default' as const, text: t('ui.healthy'), icon: CheckCircle };
+    }
+    return { variant: 'destructive' as const, text: t('scheduler.abnormal'), icon: AlertCircle };
+  }
+
   const statusBadge = getStatusBadge(status.isHealthy, status.isRunning);
   const StatusIcon = statusBadge.icon;
 
@@ -86,8 +70,8 @@ export function SchedulerStatusWidget({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <CardTitle className="text-xl">排程器狀態</CardTitle>
-            <CardDescription>背景任務執行狀況和下次執行時間</CardDescription>
+            <CardTitle className="text-xl">{t('scheduler.status')}</CardTitle>
+            <CardDescription>{t('scheduler.description')}</CardDescription>
           </div>
           <Badge variant={statusBadge.variant} className="gap-1.5">
             <StatusIcon className={`h-3.5 w-3.5 ${status.isRunning ? 'animate-spin' : ''}`} />
@@ -103,7 +87,7 @@ export function SchedulerStatusWidget({
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <CheckCircle className="h-4 w-4" />
-              <span>上次執行</span>
+              <span>{t('scheduler.last-execution')}</span>
             </div>
             <div className="text-sm font-medium">
               {status.lastExecutionTime ? (
@@ -111,12 +95,12 @@ export function SchedulerStatusWidget({
                   {formatRelativeTime(status.lastExecutionTime)}
                   {status.articlesProcessed > 0 && (
                     <span className="ml-2 text-muted-foreground">
-                      ({status.articlesProcessed} 篇文章)
+                      ({t('scheduler.articles-processed', { count: status.articlesProcessed })})
                     </span>
                   )}
                 </>
               ) : (
-                <span className="text-muted-foreground">尚未執行</span>
+                <span className="text-muted-foreground">{t('scheduler.not-executed')}</span>
               )}
             </div>
           </div>
@@ -125,13 +109,13 @@ export function SchedulerStatusWidget({
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
-              <span>下次排程</span>
+              <span>{t('scheduler.next-scheduled')}</span>
             </div>
             <div className="text-sm font-medium">
               {status.nextExecutionTime ? (
                 formatRelativeTime(status.nextExecutionTime)
               ) : (
-                <span className="text-muted-foreground">計算中...</span>
+                <span className="text-muted-foreground">{t('scheduler.calculating')}</span>
               )}
             </div>
           </div>
@@ -140,20 +124,20 @@ export function SchedulerStatusWidget({
         {/* Execution Statistics */}
         {status.totalOperations > 0 && (
           <div className="rounded-lg bg-muted/50 p-3 space-y-2">
-            <div className="text-sm font-medium">執行統計</div>
+            <div className="text-sm font-medium">{t('scheduler.execution-stats')}</div>
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div>
-                <div className="text-muted-foreground">總操作</div>
+                <div className="text-muted-foreground">{t('scheduler.total-operations')}</div>
                 <div className="font-medium">{status.totalOperations}</div>
               </div>
               <div>
-                <div className="text-muted-foreground">成功</div>
+                <div className="text-muted-foreground">{t('scheduler.success')}</div>
                 <div className="font-medium text-green-600 dark:text-green-400">
                   {status.totalOperations - status.failedOperations}
                 </div>
               </div>
               <div>
-                <div className="text-muted-foreground">失敗</div>
+                <div className="text-muted-foreground">{t('scheduler.failed')}</div>
                 <div className="font-medium text-red-600 dark:text-red-400">
                   {status.failedOperations}
                 </div>
@@ -167,7 +151,7 @@ export function SchedulerStatusWidget({
           <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 space-y-2">
             <div className="flex items-center gap-2 text-sm font-medium text-destructive">
               <AlertCircle className="h-4 w-4" />
-              <span>健康度問題</span>
+              <span>{t('scheduler.health-issues')}</span>
             </div>
             <ul className="space-y-1 text-sm text-muted-foreground">
               {status.issues.map((issue, index) => (
@@ -191,12 +175,12 @@ export function SchedulerStatusWidget({
             {isTriggering ? (
               <>
                 <RefreshCw className="h-4 w-4 animate-spin" />
-                觸發中...
+                {t('scheduler.triggering')}
               </>
             ) : (
               <>
                 <PlayCircle className="h-4 w-4" />
-                手動觸發抓取
+                {t('scheduler.manual-trigger')}
               </>
             )}
           </Button>

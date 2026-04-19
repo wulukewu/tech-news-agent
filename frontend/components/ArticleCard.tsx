@@ -13,6 +13,7 @@ import type { Article } from '@/types/article';
 import { useAddToReadingList } from '@/lib/hooks/useReadingList';
 import { toast } from '@/lib/toast';
 import { useTheme } from 'next-themes';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface ArticleCardProps {
   article: Article;
@@ -40,6 +41,7 @@ export function ArticleCard({
   const [isAdded, setIsAdded] = useState(article.isInReadingList);
   const addToReadingList = useAddToReadingList();
   const { theme } = useTheme();
+  const { t } = useI18n();
 
   const handleAddToReadingList = async () => {
     if (!article.id) {
@@ -178,7 +180,7 @@ export function ArticleCard({
                         className="mt-1 p-0 h-auto text-xs"
                         aria-expanded={isExpanded}
                       >
-                        {isExpanded ? 'Show less' : 'Read more'}
+                        {isExpanded ? t('ui.show-less') : t('ui.read-more')}
                       </Button>
                     )}
                   </div>
@@ -349,7 +351,7 @@ export function ArticleCard({
                       className="mt-1 p-0 h-auto text-xs cursor-pointer"
                       aria-expanded={isExpanded}
                     >
-                      {isExpanded ? 'Show less' : 'Read more'}
+                      {isExpanded ? t('ui.show-less') : t('ui.read-more')}
                     </Button>
                   )}
                 </div>

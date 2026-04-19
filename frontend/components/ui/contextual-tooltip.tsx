@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { HelpCircle, Info, AlertCircle, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/contexts/I18nContext';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ContextualTooltipProps {
@@ -62,6 +63,7 @@ export function ContextualTooltip({
 }: ContextualTooltipProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isTouchDevice, setIsTouchDevice] = React.useState(false);
+  const { t } = useI18n();
 
   // Detect touch device
   React.useEffect(() => {
@@ -156,15 +158,15 @@ export function ContextualTooltip({
         getTypeStyles(),
         className
       )}
-      aria-label={`顯示${
+      aria-label={`${t('ui.show')}${
         type === 'help'
-          ? '說明'
+          ? t('ui.help')
           : type === 'warning'
-            ? '警告'
+            ? t('ui.warning')
             : type === 'success'
-              ? '成功'
-              : '資訊'
-      }提示`}
+              ? t('ui.success')
+              : t('ui.info')
+      }${t('ui.tooltip')}`}
     >
       {getIcon()}
     </button>
@@ -234,6 +236,8 @@ interface InfoBadgeProps {
 }
 
 export function InfoBadge({ content, type = 'info', className }: InfoBadgeProps) {
+  const { t } = useI18n();
+
   const getBadgeStyles = () => {
     switch (type) {
       case 'help':
@@ -266,10 +270,10 @@ export function InfoBadge({ content, type = 'info', className }: InfoBadgeProps)
           {type === 'info' && <Info className="h-3 w-3" />}
         </ContextualTooltip>
         <span>
-          {type === 'help' && '說明'}
-          {type === 'warning' && '注意'}
-          {type === 'success' && '完成'}
-          {type === 'info' && '資訊'}
+          {type === 'help' && t('ui.help')}
+          {type === 'warning' && t('ui.notice')}
+          {type === 'success' && t('ui.complete')}
+          {type === 'info' && t('ui.info')}
         </span>
       </span>
     </ContextualTooltip>
