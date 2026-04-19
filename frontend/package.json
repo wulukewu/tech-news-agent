@@ -23,6 +23,7 @@
     "generate:types": "python3 ../scripts/generate-types.py",
     "generate:i18n-types": "node scripts/generate-i18n-types.js",
     "validate-api": "ts-node scripts/validate-api.ts",
+    "validate:translations": "npx tsx scripts/validate-translations.ts",
     "find:missing-translations": "node scripts/find-missing-translations.js",
     "find:unused-translations": "node scripts/find-unused-translations.js"
   },

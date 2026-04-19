@@ -30,6 +30,9 @@ const mockZhTWTranslations = {
   messages: {
     'article-count': '成功抓取 {count} 篇新文章',
     loading: '載入中...',
+    'user-count': '共有 {count} 位使用者',
+    'status-active': '狀態：{active}',
+    'empty-message': '',
   },
   errors: {
     'network-error': '網路連線異常',
@@ -37,6 +40,15 @@ const mockZhTWTranslations = {
   language: {
     'changed-to-chinese': '語言已切換為繁體中文',
     'changed-to-english': '語言已切換為英文',
+  },
+  special: {
+    'quotes-single': "It's a beautiful day",
+    'quotes-double': 'He said "Hello world"',
+    'quotes-mixed': `She replied: "I'm fine, thanks!"`,
+    'unicode-emoji': '歡迎使用 🚀 技術新聞',
+    'unicode-symbols': '溫度：25°C • 濕度：60%',
+    apostrophe: "Don't worry, be happy",
+    'complex-punctuation': '問題？答案！解決方案... (完成)',
   },
 };
 
@@ -52,6 +64,9 @@ const mockEnUSTranslations = {
   messages: {
     'article-count': 'Successfully fetched {count} new articles',
     loading: 'Loading...',
+    'user-count': 'Total {count} users',
+    'status-active': 'Status: {active}',
+    'empty-message': '',
   },
   errors: {
     'network-error': 'Network connection error',
@@ -59,6 +74,15 @@ const mockEnUSTranslations = {
   language: {
     'changed-to-chinese': 'Language changed to Traditional Chinese',
     'changed-to-english': 'Language changed to English',
+  },
+  special: {
+    'quotes-single': "It's a beautiful day",
+    'quotes-double': 'He said "Hello world"',
+    'quotes-mixed': `She replied: "I'm fine, thanks!"`,
+    'unicode-emoji': 'Welcome to 🚀 Tech News',
+    'unicode-symbols': 'Temperature: 25°C • Humidity: 60%',
+    apostrophe: "Don't worry, be happy",
+    'complex-punctuation': 'Question? Answer! Solution... (Done)',
   },
 };
 
@@ -109,6 +133,63 @@ describe('I18nContext', () => {
       expect(result.current.locale).toBe('zh-TW');
     });
 
+    it('should detect zh variant and map to zh-TW', async () => {
+      // Requirement 1.2: Chinese variants (zh) → zh-TW
+      Object.defineProperty(window.navigator, 'language', {
+        writable: true,
+        configurable: true,
+        value: 'zh',
+      });
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.locale).toBe('zh-TW');
+    });
+
+    it('should detect zh-TW variant and map to zh-TW', async () => {
+      // Requirement 1.2: Chinese variants (zh-TW) → zh-TW
+      Object.defineProperty(window.navigator, 'language', {
+        writable: true,
+        configurable: true,
+        value: 'zh-TW',
+      });
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.locale).toBe('zh-TW');
+    });
+
+    it('should detect zh-HK variant and map to zh-TW', async () => {
+      // Requirement 1.2: Chinese variants (zh-HK) → zh-TW
+      Object.defineProperty(window.navigator, 'language', {
+        writable: true,
+        configurable: true,
+        value: 'zh-HK',
+      });
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.locale).toBe('zh-TW');
+    });
+
     it('should detect English variants and map to en-US', async () => {
       // Requirement 1.3: English variants → en-US
       Object.defineProperty(window.navigator, 'language', {
@@ -128,8 +209,46 @@ describe('I18nContext', () => {
       expect(result.current.locale).toBe('en-US');
     });
 
-    it('should default to en-US for unsupported languages', async () => {
-      // Requirement 1.4: Unsupported languages → en-US
+    it('should detect en variant and map to en-US', async () => {
+      // Requirement 1.3: English variants (en) → en-US
+      Object.defineProperty(window.navigator, 'language', {
+        writable: true,
+        configurable: true,
+        value: 'en',
+      });
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.locale).toBe('en-US');
+    });
+
+    it('should detect en-US variant and map to en-US', async () => {
+      // Requirement 1.3: English variants (en-US) → en-US
+      Object.defineProperty(window.navigator, 'language', {
+        writable: true,
+        configurable: true,
+        value: 'en-US',
+      });
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.locale).toBe('en-US');
+    });
+
+    it('should default to en-US for French language', async () => {
+      // Requirement 1.4: Unsupported languages (fr) → en-US
       Object.defineProperty(window.navigator, 'language', {
         writable: true,
         configurable: true,
@@ -145,6 +264,93 @@ describe('I18nContext', () => {
       });
 
       expect(result.current.locale).toBe('en-US');
+    });
+
+    it('should default to en-US for German language', async () => {
+      // Requirement 1.4: Unsupported languages (de) → en-US
+      Object.defineProperty(window.navigator, 'language', {
+        writable: true,
+        configurable: true,
+        value: 'de-DE',
+      });
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.locale).toBe('en-US');
+    });
+
+    it('should default to en-US for Japanese language', async () => {
+      // Requirement 1.4: Unsupported languages (ja) → en-US
+      Object.defineProperty(window.navigator, 'language', {
+        writable: true,
+        configurable: true,
+        value: 'ja-JP',
+      });
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.locale).toBe('en-US');
+    });
+
+    it('should handle undefined navigator.language gracefully', async () => {
+      // Requirement 1.6: Handle undefined navigator.language
+      Object.defineProperty(window.navigator, 'language', {
+        writable: true,
+        configurable: true,
+        value: undefined,
+      });
+      Object.defineProperty(window.navigator, 'languages', {
+        writable: true,
+        configurable: true,
+        value: undefined,
+      });
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.locale).toBe('en-US');
+    });
+
+    it('should complete language detection within 100ms', async () => {
+      // Requirement 1.6: Detection completes within 100ms
+      Object.defineProperty(window.navigator, 'language', {
+        writable: true,
+        configurable: true,
+        value: 'zh-CN',
+      });
+
+      const startTime = performance.now();
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      const endTime = performance.now();
+      const detectionTime = endTime - startTime;
+
+      expect(detectionTime).toBeLessThan(100);
+      expect(result.current.locale).toBe('zh-TW');
     });
 
     it('should use stored preference over browser detection', async () => {
@@ -246,6 +452,158 @@ describe('I18nContext', () => {
       expect(result.current.t('messages.article-count', { count: 10 })).toBe(
         'Successfully fetched 10 new articles'
       );
+    });
+
+    it('should handle special characters in translations - single quotes', async () => {
+      // Requirement 5.6: Special characters (quotes, apostrophes)
+      localStorage.setItem('language', 'en-US');
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.t('special.quotes-single')).toBe("It's a beautiful day");
+      expect(result.current.t('special.apostrophe')).toBe("Don't worry, be happy");
+    });
+
+    it('should handle special characters in translations - double quotes', async () => {
+      // Requirement 5.6: Special characters (quotes)
+      localStorage.setItem('language', 'en-US');
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.t('special.quotes-double')).toBe('He said "Hello world"');
+      expect(result.current.t('special.quotes-mixed')).toBe(`She replied: "I'm fine, thanks!"`);
+    });
+
+    it('should handle unicode characters in translations', async () => {
+      // Requirement 5.6: Special characters (unicode)
+      localStorage.setItem('language', 'zh-TW');
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.t('special.unicode-emoji')).toBe('歡迎使用 🚀 技術新聞');
+      expect(result.current.t('special.unicode-symbols')).toBe('溫度：25°C • 濕度：60%');
+    });
+
+    it('should handle complex punctuation in translations', async () => {
+      // Requirement 5.6: Special characters (complex punctuation)
+      localStorage.setItem('language', 'zh-TW');
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.t('special.complex-punctuation')).toBe(
+        '問題？答案！解決方案... (完成)'
+      );
+    });
+
+    it('should handle empty string translations', async () => {
+      // Requirement 5.6: Empty string translations
+      localStorage.setItem('language', 'en-US');
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      expect(result.current.t('messages.empty-message')).toBe('');
+    });
+
+    it('should handle numeric variable interpolation', async () => {
+      // Requirement 7.7: Numeric variable interpolation
+      localStorage.setItem('language', 'en-US');
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // Test with different numeric types
+      expect(result.current.t('messages.user-count', { count: 42 })).toBe('Total 42 users');
+      expect(result.current.t('messages.user-count', { count: 0 })).toBe('Total 0 users');
+      expect(result.current.t('messages.user-count', { count: 1.5 })).toBe('Total 1.5 users');
+      expect(result.current.t('messages.user-count', { count: -5 })).toBe('Total -5 users');
+    });
+
+    it('should handle boolean variable interpolation', async () => {
+      // Requirement 7.7: Boolean variable interpolation
+      localStorage.setItem('language', 'en-US');
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // Test with boolean values
+      expect(result.current.t('messages.status-active', { active: true })).toBe('Status: true');
+      expect(result.current.t('messages.status-active', { active: false })).toBe('Status: false');
+    });
+
+    it('should handle mixed variable types in interpolation', async () => {
+      // Additional test for mixed variable types
+      localStorage.setItem('language', 'en-US');
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // Test with string, number, and boolean in same translation
+      // For this test, we'll verify the interpolation logic works with multiple types
+      expect(result.current.t('messages.user-count', { count: 'many' })).toBe('Total many users');
+    });
+
+    it('should handle undefined and null variables gracefully', async () => {
+      // Edge case: undefined/null variables
+      localStorage.setItem('language', 'en-US');
+
+      const { result } = renderHook(() => useI18n(), {
+        wrapper: I18nProvider,
+      });
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false);
+      });
+
+      // Test with undefined variables - should leave placeholder unchanged
+      expect(result.current.t('messages.user-count', { count: undefined })).toBe(
+        'Total {count} users'
+      );
+      expect(result.current.t('messages.user-count', { count: null })).toBe('Total {count} users');
     });
   });
 

@@ -4,6 +4,101 @@ This directory contains utility scripts for the frontend application.
 
 ## Translation Management Scripts
 
+### validate-translations.ts
+
+**⭐ RECOMMENDED** - Comprehensive translation validation script that performs all checks in one command.
+
+Validates translation completeness and consistency between zh-TW and en-US translation files with detailed reporting.
+
+**Usage:**
+
+```bash
+npm run validate:translations
+```
+
+**What it checks:**
+
+- ✅ All keys in `zh-TW.json` exist in `en-US.json` and vice versa
+- ✅ All interpolation variables match between languages (e.g., `{count}`, `{name}`)
+- ✅ No duplicate keys within the same file
+- ✅ All translation values are non-empty strings
+- ✅ Proper JSON syntax and structure validation
+
+**Exit codes:**
+
+- `0` - All validations passed
+- `1` - Validation errors found
+
+**Example output (success):**
+
+```
+Translation Validation Script
+Validating translation completeness and consistency...
+
+═══════════════════════════════════════════════════════════════
+                    TRANSLATION VALIDATION REPORT
+═══════════════════════════════════════════════════════════════
+
+📊 Overview:
+   Total keys in zh-TW.json: 572
+   Total keys in en-US.json: 572
+   Total issues found: 0
+
+✅ VALIDATION PASSED
+   All translation validations passed successfully!
+   • All keys exist in both language files
+   • All values are non-empty strings
+   • All interpolation variables match
+   • No duplicate keys found
+```
+
+**Example output (with issues):**
+
+```
+Translation Validation Script
+Validating translation completeness and consistency...
+
+═══════════════════════════════════════════════════════════════
+                    TRANSLATION VALIDATION REPORT
+═══════════════════════════════════════════════════════════════
+
+📊 Overview:
+   Total keys in zh-TW.json: 572
+   Total keys in en-US.json: 570
+   Total issues found: 4
+
+❌ VALIDATION FAILED
+   Found 4 issue(s) that need attention
+
+📋 Issue Summary:
+   • Missing keys: 2
+   • Empty values: 1
+   • Interpolation mismatches: 1
+
+🚫 Missing in en-US.json (2):
+   1. nav.new-feature
+      Key exists in zh-TW but missing in en-US
+   2. buttons.advanced-action
+      Key exists in zh-TW but missing in en-US
+
+⚠️  Empty values in zh-TW.json (1):
+   1. messages.loading-state
+      Key exists but value is empty
+
+🔀 Interpolation variable mismatches (1):
+   1. messages.article-count
+      Interpolation variables don't match between languages
+      Expected: [count]
+      Actual:   [number, total]
+
+💡 Recommendations:
+   • Add missing keys to maintain translation completeness
+   • Provide translations for empty values
+   • Ensure interpolation variables match between languages
+```
+
+**Requirements satisfied:** 11.5, 12.2, 12.3
+
 ### find-missing-translations.js
 
 Identifies translation keys that exist in one language file but not the other, and reports keys with empty values.
@@ -138,7 +233,7 @@ npm run validate-api
 ### Adding New Translations
 
 1. Add the key-value pairs to both `locales/zh-TW.json` and `locales/en-US.json`
-2. Run `npm run find:missing-translations` to verify completeness
+2. **Run `npm run validate:translations` to verify completeness and consistency** ⭐
 3. Run `npm run generate:i18n-types` to update TypeScript types
 4. Use the translation in your component: `const { t } = useI18n(); t('your.new.key')`
 
@@ -147,17 +242,28 @@ npm run validate-api
 1. Run `npm run find:unused-translations` to identify unused keys
 2. Review the output carefully
 3. Remove unused keys from both translation files
-4. Run `npm run find:missing-translations` to verify consistency
+4. **Run `npm run validate:translations` to verify consistency** ⭐
 5. Run `npm run generate:i18n-types` to update TypeScript types
 
 ### Pre-commit Checklist
 
 Before committing changes that involve translations:
 
-- [ ] Run `npm run find:missing-translations` - should pass with no issues
+- [ ] **Run `npm run validate:translations` - should pass with no issues** ⭐
 - [ ] Run `npm run generate:i18n-types` - update type definitions
 - [ ] Verify translations display correctly in both languages
 - [ ] Check that no hardcoded UI text remains in components
+
+### Quick Validation Commands
+
+```bash
+# Comprehensive validation (recommended)
+npm run validate:translations
+
+# Individual checks (for specific issues)
+npm run find:missing-translations    # Missing keys and empty values
+npm run find:unused-translations     # Unused translation keys
+```
 
 ## Troubleshooting
 
