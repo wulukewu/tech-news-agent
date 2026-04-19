@@ -696,7 +696,7 @@ export default function SubscriptionsPage() {
                         </div>
                         <CardDescription>
                           {subscribedCount} / {categoryFeeds.length}{' '}
-                          {t('subscriptions.subscribed', { count: '' }).replace(' 個來源', '')}
+                          {t('subscriptions.subscribed-simple')}
                         </CardDescription>
                       </div>
                     </button>
