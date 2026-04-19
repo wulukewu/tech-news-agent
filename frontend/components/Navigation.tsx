@@ -143,7 +143,7 @@ export function Navigation() {
           </div>
 
           <div className="flex items-center gap-2">
-            <LanguageSwitcher />
+            <LanguageSwitcher variant="icon" />
             <ThemeToggle variant="dropdown" />
 
             {/* User menu for desktop (Req 4.1, 4.2, 4.3, 4.4) */}
@@ -234,7 +234,7 @@ export function Navigation() {
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between px-2">
                   <span className="text-sm font-medium">{t('nav.language')}</span>
-                  <LanguageSwitcher />
+                  <LanguageSwitcher variant="compact" />
                 </div>
                 <div className="flex items-center justify-between px-2">
                   <span className="text-sm font-medium">{t('nav.theme')}</span>

@@ -17,6 +17,7 @@
 
 import { Github, Twitter, Mail } from 'lucide-react';
 import { Logo } from '@/components/Logo';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 const footerLinks = {
   product: [
@@ -144,9 +145,12 @@ export function Footer() {
             <p className="text-sm text-muted-foreground">
               © {currentYear} Tech News Agent. All rights reserved.
             </p>
-            <p className="text-sm text-muted-foreground">
-              Built with Next.js, TypeScript, and Tailwind CSS
-            </p>
+            <div className="flex items-center gap-6">
+              <LanguageSwitcher variant="compact" />
+              <p className="text-sm text-muted-foreground hidden sm:block">
+                Built with Next.js, TypeScript, and Tailwind CSS
+              </p>
+            </div>
           </div>
         </div>
       </div>

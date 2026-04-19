@@ -20,6 +20,7 @@ import { Menu, X } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/contexts/I18nContext';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 
 interface LandingNavProps {
   isAuthenticated?: boolean;
@@ -53,7 +54,7 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-4">
             {navLinks.map((link) => (
               <a
                 key={link.href}
@@ -64,6 +65,7 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
                 {link.label}
               </a>
             ))}
+            <LanguageSwitcher variant="icon" />
             {isAuthenticated ? (
               <Link href="/app/articles">
                 <Button>{t('buttons.enter-app')}</Button>
@@ -118,7 +120,8 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
               ))}
             </div>
 
-            <div className="pt-4 border-t">
+            <div className="pt-4 border-t space-y-3">
+              <LanguageSwitcher variant="compact" />
               {isAuthenticated ? (
                 <Link href="/app/articles" className="block">
                   <Button className="w-full">{t('buttons.enter-app')}</Button>

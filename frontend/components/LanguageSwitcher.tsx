@@ -3,158 +3,164 @@
 /**
  * LanguageSwitcher Component
  *
- * A button group component that allows users to manually switch between
- * Traditional Chinese (zh-TW) and English (en-US) languages.
+ * A compact language switcher that can be used in navigation or footer.
+ * Provides two variants:
+ * - icon: Globe icon with dropdown menu (for navbar)
+ * - compact: Text-based toggle (for footer)
  *
  * Features:
- * - Visual feedback for active language (highlighted background)
- * - Full keyboard navigation support (Tab, Enter, Space)
- * - WCAG AA compliant accessibility (ARIA attributes, focus indicators)
- * - Minimum touch target size (44x44px)
- * - Smooth transitions for state changes
+ * - Accessible keyboard navigation
+ * - ARIA labels for screen readers
+ * - Smooth transitions
+ * - Minimum 44x44px touch targets
  *
- * Accessibility:
- * - role="group" for semantic grouping
- * - aria-label="Language selector" for screen readers
- * - aria-pressed for active state indication
- * - Keyboard navigation: Tab (focus), Enter/Space (activate)
- * - Focus indicators: 2px ring with blue-500 color
- *
- * Usage:
- * ```tsx
- * import { LanguageSwitcher } from '@/components/LanguageSwitcher';
- *
- * function Navigation() {
- *   return (
- *     <nav>
- *       <LanguageSwitcher />
- *     </nav>
- *   );
- * }
- * ```
- *
- * @see Requirements 3.1, 3.2, 3.3, 3.5, 3.6, 9.1, 9.2, 9.3, 9.4, 9.6
+ * Requirements: Bilingual UI System
  */
 
-import React from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { Globe } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 import type { Locale } from '@/types/i18n';
 
-/**
- * Language option configuration
- * Defines the available languages with their labels and metadata
- */
-const LANGUAGE_OPTIONS: Array<{
-  value: Locale;
-  label: string;
-  nativeLabel: string;
-}> = [
-  {
-    value: 'zh-TW',
-    label: 'Traditional Chinese',
-    nativeLabel: '繁體中文',
-  },
-  {
-    value: 'en-US',
-    label: 'English',
-    nativeLabel: 'English',
-  },
+interface LanguageSwitcherProps {
+  variant?: 'icon' | 'compact';
+  className?: string;
+}
+
+const LANGUAGE_OPTIONS: Array<{ value: Locale; label: string; nativeLabel: string }> = [
+  { value: 'zh-TW', label: 'Traditional Chinese', nativeLabel: '繁體中文' },
+  { value: 'en-US', label: 'English', nativeLabel: 'English' },
 ];
 
-/**
- * LanguageSwitcher Component (Internal)
- *
- * Renders a button group for language selection with full accessibility support.
- * Integrates with I18nContext to manage language state.
- *
- * @returns Language switcher button group
- *
- * @see Requirement 3.1: Display both language options
- * @see Requirement 3.2: Change language within 200ms
- * @see Requirement 3.3: Visual feedback for active language
- * @see Requirement 3.6: Keyboard navigation support
- * @see Requirement 9.1-9.4: Accessibility compliance
- */
-function LanguageSwitcherComponent() {
+export function LanguageSwitcher({ variant = 'icon', className = '' }: LanguageSwitcherProps) {
   const { locale, setLocale } = useI18n();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
-  /**
-   * Handle language change
-   *
-   * Calls setLocale from I18nContext to switch the active language.
-   * The context handles translation loading and persistence.
-   *
-   * @param newLocale - The locale to switch to
-   *
-   * @see Requirement 3.2: Language change within 200ms
-   */
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isOpen]);
+
+  // Close dropdown on Escape key
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen]);
+
   const handleLanguageChange = (newLocale: Locale) => {
     setLocale(newLocale);
+    setIsOpen(false);
   };
 
-  /**
-   * Handle keyboard events
-   *
-   * Supports Enter and Space keys for activation, matching native button behavior.
-   *
-   * @param event - Keyboard event
-   * @param targetLocale - The locale to switch to
-   *
-   * @see Requirement 3.6: Keyboard navigation (Tab, Enter, Space)
-   */
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>, targetLocale: Locale) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      handleLanguageChange(targetLocale);
-    }
-  };
+  if (variant === 'compact') {
+    // Compact text-based toggle for footer
+    return (
+      <div className={`flex items-center gap-2 ${className}`}>
+        {LANGUAGE_OPTIONS.map((option, index) => (
+          <div key={option.value} className="flex items-center">
+            <button
+              onClick={() => handleLanguageChange(option.value)}
+              aria-label={`Switch to ${option.label}`}
+              aria-pressed={locale === option.value}
+              className={`
+                text-sm font-medium transition-colors duration-200
+                min-w-[44px] min-h-[44px] px-2
+                focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
+                ${
+                  locale === option.value
+                    ? 'text-foreground'
+                    : 'text-muted-foreground hover:text-foreground'
+                }
+              `}
+            >
+              {option.value === 'zh-TW' ? '繁' : 'EN'}
+            </button>
+            {index < LANGUAGE_OPTIONS.length - 1 && (
+              <span className="text-muted-foreground">/</span>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
 
+  // Icon variant with dropdown for navbar
   return (
-    <div
-      role="group"
-      aria-label="Language selector"
-      className="flex items-center gap-2 rounded-lg bg-gray-100 dark:bg-gray-800 p-1"
-    >
-      {LANGUAGE_OPTIONS.map((option) => {
-        const isActive = locale === option.value;
+    <div ref={dropdownRef} className={`relative ${className}`}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        aria-label="Language selector"
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+        className="
+          flex items-center justify-center
+          w-10 h-10 rounded-lg
+          text-muted-foreground hover:text-foreground
+          hover:bg-accent
+          transition-colors duration-200
+          focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
+        "
+      >
+        <Globe className="w-5 h-5" />
+      </button>
 
-        return (
-          <button
-            key={option.value}
-            onClick={() => handleLanguageChange(option.value)}
-            onKeyDown={(e) => handleKeyDown(e, option.value)}
-            aria-label={`Switch to ${option.label}`}
-            aria-pressed={isActive}
-            className={`
-              px-3 py-1.5 rounded-md text-sm font-medium
-              transition-colors duration-200
-              min-w-[44px] min-h-[44px]
-              flex items-center justify-center
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-              ${
-                isActive
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-              }
-            `}
-          >
-            {option.nativeLabel}
-          </button>
-        );
-      })}
+      {isOpen && (
+        <div
+          role="menu"
+          aria-label="Language options"
+          className="
+            absolute right-0 mt-2 w-48
+            bg-background border border-border rounded-lg shadow-lg
+            py-1 z-50
+            animate-in fade-in slide-in-from-top-2 duration-200
+          "
+        >
+          {LANGUAGE_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              role="menuitem"
+              onClick={() => handleLanguageChange(option.value)}
+              aria-label={`Switch to ${option.label}`}
+              className={`
+                w-full px-4 py-2.5 text-left text-sm
+                transition-colors duration-150
+                min-h-[44px] flex items-center
+                focus:outline-none focus:bg-accent
+                ${
+                  locale === option.value
+                    ? 'bg-accent text-foreground font-medium'
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
+                }
+              `}
+            >
+              <span className="flex-1">{option.nativeLabel}</span>
+              {locale === option.value && (
+                <span className="text-primary" aria-hidden="true">
+                  ✓
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
-
-/**
- * LanguageSwitcher Component (Memoized)
- *
- * Optimized version wrapped with React.memo to prevent unnecessary re-renders
- * when parent components update but the LanguageSwitcher's props haven't changed.
- *
- * Since this component has no props and only depends on I18nContext,
- * React.memo ensures it only re-renders when the context values change.
- *
- * @see Requirement 8.6: Performance optimization with React.memo
- */
-export const LanguageSwitcher = React.memo(LanguageSwitcherComponent);
