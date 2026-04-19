@@ -37,6 +37,7 @@
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * Loading Screen Component
@@ -45,11 +46,13 @@ import { useAuth } from '@/contexts/AuthContext';
  * This provides visual feedback to users during the authentication process.
  */
 function LoadingScreen() {
+  const { t } = useI18n();
+
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="flex flex-col items-center gap-4">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600"></div>
-        <p className="text-sm text-gray-600">正在驗證身份...</p>
+        <p className="text-sm text-gray-600">{t('auth.verifying')}</p>
       </div>
     </div>
   );

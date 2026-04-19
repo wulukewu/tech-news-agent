@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -25,6 +26,7 @@ export function DashboardLayout({
   className,
   breadcrumbs,
 }: DashboardLayoutProps) {
+  const { t } = useI18n();
   return (
     <div className={cn('flex flex-col min-h-full', className)}>
       {/* Dashboard header */}
@@ -32,7 +34,7 @@ export function DashboardLayout({
         <div className="max-w-7xl mx-auto">
           {/* Breadcrumbs */}
           {breadcrumbs && (
-            <nav className="mb-4" aria-label="麵包屑導航">
+            <nav className="mb-4" aria-label={t('aria-labels.breadcrumb-navigation')}>
               {breadcrumbs}
             </nav>
           )}

@@ -47,7 +47,7 @@ export function UserMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger
         className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-full"
-        aria-label="User menu"
+        aria-label={t('ui.user-menu')}
       >
         <Avatar className="h-8 w-8 cursor-pointer hover:opacity-80 transition-opacity">
           {user.avatar && <AvatarImage src={user.avatar} alt={user.username || 'User'} />}
@@ -74,35 +74,35 @@ export function UserMenu() {
         <DropdownMenuItem asChild>
           <Link href="/app/profile" className="cursor-pointer">
             <User className="mr-2 h-4 w-4" aria-hidden="true" />
-            <span>Profile</span>
+            <span>{t('ui.profile')}</span>
           </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild>
           <Link href="/app/analytics" className="cursor-pointer">
             <BarChart3 className="mr-2 h-4 w-4" aria-hidden="true" />
-            <span>Analytics</span>
+            <span>{t('nav.analytics')}</span>
           </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild>
           <Link href="/app/settings" className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" aria-hidden="true" />
-            <span>Settings</span>
+            <span>{t('nav.settings')}</span>
           </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild>
           <Link href="/app/settings/notifications" className="cursor-pointer">
             <Bell className="mr-2 h-4 w-4" aria-hidden="true" />
-            <span>Notifications</span>
+            <span>{t('nav.notifications')}</span>
           </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild>
           <Link href="/app/system-status" className="cursor-pointer">
             <Monitor className="mr-2 h-4 w-4" aria-hidden="true" />
-            <span>System Status</span>
+            <span>{t('nav.system-status')}</span>
           </Link>
         </DropdownMenuItem>
 
@@ -113,7 +113,7 @@ export function UserMenu() {
           className="cursor-pointer text-destructive focus:text-destructive"
         >
           <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
-          <span>Logout</span>
+          <span>{t('nav.logout')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

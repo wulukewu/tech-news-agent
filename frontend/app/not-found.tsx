@@ -9,9 +9,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Home, Search, ArrowLeft, FileQuestion, Sparkles } from 'lucide-react';
+import { useI18n } from '@/contexts/I18nContext';
 
 export default function NotFound() {
   const [mounted, setMounted] = useState(false);
+  const { t } = useI18n();
 
   useEffect(() => {
     setMounted(true);
@@ -60,9 +62,9 @@ export default function NotFound() {
 
           {/* 固定訊息 */}
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-200">
-            <p className="text-2xl md:text-3xl font-semibold">找不到這個頁面</p>
+            <p className="text-2xl md:text-3xl font-semibold">{t('pages-404.title')}</p>
             <p className="text-base md:text-lg text-muted-foreground max-w-md mx-auto leading-relaxed">
-              您訪問的頁面不存在或已被移除。請檢查網址是否正確，或返回首頁繼續瀏覽。
+              {t('pages-404.description')}
             </p>
           </div>
 
@@ -73,7 +75,7 @@ export default function NotFound() {
               className="group inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-medium text-primary-foreground bg-primary rounded-lg hover:bg-primary/90 transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary/25"
             >
               <Home className="h-5 w-5 transition-transform group-hover:-translate-y-0.5" />
-              回到首頁
+              {t('pages-404.back-to-home')}
             </Link>
 
             <Link
@@ -81,7 +83,7 @@ export default function NotFound() {
               className="group inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-medium border border-input bg-background/50 backdrop-blur-sm rounded-lg hover:bg-accent transition-all duration-200 hover:scale-105 hover:shadow-lg"
             >
               <Search className="h-5 w-5 transition-transform group-hover:rotate-12" />
-              探索新聞
+              {t('pages-404.explore-news')}
             </Link>
           </div>
 
@@ -89,7 +91,7 @@ export default function NotFound() {
           <div className="mt-12 p-6 rounded-xl border border-border/50 bg-card/50 backdrop-blur-sm text-left animate-in fade-in slide-in-from-bottom-4 duration-700 delay-500 hover:border-border transition-colors">
             <div className="flex items-center gap-2 mb-4">
               <Sparkles className="h-5 w-5 text-primary" />
-              <h3 className="text-lg font-semibold">可能的原因</h3>
+              <h3 className="text-lg font-semibold">{t('pages-404.possible-reasons')}</h3>
             </div>
             <ul className="space-y-3 text-sm text-muted-foreground">
               <li className="flex items-start gap-3 group">
@@ -97,7 +99,7 @@ export default function NotFound() {
                   •
                 </span>
                 <span className="group-hover:text-foreground transition-colors">
-                  網址輸入錯誤或包含拼寫錯誤
+                  {t('pages-404.reason-1')}
                 </span>
               </li>
               <li className="flex items-start gap-3 group">
@@ -105,7 +107,7 @@ export default function NotFound() {
                   •
                 </span>
                 <span className="group-hover:text-foreground transition-colors">
-                  頁面已被移動或刪除
+                  {t('pages-404.reason-2')}
                 </span>
               </li>
               <li className="flex items-start gap-3 group">
@@ -113,7 +115,7 @@ export default function NotFound() {
                   •
                 </span>
                 <span className="group-hover:text-foreground transition-colors">
-                  連結已過期或失效
+                  {t('pages-404.reason-3')}
                 </span>
               </li>
               <li className="flex items-start gap-3 group">
@@ -121,7 +123,7 @@ export default function NotFound() {
                   •
                 </span>
                 <span className="group-hover:text-foreground transition-colors">
-                  您沒有訪問此頁面的權限
+                  {t('pages-404.reason-4')}
                 </span>
               </li>
             </ul>
@@ -133,7 +135,7 @@ export default function NotFound() {
             className="group inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 cursor-pointer animate-in fade-in duration-700 delay-700"
           >
             <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-            <span>返回上一頁</span>
+            <span>{t('pages-404.go-back')}</span>
           </button>
 
           {/* 裝飾性元素 */}

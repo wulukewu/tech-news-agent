@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -28,6 +29,7 @@ export function AppLayout({
   onSidebarToggle,
 }: AppLayoutProps) {
   const [internalCollapsed, setInternalCollapsed] = useState(false);
+  const { t } = useI18n();
 
   const collapsed = sidebarCollapsed ?? internalCollapsed;
   const handleToggle = (newCollapsed: boolean) => {
@@ -60,7 +62,7 @@ export function AppLayout({
             style={{
               width: collapsed ? '64px' : '256px',
             }}
-            aria-label="側邊導航"
+            aria-label={t('aria-labels.sidebar-navigation')}
           >
             <div className="flex flex-col flex-1 min-h-0 border-r bg-background/95 backdrop-blur">
               {React.cloneElement(sidebar as React.ReactElement, {

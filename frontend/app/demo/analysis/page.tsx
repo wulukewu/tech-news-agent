@@ -12,6 +12,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AnalysisTrigger } from '@/features/ai-analysis/components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useI18n } from '@/contexts/I18nContext';
 
 // Create a query client for the demo
 const queryClient = new QueryClient({
@@ -53,15 +54,15 @@ const mockArticles = [
 ];
 
 export default function AnalysisDemoPage() {
+  const { t } = useI18n();
+
   return (
     <QueryClientProvider client={queryClient}>
       <div className="container mx-auto py-8 px-4">
         <div className="max-w-4xl mx-auto space-y-8">
           <div className="text-center space-y-4">
-            <h1 className="text-3xl font-bold">AI 分析功能展示</h1>
-            <p className="text-muted-foreground">
-              點擊下方文章的「Deep Dive Analysis」按鈕來測試 AI 分析模態視窗功能
-            </p>
+            <h1 className="text-3xl font-bold">{t('demo.ai-analysis')}</h1>
+            <p className="text-muted-foreground">{t('demo.description')}</p>
           </div>
 
           <div className="grid gap-6">
@@ -87,7 +88,9 @@ export default function AnalysisDemoPage() {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">技術深度:</span>
+                      <span className="text-xs text-muted-foreground">
+                        {t('demo.technical-depth')}:
+                      </span>
                       <div className="flex">
                         {Array.from({ length: 5 }).map((_, i) => (
                           <span
@@ -115,25 +118,25 @@ export default function AnalysisDemoPage() {
           </div>
 
           <div className="mt-12 p-6 bg-muted/50 rounded-lg">
-            <h2 className="text-lg font-semibold mb-3">功能說明</h2>
+            <h2 className="text-lg font-semibold mb-3">{t('demo.sample-articles')}</h2>
             <div className="space-y-2 text-sm text-muted-foreground">
               <p>
-                • <strong>模態視窗觸發</strong>: 點擊「Deep Dive Analysis」按鈕開啟分析模態視窗
+                • <strong>{t('demo.beginner')}</strong>: {t('demo.intermediate')}
               </p>
               <p>
-                • <strong>文章資訊顯示</strong>: 顯示文章標題、來源和發布日期
+                • <strong>{t('demo.advanced')}</strong>: {t('demo.expert')}
               </p>
               <p>
-                • <strong>載入狀態</strong>: 顯示分析進度和載入指示器（最多 30 秒）
+                • <strong>{t('demo.master')}</strong>: {t('demo.guru')}
               </p>
               <p>
-                • <strong>分析結果</strong>: 展示核心概念、應用場景、潛在風險和建議步驟
+                • <strong>{t('demo.beginner')}</strong>: {t('demo.intermediate')}
               </p>
               <p>
-                • <strong>互動功能</strong>: 支援複製分析內容和生成分享連結
+                • <strong>{t('demo.advanced')}</strong>: {t('demo.expert')}
               </p>
               <p>
-                • <strong>鍵盤導航</strong>: 完整支援鍵盤操作和螢幕閱讀器
+                • <strong>{t('demo.master')}</strong>: {t('demo.guru')}
               </p>
             </div>
           </div>

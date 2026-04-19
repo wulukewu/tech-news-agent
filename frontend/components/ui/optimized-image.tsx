@@ -4,6 +4,7 @@ import * as React from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useResponsiveLayout } from '@/hooks/useResponsiveLayout';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface OptimizedImageProps {
   src: string;
@@ -44,6 +45,7 @@ export function OptimizedImage({
   fallbackSrc = '/images/placeholder.jpg',
   adaptiveQuality = true,
 }: OptimizedImageProps) {
+  const { t } = useI18n();
   const [imageSrc, setImageSrc] = React.useState(src);
   const [isLoading, setIsLoading] = React.useState(true);
   const [hasError, setHasError] = React.useState(false);
@@ -142,7 +144,7 @@ export function OptimizedImage({
         {isLoading && <div className="absolute inset-0 bg-muted animate-pulse" />}
         {hasError && !fallbackSrc && (
           <div className="absolute inset-0 bg-muted flex items-center justify-center">
-            <span className="text-muted-foreground text-sm">圖片載入失敗</span>
+            <span className="text-muted-foreground text-sm">{t('ui.image-load-failed')}</span>
           </div>
         )}
       </div>
@@ -160,7 +162,7 @@ export function OptimizedImage({
           className="absolute inset-0 bg-muted flex items-center justify-center"
           style={{ width, height }}
         >
-          <span className="text-muted-foreground text-sm">圖片載入失敗</span>
+          <span className="text-muted-foreground text-sm">{t('ui.image-load-failed')}</span>
         </div>
       )}
     </div>

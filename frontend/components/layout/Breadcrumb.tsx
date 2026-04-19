@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { ChevronRight, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/contexts/I18nContext';
 
 export interface BreadcrumbItem {
   label: string;
@@ -23,11 +24,12 @@ interface BreadcrumbProps {
  */
 export function Breadcrumb({ items, className, showHome = true }: BreadcrumbProps) {
   const allItems = showHome ? [{ label: 'Dashboard', href: '/app/articles' }, ...items] : items;
+  const { t } = useI18n();
 
   return (
     <nav
       className={cn('flex items-center space-x-1 text-sm text-muted-foreground', className)}
-      aria-label="麵包屑導航"
+      aria-label={t('aria-labels.breadcrumb-navigation')}
     >
       <ol className="flex items-center space-x-1">
         {allItems.map((item, index) => {

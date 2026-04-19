@@ -1,4 +1,7 @@
 {
+  "auth": {
+    "verifying": "正在驗證身份..."
+  },
   "nav": {
     "articles": "文章",
     "reading-list": "閱讀清單",
@@ -166,7 +169,10 @@
     "date": "發布日期",
     "tinkering-index": "技術深度",
     "category": "分類",
-    "title": "標題"
+    "title": "標題",
+    "latest": "最新",
+    "popular": "熱門",
+    "tinkering": "技術深度"
   },
   "theme": {
     "light": "淺色模式",
@@ -329,6 +335,9 @@
     "notice": "注意",
     "complete": "完成",
     "tooltip": "提示",
+    "tooltip-step": "步驟 {current} / {total}",
+    "tooltip-skip": "跳過導覽",
+    "tooltip-previous": "上一步",
     "pagination-navigation": "分頁導航",
     "pagination-first": "第一頁",
     "pagination-first-short": "首",
@@ -339,6 +348,11 @@
     "pagination-page": "第 {page} 頁",
     "pagination-showing": "顯示第 {start} - {end} 項，共 {total} 項結果",
     "pagination-page-info": "(第 {current} 頁，共 {total} 頁)",
+    "drag-drop-list": "可拖拽排序的列表",
+    "drag-handle": "拖拽手柄",
+    "drag-keyboard-hint": "Shift+Enter 向上，Enter 向下",
+    "drag-drop-zone": "拖拽到此處重新排序",
+    "image-load-failed": "圖片載入失敗",
     "health-healthy": "健康",
     "health-stale": "過時",
     "health-error": "錯誤",
@@ -383,7 +397,18 @@
   "onboarding": {
     "setup-complete": "設定完成！",
     "subscribed-sources": "已成功訂閱 {count} 個來源",
-    "system-will-fetch": "系統將開始為你抓取文章"
+    "system-will-fetch": "系統將開始為你抓取文章",
+    "welcome-title": "歡迎使用技術新聞訂閱工具！",
+    "welcome-description": "這個平台幫助你：",
+    "feature-1": "訂閱優質的技術 RSS 來源",
+    "feature-2": "每週自動抓取和分析文章",
+    "feature-3": "透過 AI 評分找到最值得閱讀的內容",
+    "skip": "稍後再說",
+    "get-started": "開始使用",
+    "select-sources": "選擇你感興趣的來源",
+    "select-sources-description": "我們已為你預選了一些熱門來源，你可以調整選擇",
+    "subscribing": "訂閱中...",
+    "confirm-subscribe": "確認訂閱 ({count})"
   },
   "filters": {
     "depth-analysis-buttons": "深度分析按鈕: 最多 {max} 個",
@@ -485,7 +510,8 @@
     "updated": "推薦已更新",
     "update-failed": "更新推薦失敗",
     "dismissed": "已忽略此推薦",
-    "operation-failed": "操作失敗"
+    "operation-failed": "操作失敗",
+    "loading-error": "載入推薦時發生錯誤"
   },
   "settings": {
     "title": "設定",
@@ -590,5 +616,51 @@
     "load-more-articles": "載入更多文章",
     "of": "共",
     "more": "更多"
+  },
+  "pages-404": {
+    "title": "找不到這個頁面",
+    "description": "您訪問的頁面不存在或已被移除。請檢查網址是否正確，或返回首頁繼續瀏覽。",
+    "back-to-home": "回到首頁",
+    "explore-news": "探索新聞",
+    "possible-reasons": "可能的原因",
+    "reason-1": "網址輸入錯誤或包含拼寫錯誤",
+    "reason-2": "頁面已被移動或刪除",
+    "reason-3": "連結已過期或失效",
+    "reason-4": "您沒有訪問此頁面的權限",
+    "go-back": "返回上一頁"
+  },
+  "auth-callback": {
+    "verifying": "正在驗證身份...",
+    "please-wait": "請稍候，即將完成登入",
+    "verification-failed": "驗證失敗",
+    "authentication-error": "Authentication Error",
+    "back-to-login": "返回登入頁面",
+    "contact-support": "如果問題持續發生，請聯絡技術支援",
+    "access-denied": "您拒絕了授權請求。若要使用本服務，請授權 Discord 登入。",
+    "auth-error": "驗證錯誤：{description}",
+    "no-token": "驗證失敗：未收到認證令牌。",
+    "auth-failed": "無法完成身份驗證。請確認您的網路連線正常，然後重試。"
+  },
+  "demo": {
+    "ai-analysis": "AI 分析演示",
+    "description": "展示 AI 如何分析技術文章的深度和複雜度",
+    "sample-articles": "範例文章",
+    "beginner": "初學者",
+    "intermediate": "中級",
+    "advanced": "進階",
+    "expert": "專家",
+    "master": "大師",
+    "guru": "宗師",
+    "technical-depth": "技術深度"
+  },
+  "aria-labels": {
+    "sidebar-navigation": "側邊導航",
+    "breadcrumb-navigation": "麵包屑導航",
+    "dashboard-navigation": "儀表板導航",
+    "skip-to-main": "跳至主要內容"
+  },
+  "examples": {
+    "language-switcher": "語言切換器範例",
+    "switch-description": "點擊以在繁體中文和英文之間切換"
   }
 }

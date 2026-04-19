@@ -1,4 +1,7 @@
 {
+  "auth": {
+    "verifying": "Verifying identity..."
+  },
   "nav": {
     "articles": "Articles",
     "reading-list": "Reading List",
@@ -166,7 +169,10 @@
     "date": "Date",
     "tinkering-index": "Technical Depth",
     "category": "Category",
-    "title": "Title"
+    "title": "Title",
+    "latest": "Latest",
+    "popular": "Popular",
+    "tinkering": "Technical Depth"
   },
   "theme": {
     "light": "Light Mode",
@@ -329,6 +335,9 @@
     "notice": "Notice",
     "complete": "Complete",
     "tooltip": "tooltip",
+    "tooltip-step": "Step {current} / {total}",
+    "tooltip-skip": "Skip tour",
+    "tooltip-previous": "Previous",
     "pagination-navigation": "Pagination navigation",
     "pagination-first": "First page",
     "pagination-first-short": "First",
@@ -339,6 +348,11 @@
     "pagination-page": "Page {page}",
     "pagination-showing": "Showing {start} - {end} of {total} results",
     "pagination-page-info": "(Page {current} of {total})",
+    "drag-drop-list": "Draggable sortable list",
+    "drag-handle": "Drag handle",
+    "drag-keyboard-hint": "Shift+Enter up, Enter down",
+    "drag-drop-zone": "Drag here to reorder",
+    "image-load-failed": "Image failed to load",
     "health-healthy": "Healthy",
     "health-stale": "Stale",
     "health-error": "Error",
@@ -383,7 +397,18 @@
   "onboarding": {
     "setup-complete": "Setup Complete!",
     "subscribed-sources": "Successfully subscribed to {count} sources",
-    "system-will-fetch": "The system will start fetching articles for you"
+    "system-will-fetch": "The system will start fetching articles for you",
+    "welcome-title": "Welcome to Tech News Agent!",
+    "welcome-description": "This platform helps you:",
+    "feature-1": "Subscribe to quality tech RSS sources",
+    "feature-2": "Automatically fetch and analyze articles weekly",
+    "feature-3": "Find the most valuable content through AI scoring",
+    "skip": "Skip for now",
+    "get-started": "Get Started",
+    "select-sources": "Choose sources you're interested in",
+    "select-sources-description": "We've pre-selected some popular sources for you, feel free to adjust",
+    "subscribing": "Subscribing...",
+    "confirm-subscribe": "Confirm Subscribe ({count})"
   },
   "filters": {
     "depth-analysis-buttons": "Depth analysis buttons: max {max}",
@@ -485,7 +510,8 @@
     "updated": "Recommendations updated",
     "update-failed": "Failed to update recommendations",
     "dismissed": "Recommendation dismissed",
-    "operation-failed": "Operation failed"
+    "operation-failed": "Operation failed",
+    "loading-error": "Error occurred while loading recommendations"
   },
   "settings": {
     "title": "Settings",
@@ -590,5 +616,51 @@
     "load-more-articles": "Load More Articles",
     "of": "of",
     "more": "more"
+  },
+  "pages-404": {
+    "title": "Page Not Found",
+    "description": "The page you're looking for doesn't exist or has been moved. Please check the URL or return to the homepage to continue browsing.",
+    "back-to-home": "Back to Home",
+    "explore-news": "Explore News",
+    "possible-reasons": "Possible Reasons",
+    "reason-1": "URL contains typos or spelling errors",
+    "reason-2": "Page has been moved or deleted",
+    "reason-3": "Link has expired or is invalid",
+    "reason-4": "You don't have permission to access this page",
+    "go-back": "Go Back"
+  },
+  "auth-callback": {
+    "verifying": "Verifying identity...",
+    "please-wait": "Please wait, login will complete shortly",
+    "verification-failed": "Verification Failed",
+    "authentication-error": "Authentication Error",
+    "back-to-login": "Back to Login",
+    "contact-support": "If the problem persists, please contact technical support",
+    "access-denied": "You denied the authorization request. To use this service, please authorize Discord login.",
+    "auth-error": "Authentication error: {description}",
+    "no-token": "Authentication failed: No authentication token received.",
+    "auth-failed": "Unable to complete authentication. Please check your network connection and try again."
+  },
+  "demo": {
+    "ai-analysis": "AI Analysis Demo",
+    "description": "Demonstrates how AI analyzes the depth and complexity of technical articles",
+    "sample-articles": "Sample Articles",
+    "beginner": "Beginner",
+    "intermediate": "Intermediate",
+    "advanced": "Advanced",
+    "expert": "Expert",
+    "master": "Master",
+    "guru": "Guru",
+    "technical-depth": "Technical Depth"
+  },
+  "aria-labels": {
+    "sidebar-navigation": "Sidebar navigation",
+    "breadcrumb-navigation": "Breadcrumb navigation",
+    "dashboard-navigation": "Dashboard navigation",
+    "skip-to-main": "Skip to main content"
+  },
+  "examples": {
+    "language-switcher": "Language Switcher Example",
+    "switch-description": "Click to switch between Traditional Chinese (繁體中文) and English"
   }
 }

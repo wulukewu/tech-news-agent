@@ -121,8 +121,8 @@ export default function RecommendationsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">智慧推薦</h1>
-            <p className="text-muted-foreground">基於您的評分歷史的個人化文章推薦</p>
+            <h1 className="text-3xl font-bold tracking-tight">{t('recommendations.title')}</h1>
+            <p className="text-muted-foreground">{t('recommendations.description')}</p>
           </div>
         </div>
         <ArticleListSkeleton />
@@ -135,12 +135,12 @@ export default function RecommendationsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">智慧推薦</h1>
-            <p className="text-muted-foreground">基於您的評分歷史的個人化文章推薦</p>
+            <h1 className="text-3xl font-bold tracking-tight">{t('recommendations.title')}</h1>
+            <p className="text-muted-foreground">{t('recommendations.description')}</p>
           </div>
         </div>
         <div className="rounded-lg border bg-destructive/10 p-6 text-center">
-          <p className="text-destructive">載入推薦時發生錯誤</p>
+          <p className="text-destructive">{t('recommendations.loading-error')}</p>
           <Button onClick={() => window.location.reload()} className="mt-4">
             {t('buttons.reload-page')}
           </Button>
@@ -158,8 +158,8 @@ export default function RecommendationsPage() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">智慧推薦</h1>
-            <p className="text-muted-foreground">基於您的評分歷史的個人化文章推薦</p>
+            <h1 className="text-3xl font-bold tracking-tight">{t('recommendations.title')}</h1>
+            <p className="text-muted-foreground">{t('recommendations.description')}</p>
           </div>
         </div>
         <InsufficientDataMessage

@@ -191,7 +191,7 @@ export function TooltipTour({
               <div className="flex-1">
                 <CardTitle className="text-lg">{currentStep.title}</CardTitle>
                 <CardDescription className="text-xs mt-1">
-                  步驟 {currentStepIndex + 1} / {steps.length}
+                  {t('ui.tooltip-step', { current: currentStepIndex + 1, total: steps.length })}
                 </CardDescription>
               </div>
               <Button
@@ -199,7 +199,7 @@ export function TooltipTour({
                 size="sm"
                 onClick={skipTour}
                 className="h-6 w-6 p-0"
-                aria-label="跳過導覽"
+                aria-label={t('ui.tooltip-skip')}
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -210,7 +210,7 @@ export function TooltipTour({
 
             <div className="flex items-center justify-between gap-2">
               <Button variant="ghost" size="sm" onClick={previousStep} disabled={isFirstStep}>
-                上一步
+                {t('ui.tooltip-previous')}
               </Button>
 
               <div className="flex gap-1">

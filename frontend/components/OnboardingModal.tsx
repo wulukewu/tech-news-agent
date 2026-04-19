@@ -216,31 +216,33 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
               <div className="flex items-center justify-center mb-4">
                 <Sparkles className="h-12 w-12 text-primary" />
               </div>
-              <DialogTitle className="text-2xl text-center">歡迎使用技術新聞訂閱工具！</DialogTitle>
+              <DialogTitle className="text-2xl text-center">
+                {t('onboarding.welcome-title')}
+              </DialogTitle>
               <DialogDescription className="text-center text-base mt-4">
-                這個平台幫助你：
+                {t('onboarding.welcome-description')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 my-6">
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                <p className="text-sm">訂閱優質的技術 RSS 來源</p>
+                <p className="text-sm">{t('onboarding.feature-1')}</p>
               </div>
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                <p className="text-sm">每週自動抓取和分析文章</p>
+                <p className="text-sm">{t('onboarding.feature-2')}</p>
               </div>
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                <p className="text-sm">透過 AI 評分找到最值得閱讀的內容</p>
+                <p className="text-sm">{t('onboarding.feature-3')}</p>
               </div>
             </div>
             <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button variant="outline" onClick={handleSkip} className="w-full sm:w-auto">
-                稍後再說
+                {t('onboarding.skip')}
               </Button>
               <Button onClick={handleStart} className="w-full sm:w-auto">
-                開始使用
+                {t('onboarding.get-started')}
               </Button>
             </DialogFooter>
           </>
@@ -249,8 +251,8 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
         {state.currentStep === 'recommendations' && (
           <>
             <DialogHeader>
-              <DialogTitle>選擇你感興趣的來源</DialogTitle>
-              <DialogDescription>我們已為你預選了一些熱門來源，你可以調整選擇</DialogDescription>
+              <DialogTitle>{t('onboarding.select-sources')}</DialogTitle>
+              <DialogDescription>{t('onboarding.select-sources-description')}</DialogDescription>
             </DialogHeader>
             <div className="max-h-[400px] overflow-y-auto space-y-4 my-4">
               {Object.entries(state.groupedFeeds).map(([category, feeds]) => (
@@ -288,7 +290,7 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
             </div>
             <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button variant="outline" onClick={handleSkip} className="w-full sm:w-auto">
-                稍後再說
+                {t('onboarding.skip')}
               </Button>
               <Button
                 onClick={handleComplete}
@@ -298,10 +300,10 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
                 {state.isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    訂閱中...
+                    {t('onboarding.subscribing')}
                   </>
                 ) : (
-                  `確認訂閱 (${state.selectedFeeds.length})`
+                  t('onboarding.confirm-subscribe', { count: state.selectedFeeds.length })
                 )}
               </Button>
             </DialogFooter>

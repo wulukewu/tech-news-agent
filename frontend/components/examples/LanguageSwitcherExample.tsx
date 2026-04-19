@@ -20,7 +20,7 @@ export function LanguageSwitcherExample() {
   return (
     <div className="container mx-auto p-6 space-y-8">
       <div className="text-center space-y-4">
-        <h1 className="text-3xl font-bold">Language Switcher Demo</h1>
+        <h1 className="text-3xl font-bold">{t('examples.language-switcher')}</h1>
         <p className="text-muted-foreground">
           Demonstration of the bilingual UI system with language switching
         </p>
@@ -33,9 +33,7 @@ export function LanguageSwitcherExample() {
         <Card>
           <CardHeader>
             <CardTitle>Language Switcher Component</CardTitle>
-            <CardDescription>
-              Click to switch between Traditional Chinese (繁體中文) and English
-            </CardDescription>
+            <CardDescription>{t('examples.switch-description')}</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
             <LanguageSwitcher />

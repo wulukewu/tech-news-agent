@@ -33,6 +33,7 @@ import { AuthGuard } from '@/components/AuthGuard';
 import { setToken } from '@/lib/api/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * Loading Spinner Component
@@ -40,13 +41,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
  * Displays an animated spinner during authentication processing.
  */
 function LoadingSpinner() {
+  const { t } = useI18n();
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted">
       <div className="text-center space-y-4">
         <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary mx-auto"></div>
         <div className="space-y-2">
-          <p className="text-xl font-semibold">正在驗證身份...</p>
-          <p className="text-sm text-muted-foreground">請稍候，即將完成登入</p>
+          <p className="text-xl font-semibold">{t('auth-callback.verifying')}</p>
+          <p className="text-sm text-muted-foreground">{t('auth-callback.please-wait')}</p>
         </div>
       </div>
     </div>
@@ -62,12 +65,16 @@ function LoadingSpinner() {
  * @param onRetry - Callback function for retry button
  */
 function ErrorDisplay({ error, onRetry }: { error: string; onRetry: () => void }) {
+  const { t } = useI18n();
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-muted p-4">
       <Card className="w-full max-w-md shadow-lg border-destructive">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-destructive">驗證失敗</CardTitle>
-          <CardDescription>Authentication Error</CardDescription>
+          <CardTitle className="text-2xl font-bold text-destructive">
+            {t('auth-callback.verification-failed')}
+          </CardTitle>
+          <CardDescription>{t('auth-callback.authentication-error')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="rounded-lg bg-destructive/10 p-4 border border-destructive/20">
@@ -76,10 +83,10 @@ function ErrorDisplay({ error, onRetry }: { error: string; onRetry: () => void }
 
           <div className="space-y-2">
             <Button onClick={onRetry} className="w-full" size="lg">
-              返回登入頁面
+              {t('auth-callback.back-to-login')}
             </Button>
             <p className="text-xs text-center text-muted-foreground">
-              如果問題持續發生，請聯絡技術支援
+              {t('auth-callback.contact-support')}
             </p>
           </div>
         </CardContent>
@@ -109,6 +116,7 @@ function CallbackPageContent() {
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(true);
+  const { t } = useI18n();
 
   /**
    * Handle OAuth callback processing
@@ -136,12 +144,12 @@ function CallbackPageContent() {
 
         if (errorParam) {
           // User denied authorization or OAuth error occurred
-          let errorMessage = '驗證失敗，請重試。';
+          let errorMessage = t('errors.server-error');
 
           if (errorParam === 'access_denied') {
-            errorMessage = '您拒絕了授權請求。若要使用本服務，請授權 Discord 登入。';
+            errorMessage = t('auth-callback.access-denied');
           } else if (errorDescription) {
-            errorMessage = `驗證錯誤：${errorDescription}`;
+            errorMessage = t('auth-callback.auth-error', { description: errorDescription });
           }
 
           setError(errorMessage);
@@ -153,7 +161,7 @@ function CallbackPageContent() {
         const token = searchParams.get('token');
 
         if (!token) {
-          setError('驗證失敗：未收到認證令牌。');
+          setError(t('auth-callback.no-token'));
           setIsProcessing(false);
           return;
         }
@@ -184,7 +192,7 @@ function CallbackPageContent() {
         // Requirement 4.5: Display error message on failure
         // Authentication callback error occurred
 
-        setError('無法完成身份驗證。請確認您的網路連線正常，然後重試。');
+        setError(t('auth-callback.auth-failed'));
         setIsProcessing(false);
       }
     };

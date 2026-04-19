@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { GripVertical, Move } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface DragDropItem {
   id: string;
@@ -57,6 +58,7 @@ export function DragDropList({
   dragHandle,
   orientation = 'vertical',
 }: DragDropListProps) {
+  const { t } = useI18n();
   const [draggedItem, setDraggedItem] = React.useState<string | null>(null);
   const [dragOverItem, setDragOverItem] = React.useState<string | null>(null);
   const [focusedIndex, setFocusedIndex] = React.useState(-1);
@@ -214,7 +216,7 @@ export function DragDropList({
         className
       )}
       role="list"
-      aria-label="可拖拽排序的列表"
+      aria-label={t('ui.drag-drop-list')}
     >
       {items.map((item, index) => {
         const isDragged = draggedItem === item.id;
@@ -265,7 +267,7 @@ export function DragDropList({
                   ],
                   item.disabled && 'text-muted-foreground/50'
                 )}
-                aria-label="拖拽手柄"
+                aria-label={t('ui.drag-handle')}
               >
                 {getDragHandle()}
               </div>
@@ -279,7 +281,7 @@ export function DragDropList({
               <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded shadow-md border">
                 <div className="flex items-center gap-1">
                   <Move className="h-3 w-3" />
-                  <span>Shift+Enter 向上，Enter 向下</span>
+                  <span>{t('ui.drag-keyboard-hint')}</span>
                 </div>
               </div>
             )}
@@ -290,7 +292,7 @@ export function DragDropList({
       {/* Drop zone indicator */}
       {draggedItem && (
         <div className="text-center py-4 text-sm text-muted-foreground border-2 border-dashed border-muted rounded-lg">
-          拖拽到此處重新排序
+          {t('ui.drag-drop-zone')}
         </div>
       )}
     </div>
