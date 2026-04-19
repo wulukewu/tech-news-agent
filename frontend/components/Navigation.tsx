@@ -122,13 +122,13 @@ export function Navigation() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      'flex items-center gap-1.5 px-2.5 lg:px-3 py-2 rounded-md transition-colors cursor-pointer',
-                      'hover:bg-accent hover:text-accent-foreground',
+                      'flex items-center gap-1.5 px-2.5 lg:px-3 py-2 rounded-md transition-all duration-200 cursor-pointer relative',
+                      'hover:bg-accent hover:text-accent-foreground hover:shadow-sm',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                       'min-h-[44px] min-w-[44px]', // Touch-friendly targets (Req 9.2)
                       isActive
-                        ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground'
-                        : 'text-foreground'
+                        ? 'bg-primary text-primary-foreground shadow-md font-semibold border border-primary/20'
+                        : 'text-foreground hover:bg-muted/50'
                     )}
                     aria-current={isActive ? 'page' : undefined}
                   >
@@ -221,12 +221,12 @@ export function Navigation() {
                         key={item.href}
                         href={item.href}
                         className={cn(
-                          'flex items-center gap-3 px-3 py-3 min-h-[48px] w-full cursor-pointer transition-colors rounded-lg',
+                          'flex items-center gap-3 px-3 py-3 min-h-[48px] w-full cursor-pointer transition-all duration-200 rounded-lg relative',
                           'hover:bg-accent hover:text-accent-foreground',
                           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                          isActive && 'bg-primary text-primary-foreground relative',
-                          isActive &&
-                            'before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary-foreground before:rounded-l-lg'
+                          isActive
+                            ? 'bg-primary text-primary-foreground shadow-lg font-semibold border-l-4 border-l-primary-foreground/30'
+                            : 'hover:bg-muted/50'
                         )}
                         onClick={closeDrawer}
                         aria-current={isActive ? 'page' : undefined}
@@ -256,12 +256,12 @@ export function Navigation() {
                         key={item.href}
                         href={item.href}
                         className={cn(
-                          'flex items-center gap-3 px-3 py-3 min-h-[48px] w-full cursor-pointer transition-colors rounded-lg',
+                          'flex items-center gap-3 px-3 py-3 min-h-[48px] w-full cursor-pointer transition-all duration-200 rounded-lg relative',
                           'hover:bg-accent hover:text-accent-foreground',
                           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                          isActive && 'bg-primary text-primary-foreground relative',
-                          isActive &&
-                            'before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary-foreground before:rounded-l-lg'
+                          isActive
+                            ? 'bg-primary text-primary-foreground shadow-lg font-semibold border-l-4 border-l-primary-foreground/30'
+                            : 'hover:bg-muted/50'
                         )}
                         onClick={closeDrawer}
                         aria-current={isActive ? 'page' : undefined}

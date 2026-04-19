@@ -136,9 +136,10 @@ export function Sidebar({
                   'flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-200 cursor-pointer group relative',
                   'hover:bg-accent hover:text-accent-foreground',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                  // Active state with left border highlight - Req 3.4
-                  isActive &&
-                    'bg-accent/50 text-accent-foreground before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary before:rounded-r',
+                  // Enhanced active state with stronger visual feedback
+                  isActive
+                    ? 'bg-primary text-primary-foreground shadow-md font-semibold border-l-4 border-l-primary-foreground/30'
+                    : 'hover:bg-muted/50',
                   item.disabled && 'opacity-50 cursor-not-allowed pointer-events-none',
                   collapsed && 'justify-center px-2'
                 )}
@@ -293,10 +294,12 @@ export function Sidebar({
                     href={item.href}
                     onClick={toggleMobileMenu}
                     className={cn(
-                      'flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-colors cursor-pointer',
+                      'flex items-center gap-3 px-3 py-3 text-sm font-medium rounded-lg transition-all duration-200 cursor-pointer',
                       'hover:bg-accent hover:text-accent-foreground',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                      isActive && 'bg-primary text-primary-foreground hover:bg-primary/90',
+                      isActive
+                        ? 'bg-primary text-primary-foreground shadow-lg font-semibold border-l-4 border-l-primary-foreground/30'
+                        : 'hover:bg-muted/50',
                       item.disabled && 'opacity-50 cursor-not-allowed pointer-events-none'
                     )}
                     aria-current={isActive ? 'page' : undefined}
@@ -329,10 +332,12 @@ export function Sidebar({
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    'flex flex-col items-center gap-1 px-2 py-2 text-xs font-medium rounded-lg transition-colors cursor-pointer relative min-h-[44px] min-w-[44px] justify-center',
+                    'flex flex-col items-center gap-1 px-2 py-2 text-xs font-medium rounded-lg transition-all duration-200 cursor-pointer relative min-h-[44px] min-w-[44px] justify-center',
                     'hover:bg-accent hover:text-accent-foreground',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                    isActive && 'text-primary bg-primary/10',
+                    isActive
+                      ? 'text-primary-foreground bg-primary shadow-md font-semibold'
+                      : 'hover:bg-muted/50',
                     item.disabled && 'opacity-50 cursor-not-allowed pointer-events-none'
                   )}
                   aria-current={isActive ? 'page' : undefined}
