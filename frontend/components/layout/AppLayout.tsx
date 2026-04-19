@@ -75,6 +75,7 @@ export function AppLayout({
         <main
           className={cn(
             'flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out',
+            'pt-4 md:pt-0', // Add top padding for mobile to account for fixed header
             'pb-16 lg:pb-0' // Add bottom padding for mobile bottom nav
           )}
           style={{

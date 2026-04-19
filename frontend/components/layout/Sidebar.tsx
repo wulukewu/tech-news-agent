@@ -220,7 +220,7 @@ export function Sidebar({
           variant="ghost"
           size="icon"
           onClick={toggleMobileMenu}
-          className="fixed top-4 left-4 z-50 lg:hidden bg-background/80 backdrop-blur border"
+          className="fixed top-4 left-4 z-[60] lg:hidden bg-background/80 backdrop-blur border shadow-sm"
           aria-label="Toggle mobile menu"
           aria-expanded={mobileMenuOpen}
         >
@@ -243,7 +243,7 @@ export function Sidebar({
             mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
           )}
         >
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-full pt-16">
             {/* Mobile header */}
             <div className="flex items-center justify-between p-4 border-b">
               <div className="flex items-center gap-3 min-w-0 flex-1">

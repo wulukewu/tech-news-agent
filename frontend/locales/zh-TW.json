@@ -9,7 +9,15 @@
     "recommendations": "推薦",
     "logout": "登出",
     "language": "語言",
-    "theme": "主題"
+    "theme": "主題",
+    "main-menu": "主選單",
+    "more": "更多功能"
+  },
+  "pages": {
+    "articles": {
+      "title": "文章",
+      "description": "探索並閱讀來自您訂閱的技術文章"
+    }
   },
   "language": {
     "changed-to-chinese": "語言已切換為繁體中文",

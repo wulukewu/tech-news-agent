@@ -15,10 +15,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ViewModeSelector, type ViewMode } from './components/ViewModeSelector';
 import { SortSelector, type SortOption } from './components/SortSelector';
 import { CategoryFilter } from '@/components/CategoryFilter';
+import { useI18n } from '@/contexts/I18nContext';
 
 function DashboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const { t } = useI18n();
   const [categories, setCategories] = useState<string[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
 
@@ -120,7 +122,7 @@ function DashboardContent() {
     return (
       <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6 lg:px-8">
         <header className="mb-6">
-          <h1 className="text-3xl font-bold">Articles</h1>
+          <h1 className="text-3xl font-bold">{t('pages.articles.title')}</h1>
         </header>
         <ArticleListSkeleton />
       </div>
@@ -130,10 +132,8 @@ function DashboardContent() {
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6 lg:px-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">Articles</h1>
-        <p className="text-muted-foreground">
-          Discover and read tech articles from your subscriptions
-        </p>
+        <h1 className="text-3xl font-bold">{t('pages.articles.title')}</h1>
+        <p className="text-muted-foreground">{t('pages.articles.description')}</p>
       </div>
 
       <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
@@ -289,12 +289,14 @@ function DashboardContent() {
 }
 
 export default function DashboardPage() {
+  const { t } = useI18n();
+
   return (
     <Suspense
       fallback={
         <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6 lg:px-8">
           <header className="mb-6">
-            <h1 className="text-3xl font-bold">Articles</h1>
+            <h1 className="text-3xl font-bold">{t('pages.articles.title')}</h1>
           </header>
           <ArticleListSkeleton />
         </div>

@@ -87,6 +87,16 @@ Complete documentation for the Tech News Agent project.
 - [Frontend Quick Fix](./frontend-quick-fix.md) - Quick fixes for common frontend issues
 - [Service Worker Dev Guide](./service-worker-dev-guide.md) - Service worker development and debugging
 
+### Bug Fixes
+
+- [Mobile Drawer Layout Fix](./fixes/mobile-drawer-layout-fix.md) - 📱 Fix for mobile sidebar/drawer layout issues
+
+### Improvements
+
+- [Mobile Navigation Redesign](./improvements/mobile-navigation-redesign.md) - 📱 Unified mobile navigation with all features in one drawer
+- [Mobile Navigation Visual Comparison](./improvements/mobile-navigation-visual-comparison.md) - 📊 Before/after visual comparison
+- [Mobile Navigation Redesign Summary](./improvements/mobile-navigation-redesign-summary.md) - 📋 Complete summary and metrics
+
 ### Validation & Verification
 
 - [Final Validation Cutover](./FINAL_VALIDATION_CUTOVER.md) - Production readiness checklist
@@ -97,6 +107,10 @@ Complete documentation for the Tech News Agent project.
 ```
 docs/
 ├── README.md                          # This file
+├── fixes/                             # Bug fixes documentation
+│   └── mobile-drawer-layout-fix.md
+├── improvements/                      # Feature improvements
+│   └── mobile-navigation-redesign.md
 ├── setup/                             # Setup guides
 │   └── ENV_SETUP_GUIDE.md
 ├── docker/                            # Docker documentation
@@ -181,6 +195,9 @@ docs/
 
 **Fix hardcoded text violations**
 → [ESLint I18n Violations Examples](./eslint-i18n-violations-example.md)
+
+**Fix mobile drawer layout issues**
+→ [Mobile Drawer Layout Fix](./fixes/mobile-drawer-layout-fix.md)
 
 ## 📝 Documentation Standards
 

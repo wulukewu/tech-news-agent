@@ -146,7 +146,7 @@ export function Navigation() {
             <LanguageSwitcher variant="icon" />
             <ThemeToggle variant="dropdown" />
 
-            {/* User menu for desktop (Req 4.1, 4.2, 4.3, 4.4) */}
+            {/* User menu for desktop - shows avatar with dropdown (Req 4.1, 4.2, 4.3, 4.4) */}
             {user && <UserMenu />}
 
             {/* Hamburger menu button - visible below 768px (Req 23.1) */}
@@ -166,7 +166,7 @@ export function Navigation() {
 
       {/* Mobile drawer navigation (Req 23.2, 23.3, 23.4) */}
       {isDrawerOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="fixed inset-0 z-[100] md:hidden">
           {/* Backdrop overlay (Req 23.3, 23.4) */}
           <div
             className="absolute inset-0 bg-black/50 animate-fade-in"
@@ -176,18 +176,21 @@ export function Navigation() {
 
           {/* Drawer panel - slides in from left (Req 23.2) */}
           <nav
-            className="absolute left-0 top-0 bottom-0 w-64 bg-card border-r shadow-xl animate-slide-in-from-left"
+            className="absolute left-0 top-0 bottom-0 w-[280px] sm:w-72 bg-background border-r shadow-xl animate-slide-in-from-left flex flex-col"
             aria-label="Mobile navigation"
           >
             {/* User profile section at top (Req 23.7) */}
             {user && (
-              <div className="flex items-center gap-3 p-4 border-b">
+              <div className="flex items-center gap-3 p-4 border-b flex-shrink-0">
                 <Avatar className="h-10 w-10">
                   {user.avatar && <AvatarImage src={user.avatar} alt={user.username || 'User'} />}
                   <AvatarFallback>{user.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{user.username}</p>
+                  {user.email && (
+                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                  )}
                 </div>
                 {/* Close button in drawer header */}
                 <Button
@@ -203,34 +206,77 @@ export function Navigation() {
             )}
 
             {/* Navigation items with full-width touch targets (Req 3.7, 23.6) */}
-            <div className="py-4 space-y-1 overflow-y-auto max-h-[calc(100vh-200px)]">
-              {[...translatedMainNavItems, ...translatedSecondaryNavItems].map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                      'flex items-center gap-3 px-4 py-3 min-h-[56px] w-full cursor-pointer transition-colors',
-                      'hover:bg-accent hover:text-accent-foreground',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                      isActive && 'bg-primary text-primary-foreground relative',
-                      isActive &&
-                        'before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary-foreground'
-                    )}
-                    onClick={closeDrawer}
-                    aria-current={isActive ? 'page' : undefined}
-                  >
-                    <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-                    <span className="text-sm font-medium">{item.translatedLabel}</span>
-                  </Link>
-                );
-              })}
+            <div className="flex-1 py-2 overflow-y-auto">
+              {/* Main navigation section */}
+              <div className="px-2 py-2">
+                <p className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  {t('nav.main-menu')}
+                </p>
+                <div className="space-y-1">
+                  {translatedMainNavItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          'flex items-center gap-3 px-3 py-3 min-h-[48px] w-full cursor-pointer transition-colors rounded-lg',
+                          'hover:bg-accent hover:text-accent-foreground',
+                          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                          isActive && 'bg-primary text-primary-foreground relative',
+                          isActive &&
+                            'before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary-foreground before:rounded-l-lg'
+                        )}
+                        onClick={closeDrawer}
+                        aria-current={isActive ? 'page' : undefined}
+                      >
+                        <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+                        <span className="text-sm font-medium">{item.translatedLabel}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="my-2 border-t" />
+
+              {/* Secondary navigation section */}
+              <div className="px-2 py-2">
+                <p className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  {t('nav.more')}
+                </p>
+                <div className="space-y-1">
+                  {translatedSecondaryNavItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = pathname === item.href;
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          'flex items-center gap-3 px-3 py-3 min-h-[48px] w-full cursor-pointer transition-colors rounded-lg',
+                          'hover:bg-accent hover:text-accent-foreground',
+                          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                          isActive && 'bg-primary text-primary-foreground relative',
+                          isActive &&
+                            'before:absolute before:left-0 before:top-0 before:bottom-0 before:w-1 before:bg-primary-foreground before:rounded-l-lg'
+                        )}
+                        onClick={closeDrawer}
+                        aria-current={isActive ? 'page' : undefined}
+                      >
+                        <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+                        <span className="text-sm font-medium">{item.translatedLabel}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
 
             {/* Bottom section with language switcher, theme toggle and logout */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 border-t bg-card space-y-3">
+            <div className="flex-shrink-0 p-4 border-t bg-background space-y-3">
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between px-2">
                   <span className="text-sm font-medium">{t('nav.language')}</span>

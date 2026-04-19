@@ -9,7 +9,15 @@
     "recommendations": "Recommendations",
     "logout": "Logout",
     "language": "Language",
-    "theme": "Theme"
+    "theme": "Theme",
+    "main-menu": "Main Menu",
+    "more": "More"
+  },
+  "pages": {
+    "articles": {
+      "title": "Articles",
+      "description": "Discover and read tech articles from your subscriptions"
+    }
   },
   "language": {
     "changed-to-chinese": "Language changed to Traditional Chinese",
