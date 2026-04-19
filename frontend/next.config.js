@@ -6,8 +6,8 @@ if (typeof global.self === 'undefined') {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Use 'standalone' for Docker only, disable for Netlify
-  // Temporarily disabled to fix build issues
-  // ...(process.env.DOCKER_BUILD === 'true' && { output: 'standalone' }),
+  // Automatically detect Docker environment
+  ...(process.env.DOCKER_BUILD === 'true' && { output: 'standalone' }),
   reactStrictMode: true,
 
   // Disable SWC minification if NEXT_DISABLE_SWC is set
