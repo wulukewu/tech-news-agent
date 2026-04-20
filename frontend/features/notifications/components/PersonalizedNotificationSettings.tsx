@@ -54,6 +54,7 @@ export function PersonalizedNotificationSettings({
   const [isSaving, setIsSaving] = useState(false);
   const [previewData, setPreviewData] = useState<NotificationPreviewResponse | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [localTime, setLocalTime] = useState<string>(''); // Local state for time input
 
   // Fetch notification preferences
   const {
@@ -143,6 +144,8 @@ export function PersonalizedNotificationSettings({
   useEffect(() => {
     if (preferences) {
       updatePreview(preferences);
+      // Initialize local time state
+      setLocalTime(preferences.notificationTime);
     }
   }, [preferences]);
 
@@ -428,10 +431,20 @@ export function PersonalizedNotificationSettings({
                 <Input
                   id="notification-time"
                   type="time"
-                  value={preferences.notificationTime}
-                  onChange={(e) => handleUpdate({ notificationTime: e.target.value })}
+                  value={localTime}
+                  onChange={(e) => {
+                    // Update local state immediately for smooth typing
+                    setLocalTime(e.target.value);
+                  }}
+                  onBlur={(e) => {
+                    // Only save to DB when user finishes editing (loses focus)
+                    if (e.target.value && e.target.value !== preferences.notificationTime) {
+                      handleUpdate({ notificationTime: e.target.value });
+                    }
+                  }}
                   disabled={isSaving || !preferences.dmEnabled}
                 />
+                <p className="text-xs text-muted-foreground">輸入完成後點擊其他地方即可儲存</p>
               </div>
 
               <div className="space-y-2">

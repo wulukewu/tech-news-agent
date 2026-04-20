@@ -279,6 +279,11 @@ app.include_router(
     notification_system.router, prefix="/api/notification-system", tags=["notification-system"]
 )
 
+# Import and register debug router (for development)
+from app.api import debug
+
+app.include_router(debug.router, prefix="/api", tags=["debug"])
+
 
 @app.get("/")
 async def root():
