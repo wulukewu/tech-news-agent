@@ -47,8 +47,8 @@ async def get_onboarding_status(current_user: dict[str, Any] = Depends(get_curre
         supabase = SupabaseService()
         onboarding_service = OnboardingService(supabase.client)
 
-        # Get user UUID
-        user_uuid = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_uuid = current_user["user_id"]
 
         # Get onboarding status
         status = await onboarding_service.get_onboarding_status(user_uuid)
@@ -102,8 +102,8 @@ async def update_onboarding_progress(
         supabase = SupabaseService()
         onboarding_service = OnboardingService(supabase.client)
 
-        # Get user UUID
-        user_uuid = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_uuid = current_user["user_id"]
 
         # Update progress
         await onboarding_service.update_onboarding_progress(
@@ -154,8 +154,8 @@ async def mark_onboarding_completed(current_user: dict[str, Any] = Depends(get_c
         supabase = SupabaseService()
         onboarding_service = OnboardingService(supabase.client)
 
-        # Get user UUID
-        user_uuid = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_uuid = current_user["user_id"]
 
         # Mark as completed
         await onboarding_service.mark_onboarding_completed(user_uuid)
@@ -201,8 +201,8 @@ async def mark_onboarding_skipped(current_user: dict[str, Any] = Depends(get_cur
         supabase = SupabaseService()
         onboarding_service = OnboardingService(supabase.client)
 
-        # Get user UUID
-        user_uuid = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_uuid = current_user["user_id"]
 
         # Mark as skipped
         await onboarding_service.mark_onboarding_skipped(user_uuid)
@@ -248,8 +248,8 @@ async def reset_onboarding(current_user: dict[str, Any] = Depends(get_current_us
         supabase = SupabaseService()
         onboarding_service = OnboardingService(supabase.client)
 
-        # Get user UUID
-        user_uuid = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_uuid = current_user["user_id"]
 
         # Reset onboarding
         await onboarding_service.reset_onboarding(user_uuid)

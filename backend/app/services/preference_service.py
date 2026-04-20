@@ -138,8 +138,11 @@ class PreferenceService(BaseService):
                     details={"errors": validation_result.errors},
                 )
 
-            # Get existing preferences to track changes
+            # Ensure user has preferences (create if not exists)
             old_preferences = await self.preferences_repo.get_by_user_id(user_id)
+            if not old_preferences:
+                self.logger.info("Creating default preferences before update", user_id=str(user_id))
+                old_preferences = await self.create_default_preferences(user_id)
 
             # Convert request to update data
             update_data = {}
@@ -161,10 +164,12 @@ class PreferenceService(BaseService):
                 update_data["email_enabled"] = updates.email_enabled
                 changed_fields.append("email_enabled")
 
-            # Ensure user has preferences (create if not exists)
-            if not old_preferences:
-                self.logger.info("Creating default preferences before update", user_id=str(user_id))
-                old_preferences = await self.create_default_preferences(user_id)
+            # If no fields to update, return existing preferences
+            if not update_data:
+                self.logger.info(
+                    "No fields to update, returning existing preferences", user_id=str(user_id)
+                )
+                return old_preferences
 
             # Update preferences
             updated_preferences = await self.preferences_repo.update_by_user_id(

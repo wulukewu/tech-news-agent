@@ -294,9 +294,7 @@ class NotificationService(BaseService):
         try:
             response = (
                 self.supabase_service.client.table("users")
-                .select(
-                    "id, discord_id, email, dm_notifications_enabled, email_notifications_enabled"
-                )
+                .select("id, discord_id")
                 .eq("id", str(user_id))
                 .execute()
             )

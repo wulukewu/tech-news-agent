@@ -46,8 +46,8 @@ async def get_notification_settings(current_user: dict[str, Any] = Depends(get_c
         supabase = SupabaseService()
         service = NotificationSettingsService(supabase)
 
-        # Get user UUID
-        user_uuid = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_uuid = current_user["user_id"]
 
         # Get notification settings
         settings = await service.get_notification_settings(user_uuid)
@@ -85,8 +85,8 @@ async def update_notification_settings(
         supabase = SupabaseService()
         service = NotificationSettingsService(supabase)
 
-        # Get user UUID
-        user_uuid = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_uuid = current_user["user_id"]
 
         # Update notification settings
         updated_settings = await service.update_notification_settings(user_uuid, updates)
@@ -126,8 +126,8 @@ async def send_test_notification(current_user: dict[str, Any] = Depends(get_curr
         supabase = SupabaseService()
         service = NotificationSettingsService(supabase)
 
-        # Get user UUID
-        user_uuid = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_uuid = current_user["user_id"]
 
         # Send test notification
         await service.send_test_notification(user_uuid)
@@ -201,8 +201,8 @@ async def get_notification_preferences(current_user: dict[str, Any] = Depends(ge
     try:
         supabase = SupabaseService()
 
-        # Get user UUID
-        user_uuid = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_uuid = current_user["user_id"]
 
         # Initialize services
         prefs_repo = UserNotificationPreferencesRepository(supabase.client)
@@ -246,8 +246,8 @@ async def update_notification_preferences(
     try:
         supabase = SupabaseService()
 
-        # Get user UUID
-        user_id = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_id = current_user["user_id"]
 
         # Initialize services
         prefs_repo = UserNotificationPreferencesRepository(supabase.client)
@@ -394,8 +394,8 @@ async def get_notification_status(current_user: dict[str, Any] = Depends(get_cur
     try:
         supabase = SupabaseService()
 
-        # Get user UUID
-        user_id = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_id = current_user["user_id"]
 
         # Get dynamic scheduler
         dynamic_scheduler = get_dynamic_scheduler()
@@ -434,8 +434,8 @@ async def reschedule_user_notification(current_user: dict[str, Any] = Depends(ge
     try:
         supabase = SupabaseService()
 
-        # Get user UUID
-        user_id = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_id = current_user["user_id"]
 
         # Get user preferences
         prefs_repo = UserNotificationPreferencesRepository(supabase.client)

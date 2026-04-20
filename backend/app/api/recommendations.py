@@ -65,8 +65,8 @@ async def get_recommended_feeds(current_user: dict[str, Any] = Depends(get_curre
         # Initialize service
         recommendation_service = RecommendationService(feed_repo, user_subscription_repo)
 
-        # Get user UUID
-        user_uuid = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_uuid = current_user["user_id"]
 
         # Get recommended feeds with subscription status
         feeds = await recommendation_service.get_recommended_feeds(user_uuid)
@@ -123,8 +123,8 @@ async def get_article_recommendations(
         # Initialize service
         recommendation_service = ArticleRecommendationService(article_repo, reading_list_repo)
 
-        # Get user UUID
-        user_uuid = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_uuid = current_user["user_id"]
 
         # Get recommendations
         recommendations = await recommendation_service.get_recommendations(user_uuid, limit)
@@ -170,8 +170,8 @@ async def refresh_article_recommendations(
         # Initialize service
         recommendation_service = ArticleRecommendationService(article_repo, reading_list_repo)
 
-        # Get user UUID
-        user_uuid = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_uuid = current_user["user_id"]
 
         # Refresh recommendations
         recommendations = await recommendation_service.refresh_recommendations(user_uuid, request)
@@ -215,8 +215,8 @@ async def dismiss_recommendation(
         # Initialize service
         recommendation_service = ArticleRecommendationService(article_repo, reading_list_repo)
 
-        # Get user UUID
-        user_uuid = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_uuid = current_user["user_id"]
 
         # Dismiss recommendation
         await recommendation_service.dismiss_recommendation(user_uuid, request)
@@ -260,8 +260,8 @@ async def track_recommendation_interaction(
         # Initialize service
         recommendation_service = ArticleRecommendationService(article_repo, reading_list_repo)
 
-        # Get user UUID
-        user_uuid = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_uuid = current_user["user_id"]
 
         # Track interaction
         await recommendation_service.track_interaction(user_uuid, interaction)

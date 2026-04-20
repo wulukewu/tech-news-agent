@@ -159,17 +159,26 @@ class UpdateUserNotificationPreferencesRequest(BaseModel):
         default=None, description="Notification frequency"
     )
     notification_time: str | None = Field(
-        default=None, description="Time in HH:MM format", serialization_alias="notificationTime"
+        default=None,
+        description="Time in HH:MM format",
+        alias="notificationTime",
+        serialization_alias="notificationTime",
     )
     timezone: str | None = Field(default=None, description="IANA timezone identifier")
     dm_enabled: bool | None = Field(
-        default=None, description="Enable Discord DM notifications", serialization_alias="dmEnabled"
+        default=None,
+        description="Enable Discord DM notifications",
+        alias="dmEnabled",
+        serialization_alias="dmEnabled",
     )
     email_enabled: bool | None = Field(
-        default=None, description="Enable email notifications", serialization_alias="emailEnabled"
+        default=None,
+        description="Enable email notifications",
+        alias="emailEnabled",
+        serialization_alias="emailEnabled",
     )
 
-    model_config = ConfigDict(populate_by_name=True, by_alias=True)
+    model_config = ConfigDict(populate_by_name=True)
 
     @field_validator("notification_time")
     @classmethod

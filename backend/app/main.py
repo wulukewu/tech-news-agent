@@ -118,6 +118,22 @@ async def lifespan(app: FastAPI):
             "Legacy preference synchronization service initialized for backward compatibility."
         )
 
+        # Restore all user notification schedules from database
+        # This ensures schedules persist across service restarts
+        try:
+            logger.info("Restoring user notification schedules from database...")
+            restore_stats = await dynamic_scheduler.restore_all_user_schedules()
+            logger.info(
+                f"User notification schedules restored: "
+                f"{restore_stats['restored']} restored, "
+                f"{restore_stats['skipped']} skipped, "
+                f"{restore_stats['failed']} failed"
+            )
+        except Exception as e:
+            logger.error(f"Failed to restore user notification schedules: {e}", exc_info=True)
+            # Don't fail the entire startup if restoration fails
+            # Individual users can manually reschedule if needed
+
         # Initialize the personalized notification system (migrate users, start scheduling)
         logger.info("Starting personalized notification system initialization...")
         init_results = await initialize_personalized_notification_system(supabase_service)

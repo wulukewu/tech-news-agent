@@ -67,16 +67,47 @@ class NotificationSettingsService(BaseService):
                 # Return default settings if user not found
                 return self._get_default_settings()
 
-            # Get DM notification setting from the new personalized preferences table
-            # This ensures consistency with the Discord interface
-            dm_enabled = await self._get_dm_enabled_from_preferences(user_id)
+            # Get all settings from the new personalized preferences table
+            try:
+                from app.repositories.user_notification_preferences import (
+                    UserNotificationPreferencesRepository,
+                )
 
-            # Get additional settings from database (with defaults)
-            frequency = user_data.get("notification_frequency", "immediate")
-            min_tinkering_index = user_data.get("min_tinkering_index", 3)
-            quiet_hours_enabled = user_data.get("quiet_hours_enabled", False)
-            quiet_hours_start = user_data.get("quiet_hours_start", "22:00")
-            quiet_hours_end = user_data.get("quiet_hours_end", "08:00")
+                prefs_repo = UserNotificationPreferencesRepository(self.supabase_service.client)
+                preferences = await prefs_repo.get_by_user_id(user_id)
+
+                if preferences:
+                    # Use settings from preferences table
+                    dm_enabled = preferences.dm_enabled
+                    frequency = preferences.frequency
+                    # Note: min_tinkering_index and quiet_hours are legacy features
+                    # They are not in the new preferences table
+                    min_tinkering_index = 3  # Default
+                    quiet_hours_enabled = False  # Default
+                    quiet_hours_start = "22:00"  # Default
+                    quiet_hours_end = "08:00"  # Default
+                else:
+                    # Use defaults if no preferences exist
+                    dm_enabled = True
+                    frequency = "weekly"
+                    min_tinkering_index = 3
+                    quiet_hours_enabled = False
+                    quiet_hours_start = "22:00"
+                    quiet_hours_end = "08:00"
+
+            except Exception as prefs_error:
+                self.logger.warning(
+                    "Failed to get preferences, using defaults",
+                    user_id=str(user_id),
+                    error=str(prefs_error),
+                )
+                # Use defaults on error
+                dm_enabled = True
+                frequency = "weekly"
+                min_tinkering_index = 3
+                quiet_hours_enabled = False
+                quiet_hours_start = "22:00"
+                quiet_hours_end = "08:00"
 
             # Create settings based on actual database data
             settings = NotificationSettings(
@@ -140,50 +171,49 @@ class NotificationSettingsService(BaseService):
             if updates.dm_enabled is not None:
                 await self._update_dm_enabled_in_preferences(user_id, updates.dm_enabled)
 
-            # Update other settings in the database
-            update_data = {}
-
+            # Update frequency in preferences table if provided
             if updates.frequency is not None:
-                update_data["notification_frequency"] = updates.frequency
-                self.logger.info(
-                    "Updating frequency setting", user_id=str(user_id), frequency=updates.frequency
-                )
+                try:
+                    from app.repositories.user_notification_preferences import (
+                        UserNotificationPreferencesRepository,
+                    )
 
+                    prefs_repo = UserNotificationPreferencesRepository(self.supabase_service.client)
+
+                    # Get or create preferences
+                    preferences = await prefs_repo.get_by_user_id(user_id)
+                    if not preferences:
+                        preferences = await prefs_repo.create_default_for_user(user_id)
+
+                    # Update frequency
+                    await prefs_repo.update_by_user_id(user_id, {"frequency": updates.frequency})
+
+                    self.logger.info(
+                        "Updated frequency in preferences",
+                        user_id=str(user_id),
+                        frequency=updates.frequency,
+                    )
+                except Exception as freq_error:
+                    self.logger.warning(
+                        "Failed to update frequency in preferences",
+                        user_id=str(user_id),
+                        error=str(freq_error),
+                    )
+
+            # Note: quiet_hours and min_tinkering_index are legacy features
+            # They are not stored in the new preferences table
+            # Log a warning if someone tries to update them
             if updates.quiet_hours is not None:
-                update_data["quiet_hours_enabled"] = updates.quiet_hours.enabled
-                update_data["quiet_hours_start"] = updates.quiet_hours.start
-                update_data["quiet_hours_end"] = updates.quiet_hours.end
-                self.logger.info(
-                    "Updating quiet hours setting",
+                self.logger.warning(
+                    "quiet_hours is a legacy feature and is no longer supported",
                     user_id=str(user_id),
-                    quiet_hours=updates.quiet_hours,
                 )
 
             if updates.min_tinkering_index is not None:
-                update_data["min_tinkering_index"] = updates.min_tinkering_index
-                self.logger.info(
-                    "Updating min tinkering index",
+                self.logger.warning(
+                    "min_tinkering_index is a legacy feature and is no longer supported",
                     user_id=str(user_id),
-                    min_tinkering_index=updates.min_tinkering_index,
                 )
-
-            # Apply updates to database if there are any
-            if update_data:
-                response = (
-                    self.supabase_service.client.table("users")
-                    .update(update_data)
-                    .eq("id", str(user_id))
-                    .execute()
-                )
-
-                if not response.data:
-                    self.logger.warning("No rows updated", user_id=str(user_id))
-                else:
-                    self.logger.info(
-                        "Successfully updated user settings",
-                        user_id=str(user_id),
-                        updated_fields=list(update_data.keys()),
-                    )
 
             # Return updated settings
             updated_settings = await self.get_notification_settings(user_id)
@@ -235,11 +265,31 @@ class NotificationSettingsService(BaseService):
                     details={"user_id": str(user_id)},
                 )
 
-            # For now, just log the test notification
-            # In the future, this could actually send a test DM via Discord bot
-            self.logger.info(
-                "Test notification would be sent", user_id=str(user_id), discord_id=discord_id
+            # Actually send the test notification via Discord
+            from app.bot.client import bot
+            from app.core.errors import ServiceError
+            from app.services.notification_service import NotificationService
+
+            notification_service = NotificationService(
+                bot=bot, supabase_service=self.supabase_service
             )
+
+            test_message = "🧪 **測試通知**\n\n這是一個測試通知，用來確認您的通知設定正常運作。\n\n如果您收到這條消息，表示通知功能已正確配置！✅"
+
+            success = await notification_service.send_discord_dm(user_id, test_message)
+
+            if success:
+                self.logger.info(
+                    "Test notification sent successfully",
+                    user_id=str(user_id),
+                    discord_id=discord_id,
+                )
+            else:
+                raise ServiceError(
+                    "Failed to send test notification via Discord",
+                    error_code=ErrorCode.EXTERNAL_DISCORD_ERROR,
+                    details={"user_id": str(user_id), "discord_id": discord_id},
+                )
 
         except ValidationError:
             raise
@@ -256,12 +306,11 @@ class NotificationSettingsService(BaseService):
     async def _get_user_data(self, user_id: UUID) -> dict:
         """Get user data from database."""
         try:
-            # Query the users table to get actual user data
+            # Query the users table to get basic user data
+            # Note: notification preferences are now in user_notification_preferences table
             response = (
                 self.supabase_service.client.table("users")
-                .select(
-                    "id, discord_id, dm_notifications_enabled, notification_frequency, min_tinkering_index, quiet_hours_enabled, quiet_hours_start, quiet_hours_end"
-                )
+                .select("id, discord_id")
                 .eq("id", str(user_id))
                 .execute()
             )
@@ -274,12 +323,6 @@ class NotificationSettingsService(BaseService):
             return {
                 "id": user_data["id"],
                 "discord_id": user_data["discord_id"],
-                "dm_notifications_enabled": user_data.get("dm_notifications_enabled", True),
-                "notification_frequency": user_data.get("notification_frequency", "immediate"),
-                "min_tinkering_index": user_data.get("min_tinkering_index", 3),
-                "quiet_hours_enabled": user_data.get("quiet_hours_enabled", False),
-                "quiet_hours_start": user_data.get("quiet_hours_start", "22:00"),
-                "quiet_hours_end": user_data.get("quiet_hours_end", "08:00"),
             }
         except Exception as e:
             self.logger.warning("Failed to get user data", user_id=str(user_id), error=str(e))

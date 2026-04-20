@@ -597,6 +597,9 @@ def setup_scheduler():
         f"Runs every 6 hours in timezone '{scheduler_tz}'"
     )
 
+    # Note: User notification schedule restoration is done in the lifespan function
+    # after the scheduler is started, since it requires async context
+
     # Verify scheduler was initialized
     if _scheduler is None:
         error_msg = "CRITICAL: Scheduler is still None after setup_scheduler()"

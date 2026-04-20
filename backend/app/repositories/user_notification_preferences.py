@@ -151,9 +151,17 @@ class UserNotificationPreferencesRepository(BaseRepository[UserNotificationPrefe
         if isinstance(notification_time, str):
             try:
                 if ":" in notification_time:
-                    hour, minute = notification_time.split(":")
-                    hour_int = int(hour)
-                    minute_int = int(minute)
+                    # Support both HH:MM and HH:MM:SS formats
+                    time_parts = notification_time.split(":")
+                    if len(time_parts) < 2 or len(time_parts) > 3:
+                        raise ValidationError(
+                            "notification_time must be in HH:MM or HH:MM:SS format",
+                            error_code=ErrorCode.VALIDATION_INVALID_FORMAT,
+                            details={"field": "notification_time", "value": notification_time},
+                        )
+
+                    hour_int = int(time_parts[0])
+                    minute_int = int(time_parts[1])
 
                     if not (0 <= hour_int <= 23):
                         raise ValidationError(
@@ -172,7 +180,7 @@ class UserNotificationPreferencesRepository(BaseRepository[UserNotificationPrefe
                     notification_time = f"{hour_int:02d}:{minute_int:02d}:00"
                 else:
                     raise ValidationError(
-                        "notification_time must be in HH:MM format",
+                        "notification_time must be in HH:MM or HH:MM:SS format",
                         error_code=ErrorCode.VALIDATION_INVALID_FORMAT,
                         details={"field": "notification_time", "value": notification_time},
                     )
@@ -254,9 +262,17 @@ class UserNotificationPreferencesRepository(BaseRepository[UserNotificationPrefe
             if isinstance(notification_time, str):
                 try:
                     if ":" in notification_time:
-                        hour, minute = notification_time.split(":")
-                        hour_int = int(hour)
-                        minute_int = int(minute)
+                        # Support both HH:MM and HH:MM:SS formats
+                        time_parts = notification_time.split(":")
+                        if len(time_parts) < 2 or len(time_parts) > 3:
+                            raise ValidationError(
+                                "notification_time must be in HH:MM or HH:MM:SS format",
+                                error_code=ErrorCode.VALIDATION_INVALID_FORMAT,
+                                details={"field": "notification_time", "value": notification_time},
+                            )
+
+                        hour_int = int(time_parts[0])
+                        minute_int = int(time_parts[1])
 
                         if not (0 <= hour_int <= 23):
                             raise ValidationError(
@@ -511,3 +527,55 @@ class UserNotificationPreferencesRepository(BaseRepository[UserNotificationPrefe
             self._handle_database_error(
                 e, {"operation": "list_by_field", "field": field, "value": value}
             )
+
+    async def get_all_active_preferences(self) -> list[UserNotificationPreferences]:
+        """
+        Get all active user notification preferences.
+
+        Returns preferences for users who have:
+        - frequency != 'disabled'
+        - dm_enabled = True
+
+        This is used to restore notification schedules on application startup.
+
+        Returns:
+            List of active UserNotificationPreferences entities
+
+        Raises:
+            DatabaseError: If database operation fails
+        """
+        self.logger.info(
+            "Getting all active notification preferences",
+            operation="get_all_active_preferences",
+            table=self.table_name,
+        )
+
+        try:
+            response = (
+                self.client.table(self.table_name)
+                .select("*")
+                .neq("frequency", "disabled")
+                .eq("dm_enabled", True)
+                .execute()
+            )
+
+            entities = [self._map_to_entity(row) for row in response.data]
+
+            self.logger.info(
+                "Successfully retrieved active notification preferences",
+                operation="get_all_active_preferences",
+                table=self.table_name,
+                count=len(entities),
+            )
+
+            return entities
+
+        except Exception as e:
+            self.logger.error(
+                "Failed to get all active preferences",
+                exc_info=True,
+                operation="get_all_active_preferences",
+                table=self.table_name,
+                error=str(e),
+            )
+            self._handle_database_error(e, {"operation": "get_all_active_preferences"})

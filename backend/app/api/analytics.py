@@ -61,8 +61,8 @@ async def log_analytics_event(
         supabase = SupabaseService()
         analytics_service = AnalyticsService(supabase.client)
 
-        # Get user UUID
-        user_uuid = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_uuid = current_user["user_id"]
 
         # Log the event
         await analytics_service.log_event(user_uuid, request.event_type, request.event_data)

@@ -315,13 +315,25 @@ export function PersonalizedNotificationSettings({
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                onClick={() => {
-                  // Test notification functionality
-                  import('@/lib/api/notifications').then(({ sendTestNotification }) => {
-                    sendTestNotification()
-                      .then(() => toast.success('測試通知已發送'))
-                      .catch(() => toast.error('發送失敗，請稍後再試'));
-                  });
+                onClick={async () => {
+                  try {
+                    const { sendTestNotification } = await import('@/lib/api/notifications');
+                    await sendTestNotification();
+                    toast.success('✅ 測試通知已發送！請檢查您的Discord私訊。');
+                  } catch (error: any) {
+                    console.error('Test notification failed:', error);
+
+                    // 提供更詳細的錯誤信息
+                    if (error?.response?.status === 400) {
+                      toast.error('❌ 通知設定有誤，請檢查您的設定');
+                    } else if (error?.response?.status === 500) {
+                      toast.error('❌ 服務器錯誤，請稍後再試');
+                    } else if (error?.message?.includes('Network')) {
+                      toast.error('❌ 網絡連接錯誤，請檢查網絡');
+                    } else {
+                      toast.error('❌ 發送失敗，請稍後再試');
+                    }
+                  }
                 }}
                 disabled={isSaving || !preferences.dmEnabled}
                 className="flex-1"

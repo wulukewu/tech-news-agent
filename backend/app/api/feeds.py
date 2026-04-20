@@ -180,8 +180,8 @@ async def batch_subscribe(
         supabase = SupabaseService()
         subscription_service = SubscriptionService(supabase.client)
 
-        # Get user UUID
-        user_uuid = await supabase.get_or_create_user(current_user["discord_id"])
+        # Use the authenticated user's UUID directly
+        user_uuid = current_user["user_id"]
 
         # Perform batch subscription
         result = await subscription_service.batch_subscribe(user_uuid, request.feed_ids)

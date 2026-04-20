@@ -502,3 +502,84 @@ class DynamicScheduler(BaseService):
                 "scheduler_state": "unknown",
                 "error": str(e),
             }
+
+    async def restore_all_user_schedules(self) -> dict:
+        """
+        Restore notification schedules for all users from database.
+
+        This method should be called on application startup to restore
+        all user notification schedules that were lost due to service restart.
+
+        Returns:
+            dict: Statistics about the restoration process
+        """
+        try:
+            self.logger.info("Starting restoration of all user notification schedules")
+
+            from app.repositories.user_notification_preferences import (
+                UserNotificationPreferencesRepository,
+            )
+            from app.services.supabase_service import SupabaseService
+
+            supabase = SupabaseService()
+            prefs_repo = UserNotificationPreferencesRepository(supabase.client)
+
+            # Get all users with active notification preferences
+            all_preferences = await prefs_repo.get_all_active_preferences()
+
+            restored_count = 0
+            skipped_count = 0
+            failed_count = 0
+
+            for preferences in all_preferences:
+                try:
+                    # Skip if notifications are disabled
+                    if preferences.frequency == "disabled" or not preferences.dm_enabled:
+                        skipped_count += 1
+                        continue
+
+                    # Schedule the user notification
+                    await self.schedule_user_notification(preferences.user_id, preferences)
+                    restored_count += 1
+
+                    self.logger.debug(
+                        "Restored notification schedule",
+                        user_id=str(preferences.user_id),
+                        frequency=preferences.frequency,
+                    )
+
+                except Exception as user_error:
+                    failed_count += 1
+                    self.logger.warning(
+                        "Failed to restore schedule for user",
+                        user_id=str(preferences.user_id),
+                        error=str(user_error),
+                    )
+
+            result = {
+                "total_users": len(all_preferences),
+                "restored": restored_count,
+                "skipped": skipped_count,
+                "failed": failed_count,
+            }
+
+            self.logger.info(
+                "Completed restoration of user notification schedules",
+                **result,
+            )
+
+            return result
+
+        except Exception as e:
+            self.logger.error(
+                "Failed to restore user schedules",
+                error=str(e),
+                exc_info=True,
+            )
+            return {
+                "total_users": 0,
+                "restored": 0,
+                "skipped": 0,
+                "failed": 0,
+                "error": str(e),
+            }

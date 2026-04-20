@@ -155,11 +155,14 @@ class TimezoneConverter:
                     f"Invalid frequency '{frequency}'. Must be one of: {', '.join(valid_frequencies)}"
                 )
 
-            # Parse notification time
+            # Parse notification time (supports both HH:MM and HH:MM:SS formats)
             try:
-                hour, minute = notification_time.split(":")
-                hour_int = int(hour)
-                minute_int = int(minute)
+                time_parts = notification_time.split(":")
+                if len(time_parts) < 2 or len(time_parts) > 3:
+                    raise ValueError("Time must have 2 or 3 parts (HH:MM or HH:MM:SS)")
+
+                hour_int = int(time_parts[0])
+                minute_int = int(time_parts[1])
 
                 if not (0 <= hour_int <= 23):
                     raise ValueError(f"Invalid hour '{hour_int}'. Must be between 0 and 23")
@@ -169,7 +172,7 @@ class TimezoneConverter:
                 notification_time_obj = time(hour_int, minute_int)
             except (ValueError, IndexError) as e:
                 raise ValueError(
-                    f"Invalid notification_time format '{notification_time}'. Must be HH:MM format"
+                    f"Invalid notification_time format '{notification_time}'. Must be HH:MM or HH:MM:SS format"
                 )
 
             # Use current UTC time if from_date not provided
