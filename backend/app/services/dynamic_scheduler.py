@@ -293,11 +293,14 @@ class DynamicScheduler(BaseService):
         It handles the actual notification sending and reschedules the next notification
         if the user still has notifications enabled.
 
+        Uses LockManager to prevent duplicate notifications when multiple instances
+        (e.g., local development + Render deployment) are running simultaneously.
+
         Args:
             user_id: UUID of the user
             preferences: User notification preferences at the time of scheduling
 
-        Requirements: 5.1, 5.2
+        Requirements: 5.1, 5.2, 10.1, 10.2
         """
         try:
             self.logger.info("Sending scheduled notification to user", user_id=str(user_id))
@@ -305,63 +308,105 @@ class DynamicScheduler(BaseService):
             # Import here to avoid circular imports
             from app.bot.client import bot
             from app.services.dm_notification_service import DMNotificationService
+            from app.services.lock_manager import LockManager
+            from app.services.supabase_service import SupabaseService
 
-            # Check if bot is ready
-            if not bot.is_ready():
-                self.logger.warning(
-                    "Bot is not ready, skipping notification",
+            # Initialize lock manager
+            supabase = SupabaseService()
+            lock_manager = LockManager(supabase.client)
+
+            # Attempt to acquire notification lock to prevent duplicates
+            scheduled_time = datetime.utcnow()
+            notification_type = f"{preferences.frequency}_digest"
+
+            lock = await lock_manager.acquire_notification_lock(
+                user_id=user_id,
+                notification_type=notification_type,
+                scheduled_time=scheduled_time,
+                ttl_minutes=30,  # Lock expires in 30 minutes
+            )
+
+            if not lock:
+                self.logger.info(
+                    "Notification already being processed by another instance, skipping",
                     user_id=str(user_id),
+                    notification_type=notification_type,
                 )
                 return
 
-            # Create DM notification service and send notification
-            dm_service = DMNotificationService(bot)
-            success = await dm_service.send_personalized_digest(str(user_id))
+            self.logger.info(
+                "Successfully acquired notification lock",
+                user_id=str(user_id),
+                lock_id=str(lock.id),
+                instance_id=lock_manager.instance_id,
+            )
 
-            if success:
-                self.logger.info(
-                    "Successfully sent notification to user",
-                    user_id=str(user_id),
-                )
-            else:
-                self.logger.warning(
-                    "Failed to send notification to user",
-                    user_id=str(user_id),
-                )
-
-            # Reschedule next notification if user still has notifications enabled
-            # We need to get fresh preferences in case they changed
             try:
-                from app.repositories.user_notification_preferences import (
-                    UserNotificationPreferencesRepository,
-                )
-                from app.services.supabase_service import SupabaseService
-
-                # Get fresh preferences
-                supabase = SupabaseService()
-                prefs_repo = UserNotificationPreferencesRepository(supabase.client)
-                current_preferences = await prefs_repo.get_by_user_id(user_id)
-
-                if current_preferences and current_preferences.frequency != "disabled":
-                    # Schedule next notification
-                    await self.schedule_user_notification(user_id, current_preferences)
-                    self.logger.info(
-                        "Scheduled next notification for user",
+                # Check if bot is ready
+                if not bot.is_ready():
+                    self.logger.warning(
+                        "Bot is not ready, skipping notification",
                         user_id=str(user_id),
-                        frequency=current_preferences.frequency,
                     )
+                    # Release lock as failed
+                    await lock_manager.release_lock(lock.id, "failed")
+                    return
+
+                # Create DM notification service and send notification
+                dm_service = DMNotificationService(bot)
+                success = await dm_service.send_personalized_digest(str(user_id))
+
+                if success:
+                    self.logger.info(
+                        "Successfully sent notification to user",
+                        user_id=str(user_id),
+                    )
+                    # Release lock as completed
+                    await lock_manager.release_lock(lock.id, "completed")
                 else:
-                    self.logger.info(
-                        "User has disabled notifications, not rescheduling",
+                    self.logger.warning(
+                        "Failed to send notification to user",
+                        user_id=str(user_id),
+                    )
+                    # Release lock as failed
+                    await lock_manager.release_lock(lock.id, "failed")
+
+                # Reschedule next notification if user still has notifications enabled
+                # We need to get fresh preferences in case they changed
+                try:
+                    from app.repositories.user_notification_preferences import (
+                        UserNotificationPreferencesRepository,
+                    )
+
+                    # Get fresh preferences
+                    prefs_repo = UserNotificationPreferencesRepository(supabase.client)
+                    current_preferences = await prefs_repo.get_by_user_id(user_id)
+
+                    if current_preferences and current_preferences.frequency != "disabled":
+                        # Schedule next notification
+                        await self.schedule_user_notification(user_id, current_preferences)
+                        self.logger.info(
+                            "Scheduled next notification for user",
+                            user_id=str(user_id),
+                            frequency=current_preferences.frequency,
+                        )
+                    else:
+                        self.logger.info(
+                            "User has disabled notifications, not rescheduling",
+                            user_id=str(user_id),
+                        )
+
+                except Exception as reschedule_error:
+                    self.logger.error(
+                        "Failed to reschedule next notification",
+                        error=str(reschedule_error),
                         user_id=str(user_id),
                     )
 
-            except Exception as reschedule_error:
-                self.logger.error(
-                    "Failed to reschedule next notification",
-                    error=str(reschedule_error),
-                    user_id=str(user_id),
-                )
+            except Exception as send_error:
+                # Release lock as failed if sending fails
+                await lock_manager.release_lock(lock.id, "failed")
+                raise send_error
 
         except Exception as e:
             self.logger.error(

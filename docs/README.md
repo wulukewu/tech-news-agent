@@ -11,9 +11,15 @@ Complete documentation for the Tech News Agent project.
 - [Environment File Structure](./ENV_FILE_STRUCTURE.md) - 📁 Why we use a single .env file
 - [Docker Guide](./docker/DOCKER_GUIDE.md) - Docker deployment instructions
 
+### Architecture & System Design
+
+- [Architecture](./ARCHITECTURE.md) - System architecture details
+- [Notification Lock Mechanism](./architecture/notification-lock-mechanism.md) - 🔒 Prevent duplicate notifications in multi-instance environments
+
 ### User Guides
 
 - [User Guide](./USER_GUIDE.md) - Using the web interface and Discord bot
+- [Preventing Duplicate Notifications (Zero Config)](./guides/preventing-duplicate-notifications-simple.md) - 🚀 No configuration needed!
 - [Manual Scheduler Trigger](./MANUAL_SCHEDULER_TRIGGER.md) - On-demand article fetching
 - [Manual Trigger Examples](./MANUAL_TRIGGER_EXAMPLES.md) - Practical examples
 
@@ -107,6 +113,11 @@ Complete documentation for the Tech News Agent project.
 ```
 docs/
 ├── README.md                          # This file
+├── architecture/                      # System architecture
+│   └── notification-lock-mechanism.md
+├── guides/                            # User guides
+│   ├── preventing-duplicate-notifications-simple.md
+│   └── preventing-duplicate-notifications.md
 ├── fixes/                             # Bug fixes documentation
 │   └── mobile-drawer-layout-fix.md
 ├── improvements/                      # Feature improvements
@@ -177,6 +188,12 @@ docs/
 
 **Deploy FastAPI to Render**
 → [Render Backend Guide](./deployment/render-backend.md)
+
+**Prevent duplicate notifications in multi-instance setup**
+→ [Preventing Duplicate Notifications (Zero Config)](./guides/preventing-duplicate-notifications-simple.md)
+
+**Understand the notification lock mechanism**
+→ [Notification Lock Mechanism](./architecture/notification-lock-mechanism.md)
 
 **Troubleshoot issues**
 → [Troubleshooting Guide](./TROUBLESHOOTING.md) or [Frontend Errors Fix](./frontend-errors-fix-guide.md)

@@ -230,10 +230,12 @@ class TestDynamicScheduler:
     async def test_send_user_notification_success(
         self, dynamic_scheduler, sample_user_id, sample_preferences
     ):
-        """Test successful sending of user notification."""
+        """Test successful sending of user notification with lock mechanism."""
         with patch("app.bot.client.bot") as mock_bot, patch(
             "app.services.dm_notification_service.DMNotificationService"
-        ) as mock_dm_service_class, patch.object(
+        ) as mock_dm_service_class, patch(
+            "app.services.lock_manager.LockManager"
+        ) as mock_lock_manager_class, patch.object(
             dynamic_scheduler, "schedule_user_notification"
         ) as mock_schedule:
             # Mock bot and DM service
@@ -241,6 +243,15 @@ class TestDynamicScheduler:
             mock_dm_service = AsyncMock()
             mock_dm_service.send_personalized_digest.return_value = True
             mock_dm_service_class.return_value = mock_dm_service
+
+            # Mock lock manager
+            mock_lock_manager = AsyncMock()
+            mock_lock = MagicMock()
+            mock_lock.id = uuid4()
+            mock_lock_manager.acquire_notification_lock.return_value = mock_lock
+            mock_lock_manager.release_lock = AsyncMock()
+            mock_lock_manager.instance_id = "test_instance"
+            mock_lock_manager_class.return_value = mock_lock_manager
 
             # Mock repository and preferences
             with patch(
@@ -258,27 +269,131 @@ class TestDynamicScheduler:
                 # Call the method
                 await dynamic_scheduler._send_user_notification(sample_user_id, sample_preferences)
 
+                # Verify lock was acquired
+                mock_lock_manager.acquire_notification_lock.assert_called_once()
+
                 # Verify DM service was called
                 mock_dm_service.send_personalized_digest.assert_called_once_with(
                     str(sample_user_id)
                 )
 
+                # Verify lock was released as completed
+                mock_lock_manager.release_lock.assert_called_once_with(mock_lock.id, "completed")
+
                 # Verify rescheduling was attempted
                 mock_schedule.assert_called_once_with(sample_user_id, sample_preferences)
+
+    @pytest.mark.asyncio
+    async def test_send_user_notification_lock_already_exists(
+        self, dynamic_scheduler, sample_user_id, sample_preferences
+    ):
+        """Test notification skipped when lock already exists (duplicate prevention)."""
+        with patch("app.bot.client.bot") as mock_bot, patch(
+            "app.services.dm_notification_service.DMNotificationService"
+        ) as mock_dm_service_class, patch(
+            "app.services.lock_manager.LockManager"
+        ) as mock_lock_manager_class, patch(
+            "app.services.supabase_service.SupabaseService"
+        ) as mock_supabase_class:
+            # Mock lock manager to return None (lock already exists)
+            mock_lock_manager = AsyncMock()
+            mock_lock_manager.acquire_notification_lock.return_value = None
+            mock_lock_manager_class.return_value = mock_lock_manager
+
+            mock_supabase = MagicMock()
+            mock_supabase_class.return_value = mock_supabase
+
+            # Mock DM service
+            mock_dm_service = AsyncMock()
+            mock_dm_service_class.return_value = mock_dm_service
+
+            # Call the method
+            await dynamic_scheduler._send_user_notification(sample_user_id, sample_preferences)
+
+            # Verify lock acquisition was attempted
+            mock_lock_manager.acquire_notification_lock.assert_called_once()
+
+            # Verify DM service was NOT called (duplicate prevented)
+            mock_dm_service.send_personalized_digest.assert_not_called()
+
+    @pytest.mark.asyncio
+    async def test_send_user_notification_failure_releases_lock(
+        self, dynamic_scheduler, sample_user_id, sample_preferences
+    ):
+        """Test lock is released as failed when notification sending fails."""
+        with patch("app.bot.client.bot") as mock_bot, patch(
+            "app.services.dm_notification_service.DMNotificationService"
+        ) as mock_dm_service_class, patch(
+            "app.services.lock_manager.LockManager"
+        ) as mock_lock_manager_class, patch(
+            "app.services.supabase_service.SupabaseService"
+        ) as mock_supabase_class:
+            # Mock bot and DM service
+            mock_bot.is_ready.return_value = True
+            mock_dm_service = AsyncMock()
+            mock_dm_service.send_personalized_digest.return_value = False  # Failure
+            mock_dm_service_class.return_value = mock_dm_service
+
+            # Mock lock manager
+            mock_lock_manager = AsyncMock()
+            mock_lock = MagicMock()
+            mock_lock.id = uuid4()
+            mock_lock_manager.acquire_notification_lock.return_value = mock_lock
+            mock_lock_manager.release_lock = AsyncMock()
+            mock_lock_manager.instance_id = "test_instance"
+            mock_lock_manager_class.return_value = mock_lock_manager
+
+            mock_supabase = MagicMock()
+            mock_supabase_class.return_value = mock_supabase
+
+            # Mock repository
+            with patch(
+                "app.repositories.user_notification_preferences.UserNotificationPreferencesRepository"
+            ) as mock_repo_class:
+                mock_repo = AsyncMock()
+                mock_repo.get_by_user_id.return_value = sample_preferences
+                mock_repo_class.return_value = mock_repo
+
+                # Call the method
+                await dynamic_scheduler._send_user_notification(sample_user_id, sample_preferences)
+
+                # Verify lock was acquired
+                mock_lock_manager.acquire_notification_lock.assert_called_once()
+
+                # Verify DM service was called
+                mock_dm_service.send_personalized_digest.assert_called_once()
+
+                # Verify lock was released as failed
+                mock_lock_manager.release_lock.assert_called_once_with(mock_lock.id, "failed")
 
     @pytest.mark.asyncio
     async def test_send_user_notification_bot_not_ready(
         self, dynamic_scheduler, sample_user_id, sample_preferences
     ):
         """Test handling when bot is not ready."""
-        with patch("app.bot.client.bot") as mock_bot:
+        with patch("app.bot.client.bot") as mock_bot, patch(
+            "app.services.lock_manager.LockManager"
+        ) as mock_lock_manager_class, patch(
+            "app.services.supabase_service.SupabaseService"
+        ) as mock_supabase_class:
             mock_bot.is_ready.return_value = False
+
+            # Mock lock manager
+            mock_lock_manager = AsyncMock()
+            mock_lock = MagicMock()
+            mock_lock.id = uuid4()
+            mock_lock_manager.acquire_notification_lock.return_value = mock_lock
+            mock_lock_manager.release_lock = AsyncMock()
+            mock_lock_manager_class.return_value = mock_lock_manager
+
+            mock_supabase = MagicMock()
+            mock_supabase_class.return_value = mock_supabase
 
             # Call the method
             await dynamic_scheduler._send_user_notification(sample_user_id, sample_preferences)
 
-            # Verify no further processing occurred
-            # (This is mainly a logging test, so we just ensure no exceptions)
+            # Verify lock was released as failed
+            mock_lock_manager.release_lock.assert_called_once_with(mock_lock.id, "failed")
 
     @pytest.mark.asyncio
     async def test_get_user_job_info_exists(
