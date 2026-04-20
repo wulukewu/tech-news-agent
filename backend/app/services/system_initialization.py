@@ -262,7 +262,7 @@ class SystemInitializationService(BaseService):
                 raise RuntimeError("Notification system integration not available")
 
             # Get all users with notification preferences
-            users_with_preferences = await self.preferences_repo.list_all()
+            users_with_preferences = await self.preferences_repo.get_all_active_preferences()
 
             if not users_with_preferences:
                 self.logger.info("No users with preferences found")

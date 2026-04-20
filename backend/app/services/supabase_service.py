@@ -682,6 +682,70 @@ class SupabaseService:
                 e, {"discord_id": discord_id, "operation": "get_or_create_user"}
             )
 
+    async def get_user_by_discord_id(self, discord_id: str) -> Optional[dict]:
+        """取得使用者資料（根據 Discord ID）
+
+        Args:
+            discord_id: Discord 使用者 ID
+
+        Returns:
+            使用者資料字典，包含 id, discord_id 等欄位，如果找不到則返回 None
+
+        Raises:
+            SupabaseServiceError: 當資料庫操作失敗時
+        """
+        logger.info(
+            "Database operation: get_user_by_discord_id",
+            extra={"operation_type": "SELECT", "table": "users", "discord_id": discord_id},
+        )
+
+        try:
+            response = (
+                self.client.table("users")
+                .select("id, discord_id, created_at")
+                .eq("discord_id", discord_id)
+                .execute()
+            )
+
+            if response.data and len(response.data) > 0:
+                user_data = response.data[0]
+                logger.info(
+                    "Database operation completed: get_user_by_discord_id (user found)",
+                    extra={
+                        "operation_type": "SELECT",
+                        "table": "users",
+                        "affected_records": 1,
+                        "user_uuid": user_data["id"],
+                    },
+                )
+                return user_data
+            else:
+                logger.info(
+                    "Database operation completed: get_user_by_discord_id (user not found)",
+                    extra={
+                        "operation_type": "SELECT",
+                        "table": "users",
+                        "affected_records": 0,
+                        "discord_id": discord_id,
+                    },
+                )
+                return None
+
+        except Exception as e:
+            logger.error(
+                f"Failed to get user by discord_id: {e}",
+                exc_info=True,
+                extra={
+                    "operation_type": "SELECT",
+                    "table": "users",
+                    "discord_id": discord_id,
+                    "error_type": type(e).__name__,
+                },
+            )
+            self._handle_database_error(
+                e, {"discord_id": discord_id, "operation": "get_user_by_discord_id"}
+            )
+
     async def get_active_feeds(self) -> list["RSSSource"]:
         """取得所有啟用的 RSS 訂閱源
 
@@ -832,9 +896,7 @@ class SupabaseService:
                     error_info = {
                         "article": {
                             "url": article.get("url", "unknown"),
-                            "title": article.get("title", "unknown")[
-                                :100
-                            ],  # 截斷標題以避免日誌過長
+                            "title": article.get("title", "unknown")[:100],  # 截斷標題以避免日誌過長
                         },
                         "error": str(e),
                         "error_type": type(e).__name__,

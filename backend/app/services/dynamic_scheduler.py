@@ -296,11 +296,13 @@ class DynamicScheduler(BaseService):
         Uses LockManager to prevent duplicate notifications when multiple instances
         (e.g., local development + Render deployment) are running simultaneously.
 
+        Now includes quiet hours checking to respect user's do-not-disturb settings.
+
         Args:
             user_id: UUID of the user
             preferences: User notification preferences at the time of scheduling
 
-        Requirements: 5.1, 5.2, 10.1, 10.2
+        Requirements: 5.1, 5.2, 10.1, 10.2, 11.1, 11.2
         """
         try:
             self.logger.info("Sending scheduled notification to user", user_id=str(user_id))
@@ -309,11 +311,77 @@ class DynamicScheduler(BaseService):
             from app.bot.client import bot
             from app.services.dm_notification_service import DMNotificationService
             from app.services.lock_manager import LockManager
+            from app.services.quiet_hours_service import QuietHoursService
             from app.services.supabase_service import SupabaseService
 
-            # Initialize lock manager
+            # Initialize services
             supabase = SupabaseService()
             lock_manager = LockManager(supabase.client)
+            quiet_hours_service = QuietHoursService(supabase)
+
+            # Check quiet hours before proceeding
+            current_time = datetime.utcnow()
+            is_in_quiet_hours, quiet_hours_settings = await quiet_hours_service.is_in_quiet_hours(
+                user_id, current_time
+            )
+
+            if is_in_quiet_hours:
+                self.logger.info(
+                    "User is in quiet hours, queuing notification for later",
+                    user_id=str(user_id),
+                    quiet_hours_start=quiet_hours_settings.start_time.strftime("%H:%M")
+                    if quiet_hours_settings
+                    else None,
+                    quiet_hours_end=quiet_hours_settings.end_time.strftime("%H:%M")
+                    if quiet_hours_settings
+                    else None,
+                    timezone=quiet_hours_settings.timezone if quiet_hours_settings else None,
+                )
+
+                # Get next available notification time after quiet hours
+                next_available_time = await quiet_hours_service.get_next_notification_time(
+                    user_id, current_time
+                )
+
+                if next_available_time:
+                    # Reschedule the notification for after quiet hours
+                    job_id = f"user_notification_{user_id}"
+
+                    # Remove current job
+                    if self.scheduler.get_job(job_id):
+                        self.scheduler.remove_job(job_id)
+
+                    # Create new job for after quiet hours
+                    from apscheduler.triggers.date import DateTrigger
+
+                    trigger = DateTrigger(run_date=next_available_time)
+
+                    self.scheduler.add_job(
+                        func=self._send_user_notification,
+                        trigger=trigger,
+                        id=job_id,
+                        name=f"User Notification - {user_id} (After Quiet Hours)",
+                        args=[user_id, preferences],
+                        replace_existing=True,
+                    )
+
+                    self.logger.info(
+                        "Rescheduled notification after quiet hours",
+                        user_id=str(user_id),
+                        next_run_time=next_available_time.isoformat(),
+                    )
+                else:
+                    self.logger.warning(
+                        "Could not determine next available time after quiet hours",
+                        user_id=str(user_id),
+                    )
+
+                return
+
+            # Proceed with normal notification flow if not in quiet hours
+            self.logger.info(
+                "User not in quiet hours, proceeding with notification", user_id=str(user_id)
+            )
 
             # Attempt to acquire notification lock to prevent duplicates
             scheduled_time = datetime.utcnow()

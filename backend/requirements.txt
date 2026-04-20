@@ -13,3 +13,4 @@ python-dotenv>=1.0.1
 certifi>=2024.2.2
 python-jose[cryptography]==3.3.0
 slowapi==0.1.9
+pytz>=2024.1

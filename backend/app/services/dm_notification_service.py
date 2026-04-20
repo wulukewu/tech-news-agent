@@ -109,12 +109,97 @@ class DMNotificationService:
                 logger.info(f"No articles found for user {discord_id}, skipping DM")
                 return True  # 沒有文章不算失敗
 
+            # Apply technical depth filtering
+            try:
+                from uuid import UUID
+
+                from app.services.technical_depth_service import TechnicalDepthService
+
+                # Get user UUID from discord_id
+                user_data = await supabase.get_user_by_discord_id(discord_id)
+                if user_data and user_data.get("id"):
+                    user_uuid = UUID(user_data["id"])
+
+                    tech_depth_service = TechnicalDepthService()
+                    tech_settings = await tech_depth_service.get_tech_depth_settings(user_uuid)
+
+                    if tech_settings.enabled:
+                        # Filter articles based on technical depth
+                        filtered_articles = []
+                        for article in articles:
+                            # Estimate article depth if not already set
+                            article_depth = getattr(article, "technical_depth", None)
+                            if not article_depth:
+                                article_depth = tech_depth_service.estimate_article_depth(
+                                    content=getattr(article, "content", "") or "",
+                                    title=article.title or "",
+                                )
+
+                            # Check if article meets user's threshold
+                            should_send, reason = await tech_depth_service.should_send_notification(
+                                user_uuid, article_depth
+                            )
+
+                            if should_send:
+                                filtered_articles.append(article)
+                            else:
+                                logger.debug(
+                                    f"Filtered out article for user {discord_id}: {reason}"
+                                )
+
+                        articles = filtered_articles
+                        logger.info(
+                            f"Technical depth filtering for user {discord_id}: {len(filtered_articles)} articles after filtering"
+                        )
+                    else:
+                        logger.debug(f"Technical depth filtering disabled for user {discord_id}")
+                else:
+                    logger.warning(
+                        f"Could not find user UUID for discord_id {discord_id}, skipping technical depth filtering"
+                    )
+
+            except Exception as filter_error:
+                logger.error(
+                    f"Error applying technical depth filtering for user {discord_id}: {filter_error}"
+                )
+                # Continue with unfiltered articles if filtering fails
+
+            # Check if we still have articles after filtering
+            if not articles:
+                logger.info(
+                    f"No articles remaining after technical depth filtering for user {discord_id}, skipping DM"
+                )
+                return True  # No articles after filtering is not a failure
+
             # 建立 DM 訊息
             embed = self._create_digest_embed(articles)
 
             # 發送 DM
             try:
                 await user.send(embed=embed)
+
+                # Record notification history
+                try:
+                    from app.services.notification_history_service import (
+                        NotificationChannel,
+                        NotificationHistoryService,
+                        NotificationStatus,
+                    )
+
+                    if user_data and user_data.get("id"):
+                        history_service = NotificationHistoryService()
+                        await history_service.record_notification(
+                            user_id=UUID(user_data["id"]),
+                            channel=NotificationChannel.DISCORD.value,
+                            status=NotificationStatus.SENT.value,
+                            content=f"Weekly digest with {len(articles)} articles",
+                            feed_source="weekly_digest",
+                        )
+                        logger.debug(f"Recorded notification history for user {discord_id}")
+                except Exception as history_error:
+                    logger.error(
+                        f"Failed to record notification history for user {discord_id}: {history_error}"
+                    )
 
                 # 記錄已發送的文章（防止重複發送）
                 try:
@@ -138,9 +223,57 @@ class DMNotificationService:
                     f"Cannot send DM to user {discord_id}: "
                     f"User has DMs disabled or bot is blocked"
                 )
+
+                # Record failed notification
+                try:
+                    from app.services.notification_history_service import (
+                        NotificationChannel,
+                        NotificationHistoryService,
+                        NotificationStatus,
+                    )
+
+                    if user_data and user_data.get("id"):
+                        history_service = NotificationHistoryService()
+                        await history_service.record_notification(
+                            user_id=UUID(user_data["id"]),
+                            channel=NotificationChannel.DISCORD.value,
+                            status=NotificationStatus.FAILED.value,
+                            content=f"Weekly digest with {len(articles)} articles",
+                            feed_source="weekly_digest",
+                            error_message="User has DMs disabled or bot is blocked",
+                        )
+                except Exception as history_error:
+                    logger.error(
+                        f"Failed to record failed notification history for user {discord_id}: {history_error}"
+                    )
+
                 return False
             except discord.HTTPException as e:
                 logger.error(f"HTTP error sending DM to user {discord_id}: {e}")
+
+                # Record failed notification
+                try:
+                    from app.services.notification_history_service import (
+                        NotificationChannel,
+                        NotificationHistoryService,
+                        NotificationStatus,
+                    )
+
+                    if user_data and user_data.get("id"):
+                        history_service = NotificationHistoryService()
+                        await history_service.record_notification(
+                            user_id=UUID(user_data["id"]),
+                            channel=NotificationChannel.DISCORD.value,
+                            status=NotificationStatus.FAILED.value,
+                            content=f"Weekly digest with {len(articles)} articles",
+                            feed_source="weekly_digest",
+                            error_message=f"HTTP error: {str(e)}",
+                        )
+                except Exception as history_error:
+                    logger.error(
+                        f"Failed to record failed notification history for user {discord_id}: {history_error}"
+                    )
+
                 return False
 
         except Exception as e:
