@@ -225,3 +225,17 @@ export async function getNotificationStatus(): Promise<NotificationStatusRespons
   }>('/api/notifications/preferences/status');
   return response.data.data;
 }
+
+/**
+ * Manually trigger user notification rescheduling
+ *
+ * @returns Promise<{success: boolean, message: string}>
+ * @throws Error if request fails
+ */
+export async function rescheduleUserNotification(): Promise<{ success: boolean; message: string }> {
+  const response = await apiClient.post<{
+    success: boolean;
+    data: { success: boolean; message: string };
+  }>('/api/notifications/preferences/reschedule');
+  return response.data.data;
+}

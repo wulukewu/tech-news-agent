@@ -74,10 +74,18 @@ export function PersonalizedNotificationSettings({
   });
 
   // Fetch notification status
-  const { data: status } = useQuery({
+  const {
+    data: status,
+    error: statusError,
+    isLoading: statusLoading,
+  } = useQuery({
     queryKey: ['notificationStatus'],
     queryFn: getNotificationStatus,
     refetchInterval: 30000, // Refetch every 30 seconds
+    retry: 3,
+    onError: (error) => {
+      console.error('Failed to fetch notification status:', error);
+    },
   });
 
   // Update preferences mutation
@@ -222,13 +230,28 @@ export function PersonalizedNotificationSettings({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {status?.scheduled ? (
+              {statusLoading ? (
+                <div className="flex items-center gap-2 text-blue-500">
+                  <LoadingSpinner size="sm" />
+                  <span className="text-sm font-medium">檢查中...</span>
+                </div>
+              ) : statusError ? (
+                <div className="flex items-center gap-2 text-yellow-500">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="text-sm font-medium">狀態未知</span>
+                </div>
+              ) : status?.scheduled ? (
                 <div className="flex items-center gap-2 text-green-600">
                   <CheckCircle className="h-4 w-4" />
                   <span className="text-sm font-medium">已排程</span>
                 </div>
-              ) : (
+              ) : preferences.frequency === 'disabled' || !preferences.dmEnabled ? (
                 <div className="flex items-center gap-2 text-gray-500">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="text-sm font-medium">已停用</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-orange-500">
                   <AlertCircle className="h-4 w-4" />
                   <span className="text-sm font-medium">未排程</span>
                 </div>
@@ -286,6 +309,58 @@ export function PersonalizedNotificationSettings({
               onCheckedChange={(checked) => handleUpdate({ emailEnabled: checked })}
               disabled={true} // Disabled until email functionality is implemented
             />
+          </div>
+
+          <div className="pt-4 border-t">
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  // Test notification functionality
+                  import('@/lib/api/notifications').then(({ sendTestNotification }) => {
+                    sendTestNotification()
+                      .then(() => toast.success('測試通知已發送'))
+                      .catch(() => toast.error('發送失敗，請稍後再試'));
+                  });
+                }}
+                disabled={isSaving || !preferences.dmEnabled}
+                className="flex-1"
+              >
+                <MessageSquare className="mr-2 h-4 w-4" />
+                發送測試通知
+              </Button>
+
+              {!status?.scheduled &&
+                preferences.frequency !== 'disabled' &&
+                preferences.dmEnabled && (
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        const { rescheduleUserNotification } = await import(
+                          '@/lib/api/notifications'
+                        );
+                        const result = await rescheduleUserNotification();
+
+                        if (result.success) {
+                          toast.success(result.message);
+                          // Refresh status
+                          queryClient.invalidateQueries({ queryKey: ['notificationStatus'] });
+                        } else {
+                          toast.error(result.message);
+                        }
+                      } catch (error) {
+                        toast.error('重新排程失敗，請稍後再試');
+                      }
+                    }}
+                    disabled={isSaving}
+                    className="flex-1"
+                  >
+                    <Clock className="mr-2 h-4 w-4" />
+                    重新排程
+                  </Button>
+                )}
+            </div>
           </div>
         </CardContent>
       </Card>

@@ -421,3 +421,48 @@ async def get_notification_status(current_user: dict[str, Any] = Depends(get_cur
     except Exception as e:
         logger.error(f"Error getting notification status: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="無法載入通知狀態")
+
+
+@router.post("/preferences/reschedule")
+async def reschedule_user_notification(current_user: dict[str, Any] = Depends(get_current_user)):
+    """
+    Manually trigger user notification rescheduling
+
+    This endpoint allows users to manually trigger the rescheduling of their
+    notifications if they appear as "not scheduled" in the frontend.
+    """
+    try:
+        supabase = SupabaseService()
+
+        # Get user UUID
+        user_id = await supabase.get_or_create_user(current_user["discord_id"])
+
+        # Get user preferences
+        prefs_repo = UserNotificationPreferencesRepository(supabase.client)
+        preference_service = PreferenceService(prefs_repo)
+
+        preferences = await preference_service.get_user_preferences(user_id)
+
+        if preferences.frequency == "disabled" or not preferences.dm_enabled:
+            return success_response({"success": False, "message": "通知已停用，無需排程"})
+
+        # Get notification system integration
+        from app.services.notification_system_integration import get_notification_system_integration
+
+        integration_service = get_notification_system_integration()
+
+        if not integration_service:
+            return success_response({"success": False, "message": "通知系統集成未初始化"})
+
+        # Schedule the user notification
+        await integration_service.schedule_user_notification(
+            user_id, preferences.frequency, preferences.notification_time, preferences.timezone
+        )
+
+        logger.info(f"Successfully rescheduled notification for user {current_user['user_id']}")
+
+        return success_response({"success": True, "message": "通知排程已更新"})
+
+    except Exception as e:
+        logger.error(f"Error rescheduling notification: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="無法更新通知排程")
