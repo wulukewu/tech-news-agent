@@ -67,8 +67,9 @@ class NotificationSettingsService(BaseService):
                 # Return default settings if user not found
                 return self._get_default_settings()
 
-            # Get DM notification setting from database
-            dm_enabled = user_data.get("dm_notifications_enabled", True)
+            # Get DM notification setting from the new personalized preferences table
+            # This ensures consistency with the Discord interface
+            dm_enabled = await self._get_dm_enabled_from_preferences(user_id)
 
             # Get additional settings from database (with defaults)
             frequency = user_data.get("notification_frequency", "immediate")
@@ -134,11 +135,10 @@ class NotificationSettingsService(BaseService):
                     details={"user_id": str(user_id)},
                 )
 
-            # Update DM notification setting if provided
+            # Update DM notification setting in the personalized preferences table
+            # This ensures consistency with the Discord interface
             if updates.dm_enabled is not None:
-                await self.supabase_service.update_notification_settings(
-                    discord_id, updates.dm_enabled
-                )
+                await self._update_dm_enabled_in_preferences(user_id, updates.dm_enabled)
 
             # Update other settings in the database
             update_data = {}
@@ -225,8 +225,8 @@ class NotificationSettingsService(BaseService):
                     details={"user_id": str(user_id)},
                 )
 
-            # Check if DM notifications are enabled
-            dm_enabled = await self.supabase_service.get_notification_settings(discord_id)
+            # Check if DM notifications are enabled using the new preferences system
+            dm_enabled = await self._get_dm_enabled_from_preferences(user_id)
 
             if not dm_enabled:
                 raise ValidationError(
@@ -297,3 +297,127 @@ class NotificationSettingsService(BaseService):
             feed_settings=[],
             channels=["dm", "in-app"],
         )
+
+    async def _get_dm_enabled_from_preferences(self, user_id: UUID) -> bool:
+        """
+        Get DM enabled status from user_notification_preferences table.
+
+        This ensures consistency with the Discord interface and the new
+        personalized notification system.
+        """
+        try:
+            # Try to get from personalized preferences first
+            response = (
+                self.supabase_service.client.table("user_notification_preferences")
+                .select("dm_enabled")
+                .eq("user_id", str(user_id))
+                .execute()
+            )
+
+            if response.data:
+                return response.data[0].get("dm_enabled", True)
+
+            # If no personalized preferences exist, check legacy field and create defaults
+            user_data = await self._get_user_data(user_id)
+            legacy_dm_enabled = user_data.get("dm_notifications_enabled", True)
+
+            # Create default preferences with legacy value
+            await self._create_default_preferences_with_legacy_value(user_id, legacy_dm_enabled)
+
+            return legacy_dm_enabled
+
+        except Exception as e:
+            self.logger.warning(
+                "Failed to get DM enabled from preferences, using default",
+                user_id=str(user_id),
+                error=str(e),
+            )
+            return True
+
+    async def _update_dm_enabled_in_preferences(self, user_id: UUID, dm_enabled: bool) -> None:
+        """
+        Update DM enabled status in user_notification_preferences table.
+
+        This ensures consistency with the Discord interface and the new
+        personalized notification system.
+        """
+        try:
+            # Check if preferences exist
+            response = (
+                self.supabase_service.client.table("user_notification_preferences")
+                .select("id")
+                .eq("user_id", str(user_id))
+                .execute()
+            )
+
+            if response.data:
+                # Update existing preferences
+                update_response = (
+                    self.supabase_service.client.table("user_notification_preferences")
+                    .update({"dm_enabled": dm_enabled, "updated_at": "now()"})
+                    .eq("user_id", str(user_id))
+                    .execute()
+                )
+
+                if not update_response.data:
+                    self.logger.warning("No preferences updated", user_id=str(user_id))
+                else:
+                    self.logger.info(
+                        "Updated DM enabled in preferences",
+                        user_id=str(user_id),
+                        dm_enabled=dm_enabled,
+                    )
+            else:
+                # Create default preferences with the specified DM enabled value
+                await self._create_default_preferences_with_legacy_value(user_id, dm_enabled)
+
+        except Exception as e:
+            self.logger.error(
+                "Failed to update DM enabled in preferences",
+                user_id=str(user_id),
+                dm_enabled=dm_enabled,
+                error=str(e),
+            )
+            raise
+
+    async def _create_default_preferences_with_legacy_value(
+        self, user_id: UUID, dm_enabled: bool
+    ) -> None:
+        """
+        Create default notification preferences with specified DM enabled value.
+
+        This helps migrate from the legacy system to the new personalized system.
+        """
+        try:
+            insert_data = {
+                "user_id": str(user_id),
+                "frequency": "weekly",
+                "notification_time": "18:00:00",
+                "timezone": "Asia/Taipei",
+                "dm_enabled": dm_enabled,
+                "email_enabled": False,
+            }
+
+            response = (
+                self.supabase_service.client.table("user_notification_preferences")
+                .insert(insert_data)
+                .execute()
+            )
+
+            if response.data:
+                self.logger.info(
+                    "Created default preferences with legacy DM value",
+                    user_id=str(user_id),
+                    dm_enabled=dm_enabled,
+                )
+            else:
+                self.logger.warning("Failed to create default preferences", user_id=str(user_id))
+
+        except Exception as e:
+            self.logger.error(
+                "Failed to create default preferences",
+                user_id=str(user_id),
+                dm_enabled=dm_enabled,
+                error=str(e),
+            )
+            # Don't raise here to avoid breaking the flow

@@ -286,7 +286,6 @@ DISCORD_CHANNEL_ID=your-channel-id  # 用於頻道通知
 
 # Scheduler 配置
 SCHEDULER_CRON=0 */6 * * *          # 每 6 小時
-DM_NOTIFICATION_CRON=10 */6 * * *   # 抓取後 10 分鐘
 SCHEDULER_TIMEZONE=Asia/Taipei
 
 # 應用程式設定

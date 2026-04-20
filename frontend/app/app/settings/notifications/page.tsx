@@ -21,6 +21,7 @@ import { TinkeringIndexThreshold } from '@/features/notifications/components/Tin
 import { FeedNotificationSettings } from '@/features/notifications/components/FeedNotificationSettings';
 import { NotificationHistoryPanel } from '@/features/notifications/components/NotificationHistoryPanel';
 import { NotificationPreview } from '@/features/notifications/components/NotificationPreview';
+import { PersonalizedNotificationSettings } from '@/features/notifications/components/PersonalizedNotificationSettings';
 import { Bell, Mail, MessageSquare } from 'lucide-react';
 
 import { useI18n } from '@/contexts/I18nContext';
@@ -49,6 +50,9 @@ export default function NotificationSettingsPage() {
     },
     onSuccess: (updatedSettings) => {
       queryClient.setQueryData(['notificationSettings'], updatedSettings);
+      // Also invalidate personalized preferences to ensure consistency
+      queryClient.invalidateQueries({ queryKey: ['notificationPreferences'] });
+      queryClient.invalidateQueries({ queryKey: ['notificationStatus'] });
       toast.success(t('success.settings-saved'));
     },
     onError: (error: any) => {
@@ -115,136 +119,148 @@ export default function NotificationSettingsPage() {
 
       {/* Main Settings Grid */}
       <div className="grid gap-6">
-        {/* Global Status Card */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Bell className="h-5 w-5 text-blue-600" />
-                <div>
-                  <CardTitle>{t('settings.notifications.status')}</CardTitle>
-                  <CardDescription>{t('settings.notifications.status-desc')}</CardDescription>
+        {/* Personalized Notification Settings */}
+        <PersonalizedNotificationSettings />
+
+        {/* Legacy Settings - Keep for backward compatibility */}
+        <div className="space-y-6">
+          <div className="border-t pt-6">
+            <h2 className="text-xl font-semibold mb-4">進階設定</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              以下為進階通知設定選項，適用於特定使用情境
+            </p>
+          </div>
+          {/* Global Status Card */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Bell className="h-5 w-5 text-blue-600" />
+                  <div>
+                    <CardTitle>{t('settings.notifications.status')}</CardTitle>
+                    <CardDescription>{t('settings.notifications.status-desc')}</CardDescription>
+                  </div>
+                </div>
+                {/* Show overall notification status */}
+                <div
+                  className={`text-sm font-medium ${
+                    settings.dmEnabled ? 'text-green-600' : 'text-gray-500'
+                  }`}
+                >
+                  {settings.dmEnabled
+                    ? t('settings.notifications.enabled')
+                    : t('settings.notifications.disabled')}
                 </div>
               </div>
-              {/* Show overall notification status */}
-              <div
-                className={`text-sm font-medium ${
-                  settings.dmEnabled ? 'text-green-600' : 'text-gray-500'
-                }`}
-              >
-                {settings.dmEnabled
-                  ? t('settings.notifications.enabled')
-                  : t('settings.notifications.disabled')}
-              </div>
-            </div>
-          </CardHeader>
-        </Card>
+            </CardHeader>
+          </Card>
 
-        {/* Notification Channels Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('settings.notifications.channels')}</CardTitle>
-            <CardDescription>{t('settings.notifications.channels-desc')}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {settings.dmEnabled ? (
-                  <MessageSquare className="h-5 w-5 text-green-600" />
-                ) : (
-                  <MessageSquare className="h-5 w-5 text-muted-foreground" />
-                )}
-                <div>
-                  <Label htmlFor="dm-enabled" className="font-medium">
-                    {t('settings.notifications.discord-dm')}
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    {t('settings.notifications.discord-dm-desc')}
-                  </p>
+          {/* Notification Channels Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('settings.notifications.channels')}</CardTitle>
+              <CardDescription>{t('settings.notifications.channels-desc')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {settings.dmEnabled ? (
+                    <MessageSquare className="h-5 w-5 text-green-600" />
+                  ) : (
+                    <MessageSquare className="h-5 w-5 text-muted-foreground" />
+                  )}
+                  <div>
+                    <Label htmlFor="dm-enabled" className="font-medium">
+                      {t('settings.notifications.discord-dm')}
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      {t('settings.notifications.discord-dm-desc')}
+                    </p>
+                  </div>
                 </div>
+                <Switch
+                  id="dm-enabled"
+                  checked={settings.dmEnabled}
+                  onCheckedChange={(checked) => handleToggle('dmEnabled', checked)}
+                  disabled={isSaving}
+                />
               </div>
-              <Switch
-                id="dm-enabled"
-                checked={settings.dmEnabled}
-                onCheckedChange={(checked) => handleToggle('dmEnabled', checked)}
-                disabled={isSaving}
-              />
-            </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-muted-foreground" />
-                <div>
-                  <Label htmlFor="email-enabled" className="font-medium">
-                    {t('settings.notifications.email')}
-                    <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
-                      {t('settings.notifications.coming-soon')}
-                    </span>
-                  </Label>
-                  <p className="text-sm text-muted-foreground">
-                    {t('settings.notifications.email-desc')}
-                  </p>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Mail className="h-5 w-5 text-muted-foreground" />
+                  <div>
+                    <Label htmlFor="email-enabled" className="font-medium">
+                      {t('settings.notifications.email')}
+                      <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                        {t('settings.notifications.coming-soon')}
+                      </span>
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      {t('settings.notifications.email-desc')}
+                    </p>
+                  </div>
                 </div>
+                <Switch id="email-enabled" checked={false} disabled={true} />
               </div>
-              <Switch id="email-enabled" checked={false} disabled={true} />
-            </div>
 
-            <div className="pt-4 border-t">
-              <Button
-                variant="outline"
-                onClick={() => testMutation.mutate()}
-                disabled={testMutation.isPending || !settings.dmEnabled}
-                className="w-full"
-              >
-                {testMutation.isPending ? (
-                  <>
-                    <LoadingSpinner size="sm" className="mr-2" />
-                    {t('settings.notifications.sending')}
-                  </>
-                ) : (
-                  <>
-                    <Bell className="mr-2 h-4 w-4" />
-                    {t('settings.notifications.send-test')}
-                  </>
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => testMutation.mutate()}
+                  disabled={testMutation.isPending || !settings.dmEnabled}
+                  className="w-full"
+                >
+                  {testMutation.isPending ? (
+                    <>
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      {t('settings.notifications.sending')}
+                    </>
+                  ) : (
+                    <>
+                      <Bell className="mr-2 h-4 w-4" />
+                      {t('settings.notifications.send-test')}
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Notification Frequency */}
-        <NotificationFrequencySelector
-          frequency={settings.frequency}
-          onFrequencyChange={(frequency) => handleUpdate({ frequency })}
-          disabled={isSaving || !settings.dmEnabled}
-        />
+          {/* Notification Frequency */}
+          <NotificationFrequencySelector
+            frequency={settings.frequency}
+            onFrequencyChange={(frequency) => handleUpdate({ frequency })}
+            disabled={isSaving || !settings.dmEnabled}
+          />
 
-        {/* Quiet Hours */}
-        <QuietHoursSettings
-          quietHours={settings.quietHours}
-          onQuietHoursChange={(quietHours) => handleUpdate({ quietHours })}
-          disabled={isSaving || !settings.dmEnabled}
-        />
+          {/* Quiet Hours */}
+          <QuietHoursSettings
+            quietHours={settings.quietHours}
+            onQuietHoursChange={(quietHours) => handleUpdate({ quietHours })}
+            disabled={isSaving || !settings.dmEnabled}
+          />
 
-        {/* Tinkering Index Threshold */}
-        <TinkeringIndexThreshold
-          threshold={settings.minTinkeringIndex}
-          onThresholdChange={(minTinkeringIndex) => handleUpdate({ minTinkeringIndex })}
-          disabled={isSaving || !settings.dmEnabled}
-        />
+          {/* Tinkering Index Threshold */}
+          <TinkeringIndexThreshold
+            threshold={settings.minTinkeringIndex}
+            onThresholdChange={(minTinkeringIndex) => handleUpdate({ minTinkeringIndex })}
+            disabled={isSaving || !settings.dmEnabled}
+          />
 
-        {/* Feed-specific Notification Settings */}
-        <FeedNotificationSettings
-          feedSettings={settings.feedSettings}
-          onFeedSettingsChange={(feedSettings) => handleUpdate({ feedSettings })}
-          disabled={isSaving || !settings.dmEnabled}
-        />
+          {/* Feed-specific Notification Settings */}
+          <FeedNotificationSettings
+            feedSettings={settings.feedSettings}
+            onFeedSettingsChange={(feedSettings) => handleUpdate({ feedSettings })}
+            disabled={isSaving || !settings.dmEnabled}
+          />
 
-        {/* Notification Preview */}
-        <NotificationPreview settings={settings} />
+          {/* Notification Preview */}
+          <NotificationPreview settings={settings} />
 
-        {/* Notification History */}
-        <NotificationHistoryPanel />
+          {/* Notification History */}
+          <NotificationHistoryPanel />
+        </div>
       </div>
     </div>
   );

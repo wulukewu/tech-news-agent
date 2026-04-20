@@ -14,6 +14,10 @@ from app.repositories.base import BaseRepository, IRepository
 from app.repositories.feed import Feed, FeedRepository
 from app.repositories.reading_list import ReadingListItem, ReadingListRepository
 from app.repositories.user import User, UserRepository
+from app.repositories.user_notification_preferences import (
+    UserNotificationPreferences,
+    UserNotificationPreferencesRepository,
+)
 from app.repositories.user_preferences import UserPreferences, UserPreferencesRepository
 from app.repositories.user_subscription import UserSubscription, UserSubscriptionRepository
 
@@ -30,6 +34,8 @@ __all__ = [
     "ReadingListItem",
     "ReadingListRepository",
     "User",
+    "UserNotificationPreferences",
+    "UserNotificationPreferencesRepository",
     "UserPreferences",
     "UserPreferencesRepository",
     "UserRepository",

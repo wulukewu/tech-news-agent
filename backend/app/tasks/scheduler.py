@@ -17,10 +17,18 @@ logger = logging.getLogger(__name__)
 # Global scheduler instance (initialized lazily)
 _scheduler: AsyncIOScheduler | None = None
 
+# Global dynamic scheduler instance (initialized lazily)
+_dynamic_scheduler = None
+
 
 def get_scheduler() -> AsyncIOScheduler | None:
     """Get the global scheduler instance."""
     return _scheduler
+
+
+def get_dynamic_scheduler():
+    """Get the global dynamic scheduler instance."""
+    return _dynamic_scheduler
 
 
 def __getattr__(name: str):
@@ -72,6 +80,9 @@ async def send_dm_notifications():
     """
     發送 DM 通知給所有啟用通知的使用者
 
+    ⚠️ DEPRECATED: This function is deprecated in favor of personalized notification scheduling.
+    Use the DynamicScheduler service for individual user notification scheduling instead.
+
     此任務會：
     1. 查詢所有啟用 DM 通知的使用者
     2. 為每個使用者查詢其訂閱的最新文章
@@ -79,6 +90,10 @@ async def send_dm_notifications():
 
     Validates: Requirements 18.1, 18.2, 18.3, 18.4
     """
+    logger.warning(
+        "send_dm_notifications is deprecated. "
+        "Use DynamicScheduler for personalized notification scheduling instead."
+    )
     logger.info("Starting DM notification job")
 
     try:
@@ -495,7 +510,7 @@ def setup_scheduler():
 
     Validates: Requirements 6.1, 6.2, 6.3, 6.4, 6.5, 6.6
     """
-    global _scheduler
+    global _scheduler, _dynamic_scheduler
 
     logger.info("Setting up scheduler...")
 
@@ -517,6 +532,14 @@ def setup_scheduler():
         logger.info(f"Scheduler initialized: {_scheduler}")
     else:
         logger.info(f"Scheduler already initialized: {_scheduler}")
+
+    # Initialize dynamic scheduler if not already done
+    if _dynamic_scheduler is None:
+        logger.info("Initializing DynamicScheduler...")
+        from app.services.dynamic_scheduler import DynamicScheduler
+
+        _dynamic_scheduler = DynamicScheduler(_scheduler)
+        logger.info("DynamicScheduler initialized successfully")
 
     # Get CRON expression from settings
     cron_expression = settings.scheduler_cron
@@ -541,31 +564,21 @@ def setup_scheduler():
         replace_existing=True,
     )
 
-    # Register DM notification job (runs after background fetch, with 10 minute delay)
-    # This ensures articles are analyzed before sending notifications
-    dm_cron = settings.dm_notification_cron or "10 */6 * * *"  # 10 minutes after fetch job
-    try:
-        dm_trigger = CronTrigger.from_crontab(dm_cron, timezone=scheduler_tz)
-        _scheduler.add_job(
-            send_dm_notifications,
-            trigger=dm_trigger,
-            id="dm_notifications",
-            name="Send DM Notifications to Users",
-            replace_existing=True,
-        )
-        logger.info(
-            f"DM notification job registered: " f"CRON='{dm_cron}', " f"Timezone='{scheduler_tz}'"
-        )
-    except (ValueError, TypeError) as e:
-        logger.warning(f"Invalid DM notification CRON expression '{dm_cron}': {e}")
-        logger.warning("DM notifications will not be scheduled")
-
     # Register token blacklist cleanup job (runs every hour)
     _scheduler.add_job(
         cleanup_token_blacklist,
         trigger=CronTrigger(hour="*", timezone=scheduler_tz),  # Every hour
         id="token_blacklist_cleanup",
         name="Token Blacklist Cleanup",
+        replace_existing=True,
+    )
+
+    # Register dynamic scheduler cleanup job (runs every 6 hours)
+    _scheduler.add_job(
+        _dynamic_scheduler.cleanup_expired_jobs,
+        trigger=CronTrigger(hour="*/6", timezone=scheduler_tz),  # Every 6 hours
+        id="dynamic_scheduler_cleanup",
+        name="Dynamic Scheduler Cleanup",
         replace_existing=True,
     )
 
@@ -578,6 +591,10 @@ def setup_scheduler():
     )
     logger.info(
         f"Token blacklist cleanup job registered: " f"Runs every hour in timezone '{scheduler_tz}'"
+    )
+    logger.info(
+        f"Dynamic scheduler cleanup job registered: "
+        f"Runs every 6 hours in timezone '{scheduler_tz}'"
     )
 
     # Verify scheduler was initialized

@@ -18,7 +18,6 @@ import pytest
 from app.core.errors import DatabaseError, ServiceError
 from app.repositories.feed import FeedRepository
 from app.repositories.user_subscription import UserSubscriptionRepository
-from app.schemas.recommendation import Feed
 from app.services.recommendation_service import RecommendationService
 
 

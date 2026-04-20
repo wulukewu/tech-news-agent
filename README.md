@@ -186,7 +186,6 @@ DISCORD_CHANNEL_ID=your-channel-id  # For channel notifications
 
 # Scheduler Configuration
 SCHEDULER_CRON=0 */6 * * *          # Every 6 hours
-DM_NOTIFICATION_CRON=10 */6 * * *   # 10 minutes after fetch
 SCHEDULER_TIMEZONE=Asia/Taipei
 
 # Application Settings

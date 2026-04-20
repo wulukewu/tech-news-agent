@@ -81,7 +81,64 @@ async def lifespan(app: FastAPI):
         logger.error(f"Failed to start scheduler: {e}", exc_info=True)
         raise
 
-    # 2. Start the Discord Bot in the background
+    # 2. Initialize notification system integration
+    try:
+        from app.services.notification_monitoring import initialize_notification_monitoring_service
+        from app.services.notification_system_integration import (
+            initialize_notification_system_integration,
+        )
+        from app.services.preference_synchronization_service import (
+            initialize_preference_sync_service,
+        )
+        from app.services.supabase_service import SupabaseService
+        from app.services.system_initialization import initialize_personalized_notification_system
+        from app.tasks.scheduler import get_dynamic_scheduler
+
+        # Get required services
+        dynamic_scheduler = get_dynamic_scheduler()
+        supabase_service = SupabaseService()
+
+        # Initialize the integrated notification system
+        integration_service = initialize_notification_system_integration(
+            supabase_service=supabase_service,
+            dynamic_scheduler=dynamic_scheduler,
+            bot_client=bot,  # Pass the Discord bot client
+        )
+
+        logger.info("Notification system integration initialized successfully.")
+
+        # Initialize monitoring service
+        monitoring_service = initialize_notification_monitoring_service(supabase_service)
+        await monitoring_service.start_monitoring()
+        logger.info("Notification monitoring service initialized and started.")
+
+        # Also initialize the legacy preference sync service for backward compatibility
+        initialize_preference_sync_service(dynamic_scheduler)
+        logger.info(
+            "Legacy preference synchronization service initialized for backward compatibility."
+        )
+
+        # Initialize the personalized notification system (migrate users, start scheduling)
+        logger.info("Starting personalized notification system initialization...")
+        init_results = await initialize_personalized_notification_system(supabase_service)
+
+        if init_results.get("success", False):
+            logger.info(
+                "Personalized notification system initialization completed successfully",
+                migrated_users=init_results.get("migration", {}).get("migrated_count", 0),
+                scheduled_users=init_results.get("scheduling", {}).get("scheduled_count", 0),
+            )
+        else:
+            logger.warning(
+                "Personalized notification system initialization completed with issues",
+                results=init_results,
+            )
+
+    except Exception as e:
+        logger.error(f"Failed to initialize notification system integration: {e}", exc_info=True)
+        # Don't raise here as this is not critical for basic functionality
+
+    # 3. Start the Discord Bot in the background
     bot_task = None
     if settings.discord_token:
         logger.info("Starting Discord Bot in background...")
@@ -103,6 +160,17 @@ async def lifespan(app: FastAPI):
     yield  # The FastAPI app runs and serves requests here
 
     logger.info("Shutting down Tech News Agent lifespan...")
+
+    # Shutdown monitoring service
+    try:
+        from app.services.notification_monitoring import get_notification_monitoring_service
+
+        monitoring_service = get_notification_monitoring_service()
+        if monitoring_service:
+            await monitoring_service.stop_monitoring()
+            logger.info("Notification monitoring service stopped.")
+    except Exception as e:
+        logger.error(f"Error stopping monitoring service: {e}")
 
     # Shutdown Scheduler
     scheduler = get_scheduler()
@@ -187,6 +255,13 @@ app.include_router(logs.router, tags=["logs"])
 from app.api import notifications
 
 app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
+
+# Import and register notification system router
+from app.api import notification_system
+
+app.include_router(
+    notification_system.router, prefix="/api/notification-system", tags=["notification-system"]
+)
 
 
 @app.get("/")

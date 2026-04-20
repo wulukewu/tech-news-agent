@@ -59,9 +59,6 @@ class Settings(BaseSettings):
     scheduler_cron: str = "0 */6 * * *"  # Every 6 hours by default
     scheduler_timezone: str | None = None  # Defaults to timezone if not set
 
-    # DM Notification Configuration
-    dm_notification_cron: str | None = "10 */6 * * *"  # 10 minutes after fetch job
-
     # Batch Processing Configuration
     batch_size: int = 50  # Maximum articles per batch
     batch_split_threshold: int = 100  # Split into multiple batches above this

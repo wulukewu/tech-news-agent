@@ -1,4 +1,13 @@
-# Quick Start: Task 1.4 Migration
+# Quick Start: Database Migrations
+
+## Available Migrations
+
+- **001**: Add deep_summary to articles table
+- **002**: Create user_preferences table (onboarding system)
+- **003**: Extend feeds table for recommendations
+- **004**: Create analytics_events table
+- **005**: Create user_notification_preferences table (personalized notifications)
+- **006**: Create notification_locks table (multi-instance coordination)
 
 ## For Existing Databases
 
@@ -11,6 +20,19 @@ Make sure you have:
 - Python 3 with `supabase` and `python-dotenv` packages
 
 ### Step 2: Apply Migration
+
+#### For Notification Preferences (Migrations 005 & 006)
+
+```bash
+# Apply both notification preference migrations
+psql $DATABASE_URL -f scripts/migrations/005_create_user_notification_preferences_table.sql
+psql $DATABASE_URL -f scripts/migrations/006_create_notification_locks_table.sql
+
+# Verify the migrations
+python3 scripts/migrations/verify_notification_preferences.py
+```
+
+#### For Other Migrations
 
 ```bash
 # Option A: Using the shell script (recommended)

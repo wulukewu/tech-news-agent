@@ -86,3 +86,142 @@ export async function getAvailableFeeds(): Promise<
   }>('/api/feeds');
   return response.data.data; // Extract data from SuccessResponse wrapper
 }
+
+// Personalized Notification Preferences API
+
+/**
+ * User notification preferences for personalized scheduling
+ */
+export interface UserNotificationPreferences {
+  id: string;
+  userId: string;
+  frequency: 'daily' | 'weekly' | 'monthly' | 'disabled';
+  notificationTime: string; // HH:MM format
+  timezone: string;
+  dmEnabled: boolean;
+  emailEnabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Request model for updating user notification preferences
+ */
+export interface UpdateUserNotificationPreferencesRequest {
+  frequency?: 'daily' | 'weekly' | 'monthly' | 'disabled';
+  notificationTime?: string; // HH:MM format
+  timezone?: string;
+  dmEnabled?: boolean;
+  emailEnabled?: boolean;
+}
+
+/**
+ * Timezone option for selector
+ */
+export interface TimezoneOption {
+  value: string;
+  label: string;
+  offset: string;
+}
+
+/**
+ * Notification preview response
+ */
+export interface NotificationPreviewResponse {
+  nextNotificationTime: string | null;
+  localTime: string | null;
+  utcTime: string | null;
+  message: string;
+}
+
+/**
+ * Notification status response
+ */
+export interface NotificationStatusResponse {
+  scheduled: boolean;
+  jobId?: string;
+  nextRunTime?: string;
+  message: string;
+}
+
+/**
+ * Get user's personalized notification preferences
+ *
+ * @returns Promise<UserNotificationPreferences> - User's notification preferences
+ * @throws Error if request fails
+ */
+export async function getNotificationPreferences(): Promise<UserNotificationPreferences> {
+  const response = await apiClient.get<{
+    success: boolean;
+    data: UserNotificationPreferences;
+  }>('/api/notifications/preferences');
+  return response.data.data;
+}
+
+/**
+ * Update user's personalized notification preferences
+ *
+ * @param updates - Updated notification preferences
+ * @returns Promise<UserNotificationPreferences> - Updated notification preferences
+ * @throws Error if request fails
+ */
+export async function updateNotificationPreferences(
+  updates: UpdateUserNotificationPreferencesRequest
+): Promise<UserNotificationPreferences> {
+  const response = await apiClient.put<{
+    success: boolean;
+    data: UserNotificationPreferences;
+  }>('/api/notifications/preferences', updates);
+  return response.data.data;
+}
+
+/**
+ * Preview next notification time based on preferences
+ *
+ * @param frequency - Notification frequency
+ * @param notificationTime - Time in HH:MM format
+ * @param timezone - IANA timezone identifier
+ * @returns Promise<NotificationPreviewResponse> - Preview information
+ * @throws Error if request fails
+ */
+export async function previewNotificationTime(
+  frequency: string,
+  notificationTime: string,
+  timezone: string
+): Promise<NotificationPreviewResponse> {
+  const response = await apiClient.get<{
+    success: boolean;
+    data: NotificationPreviewResponse;
+  }>('/api/notifications/preferences/preview', {
+    params: { frequency, notification_time: notificationTime, timezone },
+  });
+  return response.data.data;
+}
+
+/**
+ * Get list of supported timezones
+ *
+ * @returns Promise<TimezoneOption[]> - List of timezone options
+ * @throws Error if request fails
+ */
+export async function getSupportedTimezones(): Promise<TimezoneOption[]> {
+  const response = await apiClient.get<{
+    success: boolean;
+    data: { timezones: TimezoneOption[]; total: number };
+  }>('/api/notifications/preferences/timezones');
+  return response.data.data.timezones;
+}
+
+/**
+ * Get notification scheduling status
+ *
+ * @returns Promise<NotificationStatusResponse> - Scheduling status
+ * @throws Error if request fails
+ */
+export async function getNotificationStatus(): Promise<NotificationStatusResponse> {
+  const response = await apiClient.get<{
+    success: boolean;
+    data: NotificationStatusResponse;
+  }>('/api/notifications/preferences/status');
+  return response.data.data;
+}
