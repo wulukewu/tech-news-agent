@@ -422,7 +422,7 @@ class DynamicScheduler(BaseService):
 
                 # Get user's discord_id from database
                 try:
-                    user = await supabase.get_user_by_discord_id(None, user_id=user_id)
+                    user = await supabase.get_user_by_id(user_id)
                     if not user or not user.get("discord_id"):
                         self.logger.error(
                             "Could not find discord_id for user",

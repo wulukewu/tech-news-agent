@@ -2,6 +2,7 @@ import asyncio
 import logging
 from datetime import UTC, datetime
 from typing import Optional
+from uuid import UUID
 
 from supabase import Client, create_client
 
@@ -745,6 +746,68 @@ class SupabaseService:
             self._handle_database_error(
                 e, {"discord_id": discord_id, "operation": "get_user_by_discord_id"}
             )
+
+    async def get_user_by_id(self, user_id: UUID) -> Optional[dict]:
+        """取得使用者資料（根據 User ID）
+
+        Args:
+            user_id: 使用者 UUID
+
+        Returns:
+            使用者資料字典，包含 id, discord_id 等欄位，如果找不到則返回 None
+
+        Raises:
+            SupabaseServiceError: 當資料庫操作失敗時
+        """
+        logger.info(
+            "Database operation: get_user_by_id",
+            extra={"operation_type": "SELECT", "table": "users", "user_id": str(user_id)},
+        )
+
+        try:
+            response = (
+                self.client.table("users")
+                .select("id, discord_id, created_at")
+                .eq("id", str(user_id))
+                .execute()
+            )
+
+            if response.data and len(response.data) > 0:
+                user_data = response.data[0]
+                logger.info(
+                    "Database operation completed: get_user_by_id (user found)",
+                    extra={
+                        "operation_type": "SELECT",
+                        "table": "users",
+                        "affected_records": 1,
+                        "user_id": str(user_id),
+                    },
+                )
+                return user_data
+            else:
+                logger.info(
+                    "Database operation completed: get_user_by_id (user not found)",
+                    extra={
+                        "operation_type": "SELECT",
+                        "table": "users",
+                        "affected_records": 0,
+                        "user_id": str(user_id),
+                    },
+                )
+                return None
+
+        except Exception as e:
+            logger.error(
+                f"Failed to get user by id: {e}",
+                exc_info=True,
+                extra={
+                    "operation_type": "SELECT",
+                    "table": "users",
+                    "user_id": str(user_id),
+                    "error_type": type(e).__name__,
+                },
+            )
+            self._handle_database_error(e, {"user_id": str(user_id), "operation": "get_user_by_id"})
 
     async def get_active_feeds(self) -> list["RSSSource"]:
         """取得所有啟用的 RSS 訂閱源
