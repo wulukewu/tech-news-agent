@@ -2183,7 +2183,9 @@ class SupabaseService:
             logger.error(f"Failed to fetch users with DM enabled: {e}", exc_info=True)
             self._handle_database_error(e, {"operation": "get_users_with_dm_enabled"})
 
-    async def record_sent_articles(self, discord_id: str, article_ids: list[str]) -> None:
+    async def record_sent_articles(
+        self, discord_id: str, article_ids: list[str], notification_type: str = "weekly"
+    ) -> None:
         """記錄已發送給使用者的文章
 
         將文章記錄到 dm_sent_articles 表格，用於追蹤哪些文章已經透過 DM 通知發送給使用者。
@@ -2192,6 +2194,7 @@ class SupabaseService:
         Args:
             discord_id: Discord 使用者 ID
             article_ids: 已發送的文章 ID 列表
+            notification_type: 通知類型 ('daily', 'weekly', 'monthly')
 
         Raises:
             SupabaseServiceError: 當資料庫操作失敗時
@@ -2210,6 +2213,7 @@ class SupabaseService:
                 "table": "dm_sent_articles",
                 "discord_id": discord_id,
                 "article_count": len(article_ids),
+                "notification_type": notification_type,
             },
         )
 
@@ -2219,7 +2223,11 @@ class SupabaseService:
 
             # 準備記錄資料
             records = [
-                {"user_id": str(user_uuid), "article_id": str(article_id)}
+                {
+                    "user_id": str(user_uuid),
+                    "article_id": str(article_id),
+                    "notification_type": notification_type,
+                }
                 for article_id in article_ids
             ]
 
@@ -2271,14 +2279,19 @@ class SupabaseService:
             logger.warning(f"Continuing without recording sent articles for user {discord_id}")
 
     async def get_user_articles(
-        self, discord_id: str, days: int = 7, limit: int = 20
+        self,
+        discord_id: str,
+        days: int = 7,
+        limit: int = 20,
+        frequency: str | None = None,
     ) -> list["ArticleSchema"]:
         """查詢使用者訂閱的文章
 
         Args:
             discord_id: Discord 使用者 ID
-            days: 查詢最近幾天的文章
+            days: 查詢最近幾天的文章（如果提供 frequency 則忽略此參數）
             limit: 返回的最大文章數量
+            frequency: 通知頻率 ('daily', 'weekly', 'monthly')，用於自動調整時間範圍
 
         Returns:
             文章列表，按 tinkering_index 降序排列
@@ -2290,6 +2303,18 @@ class SupabaseService:
 
         from app.schemas.article import ArticleSchema
 
+        # 根據頻率自動調整時間範圍
+        if frequency:
+            if frequency == "daily":
+                days = 1
+            elif frequency == "weekly":
+                days = 7
+            elif frequency == "monthly":
+                days = 30
+            else:
+                # 預設使用傳入的 days 參數
+                pass
+
         logger.info(
             "Database operation: get_user_articles",
             extra={
@@ -2298,6 +2323,7 @@ class SupabaseService:
                 "discord_id": discord_id,
                 "days": days,
                 "limit": limit,
+                "frequency": frequency,
             },
         )
 

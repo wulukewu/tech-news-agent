@@ -103,7 +103,32 @@ class DMNotificationService:
 
             # 查詢使用者訂閱的文章
             supabase = SupabaseService()
-            articles = await supabase.get_user_articles(discord_id=discord_id, days=7, limit=20)
+
+            # 取得使用者的通知頻率設定
+            user_data = await supabase.get_user_by_discord_id(discord_id)
+            frequency = "weekly"  # 預設值
+            if user_data and user_data.get("id"):
+                try:
+                    from uuid import UUID
+
+                    user_uuid = UUID(user_data["id"])
+                    prefs_response = (
+                        supabase.client.table("user_notification_preferences")
+                        .select("frequency")
+                        .eq("user_id", str(user_uuid))
+                        .execute()
+                    )
+                    if prefs_response.data and len(prefs_response.data) > 0:
+                        frequency = prefs_response.data[0].get("frequency", "weekly")
+                except Exception as freq_error:
+                    logger.warning(
+                        f"Failed to get notification frequency for user {discord_id}: {freq_error}"
+                    )
+
+            # 根據頻率查詢文章
+            articles = await supabase.get_user_articles(
+                discord_id=discord_id, limit=20, frequency=frequency
+            )
 
             if not articles:
                 logger.info(f"No articles found for user {discord_id}, skipping DM")
@@ -205,7 +230,7 @@ class DMNotificationService:
                 try:
                     article_ids = [str(article.id) for article in articles if article.id]
                     if article_ids:
-                        await supabase.record_sent_articles(discord_id, article_ids)
+                        await supabase.record_sent_articles(discord_id, article_ids, frequency)
                         logger.info(
                             f"Recorded {len(article_ids)} sent articles for user {discord_id}"
                         )
@@ -293,7 +318,7 @@ class DMNotificationService:
         """
         embed = discord.Embed(
             title="📰 本週技術文章精選",
-            description=f"為你精選了 {len(articles)} 篇技術文章",
+            description=f"為你精選了 {len(articles)} 篇新技術文章",
             color=discord.Color.blue(),
             timestamp=datetime.now(UTC),
         )
@@ -310,12 +335,47 @@ class DMNotificationService:
         for category, cat_articles in list(categories.items())[:5]:
             articles_text = ""
             for article in cat_articles[:5]:
-                # 截斷標題
-                title = article.title[:80] + "..." if len(article.title) > 80 else article.title
-                tinkering = "⭐" * (article.tinkering_index or 3)
-                articles_text += f"{tinkering} [{title}]({article.url})\n"
+                # 完整標題（不截斷）
+                title = article.title
 
-            embed.add_field(name=f"📂 {category}", value=articles_text or "無文章", inline=False)
+                # 星星評分
+                tinkering = "⭐" * (article.tinkering_index or 3)
+
+                # 文章摘要（前 100 字）
+                summary = ""
+                if article.ai_summary:
+                    summary = (
+                        article.ai_summary[:100] + "..."
+                        if len(article.ai_summary) > 100
+                        else article.ai_summary
+                    )
+
+                # 發布時間（相對時間）
+                time_ago = ""
+                if article.published_at:
+                    now = datetime.now(UTC)
+                    delta = now - article.published_at
+                    if delta.days > 0:
+                        time_ago = f"🗓️ {delta.days} 天前"
+                    elif delta.seconds >= 3600:
+                        hours = delta.seconds // 3600
+                        time_ago = f"🗓️ {hours} 小時前"
+                    else:
+                        minutes = delta.seconds // 60
+                        time_ago = f"🗓️ {minutes} 分鐘前"
+
+                # 組合文章資訊
+                articles_text += f"{tinkering} **{title}**\n"
+                articles_text += f"🔗 {article.url}\n"
+                if summary:
+                    articles_text += f"📝 {summary}\n"
+                if time_ago:
+                    articles_text += f"{time_ago}\n"
+                articles_text += "\n"
+
+            # 添加分類欄位，顯示文章數量
+            field_name = f"📂 {category} ({len(cat_articles)} 篇)"
+            embed.add_field(name=field_name, value=articles_text or "無文章", inline=False)
 
         embed.set_footer(text="💡 使用 /news_now 查看完整列表 | 使用 /notifications 管理通知設定")
 
