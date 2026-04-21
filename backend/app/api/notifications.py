@@ -313,6 +313,8 @@ async def preview_notification_time(
     frequency: str,
     notification_time: str,
     timezone: str,
+    notification_day_of_week: int | None = None,
+    notification_day_of_month: int | None = None,
     current_user: dict[str, Any] = Depends(get_current_user),
 ):
     """
@@ -334,7 +336,11 @@ async def preview_notification_time(
 
         # Calculate next notification time
         next_time = TimezoneConverter.get_next_notification_time(
-            frequency=frequency, notification_time=notification_time, timezone=timezone
+            frequency=frequency,
+            notification_time=notification_time,
+            timezone=timezone,
+            notification_day_of_week=notification_day_of_week,
+            notification_day_of_month=notification_day_of_month,
         )
 
         if next_time is None:
