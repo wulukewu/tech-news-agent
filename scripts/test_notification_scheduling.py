@@ -1,117 +1,210 @@
 #!/usr/bin/env python3
 """
-Test notification scheduling functionality
+Test notification scheduling with new day fields
+
+This script tests the updated scheduling logic with notification_day_of_week
+and notification_day_of_month fields.
 """
 
-import asyncio
 import sys
+from datetime import datetime, time
 from pathlib import Path
 
-# Add backend to path
-backend_path = Path(__file__).parent.parent / "backend"
-sys.path.insert(0, str(backend_path))
+# Add parent directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent / "backend"))
 
-from uuid import UUID
-from datetime import datetime, timedelta
-from app.services.dynamic_scheduler import DynamicScheduler
-from app.services.preference_service import PreferenceService
-from app.services.supabase_service import SupabaseService
+from app.core.timezone_converter import TimezoneConverter
 
 
-async def test_scheduling():
-    """Test notification scheduling"""
-
-    print("🧪 Testing Notification Scheduling")
+def test_daily_notifications():
+    """Test daily notification scheduling."""
+    print("\n📅 Testing Daily Notifications")
     print("=" * 50)
 
-    # Initialize services
-    supabase = SupabaseService()
-    scheduler = DynamicScheduler()
-    preference_service = PreferenceService()
+    next_time = TimezoneConverter.get_next_notification_time(
+        frequency="daily",
+        notification_time="09:00",
+        timezone="Asia/Taipei",
+    )
 
-    # Get all active users
-    print("\n1. Getting all active users...")
-    try:
-        from app.repositories.user_notification_preferences import UserNotificationPreferencesRepository
-        prefs_repo = UserNotificationPreferencesRepository(supabase.client)
-        all_prefs = await prefs_repo.get_all_active_preferences()
+    if next_time:
+        local_time = TimezoneConverter.convert_to_user_time(next_time, "Asia/Taipei")
+        print(f"✅ Next daily notification:")
+        print(f"   UTC: {next_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+        print(f"   Local: {local_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+        print(f"   Day: {local_time.strftime('%A')}")
+    else:
+        print("❌ Failed to calculate next time")
 
-        print(f"   ✅ Found {len(all_prefs)} active users")
 
-        for pref in all_prefs:
-            print(f"\n   User: {pref.user_id}")
-            print(f"   - Frequency: {pref.frequency}")
-            print(f"   - Time: {pref.notification_time}")
-            print(f"   - Timezone: {pref.timezone}")
-            print(f"   - DM Enabled: {pref.dm_enabled}")
-            print(f"   - Email Enabled: {pref.email_enabled}")
+def test_weekly_notifications():
+    """Test weekly notification scheduling with different days."""
+    print("\n📅 Testing Weekly Notifications")
+    print("=" * 50)
 
-    except Exception as e:
-        print(f"   ❌ Error: {e}")
-        return
+    days = {
+        0: "Sunday",
+        1: "Monday",
+        2: "Tuesday",
+        3: "Wednesday",
+        4: "Thursday",
+        5: "Friday",
+        6: "Saturday",
+    }
 
-    # Check scheduler status
-    print("\n2. Checking scheduler status...")
-    try:
-        jobs = scheduler.scheduler.get_jobs()
-        print(f"   ✅ Total jobs in scheduler: {len(jobs)}")
+    for day_num, day_name in days.items():
+        next_time = TimezoneConverter.get_next_notification_time(
+            frequency="weekly",
+            notification_time="18:00",
+            timezone="Asia/Taipei",
+            notification_day_of_week=day_num,
+        )
 
-        user_notification_jobs = [j for j in jobs if j.id.startswith("user_notification_")]
-        print(f"   ✅ User notification jobs: {len(user_notification_jobs)}")
+        if next_time:
+            local_time = TimezoneConverter.convert_to_user_time(next_time, "Asia/Taipei")
+            print(f"\n✅ Next {day_name} notification:")
+            print(f"   UTC: {next_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+            print(f"   Local: {local_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+            print(f"   Day: {local_time.strftime('%A')}")
 
-        for job in user_notification_jobs:
-            print(f"\n   Job ID: {job.id}")
-            print(f"   - Name: {job.name}")
-            print(f"   - Next run: {job.next_run_time}")
-            print(f"   - Trigger: {job.trigger}")
-
-    except Exception as e:
-        print(f"   ❌ Error: {e}")
-        return
-
-    # Test manual notification trigger
-    print("\n3. Testing manual notification trigger...")
-    if all_prefs:
-        test_user = all_prefs[0]
-        print(f"   Testing with user: {test_user.user_id}")
-
-        try:
-            # Try to manually trigger the notification function
-            from app.services.notification_system_integration import get_notification_system_integration
-
-            integration = get_notification_system_integration()
-            if integration:
-                print("   ✅ Notification system integration available")
-
-                # Check if we can send a test notification
-                print("   ℹ️  To send a test notification, use the frontend 'Send Test Notification' button")
+            # Verify it's the correct day
+            expected_weekday = (day_num - 1) % 7  # Convert to Python weekday
+            actual_weekday = local_time.weekday()
+            if actual_weekday == expected_weekday:
+                print(f"   ✓ Correct day verified")
             else:
-                print("   ❌ Notification system integration not available")
-
-        except Exception as e:
-            print(f"   ❌ Error: {e}")
-
-    # Check if scheduler is running
-    print("\n4. Checking if scheduler is running...")
-    try:
-        is_running = scheduler.scheduler.running
-        print(f"   Scheduler running: {is_running}")
-
-        if is_running:
-            print("   ✅ Scheduler is active and will execute jobs at scheduled times")
+                print(f"   ✗ Wrong day! Expected {expected_weekday}, got {actual_weekday}")
         else:
-            print("   ❌ Scheduler is not running!")
+            print(f"❌ Failed to calculate next time for {day_name}")
+
+
+def test_monthly_notifications():
+    """Test monthly notification scheduling with different days."""
+    print("\n📅 Testing Monthly Notifications")
+    print("=" * 50)
+
+    test_days = [1, 5, 10, 15, 20, 25, 28, 31]
+
+    for day in test_days:
+        next_time = TimezoneConverter.get_next_notification_time(
+            frequency="monthly",
+            notification_time="18:00",
+            timezone="Asia/Taipei",
+            notification_day_of_month=day,
+        )
+
+        if next_time:
+            local_time = TimezoneConverter.convert_to_user_time(next_time, "Asia/Taipei")
+            print(f"\n✅ Next notification on day {day}:")
+            print(f"   UTC: {next_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+            print(f"   Local: {local_time.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+            print(f"   Day of month: {local_time.day}")
+
+            # Note: Day might be adjusted for months with fewer days
+            if local_time.day == day:
+                print(f"   ✓ Exact day {day}")
+            else:
+                print(f"   ℹ️  Adjusted to day {local_time.day} (month has fewer days)")
+        else:
+            print(f"❌ Failed to calculate next time for day {day}")
+
+
+def test_default_values():
+    """Test scheduling with default values (backward compatibility)."""
+    print("\n📅 Testing Default Values (Backward Compatibility)")
+    print("=" * 50)
+
+    # Weekly without day_of_week (should default to Friday)
+    next_time = TimezoneConverter.get_next_notification_time(
+        frequency="weekly",
+        notification_time="18:00",
+        timezone="Asia/Taipei",
+    )
+
+    if next_time:
+        local_time = TimezoneConverter.convert_to_user_time(next_time, "Asia/Taipei")
+        print(f"\n✅ Weekly (default):")
+        print(f"   Local: {local_time.strftime('%Y-%m-%d %H:%M:%S %A')}")
+        if local_time.weekday() == 4:  # Friday
+            print(f"   ✓ Correctly defaults to Friday")
+        else:
+            print(f"   ✗ Wrong day! Expected Friday, got {local_time.strftime('%A')}")
+
+    # Monthly without day_of_month (should default to 1st)
+    next_time = TimezoneConverter.get_next_notification_time(
+        frequency="monthly",
+        notification_time="18:00",
+        timezone="Asia/Taipei",
+    )
+
+    if next_time:
+        local_time = TimezoneConverter.convert_to_user_time(next_time, "Asia/Taipei")
+        print(f"\n✅ Monthly (default):")
+        print(f"   Local: {local_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        if local_time.day == 1:
+            print(f"   ✓ Correctly defaults to 1st of month")
+        else:
+            print(f"   ✗ Wrong day! Expected 1st, got {local_time.day}")
+
+
+def test_edge_cases():
+    """Test edge cases like February 31st."""
+    print("\n📅 Testing Edge Cases")
+    print("=" * 50)
+
+    # Test February 31st (should adjust to Feb 28/29)
+    print("\n🔍 Testing February 31st:")
+
+    # Force a date in January to test February
+    from datetime import datetime
+    import zoneinfo
+
+    jan_date = datetime(2024, 1, 15, 12, 0, 0, tzinfo=zoneinfo.ZoneInfo("UTC"))
+
+    next_time = TimezoneConverter.get_next_notification_time(
+        frequency="monthly",
+        notification_time="18:00",
+        timezone="Asia/Taipei",
+        notification_day_of_month=31,
+        from_date=jan_date,
+    )
+
+    if next_time:
+        local_time = TimezoneConverter.convert_to_user_time(next_time, "Asia/Taipei")
+        print(f"   Local: {local_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        if local_time.month == 2:
+            print(f"   ✓ Correctly scheduled for February")
+            if local_time.day in [28, 29]:
+                print(f"   ✓ Correctly adjusted to last day of February ({local_time.day})")
+            else:
+                print(f"   ✗ Wrong day! Expected 28 or 29, got {local_time.day}")
+        else:
+            print(f"   ℹ️  Scheduled for {local_time.strftime('%B')} instead")
+
+
+def main():
+    """Run all tests."""
+    print("\n" + "=" * 50)
+    print("🧪 Notification Scheduling Tests")
+    print("=" * 50)
+
+    try:
+        test_daily_notifications()
+        test_weekly_notifications()
+        test_monthly_notifications()
+        test_default_values()
+        test_edge_cases()
+
+        print("\n" + "=" * 50)
+        print("✅ All tests completed!")
+        print("=" * 50)
 
     except Exception as e:
-        print(f"   ❌ Error: {e}")
-
-    print("\n" + "=" * 50)
-    print("✅ Test completed")
-    print("\n📝 Notes:")
-    print("   - Notifications will be sent at the scheduled times")
-    print("   - Check backend logs for notification execution")
-    print("   - Use 'Send Test Notification' button in frontend to test immediately")
+        print(f"\n❌ Test failed with error: {e}")
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
 
 
 if __name__ == "__main__":
-    asyncio.run(test_scheduling())
+    main()

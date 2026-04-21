@@ -130,7 +130,9 @@ export function PersonalizedNotificationSettings({
       const preview = await previewNotificationTime(
         prefs.frequency,
         prefs.notificationTime,
-        prefs.timezone
+        prefs.timezone,
+        prefs.notificationDayOfWeek,
+        prefs.notificationDayOfMonth
       );
       setPreviewData(preview);
     } catch (error) {
@@ -425,6 +427,62 @@ export function PersonalizedNotificationSettings({
             <CardDescription>設定您希望接收通知的時間和時區</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Weekly: Day of Week Selector */}
+            {preferences.frequency === 'weekly' && (
+              <div className="space-y-2">
+                <Label htmlFor="day-of-week">通知日期</Label>
+                <Select
+                  value={preferences.notificationDayOfWeek?.toString() || '5'}
+                  onValueChange={(value) =>
+                    handleUpdate({ notificationDayOfWeek: parseInt(value) })
+                  }
+                  disabled={isSaving || !preferences.dmEnabled}
+                >
+                  <SelectTrigger id="day-of-week">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">星期日</SelectItem>
+                    <SelectItem value="1">星期一</SelectItem>
+                    <SelectItem value="2">星期二</SelectItem>
+                    <SelectItem value="3">星期三</SelectItem>
+                    <SelectItem value="4">星期四</SelectItem>
+                    <SelectItem value="5">星期五</SelectItem>
+                    <SelectItem value="6">星期六</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">選擇每週的哪一天接收通知</p>
+              </div>
+            )}
+
+            {/* Monthly: Day of Month Selector */}
+            {preferences.frequency === 'monthly' && (
+              <div className="space-y-2">
+                <Label htmlFor="day-of-month">通知日期</Label>
+                <Select
+                  value={preferences.notificationDayOfMonth?.toString() || '1'}
+                  onValueChange={(value) =>
+                    handleUpdate({ notificationDayOfMonth: parseInt(value) })
+                  }
+                  disabled={isSaving || !preferences.dmEnabled}
+                >
+                  <SelectTrigger id="day-of-month">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[300px]">
+                    {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                      <SelectItem key={day} value={day.toString()}>
+                        每月 {day} 號
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  選擇每月的哪一天接收通知（如果該月沒有此日期，將在該月最後一天發送）
+                </p>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="notification-time">通知時間</Label>

@@ -32,6 +32,20 @@ class UserNotificationPreferences(BaseModel):
     notification_time: time = Field(
         ..., description="Time of day to send notifications", serialization_alias="notificationTime"
     )
+    notification_day_of_week: int = Field(
+        default=5,
+        ge=0,
+        le=6,
+        description="Day of week for weekly notifications (0=Sunday, 6=Saturday)",
+        serialization_alias="notificationDayOfWeek",
+    )
+    notification_day_of_month: int = Field(
+        default=1,
+        ge=1,
+        le=31,
+        description="Day of month for monthly notifications (1-31)",
+        serialization_alias="notificationDayOfMonth",
+    )
     timezone: str = Field(..., description="IANA timezone identifier")
     dm_enabled: bool = Field(
         ...,
@@ -95,6 +109,20 @@ class CreateUserNotificationPreferencesRequest(BaseModel):
     )
     notification_time: str = Field(
         default="18:00", description="Time in HH:MM format", serialization_alias="notificationTime"
+    )
+    notification_day_of_week: int = Field(
+        default=5,
+        ge=0,
+        le=6,
+        description="Day of week for weekly notifications (0=Sunday, 6=Saturday)",
+        serialization_alias="notificationDayOfWeek",
+    )
+    notification_day_of_month: int = Field(
+        default=1,
+        ge=1,
+        le=31,
+        description="Day of month for monthly notifications (1-31)",
+        serialization_alias="notificationDayOfMonth",
     )
     timezone: str = Field(default="Asia/Taipei", description="IANA timezone identifier")
     dm_enabled: bool = Field(
@@ -163,6 +191,22 @@ class UpdateUserNotificationPreferencesRequest(BaseModel):
         description="Time in HH:MM format",
         alias="notificationTime",
         serialization_alias="notificationTime",
+    )
+    notification_day_of_week: int | None = Field(
+        default=None,
+        ge=0,
+        le=6,
+        description="Day of week for weekly notifications (0=Sunday, 6=Saturday)",
+        alias="notificationDayOfWeek",
+        serialization_alias="notificationDayOfWeek",
+    )
+    notification_day_of_month: int | None = Field(
+        default=None,
+        ge=1,
+        le=31,
+        description="Day of month for monthly notifications (1-31)",
+        alias="notificationDayOfMonth",
+        serialization_alias="notificationDayOfMonth",
     )
     timezone: str | None = Field(default=None, description="IANA timezone identifier")
     dm_enabled: bool | None = Field(

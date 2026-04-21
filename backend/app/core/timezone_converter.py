@@ -123,7 +123,12 @@ class TimezoneConverter:
 
     @staticmethod
     def get_next_notification_time(
-        frequency: str, notification_time: str, timezone: str, from_date: Optional[datetime] = None
+        frequency: str,
+        notification_time: str,
+        timezone: str,
+        from_date: Optional[datetime] = None,
+        notification_day_of_week: Optional[int] = None,
+        notification_day_of_month: Optional[int] = None,
     ) -> Optional[datetime]:
         """
         Calculate the next notification time based on user preferences.
@@ -133,6 +138,8 @@ class TimezoneConverter:
             notification_time: Time in HH:MM format (e.g., '18:00')
             timezone: IANA timezone identifier
             from_date: Reference date to calculate from (defaults to current UTC time)
+            notification_day_of_week: Day of week for weekly notifications (0=Sunday, 6=Saturday)
+            notification_day_of_month: Day of month for monthly notifications (1-31)
 
         Returns:
             datetime: Next notification time in UTC, or None if disabled
@@ -197,38 +204,84 @@ class TimezoneConverter:
                 if frequency == "daily":
                     next_notification += timedelta(days=1)
                 elif frequency == "weekly":
-                    # Default to Friday (weekday 4, where Monday is 0)
-                    days_until_friday = (4 - next_notification.weekday()) % 7
-                    if days_until_friday == 0:  # It's Friday but time has passed
-                        days_until_friday = 7
-                    next_notification += timedelta(days=days_until_friday)
+                    # Use notification_day_of_week if provided, otherwise default to Friday (4)
+                    target_weekday = (
+                        notification_day_of_week if notification_day_of_week is not None else 5
+                    )
+                    # Convert from our format (0=Sunday) to Python's format (0=Monday)
+                    # Our: 0=Sun, 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat
+                    # Python: 0=Mon, 1=Tue, 2=Wed, 3=Thu, 4=Fri, 5=Sat, 6=Sun
+                    python_weekday = (target_weekday - 1) % 7
+
+                    current_weekday = next_notification.weekday()
+                    days_ahead = (python_weekday - current_weekday) % 7
+                    if days_ahead == 0:  # It's the target day but time has passed
+                        days_ahead = 7
+                    next_notification += timedelta(days=days_ahead)
                 elif frequency == "monthly":
-                    # Move to the first day of next month
+                    # Use notification_day_of_month if provided, otherwise default to 1
+                    target_day = (
+                        notification_day_of_month if notification_day_of_month is not None else 1
+                    )
+
+                    # Move to next month
                     if next_notification.month == 12:
-                        next_notification = next_notification.replace(
-                            year=next_notification.year + 1, month=1, day=1
-                        )
+                        next_year = next_notification.year + 1
+                        next_month = 1
                     else:
-                        next_notification = next_notification.replace(
-                            month=next_notification.month + 1, day=1
-                        )
+                        next_year = next_notification.year
+                        next_month = next_notification.month + 1
+
+                    # Handle months with fewer days (e.g., Feb 31 -> Feb 28/29)
+                    import calendar
+
+                    max_day = calendar.monthrange(next_year, next_month)[1]
+                    actual_day = min(target_day, max_day)
+
+                    next_notification = next_notification.replace(
+                        year=next_year, month=next_month, day=actual_day
+                    )
             else:
-                # For weekly notifications, always schedule for Friday even if time hasn't passed today
-                if frequency == "weekly" and next_notification.weekday() != 4:
-                    days_until_friday = (4 - next_notification.weekday()) % 7
-                    if days_until_friday == 0:  # It's Friday
-                        days_until_friday = 7
-                    next_notification += timedelta(days=days_until_friday)
-                # For monthly notifications, always schedule for the first day of next month
+                # For weekly notifications, schedule for the target day
+                if frequency == "weekly":
+                    target_weekday = (
+                        notification_day_of_week if notification_day_of_week is not None else 5
+                    )
+                    python_weekday = (target_weekday - 1) % 7
+
+                    current_weekday = next_notification.weekday()
+                    if current_weekday != python_weekday:
+                        days_ahead = (python_weekday - current_weekday) % 7
+                        if days_ahead == 0:
+                            days_ahead = 7
+                        next_notification += timedelta(days=days_ahead)
+                # For monthly notifications, schedule for the target day
                 elif frequency == "monthly":
-                    if next_notification.month == 12:
-                        next_notification = next_notification.replace(
-                            year=next_notification.year + 1, month=1, day=1
-                        )
+                    target_day = (
+                        notification_day_of_month if notification_day_of_month is not None else 1
+                    )
+
+                    # If current day is past target day, move to next month
+                    if next_notification.day > target_day:
+                        if next_notification.month == 12:
+                            next_year = next_notification.year + 1
+                            next_month = 1
+                        else:
+                            next_year = next_notification.year
+                            next_month = next_notification.month + 1
                     else:
-                        next_notification = next_notification.replace(
-                            month=next_notification.month + 1, day=1
-                        )
+                        next_year = next_notification.year
+                        next_month = next_notification.month
+
+                    # Handle months with fewer days
+                    import calendar
+
+                    max_day = calendar.monthrange(next_year, next_month)[1]
+                    actual_day = min(target_day, max_day)
+
+                    next_notification = next_notification.replace(
+                        year=next_year, month=next_month, day=actual_day
+                    )
 
             # Convert back to UTC
             next_notification_utc = TimezoneConverter.convert_to_utc(next_notification, timezone)

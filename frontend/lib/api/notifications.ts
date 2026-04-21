@@ -97,6 +97,8 @@ export interface UserNotificationPreferences {
   userId: string;
   frequency: 'daily' | 'weekly' | 'monthly' | 'disabled';
   notificationTime: string; // HH:MM format
+  notificationDayOfWeek: number; // 0=Sunday, 1=Monday, ..., 6=Saturday
+  notificationDayOfMonth: number; // 1-31
   timezone: string;
   dmEnabled: boolean;
   emailEnabled: boolean;
@@ -110,6 +112,8 @@ export interface UserNotificationPreferences {
 export interface UpdateUserNotificationPreferencesRequest {
   frequency?: 'daily' | 'weekly' | 'monthly' | 'disabled';
   notificationTime?: string; // HH:MM format
+  notificationDayOfWeek?: number; // 0=Sunday, 1=Monday, ..., 6=Saturday
+  notificationDayOfMonth?: number; // 1-31
   timezone?: string;
   dmEnabled?: boolean;
   emailEnabled?: boolean;
@@ -181,20 +185,36 @@ export async function updateNotificationPreferences(
  * @param frequency - Notification frequency
  * @param notificationTime - Time in HH:MM format
  * @param timezone - IANA timezone identifier
+ * @param notificationDayOfWeek - Day of week for weekly notifications (0-6)
+ * @param notificationDayOfMonth - Day of month for monthly notifications (1-31)
  * @returns Promise<NotificationPreviewResponse> - Preview information
  * @throws Error if request fails
  */
 export async function previewNotificationTime(
   frequency: string,
   notificationTime: string,
-  timezone: string
+  timezone: string,
+  notificationDayOfWeek?: number,
+  notificationDayOfMonth?: number
 ): Promise<NotificationPreviewResponse> {
+  const params: any = {
+    frequency,
+    notification_time: notificationTime,
+    timezone,
+  };
+
+  if (notificationDayOfWeek !== undefined) {
+    params.notification_day_of_week = notificationDayOfWeek;
+  }
+
+  if (notificationDayOfMonth !== undefined) {
+    params.notification_day_of_month = notificationDayOfMonth;
+  }
+
   const response = await apiClient.get<{
     success: boolean;
     data: NotificationPreviewResponse;
-  }>('/api/notifications/preferences/preview', {
-    params: { frequency, notification_time: notificationTime, timezone },
-  });
+  }>('/api/notifications/preferences/preview', { params });
   return response.data.data;
 }
 

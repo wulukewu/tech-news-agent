@@ -154,6 +154,12 @@ class PreferenceService(BaseService):
             if updates.notification_time is not None:
                 update_data["notification_time"] = updates.notification_time
                 changed_fields.append("notification_time")
+            if updates.notification_day_of_week is not None:
+                update_data["notification_day_of_week"] = updates.notification_day_of_week
+                changed_fields.append("notification_day_of_week")
+            if updates.notification_day_of_month is not None:
+                update_data["notification_day_of_month"] = updates.notification_day_of_month
+                changed_fields.append("notification_day_of_month")
             if updates.timezone is not None:
                 update_data["timezone"] = updates.timezone
                 changed_fields.append("timezone")

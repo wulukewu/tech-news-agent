@@ -260,6 +260,8 @@ class DynamicScheduler(BaseService):
                 frequency=preferences.frequency,
                 notification_time=notification_time_str,
                 timezone=preferences.timezone,
+                notification_day_of_week=preferences.notification_day_of_week,
+                notification_day_of_month=preferences.notification_day_of_month,
             )
 
             if next_time:
@@ -267,6 +269,8 @@ class DynamicScheduler(BaseService):
                     "Calculated next notification time",
                     frequency=preferences.frequency,
                     notification_time=notification_time_str,
+                    notification_day_of_week=preferences.notification_day_of_week,
+                    notification_day_of_month=preferences.notification_day_of_month,
                     timezone=preferences.timezone,
                     next_time=next_time.isoformat(),
                 )

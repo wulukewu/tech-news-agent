@@ -26,6 +26,8 @@ class UserNotificationPreferences:
         user_id: UUID,
         frequency: str = "weekly",
         notification_time: time = time(18, 0),
+        notification_day_of_week: int = 5,  # Friday
+        notification_day_of_month: int = 1,  # First day of month
         timezone: str = "Asia/Taipei",
         dm_enabled: bool = True,
         email_enabled: bool = False,
@@ -36,6 +38,8 @@ class UserNotificationPreferences:
         self.user_id = user_id
         self.frequency = frequency
         self.notification_time = notification_time
+        self.notification_day_of_week = notification_day_of_week
+        self.notification_day_of_month = notification_day_of_month
         self.timezone = timezone
         self.dm_enabled = dm_enabled
         self.email_enabled = email_enabled
@@ -104,6 +108,8 @@ class UserNotificationPreferencesRepository(BaseRepository[UserNotificationPrefe
             user_id=UUID(row["user_id"]) if isinstance(row["user_id"], str) else row["user_id"],
             frequency=row.get("frequency", "weekly"),
             notification_time=notification_time,
+            notification_day_of_week=row.get("notification_day_of_week", 5),  # Default: Friday
+            notification_day_of_month=row.get("notification_day_of_month", 1),  # Default: 1st
             timezone=row.get("timezone", "Asia/Taipei"),
             dm_enabled=row.get("dm_enabled", True),
             email_enabled=row.get("email_enabled", False),
@@ -218,10 +224,30 @@ class UserNotificationPreferencesRepository(BaseRepository[UserNotificationPrefe
             "user_id": str(data["user_id"]),
             "frequency": frequency,
             "notification_time": notification_time,
+            "notification_day_of_week": data.get("notification_day_of_week", 5),  # Default: Friday
+            "notification_day_of_month": data.get("notification_day_of_month", 1),  # Default: 1st
             "timezone": timezone,
             "dm_enabled": data.get("dm_enabled", True),
             "email_enabled": data.get("email_enabled", False),
         }
+
+        # Validate notification_day_of_week if provided
+        day_of_week = validated_data["notification_day_of_week"]
+        if not isinstance(day_of_week, int) or not (0 <= day_of_week <= 6):
+            raise ValidationError(
+                f"Invalid notification_day_of_week: {day_of_week}. Must be an integer between 0 (Sunday) and 6 (Saturday)",
+                error_code=ErrorCode.VALIDATION_INVALID_FORMAT,
+                details={"field": "notification_day_of_week", "value": day_of_week},
+            )
+
+        # Validate notification_day_of_month if provided
+        day_of_month = validated_data["notification_day_of_month"]
+        if not isinstance(day_of_month, int) or not (1 <= day_of_month <= 31):
+            raise ValidationError(
+                f"Invalid notification_day_of_month: {day_of_month}. Must be an integer between 1 and 31",
+                error_code=ErrorCode.VALIDATION_INVALID_FORMAT,
+                details={"field": "notification_day_of_month", "value": day_of_month},
+            )
 
         return validated_data
 
@@ -348,6 +374,28 @@ class UserNotificationPreferencesRepository(BaseRepository[UserNotificationPrefe
                 )
             validated_data["email_enabled"] = email_enabled
 
+        # Validate notification_day_of_week if provided
+        if "notification_day_of_week" in data:
+            day_of_week = data["notification_day_of_week"]
+            if not isinstance(day_of_week, int) or not (0 <= day_of_week <= 6):
+                raise ValidationError(
+                    f"Invalid notification_day_of_week: {day_of_week}. Must be an integer between 0 (Sunday) and 6 (Saturday)",
+                    error_code=ErrorCode.VALIDATION_INVALID_FORMAT,
+                    details={"field": "notification_day_of_week", "value": day_of_week},
+                )
+            validated_data["notification_day_of_week"] = day_of_week
+
+        # Validate notification_day_of_month if provided
+        if "notification_day_of_month" in data:
+            day_of_month = data["notification_day_of_month"]
+            if not isinstance(day_of_month, int) or not (1 <= day_of_month <= 31):
+                raise ValidationError(
+                    f"Invalid notification_day_of_month: {day_of_month}. Must be an integer between 1 and 31",
+                    error_code=ErrorCode.VALIDATION_INVALID_FORMAT,
+                    details={"field": "notification_day_of_month", "value": day_of_month},
+                )
+            validated_data["notification_day_of_month"] = day_of_month
+
         return validated_data
 
     async def get_by_user_id(self, user_id: UUID) -> UserNotificationPreferences | None:
@@ -467,6 +515,8 @@ class UserNotificationPreferencesRepository(BaseRepository[UserNotificationPrefe
             "user_id": str(user_id),
             "frequency": "weekly",
             "notification_time": "18:00",
+            "notification_day_of_week": 5,  # Friday
+            "notification_day_of_month": 1,  # First day of month
             "timezone": "Asia/Taipei",
             "dm_enabled": True,
             "email_enabled": False,
