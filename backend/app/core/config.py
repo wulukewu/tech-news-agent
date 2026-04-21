@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     rss_fetch_days: int = 7
 
     # Scheduler Configuration
-    scheduler_cron: str = "0 */6 * * *"  # Every 6 hours by default
+    scheduler_cron: str = "0 * * * *"  # Every hour by default (有去重機制，不會增加 LLM 用量)
     scheduler_timezone: str | None = None  # Defaults to timezone if not set
 
     # Batch Processing Configuration
