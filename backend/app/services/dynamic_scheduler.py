@@ -420,9 +420,30 @@ class DynamicScheduler(BaseService):
                     await lock_manager.release_lock(lock.id, "failed")
                     return
 
+                # Get user's discord_id from database
+                try:
+                    user = await supabase.get_user_by_discord_id(None, user_id=user_id)
+                    if not user or not user.get("discord_id"):
+                        self.logger.error(
+                            "Could not find discord_id for user",
+                            user_id=str(user_id),
+                        )
+                        await lock_manager.release_lock(lock.id, "failed")
+                        return
+
+                    discord_id = user["discord_id"]
+                except Exception as e:
+                    self.logger.error(
+                        "Failed to get user discord_id",
+                        user_id=str(user_id),
+                        error=str(e),
+                    )
+                    await lock_manager.release_lock(lock.id, "failed")
+                    return
+
                 # Create DM notification service and send notification
                 dm_service = DMNotificationService(bot)
-                success = await dm_service.send_personalized_digest(str(user_id))
+                success = await dm_service.send_personalized_digest(discord_id)
 
                 if success:
                     self.logger.info(
