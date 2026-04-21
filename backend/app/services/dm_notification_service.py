@@ -331,22 +331,22 @@ class DMNotificationService:
                 categories[category] = []
             categories[category].append(article)
 
-        # 每個類別最多顯示 5 篇
+        # 每個類別最多顯示 3 篇，避免超過 Discord 1024 字元限制
         for category, cat_articles in list(categories.items())[:5]:
             articles_text = ""
-            for article in cat_articles[:5]:
-                # 完整標題（不截斷）
-                title = article.title
+            for article in cat_articles[:3]:  # 限制每個分類最多 3 篇
+                # 完整標題（但限制長度避免過長）
+                title = article.title[:100] if len(article.title) > 100 else article.title
 
                 # 星星評分
                 tinkering = "⭐" * (article.tinkering_index or 3)
 
-                # 文章摘要（前 100 字）
+                # 文章摘要（前 80 字）
                 summary = ""
                 if article.ai_summary:
                     summary = (
-                        article.ai_summary[:100] + "..."
-                        if len(article.ai_summary) > 100
+                        article.ai_summary[:80] + "..."
+                        if len(article.ai_summary) > 80
                         else article.ai_summary
                     )
 
@@ -364,7 +364,7 @@ class DMNotificationService:
                         minutes = delta.seconds // 60
                         time_ago = f"🗓️ {minutes} 分鐘前"
 
-                # 組合文章資訊
+                # 組合文章資訊（精簡版，確保不超過 1024 字元）
                 articles_text += f"{tinkering} **{title}**\n"
                 articles_text += f"🔗 {article.url}\n"
                 if summary:
@@ -373,8 +373,15 @@ class DMNotificationService:
                     articles_text += f"{time_ago}\n"
                 articles_text += "\n"
 
+                # 檢查長度，如果接近 1024 就停止添加
+                if len(articles_text) > 900:  # 留一些緩衝空間
+                    break
+
             # 添加分類欄位，顯示文章數量
             field_name = f"📂 {category} ({len(cat_articles)} 篇)"
+            # 確保 field value 不超過 1024 字元
+            if len(articles_text) > 1024:
+                articles_text = articles_text[:1020] + "..."
             embed.add_field(name=field_name, value=articles_text or "無文章", inline=False)
 
         embed.set_footer(text="💡 使用 /news_now 查看完整列表 | 使用 /notifications 管理通知設定")
