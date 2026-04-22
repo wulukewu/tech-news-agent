@@ -229,6 +229,7 @@ export type TranslationKey =
   | 'nav.analytics'
   | 'nav.appearance'
   | 'nav.articles'
+  | 'nav.chat'
   | 'nav.language'
   | 'nav.logout'
   | 'nav.main-menu'

@@ -70,3 +70,6 @@ coverage.xml
 
 # Playwright test reports
 frontend/playwright-report/
+
+# PyInstaller
+.coverage

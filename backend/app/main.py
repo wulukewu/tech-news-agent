@@ -69,6 +69,37 @@ async def lifespan(app: FastAPI):
     validate_configuration()
     logger.info("Configuration validated successfully.")
 
+    # 0. Initialize QA Agent Database Manager
+    try:
+        # Try direct PostgreSQL connection first
+        try:
+            from app.qa_agent.database import get_database_manager
+
+            logger.info("Initializing QA Agent database manager (PostgreSQL)...")
+            db_manager = await get_database_manager()
+            health = await db_manager.health_check()
+            if health["healthy"]:
+                logger.info("QA Agent database manager (PostgreSQL) initialized successfully.")
+            else:
+                raise Exception(f"PostgreSQL health check failed: {health}")
+        except Exception as pg_error:
+            logger.warning(f"PostgreSQL connection failed, trying Supabase REST API: {pg_error}")
+            # Fallback to Supabase REST API
+            from app.qa_agent.supabase_database import get_supabase_database_manager
+
+            logger.info("Initializing QA Agent database manager (Supabase REST API)...")
+            supabase_db_manager = await get_supabase_database_manager()
+            health = await supabase_db_manager.health_check()
+            if health["healthy"]:
+                logger.info(
+                    "QA Agent database manager (Supabase REST API) initialized successfully."
+                )
+            else:
+                raise Exception(f"Supabase health check failed: {health}")
+    except Exception as e:
+        logger.error(f"Failed to initialize any QA Agent database manager: {e}", exc_info=True)
+        # Don't fail startup - QA features will be disabled but other features work
+
     # 1. Start the Scheduler
     try:
         setup_scheduler()
@@ -176,6 +207,27 @@ async def lifespan(app: FastAPI):
     yield  # The FastAPI app runs and serves requests here
 
     logger.info("Shutting down Tech News Agent lifespan...")
+
+    # Shutdown QA Agent Database Manager
+    try:
+        # Try to close both possible database managers
+        try:
+            from app.qa_agent.database import close_database_manager
+
+            await close_database_manager()
+            logger.info("QA Agent database manager (PostgreSQL) closed.")
+        except:
+            pass
+
+        try:
+            from app.qa_agent.supabase_database import close_supabase_database_manager
+
+            await close_supabase_database_manager()
+            logger.info("QA Agent database manager (Supabase) closed.")
+        except:
+            pass
+    except Exception as e:
+        logger.error(f"Error closing QA Agent database managers: {e}")
 
     # Shutdown monitoring service
     try:
@@ -311,7 +363,10 @@ async def health_check():
     # Check QA Agent health
     qa_agent_status = "healthy"
     try:
-        from app.qa_agent.qa_agent_controller import QAAgentController  # noqa: F401
+        from app.qa_agent.simple_qa import get_simple_qa_agent  # noqa: F401
+
+        # Just check if we can import it
+        _ = get_simple_qa_agent()
     except Exception:
         qa_agent_status = "degraded"
 

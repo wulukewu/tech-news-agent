@@ -14,6 +14,7 @@ import {
   BarChart3,
   Heart,
   Monitor,
+  MessageSquare,
 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useUser } from '@/contexts/UserContext';
@@ -39,6 +40,7 @@ const mainNavItems: NavItem[] = [
   { href: '/app/articles', labelKey: 'nav.articles', icon: Home },
   { href: '/app/reading-list', labelKey: 'nav.reading-list', icon: BookMarked },
   { href: '/app/subscriptions', labelKey: 'nav.subscriptions', icon: Rss },
+  { href: '/chat', labelKey: 'nav.chat', icon: MessageSquare },
 ];
 
 // Secondary items moved to user menu (Req 4.2)

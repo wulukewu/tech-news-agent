@@ -81,6 +81,22 @@ class Settings(BaseSettings):
     # Frontend Configuration (Required for OAuth redirects)
     frontend_url: str = "http://localhost:3000"
 
+    # Database Configuration (Optional — for QA Agent direct PostgreSQL access)
+    # If not set, the QA agent will derive the connection from SUPABASE_URL.
+    # Format: postgresql://user:password@host:port/dbname
+    database_url: str | None = None
+    database_host: str | None = None
+    database_port: int = 5432
+    database_name: str = "postgres"
+    database_user: str = "postgres"
+    database_password: str | None = None
+    database_pool_min_size: int = 2
+    database_pool_max_size: int = 10
+    database_pool_max_queries: int = 50000
+    database_pool_max_inactive_connection_lifetime: float = 300.0
+    database_connection_timeout: float = 30.0
+    database_command_timeout: float = 60.0
+
     model_config = SettingsConfigDict(
         env_file="../.env", env_file_encoding="utf-8", extra="ignore", case_sensitive=False
     )

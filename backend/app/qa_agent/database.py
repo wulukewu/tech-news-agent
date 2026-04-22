@@ -80,6 +80,11 @@ class DatabaseManager:
         """
         Build connection parameters from configuration.
 
+        Priority:
+        1. settings.database_url (explicit DATABASE_URL env var)
+        2. settings.database_host (individual DB_* env vars)
+        3. Derived from settings.supabase_url (automatic fallback)
+
         Returns:
             Dictionary of connection parameters for asyncpg
 
@@ -99,7 +104,8 @@ class DatabaseManager:
                 }
             except Exception as e:
                 raise ConfigurationError(f"Invalid DATABASE_URL format: {e}") from e
-        else:
+
+        if settings.database_host:
             # Use individual configuration parameters
             return {
                 "host": settings.database_host,
@@ -108,6 +114,30 @@ class DatabaseManager:
                 "user": settings.database_user,
                 "password": settings.database_password,
             }
+
+        # Derive connection from Supabase URL as a fallback.
+        # Supabase exposes a direct PostgreSQL connection at:
+        #   db.<project-ref>.supabase.co:5432
+        # The project ref is the subdomain of the Supabase URL.
+        try:
+            parsed = urlparse(settings.supabase_url)
+            # supabase_url is like https://ieqskggdhlvepuslouxy.supabase.co
+            project_ref = parsed.hostname.split(".")[0]
+            db_host = f"db.{project_ref}.supabase.co"
+            # Supabase service_role key is used as the password for direct DB access.
+            # The user is always "postgres" and the database is "postgres".
+            return {
+                "host": db_host,
+                "port": 5432,
+                "database": "postgres",
+                "user": "postgres",
+                "password": settings.supabase_key,
+            }
+        except Exception as e:
+            raise ConfigurationError(
+                f"Could not derive database connection from SUPABASE_URL: {e}. "
+                "Please set DATABASE_URL or DATABASE_HOST environment variables."
+            ) from e
 
     async def _create_pool(self) -> Pool:
         """
