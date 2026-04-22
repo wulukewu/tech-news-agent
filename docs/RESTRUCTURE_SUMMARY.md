@@ -144,8 +144,7 @@ JWT_ALGORITHM=HS256
 JWT_EXPIRATION_MINUTES=10080
 
 # LLM
-OPENAI_API_KEY=your_openai_api_key
-OPENAI_MODEL=gpt-4o-mini
+GROQ_API_KEY=your_groq_api_key
 
 # CORS (重要！)
 CORS_ORIGINS=http://localhost:3000,http://localhost:8000

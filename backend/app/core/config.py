@@ -360,3 +360,19 @@ except Exception as e:
         ) from e
     # In development/test, allow the module to load
     settings = None
+
+
+def get_settings() -> Settings:
+    """
+    Get the global settings instance.
+
+    Returns:
+        Settings instance
+
+    Raises:
+        ConfigurationError: If settings are not loaded or invalid
+    """
+    global settings
+    if settings is None:
+        settings = load_settings()
+    return settings

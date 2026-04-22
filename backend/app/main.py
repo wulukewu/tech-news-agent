@@ -284,6 +284,11 @@ from app.api import debug
 
 app.include_router(debug.router, prefix="/api", tags=["debug"])
 
+# Import and register QA router
+from app.api import qa as qa_api
+
+app.include_router(qa_api.router, prefix="/api/qa", tags=["qa"])
+
 
 @app.get("/")
 async def root():
@@ -303,6 +308,13 @@ async def health_check():
     # Get scheduler instance
     scheduler = get_scheduler()
 
+    # Check QA Agent health
+    qa_agent_status = "healthy"
+    try:
+        from app.qa_agent.qa_agent_controller import QAAgentController  # noqa: F401
+    except Exception:
+        qa_agent_status = "degraded"
+
     # Initialize health status
     health_status = {
         "status": "healthy",
@@ -312,6 +324,7 @@ async def health_check():
             "database": "healthy",
             "oauth": "healthy",
             "jwt": "healthy",
+            "qa_agent": qa_agent_status,
         },
     }
 
