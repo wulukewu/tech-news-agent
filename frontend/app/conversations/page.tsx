@@ -186,7 +186,7 @@ function ConversationsPageContent() {
     } finally {
       setLoading(false);
     }
-  }, [buildFilters]);
+  }, [buildFilters, t]);
 
   useEffect(() => {
     loadConversations();
@@ -317,12 +317,14 @@ function ConversationsPageContent() {
         className="flex gap-1 mb-3 border-b"
       >
         {FILTER_TABS.map((tab) => {
-          const label =
-            tab.id === 'all'
-              ? t('chat.filter-all')
-              : tab.id === 'favorites'
-                ? t('chat.filter-favorites')
-                : t('chat.filter-archived');
+          let label: string;
+          if (tab.id === 'all') {
+            label = t('chat.filter-all');
+          } else if (tab.id === 'favorites') {
+            label = t('chat.filter-favorites');
+          } else {
+            label = t('chat.filter-archived');
+          }
           return (
             <button
               key={tab.id}
@@ -352,8 +354,14 @@ function ConversationsPageContent() {
       >
         <span className="text-xs text-muted-foreground mr-1">{t('chat.platform-label')}</span>
         {PLATFORM_FILTERS.map((pf) => {
-          const label =
-            pf.id === 'all' ? t('chat.filter-all') : pf.id === 'web' ? 'Web' : 'Discord';
+          let label: string;
+          if (pf.id === 'all') {
+            label = t('chat.filter-all');
+          } else if (pf.id === 'web') {
+            label = 'Web';
+          } else {
+            label = 'Discord';
+          }
           return (
             <button
               key={pf.id}
@@ -394,7 +402,7 @@ function ConversationsPageContent() {
       )}
 
       {/* Content area */}
-      {loading ? (
+      {loading && (
         <div
           role="status"
           aria-label={t('chat.loading-conversations-aria')}
@@ -405,13 +413,15 @@ function ConversationsPageContent() {
           ))}
           <span className="sr-only">{t('chat.loading-conversations-aria')}...</span>
         </div>
-      ) : conversations.length === 0 ? (
+      )}
+      {!loading && conversations.length === 0 && (
         <EmptyState
           tab={activeTab}
           searchQuery={debouncedSearch}
           onNewConversation={handleNewConversation}
         />
-      ) : (
+      )}
+      {!loading && conversations.length > 0 && (
         <>
           <div
             role="list"
