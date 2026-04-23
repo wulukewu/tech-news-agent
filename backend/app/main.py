@@ -346,6 +346,11 @@ from app.api import conversations as conversations_api
 
 app.include_router(conversations_api.router, prefix="/api/conversations", tags=["conversations"])
 
+# Import and register Weekly Insights router
+from app.api import weekly_insights as weekly_insights_api
+
+app.include_router(weekly_insights_api.router, prefix="/api", tags=["weekly-insights"])
+
 # Import and register Platforms router (user platform linking + sync)
 from app.api import platforms as platforms_api
 

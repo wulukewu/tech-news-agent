@@ -328,6 +328,7 @@ export type TranslationKey =
   | 'nav.appearance'
   | 'nav.articles'
   | 'nav.chat'
+  | 'nav.insights'
   | 'nav.language'
   | 'nav.logout'
   | 'nav.main-menu'

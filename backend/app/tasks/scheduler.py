@@ -496,6 +496,26 @@ async def background_fetch_job():
         )
 
 
+async def weekly_insights_job():
+    """
+    Scheduled job: generate weekly insights report every Monday at 09:00.
+    Requirements: 7.2, 7.4
+    """
+    logger.info("Starting weekly insights report generation job...")
+    try:
+        from app.qa_agent.weekly_insights.report_generator import InsightReportGenerator
+
+        generator = InsightReportGenerator()
+        report = await generator.generate(days=7)
+        logger.info(
+            "Weekly insights report generated successfully (id=%s, articles=%d)",
+            report.get("id"),
+            report.get("article_count", 0),
+        )
+    except Exception as exc:
+        logger.error("Weekly insights job failed: %s", exc, exc_info=True)
+
+
 def setup_scheduler():
     """
     Register jobs to the scheduler with configurable CRON expression.
@@ -580,6 +600,18 @@ def setup_scheduler():
         id="dynamic_scheduler_cleanup",
         name="Dynamic Scheduler Cleanup",
         replace_existing=True,
+    )
+
+    # Register weekly insights generation job (every Monday at 09:00)
+    _scheduler.add_job(
+        weekly_insights_job,
+        trigger=CronTrigger(day_of_week="mon", hour=9, minute=0, timezone=scheduler_tz),
+        id="weekly_insights",
+        name="Weekly Insights Report Generation",
+        replace_existing=True,
+    )
+    logger.info(
+        f"Weekly insights job registered: Runs every Monday at 09:00 in timezone '{scheduler_tz}'"
     )
 
     # Log the configured schedule
