@@ -12,17 +12,12 @@ import {
   createConversation,
   type ConversationSummary,
 } from '@/lib/api/conversations';
+import { useI18n } from '@/contexts/I18nContext';
 import { MessageSquare, Plus, Search, Loader2, AlertCircle, Inbox } from 'lucide-react';
 
 // ─── Filter Tabs ──────────────────────────────────────────────────────────────
 
 type FilterTab = 'all' | 'favorites' | 'archived';
-
-const FILTER_TABS: { id: FilterTab; label: string }[] = [
-  { id: 'all', label: 'All' },
-  { id: 'favorites', label: 'Favorites' },
-  { id: 'archived', label: 'Archived' },
-];
 
 const PAGE_SIZE = 20;
 
@@ -37,18 +32,20 @@ function EmptyState({
   searchQuery: string;
   onNewConversation: () => void;
 }) {
+  const { t } = useI18n();
+
   const message = searchQuery
-    ? `No conversations match "${searchQuery}"`
+    ? t('chat.empty-no-match', { query: searchQuery })
     : tab === 'favorites'
-      ? 'No favorite conversations yet'
+      ? t('chat.empty-no-favorites')
       : tab === 'archived'
-        ? 'No archived conversations'
-        : 'No conversations yet';
+        ? t('chat.empty-no-archived')
+        : t('chat.empty-no-conversations');
 
   const description = searchQuery
-    ? 'Try a different search term.'
+    ? t('chat.empty-try-different')
     : tab === 'all'
-      ? 'Start a new conversation to get going.'
+      ? t('chat.empty-start-first')
       : null;
 
   return (
@@ -61,7 +58,7 @@ function EmptyState({
       {tab === 'all' && !searchQuery && (
         <Button onClick={onNewConversation} className="cursor-pointer">
           <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
-          New Conversation
+          {t('chat.new-conversation')}
         </Button>
       )}
     </div>
@@ -94,6 +91,7 @@ function ConversationCardSkeleton() {
 
 function ConversationsPageContent() {
   const router = useRouter();
+  const { t } = useI18n();
 
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -136,7 +134,6 @@ function ConversationsPageContent() {
       } else if (activeTab === 'archived') {
         filters.is_archived = true;
       } else {
-        // 'all' tab: exclude archived by default
         filters.is_archived = false;
       }
       return filters;
@@ -157,11 +154,11 @@ function ConversationsPageContent() {
       setOffset(result.items.length);
     } catch (err) {
       console.error('Failed to load conversations:', err);
-      setError('Failed to load conversations. Please try again.');
+      setError(t('chat.error-load-failed'));
     } finally {
       setLoading(false);
     }
-  }, [buildFilters]);
+  }, [buildFilters, t]);
 
   useEffect(() => {
     loadConversations();
@@ -216,7 +213,7 @@ function ConversationsPageContent() {
       router.push(`/chat/conversations/${newConv.id}`);
     } catch (err) {
       console.error('Failed to create conversation:', err);
-      setError('Failed to create conversation. Please try again.');
+      setError(t('chat.error-load-failed'));
       setCreating(false);
     }
   };
@@ -228,6 +225,13 @@ function ConversationsPageContent() {
     setDebouncedSearch('');
   };
 
+  // Filter tab definitions (using i18n)
+  const FILTER_TABS: { id: FilterTab; label: string }[] = [
+    { id: 'all', label: t('chat.filter-all') },
+    { id: 'favorites', label: t('chat.filter-favorites') },
+    { id: 'archived', label: t('chat.filter-archived') },
+  ];
+
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
       {/* Page header */}
@@ -237,10 +241,10 @@ function ConversationsPageContent() {
             <MessageSquare className="h-5 w-5 text-primary" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold leading-tight">Conversations</h1>
+            <h1 className="text-2xl font-bold leading-tight">{t('chat.conversations-title')}</h1>
             {!loading && (
               <p className="text-xs text-muted-foreground">
-                {totalCount} {totalCount === 1 ? 'conversation' : 'conversations'}
+                {t('chat.conversations-count', { count: totalCount })}
               </p>
             )}
           </div>
@@ -249,7 +253,7 @@ function ConversationsPageContent() {
         <Button
           onClick={handleNewConversation}
           disabled={creating}
-          aria-label="Start a new conversation"
+          aria-label={t('chat.new-conversation-btn-aria')}
           className="cursor-pointer"
         >
           {creating ? (
@@ -257,7 +261,7 @@ function ConversationsPageContent() {
           ) : (
             <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
           )}
-          New Conversation
+          {t('chat.new-conversation')}
         </Button>
       </div>
 
@@ -269,16 +273,20 @@ function ConversationsPageContent() {
         />
         <Input
           type="search"
-          placeholder="Search conversations..."
+          placeholder={t('chat.search-placeholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          aria-label="Search conversations"
+          aria-label={t('chat.search-aria')}
           className="pl-9"
         />
       </div>
 
       {/* Filter tabs */}
-      <div role="tablist" aria-label="Conversation filters" className="flex gap-1 mb-6 border-b">
+      <div
+        role="tablist"
+        aria-label={t('chat.filter-tabs-aria')}
+        className="flex gap-1 mb-6 border-b"
+      >
         {FILTER_TABS.map((tab) => (
           <button
             key={tab.id}
@@ -310,20 +318,24 @@ function ConversationsPageContent() {
           <button
             onClick={() => setError(null)}
             className="ml-auto text-xs underline cursor-pointer hover:no-underline"
-            aria-label="Dismiss error"
+            aria-label={t('chat.close-error-btn-aria')}
           >
-            Dismiss
+            {t('chat.close-error')}
           </button>
         </div>
       )}
 
       {/* Content */}
       {loading ? (
-        <div role="status" aria-label="Loading conversations" className="grid gap-3 sm:grid-cols-2">
+        <div
+          role="status"
+          aria-label={t('chat.loading-conversations-aria')}
+          className="grid gap-3 sm:grid-cols-2"
+        >
           {Array.from({ length: 6 }).map((_, i) => (
             <ConversationCardSkeleton key={i} />
           ))}
-          <span className="sr-only">Loading conversations...</span>
+          <span className="sr-only">{t('chat.loading-conversations-aria')}</span>
         </div>
       ) : conversations.length === 0 ? (
         <EmptyState
@@ -333,7 +345,11 @@ function ConversationsPageContent() {
         />
       ) : (
         <>
-          <div role="list" aria-label="Conversation list" className="grid gap-3 sm:grid-cols-2">
+          <div
+            role="list"
+            aria-label={t('chat.conversation-list-aria')}
+            className="grid gap-3 sm:grid-cols-2"
+          >
             {conversations.map((conv) => (
               <div key={conv.id} role="listitem">
                 <ConversationCard conversation={conv} onUpdate={handleConversationUpdate} />
@@ -348,15 +364,14 @@ function ConversationsPageContent() {
           {loadingMore && (
             <div role="status" aria-live="polite" className="flex justify-center py-6">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden="true" />
-              <span className="sr-only">Loading more conversations...</span>
+              <span className="sr-only">{t('chat.loading-more-aria')}</span>
             </div>
           )}
 
           {/* End of list */}
           {!hasNextPage && conversations.length > 0 && (
             <p role="status" className="text-center text-xs text-muted-foreground py-6">
-              Showing all {conversations.length} of {totalCount}{' '}
-              {totalCount === 1 ? 'conversation' : 'conversations'}
+              {t('chat.end-of-list', { shown: conversations.length, total: totalCount })}
             </p>
           )}
         </>

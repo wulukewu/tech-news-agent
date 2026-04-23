@@ -150,8 +150,8 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
                 <li className="flex items-start gap-2">
                   <span className="text-muted-foreground mt-0.5">•</span>
                   <span>
-                    {t('settings.notifications.below-threshold')} ({mockArticle.tinkeringIndex})
-                    低於閾值 ({settings.minTinkeringIndex})
+                    {t('settings.notifications.below-threshold')} ({mockArticle.tinkeringIndex} /{' '}
+                    {settings.minTinkeringIndex})
                   </span>
                 </li>
               )}

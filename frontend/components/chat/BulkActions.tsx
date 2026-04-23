@@ -9,6 +9,7 @@ import {
   deleteConversation,
   type ConversationSummary,
 } from '@/lib/api/conversations';
+import { useI18n } from '@/contexts/I18nContext';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -44,6 +45,7 @@ export function BulkActions({
   onBulkDelete,
   className,
 }: BulkActionsProps) {
+  const { t } = useI18n();
   const [loading, setLoading] = useState<'favorite' | 'archive' | 'delete' | null>(null);
 
   if (selectedIds.length === 0) return null;
@@ -94,9 +96,7 @@ export function BulkActions({
 
   const handleBulkDelete = async () => {
     if (loading) return;
-    const confirmed = window.confirm(
-      `確定要刪除選取的 ${selectedIds.length} 個對話嗎？此操作無法復原。`
-    );
+    const confirmed = window.confirm(t('chat.bulk-delete-confirm', { count: selectedIds.length }));
     if (!confirmed) return;
 
     setLoading('delete');
@@ -114,7 +114,7 @@ export function BulkActions({
   return (
     <div
       role="toolbar"
-      aria-label="批量操作"
+      aria-label={t('chat.bulk-actions-aria')}
       className={cn(
         'flex items-center gap-2 px-4 py-2.5 rounded-lg border bg-primary/5 border-primary/20',
         className
@@ -123,7 +123,7 @@ export function BulkActions({
       {/* Selection count */}
       <div className="flex items-center gap-1.5 text-sm font-medium mr-2">
         <CheckSquare className="h-4 w-4 text-primary" aria-hidden="true" />
-        <span>已選取 {selectedIds.length} 個</span>
+        <span>{t('chat.bulk-selected-count', { count: selectedIds.length })}</span>
       </div>
 
       {/* Favorite toggle */}
@@ -132,7 +132,7 @@ export function BulkActions({
         size="sm"
         onClick={handleBulkFavorite}
         disabled={loading !== null}
-        aria-label={allFavorited ? '取消收藏選取的對話' : '收藏選取的對話'}
+        aria-label={allFavorited ? t('chat.bulk-unfavorite-aria') : t('chat.bulk-favorite-aria')}
         className={cn(
           'cursor-pointer gap-1.5',
           allFavorited ? 'text-yellow-500' : 'text-muted-foreground hover:text-yellow-500'
@@ -147,7 +147,9 @@ export function BulkActions({
             aria-hidden="true"
           />
         )}
-        <span className="text-xs">{allFavorited ? '取消收藏' : '收藏'}</span>
+        <span className="text-xs">
+          {allFavorited ? t('chat.bulk-unfavorite-label') : t('chat.bulk-favorite-label')}
+        </span>
       </Button>
 
       {/* Archive toggle */}
@@ -156,7 +158,7 @@ export function BulkActions({
         size="sm"
         onClick={handleBulkArchive}
         disabled={loading !== null}
-        aria-label={allArchived ? '取消歸檔選取的對話' : '歸檔選取的對話'}
+        aria-label={allArchived ? t('chat.bulk-unarchive-aria') : t('chat.bulk-archive-aria')}
         className="cursor-pointer gap-1.5 text-muted-foreground hover:text-foreground"
       >
         {loading === 'archive' ? (
@@ -164,7 +166,9 @@ export function BulkActions({
         ) : (
           <Archive className="h-3.5 w-3.5" aria-hidden="true" />
         )}
-        <span className="text-xs">{allArchived ? '取消歸檔' : '歸檔'}</span>
+        <span className="text-xs">
+          {allArchived ? t('chat.bulk-unarchive-label') : t('chat.bulk-archive-label')}
+        </span>
       </Button>
 
       {/* Delete */}
@@ -173,7 +177,7 @@ export function BulkActions({
         size="sm"
         onClick={handleBulkDelete}
         disabled={loading !== null}
-        aria-label="刪除選取的對話"
+        aria-label={t('chat.bulk-delete-aria')}
         className="cursor-pointer gap-1.5 text-muted-foreground hover:text-destructive"
       >
         {loading === 'delete' ? (
@@ -181,7 +185,7 @@ export function BulkActions({
         ) : (
           <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
         )}
-        <span className="text-xs">刪除</span>
+        <span className="text-xs">{t('chat.bulk-delete-label')}</span>
       </Button>
 
       {/* Clear selection */}
@@ -190,7 +194,7 @@ export function BulkActions({
         size="sm"
         onClick={onClearSelection}
         disabled={loading !== null}
-        aria-label="取消選取"
+        aria-label={t('chat.bulk-clear-aria')}
         className="cursor-pointer ml-auto text-muted-foreground hover:text-foreground h-7 w-7 p-0"
       >
         <X className="h-3.5 w-3.5" aria-hidden="true" />

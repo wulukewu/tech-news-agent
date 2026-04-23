@@ -76,29 +76,27 @@ export function ArticleCard({
     ? (() => {
         try {
           const date = new Date(article.publishedAt);
-          // Check if date is valid
           if (isNaN(date.getTime())) {
-            return 'Recently added';
+            return t('article-card.recently-added');
           }
 
           const now = new Date();
           const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / 60000);
 
           if (diffInMinutes < 0) {
-            // Future date, shouldn't happen but handle gracefully
-            return 'Recently added';
+            return t('article-card.recently-added');
           }
 
           if (diffInMinutes < 60) {
-            return `${diffInMinutes} minutes ago`;
+            return t('article-card.minutes-ago', { count: diffInMinutes });
           }
           return formatDistanceToNow(date, { addSuffix: true });
         } catch (error) {
           console.error('Error formatting date:', error, 'publishedAt:', article.publishedAt);
-          return 'Recently added';
+          return t('article-card.recently-added');
         }
       })()
-    : 'Recently added';
+    : t('article-card.recently-added');
 
   const shouldShowReadMore = article.aiSummary && article.aiSummary.length > 200;
 
@@ -193,7 +191,11 @@ export function ArticleCard({
                       variant="outline"
                       onClick={handleAddToReadingList}
                       disabled={addToReadingList.isPending || isAdded}
-                      aria-label={isAdded ? 'Added to reading list' : 'Add to reading list'}
+                      aria-label={
+                        isAdded
+                          ? t('article-card.added-to-reading-list-aria')
+                          : t('article-card.add-to-reading-list-aria')
+                      }
                       className="flex-1 min-h-[44px] min-w-[44px]"
                     >
                       {addToReadingList.isPending ? (
@@ -212,7 +214,7 @@ export function ArticleCard({
                     variant="outline"
                     onClick={handleAddToReadingList}
                     disabled={isAdded}
-                    aria-label="Mark as read"
+                    aria-label={t('article-card.mark-as-read-aria')}
                     className="flex-1 min-h-[44px] min-w-[44px]"
                   >
                     <CheckCircle className="h-4 w-4 mr-2" />
@@ -225,10 +227,10 @@ export function ArticleCard({
                   <Button
                     variant="default"
                     onClick={handleAnalyze}
-                    aria-label="Deep Dive Analysis"
+                    aria-label={t('article-card.deep-dive-aria')}
                     className="w-full min-h-[44px]"
                   >
-                    Deep Dive Analysis
+                    {t('article-card.deep-dive-label')}
                   </Button>
                 )}
               </div>
@@ -367,7 +369,11 @@ export function ArticleCard({
                     variant="outline"
                     onClick={handleAddToReadingList}
                     disabled={addToReadingList.isPending || isAdded}
-                    aria-label={isAdded ? 'Added to reading list' : 'Add to reading list'}
+                    aria-label={
+                      isAdded
+                        ? t('article-card.added-to-reading-list-aria')
+                        : t('article-card.add-to-reading-list-aria')
+                    }
                     className="min-h-[44px] min-w-[44px] cursor-pointer"
                   >
                     {addToReadingList.isPending ? (
@@ -387,7 +393,7 @@ export function ArticleCard({
                   variant="outline"
                   onClick={handleAddToReadingList}
                   disabled={isAdded}
-                  aria-label="Mark as read"
+                  aria-label={t('article-card.mark-as-read-aria')}
                   className="min-h-[44px] min-w-[44px] cursor-pointer"
                 >
                   <CheckCircle className="h-4 w-4" />
@@ -400,10 +406,10 @@ export function ArticleCard({
                 <Button
                   variant="default"
                   onClick={handleAnalyze}
-                  aria-label="Deep Dive Analysis"
+                  aria-label={t('article-card.deep-dive-aria')}
                   className="w-full min-h-[44px] cursor-pointer"
                 >
-                  Deep Dive Analysis
+                  {t('article-card.deep-dive-label')}
                 </Button>
               )}
             </div>
@@ -430,6 +436,7 @@ export function ArticleCard({
  * - 25.8: Use consistent star icon sizing (20px standard view)
  */
 function TinkeringIndexStars({ index }: { index: number }) {
+  const { t } = useI18n();
   // Clamp index to valid range (1-5)
   const clampedIndex = Math.max(1, Math.min(5, index || 1));
 
@@ -463,7 +470,7 @@ function TinkeringIndexStars({ index }: { index: number }) {
         <TooltipTrigger asChild>
           <div
             className="flex items-center gap-1 cursor-help"
-            aria-label={`Tinkering index: ${clampedIndex} out of 5 - ${description}`}
+            aria-label={t('article-card.tinkering-aria', { index: clampedIndex, description })}
             role="img"
           >
             {Array.from({ length: 5 }).map((_, i) => (

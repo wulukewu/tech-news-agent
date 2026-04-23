@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { searchConversations, type ConversationSummary } from '@/lib/api/conversations';
+import { useI18n } from '@/contexts/I18nContext';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -70,6 +71,7 @@ function SearchResultCard({
   query: string;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
 
   let timeDisplay = '';
   try {
@@ -92,7 +94,7 @@ function SearchResultCard({
           router.push(`/conversations/${conversation.id}`);
         }
       }}
-      aria-label={`開啟對話：${conversation.title}`}
+      aria-label={t('chat.search-open-aria', { title: conversation.title })}
       className={cn(
         'group flex flex-col gap-2 rounded-lg border bg-card p-4',
         'cursor-pointer transition-all duration-200',
@@ -107,7 +109,10 @@ function SearchResultCard({
         </h3>
         <div className="flex items-center gap-1.5 flex-shrink-0">
           {conversation.is_favorite && (
-            <Star className="h-3.5 w-3.5 text-yellow-500 fill-current" aria-label="已收藏" />
+            <Star
+              className="h-3.5 w-3.5 text-yellow-500 fill-current"
+              aria-label={t('chat.search-result-favorited-aria')}
+            />
           )}
           {conversation.platform === 'discord' ? (
             <Badge
@@ -138,7 +143,7 @@ function SearchResultCard({
 
       {/* Tags */}
       {conversation.tags && conversation.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1" aria-label="標籤">
+        <div className="flex flex-wrap gap-1" aria-label={t('chat.search-result-tags-aria')}>
           {conversation.tags.slice(0, 4).map((tag) => (
             <span
               key={tag}
@@ -184,6 +189,7 @@ function AdvancedFilters({
   onChange: (f: Partial<FiltersState>) => void;
   onReset: () => void;
 }) {
+  const { t } = useI18n();
   const hasActiveFilters =
     filters.platform !== 'all' ||
     filters.is_favorite !== undefined ||
@@ -192,23 +198,25 @@ function AdvancedFilters({
   return (
     <div className="rounded-lg border bg-muted/30 p-4 space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-medium">進階篩選</h3>
+        <h3 className="text-sm font-medium">{t('chat.search-advanced-title')}</h3>
         {hasActiveFilters && (
           <button
             onClick={onReset}
             className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer flex items-center gap-1"
-            aria-label="重置篩選條件"
+            aria-label={t('chat.search-reset-aria')}
           >
             <X className="h-3 w-3" aria-hidden="true" />
-            重置
+            {t('chat.search-reset-label')}
           </button>
         )}
       </div>
 
       {/* Platform */}
       <div>
-        <label className="text-xs text-muted-foreground mb-2 block">平台</label>
-        <div role="group" aria-label="平台篩選" className="flex gap-2">
+        <label className="text-xs text-muted-foreground mb-2 block">
+          {t('chat.search-platform-label')}
+        </label>
+        <div role="group" aria-label={t('chat.search-platform-aria')} className="flex gap-2">
           {(['all', 'web', 'discord'] as PlatformFilter[]).map((p) => (
             <button
               key={p}
@@ -222,7 +230,7 @@ function AdvancedFilters({
                   : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
               )}
             >
-              {p === 'all' ? '全部' : p === 'web' ? 'Web' : 'Discord'}
+              {p === 'all' ? t('chat.search-platform-all') : p === 'web' ? 'Web' : 'Discord'}
             </button>
           ))}
         </div>
@@ -230,7 +238,9 @@ function AdvancedFilters({
 
       {/* Status */}
       <div>
-        <label className="text-xs text-muted-foreground mb-2 block">狀態</label>
+        <label className="text-xs text-muted-foreground mb-2 block">
+          {t('chat.search-status-label')}
+        </label>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() =>
@@ -246,7 +256,7 @@ function AdvancedFilters({
             )}
           >
             <Star className="h-3 w-3" aria-hidden="true" />
-            收藏
+            {t('chat.search-status-favorite')}
           </button>
           <button
             onClick={() =>
@@ -261,7 +271,7 @@ function AdvancedFilters({
                 : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
             )}
           >
-            已歸檔
+            {t('chat.search-status-archived')}
           </button>
         </div>
       </div>
@@ -280,6 +290,7 @@ const DEFAULT_FILTERS: FiltersState = {
 function ConversationSearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { t } = useI18n();
 
   const initialQuery = searchParams?.get('q') ?? '';
 
@@ -335,7 +346,7 @@ function ConversationSearchContent() {
       setResults(response.items);
     } catch (err) {
       console.error('Search failed:', err);
-      setError('搜尋失敗，請稍後再試。');
+      setError(t('chat.error-load-failed'));
     } finally {
       setLoading(false);
     }
@@ -375,11 +386,11 @@ function ConversationSearchContent() {
           size="sm"
           onClick={() => router.push('/conversations')}
           className="cursor-pointer"
-          aria-label="返回對話列表"
+          aria-label={t('chat.search-back-aria')}
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         </Button>
-        <h1 className="text-2xl font-bold">搜尋對話</h1>
+        <h1 className="text-2xl font-bold">{t('chat.search-page-title')}</h1>
       </header>
 
       {/* Search input */}
@@ -389,7 +400,7 @@ function ConversationSearchContent() {
           aria-hidden="true"
         />
         <label htmlFor="search-input" className="sr-only">
-          搜尋對話關鍵字
+          {t('chat.search-label')}
         </label>
         <Input
           id="search-input"
@@ -397,15 +408,15 @@ function ConversationSearchContent() {
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="輸入關鍵字搜尋對話..."
+          placeholder={t('chat.search-input-placeholder')}
           className="pl-9 pr-9"
-          aria-label="搜尋對話關鍵字"
+          aria-label={t('chat.search-input-aria')}
         />
         {query && (
           <button
             onClick={handleClearSearch}
             className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-            aria-label="清除搜尋"
+            aria-label={t('chat.search-clear-aria')}
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -427,7 +438,7 @@ function ConversationSearchContent() {
           aria-controls="advanced-filters"
         >
           <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />
-          進階篩選
+          {t('chat.search-advanced-toggle')}
           {hasActiveFilters && (
             <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-primary text-primary-foreground text-xs">
               !
@@ -442,7 +453,9 @@ function ConversationSearchContent() {
 
         {hasSearched && !loading && (
           <p className="text-xs text-muted-foreground" aria-live="polite">
-            {results.length > 0 ? `找到 ${results.length} 個結果` : '沒有符合的結果'}
+            {results.length > 0
+              ? t('chat.search-results-count', { count: results.length })
+              : t('chat.search-no-results-text')}
           </p>
         )}
       </div>
@@ -471,24 +484,30 @@ function ConversationSearchContent() {
 
       {/* Results */}
       {loading ? (
-        <div role="status" aria-label="搜尋中" className="flex justify-center py-12">
+        <div
+          role="status"
+          aria-label={t('chat.search-loading-aria')}
+          className="flex justify-center py-12"
+        >
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden="true" />
-          <span className="sr-only">搜尋中...</span>
+          <span className="sr-only">{t('chat.search-loading-sr')}</span>
         </div>
       ) : !hasSearched ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Search className="h-10 w-10 text-muted-foreground/40 mb-4" aria-hidden="true" />
-          <p className="text-sm text-muted-foreground">輸入關鍵字開始搜尋</p>
-          <p className="text-xs text-muted-foreground mt-1">支援搜尋對話標題和訊息內容</p>
+          <p className="text-sm text-muted-foreground">{t('chat.search-empty-hint')}</p>
+          <p className="text-xs text-muted-foreground mt-1">{t('chat.search-empty-hint-sub')}</p>
         </div>
       ) : results.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <Search className="h-10 w-10 text-muted-foreground/40 mb-4" aria-hidden="true" />
-          <p className="text-sm text-muted-foreground">找不到包含「{debouncedQuery}」的對話</p>
-          <p className="text-xs text-muted-foreground mt-1">試試不同的關鍵字，或調整篩選條件</p>
+          <p className="text-sm text-muted-foreground">
+            {t('chat.search-no-match', { query: debouncedQuery })}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">{t('chat.search-no-match-sub')}</p>
         </div>
       ) : (
-        <div role="list" aria-label="搜尋結果" className="space-y-3">
+        <div role="list" aria-label={t('chat.search-results-aria')} className="space-y-3">
           {results.map((conv) => (
             <div key={conv.id} role="listitem">
               <SearchResultCard conversation={conv} query={debouncedQuery} />

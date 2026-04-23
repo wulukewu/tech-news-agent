@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { getConversations, type ConversationSummary } from '@/lib/api/conversations';
+import { useI18n } from '@/contexts/I18nContext';
 import {
   MessageSquare,
   Plus,
@@ -28,18 +29,6 @@ type PlatformFilter = 'all' | 'web' | 'discord';
 
 const PAGE_SIZE = 20;
 
-const FILTER_TABS: { id: FilterTab; label: string }[] = [
-  { id: 'all', label: '全部' },
-  { id: 'favorites', label: '收藏' },
-  { id: 'archived', label: '已歸檔' },
-];
-
-const PLATFORM_FILTERS: { id: PlatformFilter; label: string }[] = [
-  { id: 'all', label: '全部' },
-  { id: 'web', label: 'Web' },
-  { id: 'discord', label: 'Discord' },
-];
-
 // ─── Empty State ──────────────────────────────────────────────────────────────
 
 function EmptyState({
@@ -51,18 +40,20 @@ function EmptyState({
   searchQuery: string;
   onNewConversation: () => void;
 }) {
+  const { t } = useI18n();
+
   const message = searchQuery
-    ? `找不到符合「${searchQuery}」的對話`
+    ? t('chat.empty-no-match', { query: searchQuery })
     : tab === 'favorites'
-      ? '還沒有收藏的對話'
+      ? t('chat.empty-no-favorites')
       : tab === 'archived'
-        ? '沒有已歸檔的對話'
-        : '還沒有任何對話';
+        ? t('chat.empty-no-archived')
+        : t('chat.empty-no-conversations');
 
   const description = searchQuery
-    ? '請嘗試不同的搜尋關鍵字。'
+    ? t('chat.empty-try-different')
     : tab === 'all'
-      ? '點擊「新對話」開始您的第一個對話。'
+      ? t('chat.empty-start-first')
       : null;
 
   return (
@@ -75,7 +66,7 @@ function EmptyState({
       {tab === 'all' && !searchQuery && (
         <Button onClick={onNewConversation} className="cursor-pointer">
           <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
-          新對話
+          {t('chat.new-conversation')}
         </Button>
       )}
     </div>
@@ -108,6 +99,7 @@ function ConversationCardSkeleton() {
 
 function ConversationsPageContent() {
   const router = useRouter();
+  const { t } = useI18n();
 
   const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -124,6 +116,19 @@ function ConversationsPageContent() {
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Filter tab definitions (using i18n)
+  const FILTER_TABS: { id: FilterTab; label: string }[] = [
+    { id: 'all', label: t('chat.filter-all') },
+    { id: 'favorites', label: t('chat.filter-favorites') },
+    { id: 'archived', label: t('chat.filter-archived') },
+  ];
+
+  const PLATFORM_FILTERS: { id: PlatformFilter; label: string }[] = [
+    { id: 'all', label: t('chat.filter-all') },
+    { id: 'web', label: 'Web' },
+    { id: 'discord', label: 'Discord' },
+  ];
 
   // Debounce search input (300ms)
   useEffect(() => {
@@ -177,11 +182,11 @@ function ConversationsPageContent() {
       setOffset(result.items.length);
     } catch (err) {
       console.error('Failed to load conversations:', err);
-      setError('載入對話失敗，請稍後再試。');
+      setError(t('chat.error-load-failed'));
     } finally {
       setLoading(false);
     }
-  }, [buildFilters]);
+  }, [buildFilters, t]);
 
   useEffect(() => {
     loadConversations();
@@ -249,7 +254,7 @@ function ConversationsPageContent() {
             size="sm"
             onClick={() => router.push('/app/chat')}
             className="cursor-pointer"
-            aria-label="返回智能問答"
+            aria-label={t('chat.back-to-new')}
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           </Button>
@@ -260,14 +265,22 @@ function ConversationsPageContent() {
             <MessageSquare className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold leading-tight">對話歷史</h1>
-            {!loading && <p className="text-xs text-muted-foreground">共 {totalCount} 則對話</p>}
+            <h1 className="text-2xl font-bold leading-tight">{t('chat.conversations-title')}</h1>
+            {!loading && (
+              <p className="text-xs text-muted-foreground">
+                {t('chat.conversations-count', { count: totalCount })}
+              </p>
+            )}
           </div>
         </div>
 
-        <Button onClick={handleNewConversation} aria-label="建立新對話" className="cursor-pointer">
+        <Button
+          onClick={handleNewConversation}
+          aria-label={t('chat.new-conversation-btn-aria')}
+          className="cursor-pointer"
+        >
           <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
-          新對話
+          {t('chat.new-conversation')}
         </Button>
       </header>
 
@@ -278,21 +291,25 @@ function ConversationsPageContent() {
           aria-hidden="true"
         />
         <label htmlFor="conversation-search" className="sr-only">
-          搜尋對話
+          {t('chat.search-conversations')}
         </label>
         <Input
           id="conversation-search"
           type="search"
-          placeholder="搜尋對話..."
+          placeholder={t('chat.search-placeholder')}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          aria-label="搜尋對話"
+          aria-label={t('chat.search-aria')}
           className="pl-9"
         />
       </div>
 
       {/* Filter tabs */}
-      <div role="tablist" aria-label="對話篩選" className="flex gap-1 mb-3 border-b">
+      <div
+        role="tablist"
+        aria-label={t('chat.filter-tabs-aria')}
+        className="flex gap-1 mb-3 border-b"
+      >
         {FILTER_TABS.map((tab) => (
           <button
             key={tab.id}
@@ -314,8 +331,12 @@ function ConversationsPageContent() {
       </div>
 
       {/* Platform filter */}
-      <div role="group" aria-label="平台篩選" className="flex items-center gap-2 mb-6">
-        <span className="text-xs text-muted-foreground mr-1">平台：</span>
+      <div
+        role="group"
+        aria-label={t('chat.platform-filter-aria')}
+        className="flex items-center gap-2 mb-6"
+      >
+        <span className="text-xs text-muted-foreground mr-1">{t('chat.platform-label')}</span>
         {PLATFORM_FILTERS.map((pf) => (
           <button
             key={pf.id}
@@ -347,20 +368,24 @@ function ConversationsPageContent() {
           <button
             onClick={() => setError(null)}
             className="ml-auto text-xs underline cursor-pointer hover:no-underline"
-            aria-label="關閉錯誤訊息"
+            aria-label={t('chat.close-error-btn-aria')}
           >
-            關閉
+            {t('chat.close-error')}
           </button>
         </div>
       )}
 
       {/* Content area */}
       {loading ? (
-        <div role="status" aria-label="載入對話中" className="grid gap-3 sm:grid-cols-2">
+        <div
+          role="status"
+          aria-label={t('chat.loading-conversations-aria')}
+          className="grid gap-3 sm:grid-cols-2"
+        >
           {Array.from({ length: 6 }).map((_, i) => (
             <ConversationCardSkeleton key={i} />
           ))}
-          <span className="sr-only">載入對話中...</span>
+          <span className="sr-only">{t('chat.loading-conversations-aria')}</span>
         </div>
       ) : conversations.length === 0 ? (
         <EmptyState
@@ -370,7 +395,11 @@ function ConversationsPageContent() {
         />
       ) : (
         <>
-          <div role="list" aria-label="對話列表" className="grid gap-3 sm:grid-cols-2">
+          <div
+            role="list"
+            aria-label={t('chat.conversation-list-aria')}
+            className="grid gap-3 sm:grid-cols-2"
+          >
             {conversations.map((conv) => (
               <div key={conv.id} role="listitem">
                 <ConversationCard conversation={conv} onUpdate={handleConversationUpdate} />
@@ -385,14 +414,14 @@ function ConversationsPageContent() {
           {loadingMore && (
             <div role="status" aria-live="polite" className="flex justify-center py-6">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden="true" />
-              <span className="sr-only">載入更多對話...</span>
+              <span className="sr-only">{t('chat.loading-more-aria')}</span>
             </div>
           )}
 
           {/* End of list */}
           {!hasNextPage && conversations.length > 0 && (
             <p role="status" className="text-center text-xs text-muted-foreground py-6">
-              已顯示全部 {conversations.length} / {totalCount} 則對話
+              {t('chat.end-of-list', { shown: conversations.length, total: totalCount })}
             </p>
           )}
         </>

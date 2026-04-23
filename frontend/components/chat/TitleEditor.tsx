@@ -5,6 +5,7 @@ import { Pencil, Check, X, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/contexts/I18nContext';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -31,6 +32,7 @@ interface TitleEditorProps {
  * Validates Requirements 3.2
  */
 export function TitleEditor({ title, onSave, className, disabled = false }: TitleEditorProps) {
+  const { t } = useI18n();
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(title);
   const [saving, setSaving] = useState(false);
@@ -100,7 +102,7 @@ export function TitleEditor({ title, onSave, className, disabled = false }: Titl
           onKeyDown={handleKeyDown}
           onBlur={handleConfirm}
           disabled={saving}
-          aria-label="編輯對話標題"
+          aria-label={t('chat.edit-title-aria')}
           className="h-8 text-sm"
         />
         {saving ? (
@@ -115,7 +117,7 @@ export function TitleEditor({ title, onSave, className, disabled = false }: Titl
               size="sm"
               onClick={handleConfirm}
               className="h-8 w-8 p-0 cursor-pointer text-green-600 hover:text-green-700"
-              aria-label="確認標題"
+              aria-label={t('chat.confirm-edit-aria')}
             >
               <Check className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
@@ -124,7 +126,7 @@ export function TitleEditor({ title, onSave, className, disabled = false }: Titl
               size="sm"
               onClick={handleCancel}
               className="h-8 w-8 p-0 cursor-pointer text-muted-foreground hover:text-foreground"
-              aria-label="取消編輯"
+              aria-label={t('chat.cancel-edit-aria')}
             >
               <X className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
@@ -144,7 +146,7 @@ export function TitleEditor({ title, onSave, className, disabled = false }: Titl
         }
       }}
       disabled={disabled}
-      aria-label={`對話標題：${title}。點擊以編輯`}
+      aria-label={t('chat.click-to-edit-aria', { title })}
       className={cn(
         'group flex items-center gap-1.5 text-left w-full',
         !disabled && 'cursor-pointer hover:text-primary transition-colors',

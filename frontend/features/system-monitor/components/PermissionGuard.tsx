@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface PermissionGuardProps {
   children: React.ReactNode;
@@ -29,6 +30,7 @@ interface PermissionGuardProps {
  */
 export function PermissionGuard({ children }: PermissionGuardProps) {
   const { isAuthenticated, loading } = useAuth();
+  const { t } = useI18n();
 
   // Loading state
   if (loading) {
@@ -59,27 +61,25 @@ export function PermissionGuard({ children }: PermissionGuardProps) {
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         <div className="space-y-6">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">系統狀態</h1>
-            <p className="text-muted-foreground">監控系統健康度和排程器執行狀況</p>
+            <h1 className="text-3xl font-bold tracking-tight">{t('nav.system-status')}</h1>
+            <p className="text-muted-foreground">{t('scheduler.description')}</p>
           </div>
 
           <Card className="border-destructive">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-destructive">
                 <Lock className="h-5 w-5" />
-                需要登入
+                {t('errors.unauthorized')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-muted-foreground">
-                系統監控功能僅限已登入的使用者存取。請先登入以查看系統狀態。
-              </p>
+              <p className="text-muted-foreground">{t('system-monitor.auth-required')}</p>
               <Button
                 onClick={() => {
                   window.location.href = '/';
                 }}
               >
-                前往登入
+                {t('buttons.login')}
               </Button>
             </CardContent>
           </Card>

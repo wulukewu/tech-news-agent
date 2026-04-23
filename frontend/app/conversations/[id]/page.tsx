@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/contexts/I18nContext';
 import {
   getConversation,
   getConversationMessages,
@@ -125,6 +126,7 @@ interface SettingsSidebarProps {
 }
 
 function SettingsSidebar({ conversation, onUpdate, onExport, exporting }: SettingsSidebarProps) {
+  const { t } = useI18n();
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState(conversation.title);
   const [savingTitle, setSavingTitle] = useState(false);
@@ -232,17 +234,19 @@ function SettingsSidebar({ conversation, onUpdate, onExport, exporting }: Settin
   return (
     <aside
       className="flex flex-col gap-5 p-4 border-l bg-muted/20 min-w-[220px] max-w-[280px]"
-      aria-label="對話設定"
+      aria-label={t('chat.detail-settings-aria')}
     >
       <div>
         <h2 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-3">
           <Settings className="h-3.5 w-3.5" aria-hidden="true" />
-          對話設定
+          {t('chat.detail-settings-title')}
         </h2>
 
         {/* Title editing */}
         <div className="mb-4">
-          <label className="text-xs text-muted-foreground mb-1 block">標題</label>
+          <label className="text-xs text-muted-foreground mb-1 block">
+            {t('chat.detail-title-label')}
+          </label>
           {editingTitle ? (
             <div className="flex items-center gap-1">
               <Input
@@ -252,7 +256,7 @@ function SettingsSidebar({ conversation, onUpdate, onExport, exporting }: Settin
                 onKeyDown={handleTitleKeyDown}
                 onBlur={handleSaveTitle}
                 className="h-7 text-sm"
-                aria-label="編輯對話標題"
+                aria-label={t('chat.detail-title-edit-aria')}
                 disabled={savingTitle}
               />
               {savingTitle && (
@@ -263,7 +267,7 @@ function SettingsSidebar({ conversation, onUpdate, onExport, exporting }: Settin
             <button
               onClick={() => setEditingTitle(true)}
               className="flex items-center gap-1.5 w-full text-left text-sm font-medium hover:text-primary transition-colors group cursor-pointer"
-              aria-label="點擊編輯標題"
+              aria-label={t('chat.detail-title-click-aria')}
             >
               <span className="flex-1 line-clamp-2">{conversation.title}</span>
               <Pencil
@@ -278,7 +282,7 @@ function SettingsSidebar({ conversation, onUpdate, onExport, exporting }: Settin
         <div className="mb-4">
           <label className="text-xs text-muted-foreground mb-2 block flex items-center gap-1">
             <Tag className="h-3 w-3" aria-hidden="true" />
-            標籤
+            {t('chat.detail-tags-label')}
           </label>
           <div className="flex flex-wrap gap-1 mb-2">
             {conversation.tags.map((tag) => (
@@ -290,7 +294,7 @@ function SettingsSidebar({ conversation, onUpdate, onExport, exporting }: Settin
                 <button
                   onClick={() => handleRemoveTag(tag)}
                   className="hover:text-destructive transition-colors cursor-pointer"
-                  aria-label={`移除標籤 ${tag}`}
+                  aria-label={t('chat.detail-remove-tag-aria', { tag })}
                 >
                   <X className="h-2.5 w-2.5" aria-hidden="true" />
                 </button>
@@ -307,9 +311,9 @@ function SettingsSidebar({ conversation, onUpdate, onExport, exporting }: Settin
                   handleAddTag();
                 }
               }}
-              placeholder="新增標籤..."
+              placeholder={t('chat.detail-add-tag-placeholder')}
               className="h-7 text-xs"
-              aria-label="新增標籤"
+              aria-label={t('chat.detail-add-tag-aria')}
             />
             <Button
               variant="ghost"
@@ -317,7 +321,7 @@ function SettingsSidebar({ conversation, onUpdate, onExport, exporting }: Settin
               onClick={handleAddTag}
               disabled={!newTag.trim()}
               className="h-7 w-7 p-0 cursor-pointer"
-              aria-label="確認新增標籤"
+              aria-label={t('chat.detail-confirm-tag-aria')}
             >
               <Check className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
@@ -336,7 +340,11 @@ function SettingsSidebar({ conversation, onUpdate, onExport, exporting }: Settin
               conversation.is_favorite && 'text-yellow-600 border-yellow-300'
             )}
             aria-pressed={conversation.is_favorite}
-            aria-label={conversation.is_favorite ? '取消收藏' : '加入收藏'}
+            aria-label={
+              conversation.is_favorite
+                ? t('chat.detail-unfavorite-aria')
+                : t('chat.detail-favorite-aria')
+            }
           >
             {savingFavorite ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -347,7 +355,9 @@ function SettingsSidebar({ conversation, onUpdate, onExport, exporting }: Settin
                 aria-hidden="true"
               />
             )}
-            {conversation.is_favorite ? '已收藏' : '加入收藏'}
+            {conversation.is_favorite
+              ? t('chat.detail-favorited-label')
+              : t('chat.detail-add-favorite-label')}
           </Button>
 
           <Button
@@ -357,7 +367,11 @@ function SettingsSidebar({ conversation, onUpdate, onExport, exporting }: Settin
             disabled={savingArchive}
             className="justify-start gap-2 cursor-pointer"
             aria-pressed={conversation.is_archived}
-            aria-label={conversation.is_archived ? '取消歸檔' : '歸檔對話'}
+            aria-label={
+              conversation.is_archived
+                ? t('chat.detail-unarchive-aria')
+                : t('chat.detail-archive-aria')
+            }
           >
             {savingArchive ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -366,7 +380,9 @@ function SettingsSidebar({ conversation, onUpdate, onExport, exporting }: Settin
             ) : (
               <Archive className="h-3.5 w-3.5" aria-hidden="true" />
             )}
-            {conversation.is_archived ? '取消歸檔' : '歸檔對話'}
+            {conversation.is_archived
+              ? t('chat.detail-archived-label')
+              : t('chat.detail-archive-label')}
           </Button>
 
           <Button
@@ -375,14 +391,14 @@ function SettingsSidebar({ conversation, onUpdate, onExport, exporting }: Settin
             onClick={onExport}
             disabled={exporting}
             className="justify-start gap-2 cursor-pointer"
-            aria-label="匯出對話"
+            aria-label={t('chat.detail-export-aria')}
           >
             {exporting ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
             ) : (
               <Download className="h-3.5 w-3.5" aria-hidden="true" />
             )}
-            匯出 Markdown
+            {t('chat.detail-export-label')}
           </Button>
         </div>
       </div>
@@ -394,6 +410,7 @@ function SettingsSidebar({ conversation, onUpdate, onExport, exporting }: Settin
 
 function ConversationDetailContent({ id }: { id: string }) {
   const router = useRouter();
+  const { t } = useI18n();
 
   const [conversation, setConversation] = useState<ConversationDetail | null>(null);
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
@@ -425,7 +442,7 @@ function ConversationDetailContent({ id }: { id: string }) {
       } catch (err) {
         if (!cancelled) {
           console.error('Failed to load conversation:', err);
-          setError('載入對話失敗，請稍後再試。');
+          setError(t('chat.detail-load-error'));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -517,7 +534,7 @@ function ConversationDetailContent({ id }: { id: string }) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-4rem)]" role="status">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-hidden="true" />
-        <span className="sr-only">載入對話中...</span>
+        <span className="sr-only">{t('chat.detail-loading-aria')}</span>
       </div>
     );
   }
@@ -526,14 +543,16 @@ function ConversationDetailContent({ id }: { id: string }) {
     return (
       <div className="flex flex-col items-center justify-center h-[calc(100vh-4rem)] gap-4 px-4">
         <AlertCircle className="h-10 w-10 text-destructive" aria-hidden="true" />
-        <p className="text-sm text-destructive text-center">{error ?? '找不到此對話'}</p>
+        <p className="text-sm text-destructive text-center">
+          {error ?? t('chat.detail-not-found')}
+        </p>
         <Button
           variant="outline"
           onClick={() => router.push('/app/chat/conversations')}
           className="cursor-pointer"
         >
           <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
-          返回對話列表
+          {t('chat.detail-back-to-list')}
         </Button>
       </div>
     );
@@ -548,7 +567,7 @@ function ConversationDetailContent({ id }: { id: string }) {
           size="sm"
           onClick={() => router.push('/app/chat/conversations')}
           className="cursor-pointer flex-shrink-0"
-          aria-label="返回對話列表"
+          aria-label={t('chat.detail-back-to-list')}
         >
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         </Button>
@@ -558,7 +577,9 @@ function ConversationDetailContent({ id }: { id: string }) {
             <h1 className="text-base font-semibold truncate">{conversation.title}</h1>
             <PlatformBadge platform={conversation.platform} />
           </div>
-          <p className="text-xs text-muted-foreground">{conversation.message_count} 則訊息</p>
+          <p className="text-xs text-muted-foreground">
+            {t('chat.detail-message-count', { count: conversation.message_count })}
+          </p>
         </div>
 
         {/* Toggle sidebar on mobile */}
@@ -567,7 +588,11 @@ function ConversationDetailContent({ id }: { id: string }) {
           size="sm"
           onClick={() => setShowSidebar((v) => !v)}
           className="cursor-pointer lg:hidden"
-          aria-label={showSidebar ? '隱藏設定' : '顯示設定'}
+          aria-label={
+            showSidebar
+              ? t('chat.detail-toggle-settings-hide')
+              : t('chat.detail-toggle-settings-show')
+          }
           aria-expanded={showSidebar}
         >
           <Settings className="h-4 w-4" aria-hidden="true" />
@@ -581,13 +606,15 @@ function ConversationDetailContent({ id }: { id: string }) {
           {/* Message list */}
           <div
             className="flex-1 overflow-y-auto px-4 py-4 space-y-4"
-            aria-label="對話訊息"
+            aria-label={t('chat.detail-messages-aria')}
             aria-live="polite"
           >
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full py-16 text-center">
-                <p className="text-sm text-muted-foreground">此對話尚無訊息。</p>
-                <p className="text-xs text-muted-foreground mt-1">在下方輸入框開始對話。</p>
+                <p className="text-sm text-muted-foreground">{t('chat.detail-no-messages')}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {t('chat.detail-start-conversation')}
+                </p>
               </div>
             ) : (
               messages.map((msg) => <MessageBubble key={msg.id} message={msg} />)
@@ -603,10 +630,10 @@ function ConversationDetailContent({ id }: { id: string }) {
                 handleSend();
               }}
               className="flex items-center gap-2"
-              aria-label="發送訊息"
+              aria-label={t('chat.detail-send-form-aria')}
             >
               <label htmlFor="message-input" className="sr-only">
-                輸入訊息
+                {t('chat.detail-input-label')}
               </label>
               <Input
                 id="message-input"
@@ -614,16 +641,16 @@ function ConversationDetailContent({ id }: { id: string }) {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="繼續對話..."
+                placeholder={t('chat.detail-input-placeholder')}
                 disabled={sending}
                 autoComplete="off"
                 className="flex-1"
-                aria-label="輸入訊息"
+                aria-label={t('chat.detail-input-aria')}
               />
               <Button
                 type="submit"
                 disabled={sending || !inputValue.trim()}
-                aria-label="送出訊息"
+                aria-label={t('chat.detail-send-aria')}
                 className="flex-shrink-0 cursor-pointer"
               >
                 {sending ? (
@@ -631,7 +658,9 @@ function ConversationDetailContent({ id }: { id: string }) {
                 ) : (
                   <Send className="h-4 w-4" aria-hidden="true" />
                 )}
-                <span className="sr-only">{sending ? '送出中' : '送出'}</span>
+                <span className="sr-only">
+                  {sending ? t('chat.detail-sending-sr') : t('chat.detail-send-sr')}
+                </span>
               </Button>
             </form>
           </footer>

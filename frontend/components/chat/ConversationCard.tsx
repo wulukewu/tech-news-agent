@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { ConversationSummary } from '@/lib/api/conversations';
 import { updateConversation } from '@/lib/api/conversations';
+import { useI18n } from '@/contexts/I18nContext';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -51,6 +52,7 @@ function PlatformBadge({ platform }: { platform: 'web' | 'discord' }) {
  */
 export function ConversationCard({ conversation, onUpdate }: ConversationCardProps) {
   const router = useRouter();
+  const { t } = useI18n();
   const [loadingAction, setLoadingAction] = useState<'favorite' | 'archive' | null>(null);
 
   // Format last message time
@@ -113,7 +115,7 @@ export function ConversationCard({ conversation, onUpdate }: ConversationCardPro
       tabIndex={0}
       onClick={handleCardClick}
       onKeyDown={handleKeyDown}
-      aria-label={`Open conversation: ${conversation.title}`}
+      aria-label={t('chat.open-conversation-aria', { title: conversation.title })}
       className={cn(
         'group relative flex flex-col gap-3 rounded-lg border bg-card p-4',
         'cursor-pointer transition-all duration-200',
@@ -139,7 +141,7 @@ export function ConversationCard({ conversation, onUpdate }: ConversationCardPro
 
       {/* Tags */}
       {conversation.tags && conversation.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1" aria-label="Tags">
+        <div className="flex flex-wrap gap-1" aria-label={t('chat.tags-label')}>
           {conversation.tags.slice(0, 4).map((tag) => (
             <span
               key={tag}
@@ -175,7 +177,9 @@ export function ConversationCard({ conversation, onUpdate }: ConversationCardPro
             size="sm"
             onClick={handleToggleFavorite}
             disabled={loadingAction !== null}
-            aria-label={conversation.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
+            aria-label={
+              conversation.is_favorite ? t('chat.unfavorite-aria') : t('chat.favorite-aria')
+            }
             aria-pressed={conversation.is_favorite}
             className={cn(
               'h-7 w-7 p-0 cursor-pointer',
@@ -202,7 +206,7 @@ export function ConversationCard({ conversation, onUpdate }: ConversationCardPro
             onClick={handleToggleArchive}
             disabled={loadingAction !== null}
             aria-label={
-              conversation.is_archived ? 'Unarchive conversation' : 'Archive conversation'
+              conversation.is_archived ? t('chat.unarchive-aria') : t('chat.archive-aria')
             }
             aria-pressed={conversation.is_archived}
             className="h-7 w-7 p-0 cursor-pointer text-muted-foreground hover:text-foreground"

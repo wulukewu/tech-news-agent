@@ -104,8 +104,12 @@ export default function NotificationSettingsPage() {
         {/* Additional Legacy Features */}
         <div className="space-y-6">
           <div className="border-t pt-6">
-            <h2 className="text-xl font-semibold mb-4">進階功能</h2>
-            <p className="text-sm text-muted-foreground mb-6">額外的通知功能和設定選項</p>
+            <h2 className="text-xl font-semibold mb-4">
+              {t('settings.notifications.advanced-title')}
+            </h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              {t('settings.notifications.advanced-desc')}
+            </p>
           </div>
 
           {/* Quiet Hours - Only if not covered in PersonalizedNotificationSettings */}

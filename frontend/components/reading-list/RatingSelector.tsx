@@ -3,6 +3,7 @@
 import { Star } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface RatingSelectorProps {
   rating: number | null;
@@ -21,6 +22,7 @@ export function RatingSelector({
   disabled = false,
   size = 'md',
 }: RatingSelectorProps) {
+  const { t } = useI18n();
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
@@ -73,7 +75,9 @@ export function RatingSelector({
   };
 
   const displayRating = hoverRating ?? rating ?? 0;
-  const ratingText = rating ? `Rated ${rating} out of 5 stars` : 'Not rated. Click to rate';
+  const ratingText = rating
+    ? t('rating-selector.rated', { rating })
+    : t('rating-selector.not-rated');
 
   return (
     <div
@@ -96,7 +100,7 @@ export function RatingSelector({
             onFocus={() => setFocusedIndex(index)}
             onBlur={() => setFocusedIndex(null)}
             disabled={disabled}
-            aria-label={`Rate ${index} out of 5 stars`}
+            aria-label={t('rating-selector.rate-aria', { index })}
             className={cn(
               'transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded',
               disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',

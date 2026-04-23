@@ -19,12 +19,14 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * Main reading list page component
  * Validates Requirements 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.8
  */
 export default function ReadingListPage() {
+  const { t } = useI18n();
   const [selectedStatus, setSelectedStatus] = useState<ReadingListStatus | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
@@ -94,28 +96,26 @@ export default function ReadingListPage() {
     return (
       <ProtectedRoute>
         <div className="container mx-auto py-8 px-4 max-w-6xl">
-          <h1 className="text-3xl font-bold mb-6">Reading List</h1>
+          <h1 className="text-3xl font-bold mb-6">{t('reading-list-page.loading-title')}</h1>
           <ArticleListSkeleton />
         </div>
       </ProtectedRoute>
     );
   }
 
-  // Empty state
   if (!articles || articles.length === 0) {
     return (
       <ProtectedRoute>
         <div className="container mx-auto py-8 px-4 max-w-6xl">
-          <h1 className="text-3xl font-bold mb-6">Reading List</h1>
+          <h1 className="text-3xl font-bold mb-6">{t('reading-list-page.title')}</h1>
 
-          {/* Show status tabs even when empty */}
           <div className="mb-6">
             <StatusFilterTabs selectedStatus={selectedStatus} onStatusChange={handleStatusChange} />
           </div>
 
           <EmptyState
-            title="Your reading list is empty"
-            description="Start adding articles from your dashboard to build your reading collection"
+            title={t('reading-list-page.empty-title')}
+            description={t('reading-list-page.empty-description')}
             icon={<BookMarked className="h-12 w-12" />}
             action={
               <Link
@@ -127,7 +127,7 @@ export default function ReadingListPage() {
                   'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2'
                 )}
               >
-                Browse Articles
+                {t('reading-list-page.browse-articles')}
               </Link>
             }
           />
@@ -140,7 +140,7 @@ export default function ReadingListPage() {
     <ProtectedRoute>
       <div className="container mx-auto py-8 px-4 max-w-6xl">
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-3xl font-bold">Reading List</h1>
+          <h1 className="text-3xl font-bold">{t('reading-list-page.title')}</h1>
           {articles && articles.length > 0 && (
             <Button
               variant="outline"
@@ -149,7 +149,9 @@ export default function ReadingListPage() {
                 setSelectedItems(new Set());
               }}
             >
-              {isSelectionMode ? 'Cancel' : 'Select'}
+              {isSelectionMode
+                ? t('reading-list-page.cancel-button')
+                : t('reading-list-page.select-button')}
             </Button>
           )}
         </div>
@@ -171,16 +173,18 @@ export default function ReadingListPage() {
                 {selectedItems.size === articles.length ? (
                   <>
                     <CheckSquare className="h-4 w-4 mr-2" />
-                    Deselect All
+                    {t('reading-list-page.deselect-all')}
                   </>
                 ) : (
                   <>
                     <Square className="h-4 w-4 mr-2" />
-                    Select All
+                    {t('reading-list-page.select-all')}
                   </>
                 )}
               </Button>
-              <span className="text-sm text-muted-foreground">{selectedItems.size} selected</span>
+              <span className="text-sm text-muted-foreground">
+                {t('reading-list-page.selected-count', { count: selectedItems.size })}
+              </span>
             </div>
             {selectedItems.size > 0 && (
               <div className="flex items-center gap-2">
@@ -190,7 +194,7 @@ export default function ReadingListPage() {
                   onClick={handleBatchMarkAsRead}
                   disabled={updateStatus.isPending}
                 >
-                  Mark as Read
+                  {t('reading-list-page.batch-mark-read')}
                 </Button>
                 <Button
                   variant="destructive"
@@ -199,7 +203,7 @@ export default function ReadingListPage() {
                   disabled={removeItem.isPending}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Remove
+                  {t('reading-list-page.batch-remove')}
                 </Button>
               </div>
             )}
@@ -242,20 +246,19 @@ export default function ReadingListPage() {
         {loadingMore && (
           <div className="flex justify-center py-8" role="status" aria-live="polite">
             <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            <span className="sr-only">Loading more articles...</span>
+            <span className="sr-only">{t('reading-list-page.loading-more-sr')}</span>
           </div>
         )}
 
-        {/* No more articles indicator */}
         {!hasNextPage && articles.length > 0 && (
           <div className="text-center py-8 text-muted-foreground" role="status">
-            No more articles
+            {t('reading-list-page.no-more-articles')}
           </div>
         )}
 
         {/* Pagination info */}
         <div className="mt-4 text-center text-sm text-muted-foreground">
-          Showing {articles.length} of {totalCount} articles
+          {t('reading-list-page.showing-count', { shown: articles.length, total: totalCount })}
         </div>
       </div>
     </ProtectedRoute>

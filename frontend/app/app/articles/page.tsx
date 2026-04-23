@@ -169,7 +169,7 @@ function DashboardContent() {
             />
           ) : (
             <>
-              <section aria-label="Article list">
+              <section aria-label={t('articles-page.article-list-aria')}>
                 <ArticleGrid articles={filteredArticles} />
               </section>
 
@@ -178,13 +178,13 @@ function DashboardContent() {
               {loadingMore && (
                 <div className="flex justify-center py-8" role="status" aria-live="polite">
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                  <span className="sr-only">Loading more articles...</span>
+                  <span className="sr-only">{t('articles-page.loading-more-sr')}</span>
                 </div>
               )}
 
               {!hasNextPage && filteredArticles.length > 0 && (
                 <div className="text-center py-8 text-muted-foreground" role="status">
-                  No more articles
+                  {t('articles-page.no-more-articles')}
                 </div>
               )}
             </>
@@ -200,7 +200,7 @@ function DashboardContent() {
             />
           ) : (
             <>
-              <section aria-label="Recommended articles">
+              <section aria-label={t('articles-page.recommended-aria')}>
                 <ArticleGrid articles={filteredArticles} />
               </section>
 
@@ -209,13 +209,13 @@ function DashboardContent() {
               {loadingMore && (
                 <div className="flex justify-center py-8" role="status" aria-live="polite">
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                  <span className="sr-only">Loading more articles...</span>
+                  <span className="sr-only">{t('articles-page.loading-more-sr')}</span>
                 </div>
               )}
 
               {!hasNextPage && filteredArticles.length > 0 && (
                 <div className="text-center py-8 text-muted-foreground" role="status">
-                  No more articles
+                  {t('articles-page.no-more-articles')}
                 </div>
               )}
             </>
@@ -231,7 +231,7 @@ function DashboardContent() {
             />
           ) : (
             <>
-              <section aria-label="Subscribed articles">
+              <section aria-label={t('articles-page.subscribed-aria')}>
                 <ArticleGrid articles={filteredArticles} />
               </section>
 
@@ -240,13 +240,13 @@ function DashboardContent() {
               {loadingMore && (
                 <div className="flex justify-center py-8" role="status" aria-live="polite">
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                  <span className="sr-only">Loading more articles...</span>
+                  <span className="sr-only">{t('articles-page.loading-more-sr')}</span>
                 </div>
               )}
 
               {!hasNextPage && filteredArticles.length > 0 && (
                 <div className="text-center py-8 text-muted-foreground" role="status">
-                  No more articles
+                  {t('articles-page.no-more-articles')}
                 </div>
               )}
             </>
@@ -262,7 +262,7 @@ function DashboardContent() {
             />
           ) : (
             <>
-              <section aria-label="Saved articles">
+              <section aria-label={t('articles-page.saved-aria')}>
                 <ArticleGrid articles={filteredArticles} />
               </section>
 
@@ -271,13 +271,13 @@ function DashboardContent() {
               {loadingMore && (
                 <div className="flex justify-center py-8" role="status" aria-live="polite">
                   <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                  <span className="sr-only">Loading more articles...</span>
+                  <span className="sr-only">{t('articles-page.loading-more-sr')}</span>
                 </div>
               )}
 
               {!hasNextPage && filteredArticles.length > 0 && (
                 <div className="text-center py-8 text-muted-foreground" role="status">
-                  No more articles
+                  {t('articles-page.no-more-articles')}
                 </div>
               )}
             </>

@@ -21,6 +21,8 @@ import {
   ChevronRight,
 } from 'lucide-react';
 
+import { useI18n } from '@/contexts/I18nContext';
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ArticleSummary {
@@ -65,6 +67,7 @@ const EXAMPLE_QUERIES = [
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function ArticleCard({ article }: { article: ArticleSummary }) {
+  const { t } = useI18n();
   return (
     <div className="rounded-lg border bg-background p-4 space-y-2 hover:shadow-md transition-shadow duration-200">
       {/* Title + category + reading time */}
@@ -74,7 +77,7 @@ function ArticleCard({ article }: { article: ArticleSummary }) {
           target="_blank"
           rel="noopener noreferrer"
           className="text-sm font-semibold text-primary hover:underline leading-snug flex-1 cursor-pointer"
-          aria-label={`閱讀文章：${article.title}`}
+          aria-label={t('chat.article-read-aria', { title: article.title })}
         >
           {article.title}
         </a>
@@ -93,11 +96,11 @@ function ArticleCard({ article }: { article: ArticleSummary }) {
         )}
         <span className="flex items-center gap-1 text-xs text-muted-foreground">
           <Clock className="h-3 w-3" aria-hidden="true" />
-          {article.reading_time} 分鐘
+          {t('chat.article-read-time', { minutes: article.reading_time })}
         </span>
         {article.relevance_score > 0 && (
           <span className="text-xs text-muted-foreground">
-            相關度 {Math.round(article.relevance_score * 100)}%
+            {t('chat.article-relevance', { score: Math.round(article.relevance_score * 100) })}
           </span>
         )}
       </div>
@@ -130,6 +133,7 @@ function AssistantMessage({
   message: ChatMessage;
   onFollowUp: (query: string) => void;
 }) {
+  const { t } = useI18n();
   const { response, error } = message;
 
   if (error) {
@@ -161,10 +165,10 @@ function AssistantMessage({
       <div className="flex-1 space-y-4 min-w-0">
         {/* Articles */}
         {response.articles && response.articles.length > 0 && (
-          <section aria-label="相關文章">
+          <section aria-label={t('chat.related-articles-section')}>
             <h3 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
               <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
-              相關文章 ({response.articles.length})
+              {t('chat.related-articles', { count: response.articles.length })}
             </h3>
             <div className="space-y-2">
               {response.articles.map((article) => (
@@ -176,10 +180,10 @@ function AssistantMessage({
 
         {/* Insights */}
         {response.insights && response.insights.length > 0 && (
-          <section aria-label="洞察">
+          <section aria-label={t('chat.insights-section')}>
             <h3 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
               <Lightbulb className="h-3.5 w-3.5" aria-hidden="true" />
-              洞察
+              {t('chat.insights')}
             </h3>
             <ul className="space-y-1.5 rounded-lg border bg-muted/30 px-4 py-3">
               {response.insights.map((insight, i) => (
@@ -194,10 +198,10 @@ function AssistantMessage({
 
         {/* Recommendations / follow-up chips */}
         {response.recommendations && response.recommendations.length > 0 && (
-          <section aria-label="延伸閱讀建議">
+          <section aria-label={t('chat.further-reading-section')}>
             <h3 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
               <MessageSquare className="h-3.5 w-3.5" aria-hidden="true" />
-              延伸閱讀
+              {t('chat.further-reading')}
             </h3>
             <div className="flex flex-wrap gap-2">
               {response.recommendations.map((rec, i) => (
@@ -210,7 +214,7 @@ function AssistantMessage({
                     'transition-colors duration-200 cursor-pointer',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1'
                   )}
-                  aria-label={`追問：${rec}`}
+                  aria-label={t('chat.follow-up-aria', { question: rec })}
                 >
                   {rec}
                 </button>
@@ -222,7 +226,7 @@ function AssistantMessage({
         {/* Response time */}
         {response.response_time > 0 && (
           <p className="text-xs text-muted-foreground/60">
-            回應時間 {response.response_time.toFixed(2)}s
+            {t('chat.response-time-text', { seconds: response.response_time.toFixed(2) })}
           </p>
         )}
       </div>
@@ -247,19 +251,20 @@ function UserMessage({ message }: { message: ChatMessage }) {
 }
 
 function EmptyState({ onExampleClick }: { onExampleClick: (q: string) => void }) {
+  const { t } = useI18n();
   return (
     <div className="flex flex-col items-center justify-center h-full py-16 px-4 text-center">
       <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
         <Bot className="h-8 w-8 text-primary" aria-hidden="true" />
       </div>
-      <h2 className="text-xl font-semibold mb-2">智能問答助理</h2>
+      <h2 className="text-xl font-semibold mb-2">{t('chat.empty-title-text')}</h2>
       <p className="text-muted-foreground text-sm max-w-sm mb-8">
-        用自然語言提問，我會從您的文章庫中找到最相關的內容，並提供結構化的回答。
+        {t('chat.empty-description-text')}
       </p>
 
       <div className="w-full max-w-md space-y-2">
         <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-3">
-          試試這些問題
+          {t('chat.example-queries-label-text')}
         </p>
         {EXAMPLE_QUERIES.map((q) => (
           <button
@@ -271,7 +276,7 @@ function EmptyState({ onExampleClick }: { onExampleClick: (q: string) => void })
               'transition-colors duration-200 cursor-pointer',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1'
             )}
-            aria-label={`使用範例問題：${q}`}
+            aria-label={t('chat.example-query-aria', { query: q })}
           >
             {q}
           </button>
@@ -289,6 +294,7 @@ function ChatPageContent() {
   const [isLoading, setIsLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
+  const { t } = useI18n();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -366,14 +372,14 @@ function ChatPageContent() {
 
         setMessages((prev) => [...prev, assistantMessage]);
       } catch (err: unknown) {
-        const errorMsg = err instanceof Error ? err.message : '發生錯誤，請稍後再試。';
+        const errorMsg = err instanceof Error ? err.message : t('errors.server-error');
 
         const errorMessage: ChatMessage = {
           id: `error-${Date.now()}`,
           type: 'assistant',
           content: '',
           timestamp: new Date(),
-          error: `無法取得回答：${errorMsg}`,
+          error: `${t('chat.load-failed')} ${errorMsg}`,
         };
 
         setMessages((prev) => [...prev, errorMessage]);
@@ -417,12 +423,12 @@ function ChatPageContent() {
             <Bot className="h-5 w-5 text-primary" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-lg font-semibold leading-tight">智能問答</h1>
-            <p className="text-xs text-muted-foreground">基於您的文章庫進行語義搜尋與智能回答</p>
+            <h1 className="text-lg font-semibold leading-tight">{t('chat.header-title')}</h1>
+            <p className="text-xs text-muted-foreground">{t('chat.header-subtitle')}</p>
           </div>
           {conversationId && (
             <Badge variant="outline" className="ml-auto text-xs">
-              對話進行中
+              {t('chat.header-in-progress')}
             </Badge>
           )}
         </div>
@@ -439,9 +445,9 @@ function ChatPageContent() {
           <button
             onClick={() => setGlobalError(null)}
             className="ml-auto text-xs underline cursor-pointer hover:no-underline"
-            aria-label="關閉錯誤訊息"
+            aria-label={t('chat.close-error-aria-label')}
           >
-            關閉
+            {t('chat.close-error-label')}
           </button>
         </div>
       )}
@@ -449,7 +455,7 @@ function ChatPageContent() {
       {/* Messages area */}
       <main
         className="flex-1 overflow-y-auto px-4 py-4 space-y-6"
-        aria-label="對話歷史"
+        aria-label={t('chat.history-aria')}
         aria-live="polite"
         aria-atomic="false"
       >
@@ -467,7 +473,11 @@ function ChatPageContent() {
 
             {/* Loading indicator */}
             {isLoading && (
-              <div className="flex items-start gap-3" role="status" aria-label="正在生成回答">
+              <div
+                className="flex items-start gap-3"
+                role="status"
+                aria-label={t('chat.generating-answer-aria')}
+              >
                 <div className="flex-shrink-0 h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
                   <Bot className="h-4 w-4 text-primary" aria-hidden="true" />
                 </div>
@@ -476,7 +486,9 @@ function ChatPageContent() {
                     className="h-4 w-4 animate-spin text-muted-foreground"
                     aria-hidden="true"
                   />
-                  <span className="text-sm text-muted-foreground">正在搜尋並生成回答...</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t('chat.searching-generating-text')}
+                  </span>
                 </div>
               </div>
             )}
@@ -488,9 +500,13 @@ function ChatPageContent() {
 
       {/* Input area */}
       <footer className="flex-shrink-0 border-t bg-background/95 backdrop-blur px-4 py-3">
-        <form onSubmit={handleSubmit} className="flex items-center gap-2" aria-label="訊息輸入">
+        <form
+          onSubmit={handleSubmit}
+          className="flex items-center gap-2"
+          aria-label={t('chat.qa-form-aria-label')}
+        >
           <label htmlFor="chat-input" className="sr-only">
-            輸入您的問題
+            {t('chat.qa-input-label-text')}
           </label>
           <Input
             id="chat-input"
@@ -498,16 +514,16 @@ function ChatPageContent() {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="輸入您的問題，按 Enter 送出..."
+            placeholder={t('chat.qa-placeholder-text')}
             disabled={isLoading}
             autoComplete="off"
-            aria-label="輸入您的問題"
+            aria-label={t('chat.qa-input-aria-text')}
             className="flex-1 min-h-10 md:min-h-10 resize-none"
           />
           <Button
             type="submit"
             disabled={isLoading || !inputValue.trim()}
-            aria-label="送出問題"
+            aria-label={t('chat.qa-send-aria')}
             className="flex-shrink-0 cursor-pointer"
           >
             {isLoading ? (
@@ -515,11 +531,13 @@ function ChatPageContent() {
             ) : (
               <Send className="h-4 w-4" aria-hidden="true" />
             )}
-            <span className="sr-only">{isLoading ? '送出中' : '送出'}</span>
+            <span className="sr-only">
+              {isLoading ? t('chat.qa-sending-sr') : t('chat.qa-send-sr')}
+            </span>
           </Button>
         </form>
         <p className="text-xs text-muted-foreground mt-1.5 text-center">
-          支援中文與英文查詢 · 按 Enter 送出
+          {t('chat.qa-footer-hint')}
         </p>
       </footer>
     </div>

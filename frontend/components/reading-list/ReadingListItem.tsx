@@ -79,7 +79,7 @@ export function ReadingListItem({
   };
 
   // Format date - handle invalid dates gracefully
-  let dateDisplay = 'Recently added';
+  let dateDisplay = t('reading-list-item.recently-added');
   try {
     const addedDate = new Date(item.addedAt);
     if (!isNaN(addedDate.getTime())) {
@@ -151,11 +151,13 @@ export function ReadingListItem({
             statusColors[item.status]
           )}
         >
-          Status: {item.status}
+          {t('reading-list-item.status-label', { status: item.status })}
         </span>
 
         {/* Added date */}
-        <span className="text-muted-foreground">Added {dateDisplay}</span>
+        <span className="text-muted-foreground">
+          {t('reading-list-item.added-date', { date: dateDisplay })}
+        </span>
       </div>
 
       {/* Rating and Actions */}
@@ -204,7 +206,7 @@ export function ReadingListItem({
             <button
               onClick={() => handleStatusChange('Unread')}
               disabled={isLoading}
-              aria-label="Mark as unread"
+              aria-label={t('reading-list-item.mark-as-unread-aria')}
               className={cn(
                 'inline-flex items-center gap-2 px-3 py-2 rounded-md',
                 'bg-primary text-primary-foreground',
@@ -220,7 +222,9 @@ export function ReadingListItem({
               ) : (
                 <RotateCcw className="h-4 w-4" />
               )}
-              <span className="hidden sm:inline">Mark as Unread</span>
+              <span className="hidden sm:inline">
+                {t('reading-list-item.mark-as-unread-label')}
+              </span>
             </button>
           )}
 
@@ -228,7 +232,7 @@ export function ReadingListItem({
             <button
               onClick={() => handleStatusChange('Unread')}
               disabled={isLoading}
-              aria-label="Unarchive"
+              aria-label={t('reading-list-item.unarchive-aria')}
               className={cn(
                 'inline-flex items-center gap-2 px-3 py-2 rounded-md',
                 'bg-primary text-primary-foreground',
@@ -244,7 +248,7 @@ export function ReadingListItem({
               ) : (
                 <ArchiveRestore className="h-4 w-4" />
               )}
-              <span className="hidden sm:inline">Unarchive</span>
+              <span className="hidden sm:inline">{t('reading-list-item.unarchive-label')}</span>
             </button>
           )}
 
@@ -253,7 +257,7 @@ export function ReadingListItem({
             <button
               onClick={() => handleStatusChange('Archived')}
               disabled={isLoading}
-              aria-label="Archive"
+              aria-label={t('reading-list-item.archive-aria')}
               className={cn(
                 'inline-flex items-center gap-2 px-3 py-2 rounded-md',
                 'bg-secondary text-secondary-foreground',
@@ -269,7 +273,7 @@ export function ReadingListItem({
               ) : (
                 <Archive className="h-4 w-4" />
               )}
-              <span className="hidden sm:inline">Archive</span>
+              <span className="hidden sm:inline">{t('reading-list-item.archive-label')}</span>
             </button>
           )}
 
@@ -277,7 +281,7 @@ export function ReadingListItem({
           <button
             onClick={handleRemove}
             disabled={isLoading}
-            aria-label="Remove from list"
+            aria-label={t('reading-list-item.remove-aria')}
             className={cn(
               'inline-flex items-center gap-2 px-3 py-2 rounded-md',
               'bg-destructive text-destructive-foreground',
