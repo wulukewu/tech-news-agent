@@ -1,0 +1,408 @@
+'use client';
+
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { ConversationCard } from '@/components/chat/ConversationCard';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
+import { getConversations, type ConversationSummary } from '@/lib/api/conversations';
+import {
+  MessageSquare,
+  Plus,
+  Search,
+  Loader2,
+  AlertCircle,
+  Inbox,
+  Globe,
+  Hash,
+  ArrowLeft,
+} from 'lucide-react';
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type FilterTab = 'all' | 'favorites' | 'archived';
+type PlatformFilter = 'all' | 'web' | 'discord';
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+const PAGE_SIZE = 20;
+
+const FILTER_TABS: { id: FilterTab; label: string }[] = [
+  { id: 'all', label: '全部' },
+  { id: 'favorites', label: '收藏' },
+  { id: 'archived', label: '已歸檔' },
+];
+
+const PLATFORM_FILTERS: { id: PlatformFilter; label: string }[] = [
+  { id: 'all', label: '全部' },
+  { id: 'web', label: 'Web' },
+  { id: 'discord', label: 'Discord' },
+];
+
+// ─── Empty State ──────────────────────────────────────────────────────────────
+
+function EmptyState({
+  tab,
+  searchQuery,
+  onNewConversation,
+}: {
+  tab: FilterTab;
+  searchQuery: string;
+  onNewConversation: () => void;
+}) {
+  const message = searchQuery
+    ? `找不到符合「${searchQuery}」的對話`
+    : tab === 'favorites'
+      ? '還沒有收藏的對話'
+      : tab === 'archived'
+        ? '沒有已歸檔的對話'
+        : '還沒有任何對話';
+
+  const description = searchQuery
+    ? '請嘗試不同的搜尋關鍵字。'
+    : tab === 'all'
+      ? '點擊「新對話」開始您的第一個對話。'
+      : null;
+
+  return (
+    <div className="flex flex-col items-center justify-center py-20 px-4 text-center">
+      <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center mb-4">
+        <Inbox className="h-7 w-7 text-muted-foreground" aria-hidden="true" />
+      </div>
+      <p className="text-base font-medium text-foreground mb-1">{message}</p>
+      {description && <p className="text-sm text-muted-foreground mb-6">{description}</p>}
+      {tab === 'all' && !searchQuery && (
+        <Button onClick={onNewConversation} className="cursor-pointer">
+          <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
+          新對話
+        </Button>
+      )}
+    </div>
+  );
+}
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+
+function ConversationCardSkeleton() {
+  return (
+    <div className="rounded-lg border bg-card p-4 space-y-3 animate-pulse">
+      <div className="flex items-start justify-between gap-2">
+        <div className="h-4 bg-muted rounded w-3/4" />
+        <div className="h-5 bg-muted rounded w-14" />
+      </div>
+      <div className="h-3 bg-muted rounded w-full" />
+      <div className="h-3 bg-muted rounded w-2/3" />
+      <div className="flex items-center justify-between">
+        <div className="h-3 bg-muted rounded w-24" />
+        <div className="flex gap-1">
+          <div className="h-7 w-7 bg-muted rounded" />
+          <div className="h-7 w-7 bg-muted rounded" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Page Content ────────────────────────────────────────────────────────
+
+function ConversationsPageContent() {
+  const router = useRouter();
+
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
+  const [offset, setOffset] = useState(0);
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [activeTab, setActiveTab] = useState<FilterTab>('all');
+  const [platformFilter, setPlatformFilter] = useState<PlatformFilter>('all');
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Debounce search input (300ms)
+  useEffect(() => {
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [searchQuery]);
+
+  // Build API filters from current UI state
+  const buildFilters = useCallback(
+    (currentOffset: number) => {
+      const filters: Parameters<typeof getConversations>[0] = {
+        limit: PAGE_SIZE,
+        offset: currentOffset,
+      };
+
+      if (debouncedSearch) filters.search = debouncedSearch;
+
+      if (platformFilter !== 'all') {
+        filters.platform = platformFilter;
+      }
+
+      if (activeTab === 'favorites') {
+        filters.is_favorite = true;
+        filters.is_archived = false;
+      } else if (activeTab === 'archived') {
+        filters.is_archived = true;
+      } else {
+        filters.is_archived = false;
+      }
+
+      return filters;
+    },
+    [debouncedSearch, activeTab, platformFilter]
+  );
+
+  // Initial / filter-change load
+  const loadConversations = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    setOffset(0);
+    try {
+      const result = await getConversations(buildFilters(0));
+      setConversations(result.items);
+      setHasNextPage(result.has_next);
+      setTotalCount(result.total_count);
+      setOffset(result.items.length);
+    } catch (err) {
+      console.error('Failed to load conversations:', err);
+      setError('載入對話失敗，請稍後再試。');
+    } finally {
+      setLoading(false);
+    }
+  }, [buildFilters]);
+
+  useEffect(() => {
+    loadConversations();
+  }, [loadConversations]);
+
+  // Load more (infinite scroll)
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasNextPage) return;
+    setLoadingMore(true);
+    try {
+      const result = await getConversations(buildFilters(offset));
+      setConversations((prev) => [...prev, ...result.items]);
+      setHasNextPage(result.has_next);
+      setTotalCount(result.total_count);
+      setOffset((prev) => prev + result.items.length);
+    } catch (err) {
+      console.error('Failed to load more conversations:', err);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasNextPage, buildFilters, offset]);
+
+  // Infinite scroll observer
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !loadingMore) {
+          loadMore();
+        }
+      },
+      { rootMargin: '200px' }
+    );
+
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasNextPage, loadingMore, loadMore]);
+
+  // Handle card update (favorite/archive toggled from card)
+  const handleConversationUpdate = useCallback((updated: ConversationSummary) => {
+    setConversations((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+  }, []);
+
+  // Create new conversation — navigate to chat page to start fresh
+  const handleNewConversation = () => {
+    router.push('/app/chat');
+  };
+
+  // Tab change resets search and platform filter
+  const handleTabChange = (tab: FilterTab) => {
+    setActiveTab(tab);
+    setSearchQuery('');
+    setDebouncedSearch('');
+  };
+
+  return (
+    <div className="container mx-auto py-8 px-4 max-w-4xl">
+      {/* Page header */}
+      <header className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push('/app/chat')}
+            className="cursor-pointer"
+            aria-label="返回智能問答"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <div
+            className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center"
+            aria-hidden="true"
+          >
+            <MessageSquare className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold leading-tight">對話歷史</h1>
+            {!loading && <p className="text-xs text-muted-foreground">共 {totalCount} 則對話</p>}
+          </div>
+        </div>
+
+        <Button onClick={handleNewConversation} aria-label="建立新對話" className="cursor-pointer">
+          <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
+          新對話
+        </Button>
+      </header>
+
+      {/* Search bar */}
+      <div className="relative mb-4">
+        <Search
+          className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none"
+          aria-hidden="true"
+        />
+        <label htmlFor="conversation-search" className="sr-only">
+          搜尋對話
+        </label>
+        <Input
+          id="conversation-search"
+          type="search"
+          placeholder="搜尋對話..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          aria-label="搜尋對話"
+          className="pl-9"
+        />
+      </div>
+
+      {/* Filter tabs */}
+      <div role="tablist" aria-label="對話篩選" className="flex gap-1 mb-3 border-b">
+        {FILTER_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            role="tab"
+            aria-selected={activeTab === tab.id}
+            onClick={() => handleTabChange(tab.id)}
+            className={cn(
+              'px-4 py-2 text-sm font-medium transition-colors cursor-pointer',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+              'border-b-2 -mb-px',
+              activeTab === tab.id
+                ? 'border-primary text-primary'
+                : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/40'
+            )}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Platform filter */}
+      <div role="group" aria-label="平台篩選" className="flex items-center gap-2 mb-6">
+        <span className="text-xs text-muted-foreground mr-1">平台：</span>
+        {PLATFORM_FILTERS.map((pf) => (
+          <button
+            key={pf.id}
+            onClick={() => setPlatformFilter(pf.id)}
+            aria-pressed={platformFilter === pf.id}
+            className={cn(
+              'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors cursor-pointer',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+              platformFilter === pf.id
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'
+            )}
+          >
+            {pf.id === 'web' && <Globe className="h-3 w-3" aria-hidden="true" />}
+            {pf.id === 'discord' && <Hash className="h-3 w-3" aria-hidden="true" />}
+            {pf.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Error banner */}
+      {error && (
+        <div
+          role="alert"
+          className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 mb-4 text-sm text-destructive"
+        >
+          <AlertCircle className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
+          <span>{error}</span>
+          <button
+            onClick={() => setError(null)}
+            className="ml-auto text-xs underline cursor-pointer hover:no-underline"
+            aria-label="關閉錯誤訊息"
+          >
+            關閉
+          </button>
+        </div>
+      )}
+
+      {/* Content area */}
+      {loading ? (
+        <div role="status" aria-label="載入對話中" className="grid gap-3 sm:grid-cols-2">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <ConversationCardSkeleton key={i} />
+          ))}
+          <span className="sr-only">載入對話中...</span>
+        </div>
+      ) : conversations.length === 0 ? (
+        <EmptyState
+          tab={activeTab}
+          searchQuery={debouncedSearch}
+          onNewConversation={handleNewConversation}
+        />
+      ) : (
+        <>
+          <div role="list" aria-label="對話列表" className="grid gap-3 sm:grid-cols-2">
+            {conversations.map((conv) => (
+              <div key={conv.id} role="listitem">
+                <ConversationCard conversation={conv} onUpdate={handleConversationUpdate} />
+              </div>
+            ))}
+          </div>
+
+          {/* Infinite scroll sentinel */}
+          <div ref={sentinelRef} className="h-px" aria-hidden="true" />
+
+          {/* Loading more indicator */}
+          {loadingMore && (
+            <div role="status" aria-live="polite" className="flex justify-center py-6">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-hidden="true" />
+              <span className="sr-only">載入更多對話...</span>
+            </div>
+          )}
+
+          {/* End of list */}
+          {!hasNextPage && conversations.length > 0 && (
+            <p role="status" className="text-center text-xs text-muted-foreground py-6">
+              已顯示全部 {conversations.length} / {totalCount} 則對話
+            </p>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+// ─── Page Export ──────────────────────────────────────────────────────────────
+
+export default function ConversationsPage() {
+  return <ConversationsPageContent />;
+}

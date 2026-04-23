@@ -138,7 +138,7 @@ def _get_supabase() -> SupabaseService:
     return SupabaseService(validate_connection=False)
 
 
-async def _create_conversation_in_db(user_id: str) -> str:
+async def _create_conversation_in_db(user_id: str, title: Optional[str] = None) -> str:
     """
     Create a new conversation row in Supabase and return its ID.
     Uses fallback approach if conversations table doesn't exist.
@@ -160,20 +160,25 @@ async def _create_conversation_in_db(user_id: str) -> str:
             "last_updated": now,
         }
 
-        result = (
-            supabase.client.table("conversations")
-            .insert(
-                {
-                    "id": conversation_id,
-                    "user_id": user_id,
-                    "context": initial_context,
-                    "created_at": now,
-                    "last_updated": now,
-                    "expires_at": expires_at,
-                }
-            )
-            .execute()
-        )
+        row: Dict[str, Any] = {
+            "id": conversation_id,
+            "user_id": user_id,
+            "context": initial_context,
+            "created_at": now,
+            "last_updated": now,
+            "expires_at": expires_at,
+            "platform": "web",
+            "tags": [],
+            "is_archived": False,
+            "is_favorite": False,
+            "message_count": 0,
+            "last_message_at": now,
+            "metadata": {},
+        }
+        if title:
+            row["title"] = title
+
+        result = supabase.client.table("conversations").insert(row).execute()
 
         logger.info(f"Successfully created conversation {conversation_id} in database")
         return conversation_id
@@ -183,6 +188,90 @@ async def _create_conversation_in_db(user_id: str) -> str:
         logger.warning(f"Failed to create conversation in database, using fallback: {e}")
         logger.info(f"Generated fallback conversation ID: {conversation_id}")
         return conversation_id
+
+
+async def _save_messages_to_db(
+    conversation_id: str,
+    user_query: str,
+    qa_response: Optional["QAQueryResponse"],
+) -> None:
+    """
+    Save the user query and assistant response as rows in conversation_messages.
+    Also updates the conversation title (from query) and message_count.
+    """
+    try:
+        supabase = _get_supabase()
+        now = datetime.utcnow().isoformat()
+
+        messages_to_insert = [
+            {
+                "conversation_id": conversation_id,
+                "role": "user",
+                "content": user_query,
+                "platform": "web",
+                "metadata": {},
+                "created_at": now,
+            }
+        ]
+
+        if qa_response is not None:
+            # Build a readable assistant reply from the structured response
+            assistant_content = _qa_response_to_text(qa_response)
+            messages_to_insert.append(
+                {
+                    "conversation_id": conversation_id,
+                    "role": "assistant",
+                    "content": assistant_content,
+                    "platform": "web",
+                    "metadata": {
+                        "articles": [a.dict() for a in qa_response.articles],
+                        "insights": qa_response.insights,
+                        "recommendations": qa_response.recommendations,
+                        "response_time": qa_response.response_time,
+                    },
+                    "created_at": now,
+                }
+            )
+
+        supabase.client.table("conversation_messages").insert(messages_to_insert).execute()
+
+        # Update conversation: set title from first query if not set, bump message_count
+        existing = (
+            supabase.client.table("conversations")
+            .select("title, message_count")
+            .eq("id", conversation_id)
+            .execute()
+        )
+        if existing.data:
+            current_title = existing.data[0].get("title")
+            current_count = existing.data[0].get("message_count") or 0
+            updates: Dict[str, Any] = {
+                "message_count": current_count + len(messages_to_insert),
+                "last_message_at": now,
+                "last_updated": now,
+            }
+            if not current_title:
+                # Use the query as the title (truncated)
+                updates["title"] = user_query[:100]
+            supabase.client.table("conversations").update(updates).eq(
+                "id", conversation_id
+            ).execute()
+
+    except Exception as e:
+        logger.warning(f"Failed to save messages to conversation_messages: {e}")
+
+
+def _qa_response_to_text(qa_response: "QAQueryResponse") -> str:
+    """Convert a QAQueryResponse to a plain-text assistant message for storage."""
+    parts = []
+    if qa_response.articles:
+        titles = [a.title for a in qa_response.articles[:3]]
+        parts.append("相關文章：" + "、".join(titles))
+    if qa_response.insights:
+        parts.append("洞察：" + " ".join(qa_response.insights[:2]))
+    if qa_response.recommendations:
+        parts.append("延伸閱讀：" + "、".join(qa_response.recommendations[:3]))
+    return "\n".join(parts) if parts else "（已處理您的查詢）"
 
 
 async def _get_conversation_from_db(conversation_id: str, user_id: str) -> Optional[Dict[str, Any]]:
@@ -387,6 +476,10 @@ async def query(
                 await _append_turn_to_db(body.conversation_id, user_id, body.query, result)
             except Exception as e:
                 logger.warning(f"Failed to persist query turn (using fallback mode): {e}")
+            try:
+                await _save_messages_to_db(body.conversation_id, body.query, result)
+            except Exception as e:
+                logger.warning(f"Failed to save query messages to DB: {e}")
 
         return success_response(result)
 
@@ -461,6 +554,13 @@ async def create_conversation(
                         )
                     except Exception as e:
                         logger.warning(f"Failed to persist initial turn (fallback mode): {e}")
+                    # Save messages to conversation_messages table
+                    try:
+                        await _save_messages_to_db(
+                            conversation_id, body.initial_query, query_result
+                        )
+                    except Exception as e:
+                        logger.warning(f"Failed to save messages to DB: {e}")
             except Exception as e:
                 # Don't fail conversation creation if the query fails
                 logger.warning(f"Initial query failed, conversation still created: {e}")
@@ -547,6 +647,11 @@ async def continue_conversation(
             await _append_turn_to_db(conversation_id, user_id, body.query, result)
         except Exception as e:
             logger.warning(f"Failed to persist follow-up turn: {e}")
+        # Save messages to conversation_messages table
+        try:
+            await _save_messages_to_db(conversation_id, body.query, result)
+        except Exception as e:
+            logger.warning(f"Failed to save follow-up messages to DB: {e}")
 
         return success_response(result)
 

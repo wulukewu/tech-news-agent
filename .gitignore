@@ -65,6 +65,7 @@ backend/.hypothesis/
 .coverage.*
 htmlcov/
 coverage.xml
+coverage.json
 *.cover
 .pytest_cache/
 

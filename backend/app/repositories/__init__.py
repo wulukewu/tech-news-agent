@@ -11,7 +11,13 @@ Validates: Requirements 3.1, 3.2, 3.4
 from app.repositories.analytics_event import AnalyticsEvent, AnalyticsEventRepository
 from app.repositories.article import Article, ArticleRepository, PaginationMetadata
 from app.repositories.base import BaseRepository, IRepository
+from app.repositories.conversation import (
+    ConversationFilters,
+    ConversationRepository,
+    ConversationSummary,
+)
 from app.repositories.feed import Feed, FeedRepository
+from app.repositories.message import MessageRepository, MessageStats
 from app.repositories.reading_list import ReadingListItem, ReadingListRepository
 from app.repositories.user import User, UserRepository
 from app.repositories.user_notification_preferences import (
@@ -27,9 +33,14 @@ __all__ = [
     "Article",
     "ArticleRepository",
     "BaseRepository",
+    "ConversationFilters",
+    "ConversationRepository",
+    "ConversationSummary",
     "Feed",
     "FeedRepository",
     "IRepository",
+    "MessageRepository",
+    "MessageStats",
     "PaginationMetadata",
     "ReadingListItem",
     "ReadingListRepository",

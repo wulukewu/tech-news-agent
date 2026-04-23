@@ -341,6 +341,20 @@ from app.api import qa as qa_api
 
 app.include_router(qa_api.router, prefix="/api/qa", tags=["qa"])
 
+# Import and register Conversations router
+from app.api import conversations as conversations_api
+
+app.include_router(conversations_api.router, prefix="/api/conversations", tags=["conversations"])
+
+# Import and register Platforms router (user platform linking + sync)
+from app.api import platforms as platforms_api
+
+app.include_router(platforms_api.router, prefix="/api/user/platforms", tags=["platforms"])
+# Also mount the conversation sync endpoint under /api
+app.include_router(
+    platforms_api.router, prefix="/api", tags=["conversations"], include_in_schema=False
+)
+
 
 @app.get("/")
 async def root():
