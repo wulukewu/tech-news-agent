@@ -1,0 +1,299 @@
+# Implementation Plan: Bilingual UI System
+
+## Overview
+
+This implementation plan breaks down the bilingual UI system into discrete, manageable tasks. The system will enable seamless language switching between Traditional Chinese (zh-TW) and English (en-US) with automatic detection, persistent preferences, and comprehensive translation coverage.
+
+The implementation follows a phased approach: infrastructure setup → translation file population → component migration → testing → developer tooling. Each task builds incrementally to ensure core functionality is validated early.
+
+## Tasks
+
+- [ ] 1. Set up core i18n infrastructure and types
+  - [x] 1.1 Create TypeScript type definitions for i18n system
+    - Create `frontend/types/i18n.ts` with Locale, TranslationKey, TranslationVariables, TranslationFunction, I18nContextType, and TranslationFile types
+    - Export all types for use across the application
+    - _Requirements: 5.1, 5.2, 5.3, 7.1, 7.2, 7.3_
+  - [x] 1.2 Create translation file structure
+    - Create `frontend/locales/` directory
+    - Create empty `frontend/locales/zh-TW.json` file
+    - Create empty `frontend/locales/en-US.json` file
+    - _Requirements: 5.1, 5.2_
+  - [x] 1.3 Implement I18nContext with language detection
+    - Create `frontend/contexts/I18nContext.tsx` with I18nProvider component
+    - Implement detectLanguage function that maps browser language to supported locales (zh variants → zh-TW, en variants → en-US, others → en-US)
+    - Implement loadTranslations function with dynamic imports
+    - Implement translation function `t` with nested key lookup and variable interpolation
+    - Implement setLocale function with localStorage persistence and HTML lang attribute update
+    - Initialize language on mount with localStorage check → browser detection fallback
+    - Export useI18n hook for consuming context
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 2.1, 2.2, 2.3, 2.4, 2.5, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7_
+  - [x] 1.4 Write unit tests for language detection
+    - Test detection of Chinese variants (zh, zh-TW, zh-CN, zh-HK) maps to zh-TW
+    - Test detection of English variants (en, en-US, en-GB) maps to en-US
+    - Test fallback to en-US for unsupported languages (fr, de, ja)
+    - Test detection completes within 100ms
+    - Test handling of undefined navigator.language
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.6, 11.1_
+  - [x] 1.5 Write unit tests for translation function
+    - Test basic key lookup: `t('nav.articles')` returns correct translation
+    - Test nested key lookup: `t('errors.network-error')` traverses object correctly
+    - Test interpolation: `t('messages.article-count', { count: 5 })` replaces variables
+    - Test missing key fallback: `t('non.existent.key')` returns key itself
+    - Test special characters in translations (quotes, apostrophes, unicode)
+    - Test empty string translations
+    - Test numeric and boolean variable interpolation
+    - _Requirements: 5.5, 5.6, 6.4, 7.5, 7.6, 7.7, 11.2, 11.3_
+  - [x] 1.6 Write unit tests for storage manager
+    - Test saving valid locale to localStorage
+    - Test retrieving stored locale on initialization
+    - Test validation rejects invalid locale values
+    - Test graceful handling when localStorage is unavailable (private browsing)
+    - Test handling of corrupted stored data (invalid JSON)
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 11.6_
+
+- [x] 2. Implement Language Switcher UI component
+  - [x] 2.1 Create LanguageSwitcher component with accessibility
+    - Create `frontend/components/LanguageSwitcher.tsx` with two variants: icon (globe dropdown) and compact (text toggle)
+    - Implement icon variant with dropdown menu for navbar (desktop)
+    - Implement compact variant with "繁 / EN" toggle for footer and mobile drawer
+    - Add visual feedback for active language (highlighted background, checkmark)
+    - Implement handleLanguageChange function that calls setLocale
+    - Add ARIA attributes: role="group", aria-label="Language selector", aria-pressed for active state
+    - Add keyboard navigation support (Tab, Enter, Space, Escape)
+    - Ensure minimum touch target size (44x44px with min-w-[44px] min-h-[44px])
+    - Add focus indicators (focus:ring-2 focus:ring-primary)
+    - Add smooth transitions (transition-colors duration-200)
+    - Add dropdown close on outside click and Escape key
+    - _Requirements: 3.1, 3.2, 3.3, 3.5, 3.6, 9.1, 9.2, 9.3, 9.4, 9.6_
+  - [x] 2.2 Integrate LanguageSwitcher into app layout
+    - Add I18nProvider to `app/layout.tsx` wrapping children
+    - Add LanguageSwitcher (icon variant) to LandingNav desktop navigation
+    - Add LanguageSwitcher (compact variant) to LandingNav mobile drawer
+    - Add LanguageSwitcher (compact variant) to Footer bottom bar
+    - Add LanguageSwitcher (icon variant) to Navigation component (app navbar)
+    - Add LanguageSwitcher (compact variant) to Navigation mobile drawer
+    - Ensure LanguageSwitcher is accessible on all pages (landing and authenticated)
+    - _Requirements: 3.5, 7.4_
+  - [x] 2.3 Write unit tests for LanguageSwitcher component
+    - Test renders both language options (繁體中文, English)
+    - Test active language has correct visual styling
+    - Test clicking language option calls setLocale
+    - Test keyboard navigation with Tab key
+    - Test activation with Enter and Space keys
+    - Test ARIA attributes (role, aria-label, aria-pressed)
+    - Test minimum touch target size (44x44px)
+    - Test dropdown opens/closes correctly (icon variant)
+    - Test dropdown closes on outside click and Escape key
+    - _Requirements: 3.1, 3.2, 3.3, 3.6, 9.1, 9.3, 9.4, 9.6, 11.4, 11.7_
+
+- [x] 3. Checkpoint - Verify infrastructure works
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 4. Populate translation files with comprehensive content
+  - [x] 4.1 Extract and populate navigation translations
+    - Add `nav` section to both zh-TW.json and en-US.json
+    - Add translations for: articles, reading-list, subscriptions, analytics, settings, system-status
+    - _Requirements: 4.1, 5.3, 5.4_
+  - [x] 4.2 Extract and populate button translations
+    - Add `buttons` section to both zh-TW.json and en-US.json
+    - Add translations for: save, cancel, delete, edit, add, remove, confirm, close
+    - _Requirements: 4.2, 5.3, 5.4_
+  - [x] 4.3 Extract and populate message translations
+    - Add `messages` section to both zh-TW.json and en-US.json
+    - Add translations for: loading, article-count (with {count} variable), no-articles, fetching-articles, scheduler-running
+    - _Requirements: 4.5, 5.3, 5.4, 6.4_
+  - [x] 4.4 Extract and populate error message translations
+    - Add `errors` section to both zh-TW.json and en-US.json
+    - Add translations for all ERROR_MESSAGES constants: network-error, analysis-timeout, insufficient-permissions, rate-limit-exceeded, invalid-input, server-error, not-found, unauthorized
+    - _Requirements: 4.6, 5.3, 5.4_
+  - [x] 4.5 Extract and populate success message translations
+    - Add `success` section to both zh-TW.json and en-US.json
+    - Add translations for all SUCCESS_MESSAGES constants: article-saved, article-removed, settings-saved, analysis-copied, subscription-added, subscription-removed
+    - _Requirements: 4.7, 5.3, 5.4_
+  - [x] 4.6 Extract and populate tinkering index translations
+    - Add `tinkering-index` section to both zh-TW.json and en-US.json
+    - Add translations for levels 1-5 with labels and descriptions
+    - _Requirements: 4.9, 5.3, 5.4_
+  - [x] 4.7 Extract and populate dropdown option translations
+    - Add `sort`, `theme`, and `notification-frequency` sections to both zh-TW.json and en-US.json
+    - Add translations for all dropdown options (sort: date, tinkering-index, category, title; theme: light, dark, system; notification-frequency: immediate, daily, weekly, disabled)
+    - _Requirements: 4.8, 5.3, 5.4_
+  - [x] 4.8 Write validation script for translation completeness
+    - Create `frontend/scripts/validate-translations.ts`
+    - Implement checks: all keys in zh-TW.json exist in en-US.json and vice versa
+    - Implement checks: all interpolation variables match between languages
+    - Implement checks: no duplicate keys within same file
+    - Implement checks: all translation values are non-empty strings
+    - Output report of missing translations and mismatches
+    - _Requirements: 11.5, 12.2, 12.3_
+
+- [ ] 5. Migrate navigation components to use translations
+  - [x] 5.1 Migrate navigation bar component
+    - Replace hardcoded navigation labels with `t('nav.articles')`, `t('nav.reading-list')`, etc.
+    - Import and use useI18n hook
+    - _Requirements: 4.1, 10.1_
+  - [x] 5.2 Migrate sidebar navigation (if exists)
+    - Replace hardcoded labels with translation keys
+    - Import and use useI18n hook
+    - _Requirements: 4.1, 10.1_
+  - [x] 5.3 Write integration tests for navigation translation updates
+    - Test navigation labels update when language switches
+    - Test all navigation items display correct translations in both languages
+    - _Requirements: 3.4, 4.1, 11.4_
+
+- [ ] 6. Migrate common UI components to use translations
+  - [x] 6.1 Migrate button components
+    - Replace hardcoded button labels with `t('buttons.save')`, `t('buttons.cancel')`, etc.
+    - Update all button usages across the application
+    - _Requirements: 4.2, 10.1_
+  - [x] 6.2 Migrate form components
+    - Replace hardcoded form labels and placeholders with translation keys
+    - Add form-specific translations to translation files if needed
+    - _Requirements: 4.3, 10.1_
+  - [x] 6.3 Migrate notification components
+    - Replace hardcoded notification messages with translation keys
+    - Update useSchedulerNotifications hook to use translations
+    - _Requirements: 4.4, 10.2_
+  - [x] 6.4 Write integration tests for component translation updates
+    - Test buttons display correct translations in both languages
+    - Test form labels update when language switches
+    - Test notifications display correct translations
+    - _Requirements: 3.4, 4.2, 4.3, 4.4, 11.4_
+
+- [x] 7. Checkpoint - Verify component migrations work
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 8. Migrate constants and configuration to use translations
+  - [x] 8.1 Migrate TINKERING_INDEX_LEVELS constant
+    - Update constant structure to use labelKey and descriptionKey instead of hardcoded text
+    - Update all usages to call `t(level.labelKey)` and `t(level.descriptionKey)`
+    - _Requirements: 4.9, 10.1_
+  - [x] 8.2 Migrate SORT_OPTIONS constant
+    - Update constant structure to use translation keys
+    - Update all usages to call `t(option.labelKey)`
+    - _Requirements: 4.8, 10.1_
+  - [x] 8.3 Migrate THEME_OPTIONS constant
+    - Update constant structure to use translation keys
+    - Update all usages to call `t(option.labelKey)`
+    - _Requirements: 4.8, 10.1_
+  - [x] 8.4 Migrate NOTIFICATION_FREQUENCY constant
+    - Update constant structure to use translation keys
+    - Update all usages to call `t(option.labelKey)`
+    - _Requirements: 4.8, 10.1_
+  - [x] 8.5 Migrate ERROR_MESSAGES and SUCCESS_MESSAGES constants
+    - Update constants to reference translation keys instead of hardcoded text
+    - Update all usages to call `t(errorKey)` or `t(successKey)`
+    - _Requirements: 4.6, 4.7, 10.4_
+  - [x] 8.6 Write unit tests for constant migrationsda
+    - Test constants return correct translations in both languages
+    - Test constants with variables (e.g., article-count) interpolate correctly
+    - _Requirements: 6.4, 10.1, 10.4, 11.3_
+
+- [x] 9. Implement accessibility enhancements
+  - [x] 9.1 Implement HTML lang attribute updates
+    - Ensure setLocale updates `document.documentElement.lang` attribute
+    - Verify lang attribute is set on initial load
+    - _Requirements: 9.5_
+  - [x] 9.2 Implement screen reader announcements for language changes
+    - Create announceLanguageChange function that creates aria-live region
+    - Call announceLanguageChange when language switches
+    - Remove announcement element after 1 second
+    - _Requirements: 9.2_
+  - [x] 9.3 Write accessibility tests for language switcher
+    - Test keyboard navigation: Tab moves focus between options
+    - Test keyboard activation: Enter and Space trigger language change
+    - Test focus indicators meet WCAG AA standards (2px minimum, 3:1 contrast)
+    - Test ARIA labels are present and descriptive
+    - Test ARIA pressed state updates correctly
+    - Test screen reader announcements on language change
+    - Test HTML lang attribute updates on document root
+    - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 11.7_
+
+- [x] 10. Implement performance optimizations
+  - [x] 10.1 Add React.memo to LanguageSwitcher component
+    - Wrap LanguageSwitcher export with React.memo
+    - _Requirements: 8.6_
+  - [x] 10.2 Add useMemo for translated options in components
+    - Identify components that map over options to translate them
+    - Wrap translation mapping with useMemo hook
+    - _Requirements: 8.6_
+  - [x] 10.3 Write performance tests
+    - Test initial language detection completes within 100ms
+    - Test language switch completes within 200ms
+    - Test translation file loading time
+    - Test only active language is in initial bundle
+    - _Requirements: 1.6, 3.2, 8.1, 8.2, 8.3, 8.5_
+
+- [x] 11. Checkpoint - Verify performance and accessibility
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 12. Implement developer tooling and documentation
+  - [x] 12.1 Create TypeScript type generation script
+    - Create `frontend/scripts/generate-i18n-types.ts`
+    - Parse translation files and generate TranslationKey union type
+    - Output to `frontend/types/i18n.generated.ts`
+    - Add npm script: `generate:i18n-types`
+    - _Requirements: 12.1_
+  - [x] 12.2 Create ESLint rule to prevent hardcoded UI text
+    - Add ESLint rule to `.eslintrc.json` to detect hardcoded Chinese text in JSX
+    - Add rule to detect hardcoded English strings in UI components (optional, may have false positives)
+    - _Requirements: 12.6_
+  - [x] 12.3 Create translation management scripts
+    - Create `frontend/scripts/find-missing-translations.ts` to identify missing keys
+    - Create `frontend/scripts/find-unused-translations.ts` to identify unused keys
+    - Add npm scripts: `find:missing-translations`, `find:unused-translations`
+    - _Requirements: 12.2, 12.3_
+  - [x] 12.4 Create developer documentation
+    - Create `docs/i18n-guide.md` with usage examples and best practices
+    - Document how to add new translations
+    - Document common translation patterns (interpolation, nested keys)
+    - Document how to run validation scripts
+    - _Requirements: 12.4, 12.5_
+  - [x] 12.5 Set up pre-commit hook for translation validation
+    - Add pre-commit hook to run `validate:translations` script
+    - Prevent commits with missing translations
+    - _Requirements: 11.5_
+
+- [ ] 13. Final integration testing and validation
+  - [x] 13.1 Write end-to-end integration tests
+    - Test complete flow: initial detection → display → user switch → persist → reload
+    - Test language switch updates all UI elements within 200ms
+    - Test persistence across page reloads
+    - Test localStorage preference overrides browser detection
+    - Test switching between languages multiple times
+    - Test language switch with slow network (translation loading)
+    - _Requirements: 3.2, 3.4, 8.3, 11.4_
+  - [x] 13.2 Write error handling integration tests
+    - Test behavior when translation file fails to load
+    - Test behavior when translation file is malformed JSON
+    - Test behavior when localStorage is blocked
+    - Test behavior when browser language detection fails
+    - _Requirements: 2.4, 11.4_
+  - [x] 13.3 Run translation completeness validation
+    - Execute `npm run validate:translations`
+    - Fix any missing translations or mismatches
+    - Ensure 100% key parity between zh-TW.json and en-US.json
+    - _Requirements: 11.5_
+  - [x] 13.4 Verify no hardcoded UI text remains
+    - Run ESLint to detect hardcoded Chinese/English text
+    - Search codebase for common hardcoded patterns
+    - Fix any remaining hardcoded text
+    - _Requirements: 10.5_
+
+- [x] 14. Final checkpoint - Complete implementation
+  - Ensure all tests pass, ask the user if questions arise.
+  - **COMPLETED**: All hardcoded text has been successfully migrated to the translation system
+  - **VERIFIED**: UserMenu component (Profile, Analytics, Settings, Notifications, System Status, Logout) now uses proper translation keys
+  - **CONFIRMED**: Build passes with no hardcoded text ESLint warnings
+  - **TOTAL COVERAGE**: 572+ translation keys across both languages
+
+## Notes
+
+- Tasks marked with `*` are optional and can be skipped for faster MVP
+- Each task references specific requirements for traceability
+- Checkpoints ensure incremental validation at key milestones
+- Testing tasks validate both functionality and accessibility compliance
+- Developer tooling tasks improve long-term maintainability
+- The implementation uses TypeScript with React and Next.js patterns
+- Translation files use JSON format with nested object structure
+- All UI text must go through the translation system (no hardcoded text)

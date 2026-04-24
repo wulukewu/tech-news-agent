@@ -1,0 +1,114 @@
+# Implementation Plan
+
+- [x] 1. Write bug condition exploration test
+  - **Property 1: Bug Condition** - TypeScript Compilation Errors
+  - **CRITICAL**: This test MUST FAIL on unfixed code - failure confirms the bug exists
+  - **DO NOT attempt to fix the test or the code when it fails**
+  - **NOTE**: This test encodes the expected behavior - it will validate the fix when it passes after implementation
+  - **GOAL**: Surface counterexamples that demonstrate the bug exists
+  - **Scoped PBT Approach**: For deterministic bugs, scope the property to the concrete failing case(s) to ensure reproducibility
+  - Test implementation details from Bug Condition in design:
+    - FeedCard.tsx uses `feed.isSubscribed` but Feed type defines `is_subscribed`
+    - Test files use Jest DOM matchers but TypeScript cannot resolve their types
+    - Navigation.tsx already uses correct import path (no bug here)
+  - The test assertions should match the Expected Behavior Properties from design
+  - Run `npm run type-check` on UNFIXED code
+  - **EXPECTED OUTCOME**: Test FAILS with 30+ TypeScript errors (this is correct - it proves the bug exists)
+  - Document counterexamples found:
+    - "Property 'isSubscribed' does not exist on type 'Feed'" in FeedCard.tsx
+    - "Property 'toBeInTheDocument' does not exist on type 'JestMatchers<HTMLElement>'" in test files
+  - Mark task complete when test is written, run, and failure is documented
+  - _Requirements: 1.1, 1.2_
+
+- [x] 2. Write preservation property tests (BEFORE implementing fix)
+  - **Property 2: Preservation** - Runtime Behavior and Test Results
+  - **IMPORTANT**: Follow observation-first methodology
+  - Observe behavior on UNFIXED code for non-buggy inputs:
+    - FeedCard component renders and displays UI (despite type errors)
+    - Switch component toggles subscription state
+    - All existing tests pass when executed (runtime behavior works)
+    - useAuth hook returns correct authentication state
+    - Feed type's other properties (id, name, url, category) are accessible
+  - Write property-based tests capturing observed behavior patterns from Preservation Requirements:
+    - Test FeedCard rendering with various Feed objects (different is_subscribed values)
+    - Test that existing test suite passes (`npm test`)
+    - Test that Switch toggle functionality works
+    - Test that useAuth hook returns expected values
+    - Test that Feed properties are correctly accessed
+  - Property-based testing generates many test cases for stronger guarantees
+  - Run tests on UNFIXED code
+  - **EXPECTED OUTCOME**: Tests PASS (this confirms baseline behavior to preserve)
+  - Mark task complete when tests are written, run, and passing on unfixed code
+  - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
+
+- [x] 3. Fix for TypeScript type errors
+  - [x] 3.1 Implement the fix for FeedCard property mismatch
+    - Open `frontend/components/FeedCard.tsx`
+    - Line 30: Change `checked={feed.isSubscribed}` to `checked={feed.is_subscribed}`
+    - Line 46: Change `feed.isSubscribed && 'border-primary'` to `feed.is_subscribed && 'border-primary'`
+    - Ensure Switch component correctly displays subscription state
+    - Ensure subscribed feed cards show correct border styling
+    - _Bug_Condition: isBugCondition(input) where input.file == "frontend/components/FeedCard.tsx" AND input.code CONTAINS "feed.isSubscribed" AND Feed.type DEFINES "is_subscribed"_
+    - _Expected_Behavior: TypeScript compilation passes, feed.is_subscribed is recognized as valid property_
+    - _Preservation: FeedCard UI display, Switch toggle functionality, conditional styling remain unchanged_
+    - _Requirements: 1.1, 2.1, 3.1, 3.4_
+
+  - [x] 3.2 Implement the fix for Jest DOM type definitions
+    - Create new file `frontend/types/jest-dom.d.ts`
+    - Add content: `import '@testing-library/jest-dom';`
+    - This automatically extends Jest's `expect` type with all Jest DOM matchers
+    - Ensure TypeScript compiler can resolve toBeInTheDocument, toHaveClass, toHaveAttribute, etc.
+    - _Bug_Condition: isBugCondition(input) where input.file MATCHES "\**/*.test.tsx" AND input.code CONTAINS Jest DOM matchers AND TypeScript CANNOT RESOLVE these methods_
+    - _Expected_Behavior: TypeScript compilation passes, Jest DOM matchers are recognized as valid expect methods_
+    - _Preservation: All test cases continue to pass, test logic and assertions remain unchanged_
+    - _Requirements: 1.2, 2.2, 3.2_
+
+  - [x] 3.3 Verify Navigation.tsx useAuth import (already correct)
+    - Confirm `frontend/components/Navigation.tsx` uses `import { useAuth } from '@/lib/hooks/useAuth'`
+    - No changes needed - this is already correct
+    - Document that this issue mentioned in requirements is already resolved
+    - _Expected_Behavior: TypeScript compilation passes, useAuth import is recognized as valid_
+    - _Preservation: useAuth hook functionality, authentication state management remain unchanged_
+    - _Requirements: 2.3, 3.3, 3.5_
+
+  - [x] 3.4 Verify bug condition exploration test now passes
+    - **Property 1: Expected Behavior** - TypeScript Compilation Success
+    - **IMPORTANT**: Re-run the SAME test from task 1 - do NOT write a new test
+    - The test from task 1 encodes the expected behavior
+    - When this test passes, it confirms the expected behavior is satisfied
+    - Run `npm run type-check` on FIXED code
+    - **EXPECTED OUTCOME**: Test PASSES with 0 TypeScript errors (confirms bug is fixed)
+    - Verify all three issues are resolved:
+      - FeedCard.tsx has no type errors for is_subscribed
+      - Test files have no type errors for Jest DOM matchers
+      - Navigation.tsx has no type errors for useAuth import
+    - _Requirements: 2.1, 2.2, 2.3_
+
+  - [x] 3.5 Verify preservation tests still pass
+    - **Property 2: Preservation** - Runtime Behavior and Test Results
+    - **IMPORTANT**: Re-run the SAME tests from task 2 - do NOT write new tests
+    - Run preservation property tests from step 2
+    - **EXPECTED OUTCOME**: Tests PASS (confirms no regressions)
+    - Confirm all tests still pass after fix:
+      - FeedCard rendering and styling correct
+      - Switch toggle functionality works
+      - All test suite passes (`npm test`)
+      - useAuth hook returns correct values
+      - Feed properties accessible
+    - Verify no regressions in runtime behavior
+
+- [x] 4. Checkpoint - Ensure all tests pass
+  - Run `npm run type-check` - should show 0 errors
+  - Run `npm test` - all tests should pass
+  - Manually test FeedCard component in browser:
+    - Verify subscription status displays correctly
+    - Verify Switch toggle works
+    - Verify subscribed feeds show border-primary styling
+  - Manually test Navigation component:
+    - Verify useAuth hook provides correct authentication state
+    - Verify logout functionality works
+  - Check IDE (VSCode) for any red underlines in:
+    - `frontend/components/FeedCard.tsx`
+    - `frontend/components/__tests__/*.test.tsx`
+    - `frontend/components/Navigation.tsx`
+  - Ensure all tests pass, ask the user if questions arise

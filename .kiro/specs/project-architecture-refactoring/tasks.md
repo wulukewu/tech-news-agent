@@ -1,0 +1,341 @@
+# Implementation Plan: Tech News Agent 專案架構重構
+
+## Overview
+
+This implementation plan breaks down the architecture refactoring into incremental, testable tasks following a safe migration strategy. The approach prioritizes foundational changes first (error handling, logging, config), then implements new layers (repository, unified API client), and finally migrates existing functionality with parallel implementation and validation.
+
+## Tasks
+
+- [x] 1. Setup foundational infrastructure and cross-cutting concerns
+  - [x] 1.1 Implement centralized configuration manager (Backend)
+    - Create `backend/app/core/config.py` with Pydantic Settings for type-safe config
+    - Support environment-specific config files (dev, test, prod)
+    - Implement validation for required configuration values
+    - Add fail-fast behavior with clear error messages for missing config
+    - _Requirements: 6.1, 6.3, 6.4_
+  - [x] 1.2 Write property test for configuration manager
+    - **Property 5: Configuration Validation**
+    - **Property 6: Configuration Loading**
+    - **Validates: Requirements 6.1, 6.3, 6.4**
+  - [x] 1.3 Implement centralized logging system (Backend)
+    - Create `backend/app/core/logger.py` with structured logging format
+    - Support multiple log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+    - Add request context middleware to capture user_id and request_id
+    - Implement log filtering and context injection
+    - _Requirements: 5.1, 5.2, 5.3_
+  - [x] 1.4 Write property test for structured logging
+    - **Property 4: Structured Logging with Context**
+    - **Validates: Requirements 5.1, 5.3**
+  - [x] 1.5 Implement unified error handling system (Backend)
+    - Create `backend/app/core/errors.py` with standard error types and codes
+    - Define base exception classes with error codes
+    - Implement FastAPI exception handlers for consistent error responses
+    - Add error recovery strategies (retry, fallback) support
+    - _Requirements: 4.1, 4.2, 4.4, 4.5_
+  - [x] 1.6 Write property tests for error handling
+    - **Property 2: Error Response Consistency**
+    - **Property 13: Error Recovery Execution**
+    - **Property 16: Error Message Clarity**
+    - **Validates: Requirements 4.2, 4.5, 13.1, 15.3**
+
+- [x] 2. Checkpoint - Verify foundational infrastructure
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 3. Implement backend repository layer
+  - [x] 3.1 Create repository interfaces and base classes
+    - Create `backend/app/repositories/base.py` with generic repository interface
+    - Define CRUD operations interface (create, read, update, delete, list)
+    - Implement base repository with common query patterns
+    - _Requirements: 3.1, 3.2, 3.4_
+  - [x] 3.2 Implement concrete repositories for existing models
+    - Create repositories for User, Article, ReadingList, Conversation models
+    - Encapsulate all Supabase-specific logic in repository implementations
+    - Add pagination support with metadata
+    - _Requirements: 3.2, 3.4, 15.4_
+  - [x] 3.3 Write unit tests for repository layer
+    - Test CRUD operations with mocked database
+    - Test pagination and filtering
+    - Test error handling for database failures
+    - _Requirements: 3.2, 3.4_
+
+- [x] 4. Implement database audit and integrity features
+  - [x] 4.1 Add audit trail fields to database models
+    - Add created_at, updated_at, modified_by fields to critical tables
+    - Create database migration scripts with rollback support
+    - Implement automatic timestamp and user tracking in repositories
+    - _Requirements: 14.1, 14.4_
+  - [x] 4.2 Implement soft delete functionality
+    - Add deleted_at field to critical entities
+    - Modify repository delete methods to use soft delete
+    - Add filters to exclude soft-deleted records from queries
+    - _Requirements: 14.5_
+  - [x] 4.3 Add business rule validation layer
+    - Create `backend/app/core/validators.py` for business rules
+    - Implement validation before persistence in repositories
+    - Add database constraints (foreign keys, unique constraints)
+    - _Requirements: 14.2, 14.3_
+  - [x] 4.4 Write property tests for audit and integrity
+    - **Property 7: Audit Trail Completeness**
+    - **Property 8: Business Rule Validation**
+    - **Property 9: Soft Delete Preservation**
+    - **Validates: Requirements 14.1, 14.3, 14.5**
+
+- [x] 5. Refactor backend service layer
+  - [x] 5.1 Create service layer interfaces
+    - Create `backend/app/services/base.py` with service interface patterns
+    - Define dependency injection pattern for services
+    - Document service responsibilities and boundaries
+    - _Requirements: 3.1, 3.3, 3.5_
+  - [x] 5.2 Refactor existing services to use repository layer
+    - Modify services to depend on repository interfaces instead of Supabase client
+    - Inject repository dependencies through constructors
+    - Remove direct database access from services
+    - _Requirements: 3.1, 3.2, 3.3_
+  - [x] 5.3 Integrate logging and error handling into services
+    - Add structured logging to all service methods
+    - Use centralized error handling for service exceptions
+    - Include request context in service logs
+    - _Requirements: 4.4, 5.3_
+  - [x] 5.4 Write integration tests for service layer
+    - Test service methods with real repository implementations
+    - Test error handling and logging integration
+    - Test transaction boundaries
+    - _Requirements: 3.3, 4.4, 5.3_
+
+- [x] 6. Checkpoint - Verify backend refactoring
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 7. Standardize API response formats
+  - [x] 7.1 Create standardized response models
+    - Create `backend/app/schemas/responses.py` with success/error response models
+    - Define pagination metadata model
+    - Implement response wrapper utilities
+    - _Requirements: 15.1, 15.2, 15.3, 15.4_
+  - [x] 7.2 Update API routes to use standardized responses
+    - Modify all API endpoints to return standardized response format
+    - Add pagination metadata to list endpoints
+    - Ensure error responses use standardized error format
+    - _Requirements: 15.1, 15.2, 15.3, 15.4_
+  - [x] 7.3 Write property tests for API response standardization
+    - **Property 10: API Response Structure Consistency**
+    - **Property 11: Pagination Metadata Presence**
+    - **Validates: Requirements 15.1, 15.2, 15.3, 15.4**
+
+- [x] 8. Implement unified frontend API client
+  - [x] 8.1 Create base HTTP client with singleton pattern
+    - Create `frontend/lib/api/client.ts` with singleton HTTP client
+    - Configure axios/fetch with base URL and default headers
+    - Implement request/response interceptor support
+    - _Requirements: 1.1, 1.3_
+  - [x] 8.2 Write property test for API client singleton
+    - **Property 1: API Client Singleton**
+    - **Property 15: Request Interceptor Execution**
+    - **Validates: Requirements 1.1, 1.3**
+  - [x] 8.3 Implement unified error handling for API client
+    - Create error mapping from backend error codes to user-friendly messages
+    - Implement retry logic with exponential backoff
+    - Add error logging and reporting
+    - _Requirements: 1.2, 1.4, 4.3_
+  - [x] 8.4 Generate TypeScript types from backend schemas
+    - Create script to generate TypeScript interfaces from Pydantic models
+    - Add types for all API request/response payloads
+    - Implement type-safe API client methods with generics
+    - _Requirements: 1.5, 8.1, 8.3_
+  - [x] 8.5 Write unit tests for API client
+    - Test error handling and retry logic
+    - Test interceptor execution order
+    - Test type safety with mock responses
+    - _Requirements: 1.2, 1.3, 1.4_
+
+- [x] 9. Implement frontend logging system
+  - [x] 9.1 Create frontend logger with batching
+    - Create `frontend/lib/logger.ts` with structured logging
+    - Implement log batching to reduce network requests
+    - Add periodic flush to backend logging endpoint
+    - _Requirements: 5.4_
+  - [x] 9.2 Write property test for frontend log batching
+    - **Property 14: Frontend Log Batching**
+    - **Validates: Requirements 5.4**
+  - [x] 9.3 Create backend endpoint for frontend logs
+    - Add POST `/api/logs` endpoint to receive frontend logs
+    - Integrate with centralized logging system
+    - Add rate limiting to prevent log flooding
+    - _Requirements: 5.4_
+
+- [x] 10. Refactor frontend state management with split contexts
+  - [x] 10.1 Split AuthContext into focused contexts
+    - Create separate contexts: AuthContext, UserContext, ThemeContext
+    - Implement context providers with minimal re-render scope
+    - Document context responsibilities and usage patterns
+    - _Requirements: 2.1, 2.2, 2.5_
+  - [x] 10.2 Write property test for context isolation
+    - **Property 3: Context Isolation**
+    - **Validates: Requirements 2.2**
+  - [x] 10.3 Integrate React Query for server state
+    - Install and configure React Query
+    - Create query hooks for API data fetching
+    - Implement cache invalidation strategies
+    - Separate server state from client state
+    - _Requirements: 2.3, 2.4_
+  - [x] 10.4 Write unit tests for split contexts
+    - Test context isolation and re-render behavior
+    - Test React Query cache behavior
+    - Test state synchronization
+    - _Requirements: 2.2, 2.3, 2.4_
+
+- [x] 11. Migrate existing API clients to unified client
+  - [x] 11.1 Create migration plan for API clients
+    - Document all existing API client locations and usage
+    - Create mapping from old API calls to new unified client methods
+    - Plan parallel implementation strategy
+    - _Requirements: 10.1, 10.2_
+  - [x] 11.2 Implement new API client methods alongside old ones
+    - Create new API methods using unified client
+    - Keep old API clients functional during migration
+    - Add feature flags to switch between old and new implementations
+    - _Requirements: 10.1, 10.2, 10.3_
+  - [x] 11.3 Validate new implementation against old implementation
+    - Run both implementations in parallel for critical paths
+    - Compare responses and log discrepancies
+    - Monitor error rates and performance metrics
+    - _Requirements: 10.2, 10.3, 11.1_
+  - [x] 11.4 Write property test for migration backward compatibility
+    - **Property 12: Migration Backward Compatibility**
+    - **Validates: Requirements 10.2**
+  - [x] 11.5 Cutover to new unified client
+    - Switch feature flags to use new implementation
+    - Remove old API client code
+    - Update all import statements
+    - _Requirements: 10.1, 10.4_
+
+- [x] 12. Checkpoint - Verify frontend refactoring
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 13. Refactor Discord bot architecture
+  - [x] 13.1 Define clear responsibilities for bot cogs
+    - Document each cog's single responsibility
+    - Identify overlapping functionality to consolidate
+    - Create responsibility boundary documentation
+    - _Requirements: 7.1, 7.5_
+  - [x] 13.2 Refactor bot cogs to use service layer
+    - Remove direct database access from cogs
+    - Inject service dependencies into cogs
+    - Use shared service layer for business logic
+    - _Requirements: 7.2, 7.3, 7.4_
+  - [x] 13.3 Integrate logging and error handling into bot
+    - Add structured logging to bot commands and events
+    - Use centralized error handling for bot exceptions
+    - Implement user-friendly error messages for Discord
+    - _Requirements: 4.4, 5.3, 13.1_
+  - [x] 13.4 Write integration tests for bot cogs
+    - Test bot commands with mocked Discord client
+    - Test service layer integration
+    - Test error handling and logging
+    - _Requirements: 7.2, 7.4_
+
+- [x] 14. Reorganize test structure
+  - [x] 14.1 Create hierarchical test organization
+    - Organize backend tests by feature/module in `backend/tests/`
+    - Separate unit, integration, and e2e tests into subdirectories
+    - Create shared fixtures in `backend/tests/fixtures/`
+    - _Requirements: 9.1, 9.2, 9.3_
+  - [x] 14.2 Create hierarchical test organization (Frontend)
+    - Organize frontend tests by feature/module in `frontend/__tests__/`
+    - Separate unit, integration, and e2e tests
+    - Create shared test utilities in `frontend/__tests__/utils/`
+    - _Requirements: 9.1, 9.2, 9.3_
+  - [x] 14.3 Establish test naming conventions and documentation
+    - Document test naming conventions (describe/it patterns)
+    - Create test writing guidelines
+    - Add examples for common test patterns
+    - _Requirements: 9.4_
+  - [x] 14.4 Measure and improve test coverage
+    - Configure coverage reporting for backend (pytest-cov)
+    - Configure coverage reporting for frontend (Jest coverage)
+    - Identify critical paths with <80% coverage
+    - Add tests to reach 80% coverage for critical paths
+    - _Requirements: 9.5_
+
+- [x] 15. Implement code quality enforcement
+  - [x] 15.1 Configure linting and formatting tools
+    - Configure ESLint and Prettier for frontend
+    - Configure Ruff/Black for backend
+    - Add lint and format scripts to package.json and Makefile
+    - _Requirements: 12.1, 12.2_
+  - [x] 15.2 Setup pre-commit hooks
+    - Install pre-commit framework
+    - Configure hooks for linting, formatting, and type checking
+    - Add complexity checks (max function complexity)
+    - _Requirements: 12.3, 12.4_
+  - [x] 15.3 Update CI pipeline for quality checks
+    - Add linting and formatting checks to GitHub Actions
+    - Add type checking to CI pipeline
+    - Add test coverage reporting
+    - Fail CI on quality violations
+    - _Requirements: 12.1, 12.2, 12.3_
+
+- [x] 16. Improve developer experience
+  - [x] 16.1 Create development setup scripts
+    - Create setup script for initial project setup
+    - Add scripts for running tests, migrations, and dev servers
+    - Document common development workflows
+    - _Requirements: 13.3_
+  - [x] 16.2 Configure hot module replacement
+    - Ensure Next.js HMR is properly configured
+    - Configure FastAPI auto-reload for development
+    - Test HMR performance and reliability
+    - _Requirements: 13.2_
+  - [x] 16.3 Improve error messages and debugging
+    - Add source maps for frontend debugging
+    - Improve error messages with actionable suggestions
+    - Document common errors and troubleshooting steps
+    - _Requirements: 13.1, 13.4, 13.5_
+
+- [x] 17. Performance validation and optimization
+  - [x] 17.1 Establish performance baselines
+    - Measure current API response times for critical endpoints
+    - Measure current frontend bundle size
+    - Measure current component render performance
+    - _Requirements: 11.1, 11.2, 11.3_
+  - [x] 17.2 Run performance benchmarks after refactoring
+    - Measure API response times after refactoring
+    - Measure frontend bundle size after refactoring
+    - Measure component render performance after refactoring
+    - _Requirements: 11.1, 11.2, 11.3_
+  - [x] 17.3 Identify and fix performance regressions
+    - Compare before/after metrics
+    - Identify any performance regressions
+    - Optimize code to match or exceed baseline performance
+    - _Requirements: 11.4, 11.5_
+
+- [x] 18. Final integration and documentation
+  - [x] 18.1 Update architecture documentation
+    - Document new architecture patterns and layers
+    - Create migration guide for future refactoring
+    - Document API contracts and type definitions
+    - _Requirements: 12.5, 13.5_
+  - [x] 18.2 Create rollback procedures
+    - Document rollback steps for each major change
+    - Test rollback procedures in staging environment
+    - Create rollback scripts where applicable
+    - _Requirements: 10.4_
+  - [x] 18.3 Final validation and cutover
+    - Run full test suite (unit, integration, e2e)
+    - Verify all property tests pass
+    - Perform manual smoke testing
+    - Document migration completion and lessons learned
+    - _Requirements: 10.1, 10.5_
+
+- [x] 19. Final checkpoint - Complete refactoring
+  - Ensure all tests pass, ask the user if questions arise.
+
+## Notes
+
+- Tasks marked with `*` are optional property-based tests and can be skipped for faster implementation
+- Each task references specific requirements for traceability
+- Checkpoints ensure incremental validation throughout the refactoring process
+- Property tests validate universal correctness properties from the design document
+- Migration strategy follows parallel implementation → validation → cutover pattern
+- Foundational changes (config, logging, errors) are prioritized to support all other refactoring
+- Backend refactoring (repository, service layers) precedes frontend to ensure stable API contracts
+- Test organization and code quality improvements run in parallel with feature migration

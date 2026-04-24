@@ -1,0 +1,392 @@
+# Implementation Plan: Web Reading List UI
+
+## Overview
+
+This implementation plan creates a complete frontend interface for users to manage their saved articles. The feature includes a reading list page with pagination, status filtering (Unread/Read/Archived), article rating, status updates, and removal functionality. The implementation integrates with the existing backend API and follows established patterns from the dashboard and subscriptions pages.
+
+## Tasks
+
+- [x] 1. Set up React Query and project dependencies
+  - Install @tanstack/react-query and @tanstack/react-query-devtools
+  - Configure QueryClient in frontend/app/layout.tsx with 30s staleTime and 2 retries
+  - Wrap app with QueryClientProvider
+  - Add React Query DevTools for development
+  - _Requirements: 9.1, 9.2, 9.3_
+
+- [x] 2. Create type definitions and API client functions
+  - [x] 2.1 Define TypeScript types for reading list data models
+    - Create frontend/types/readingList.ts with ReadingListItem, ReadingListStatus, ReadingListResponse types
+    - Define AddToReadingListRequest, UpdateStatusRequest, UpdateRatingRequest types
+    - Ensure types match backend API response format (flat structure with article_id, title, url, category)
+    - _Requirements: 1.4, 13.1, 13.2, 20.5_
+  - [x] 2.2 Implement API client functions in frontend/lib/api/readingList.ts
+    - Implement fetchReadingList(page, pageSize, status) with query parameters
+    - Implement addToReadingList(articleId) for POST /api/reading-list
+    - Implement updateReadingListStatus(articleId, status) for PATCH /api/reading-list/:id/status
+    - Implement updateReadingListRating(articleId, rating) for PATCH /api/reading-list/:id/rating
+    - Implement removeFromReadingList(articleId) for DELETE /api/reading-list/:id
+    - Use existing apiClient from frontend/lib/api/client.ts
+    - _Requirements: 1.1, 4.1, 5.1, 6.1, 7.1, 8.4, 20.1_
+
+- [x] 3. Create React Query hooks for data fetching and mutations
+  - [x] 3.1 Implement useReadingList hook
+    - Create frontend/lib/hooks/useReadingList.ts
+    - Implement useReadingList(page, status) with queryKey ['readingList', page, status]
+    - Configure staleTime: 30000ms, retry: 2
+    - _Requirements: 1.1, 2.2, 9.1, 9.2_
+  - [x] 3.2 Implement useAddToReadingList mutation hook
+    - Implement mutation with addToReadingList API call
+    - Invalidate ['readingList'] queries on success
+    - Show success toast "Added to reading list"
+    - Handle 409 conflict error with "Article already in reading list" message
+    - _Requirements: 4.1, 4.3, 4.4, 4.5, 9.5_
+  - [x] 3.3 Implement useUpdateReadingListStatus mutation hook
+    - Implement mutation with updateReadingListStatus API call
+    - Invalidate ['readingList'] queries on success
+    - Show success toast "Status updated"
+    - Show error toast "Failed to update status" on failure
+    - _Requirements: 5.1, 5.2, 5.4, 5.5, 9.5_
+  - [x] 3.4 Implement useUpdateReadingListRating mutation hook with optimistic updates
+    - Implement mutation with updateReadingListRating API call
+    - Implement optimistic update in onMutate (update cache immediately)
+    - Rollback to previous value on error within 100ms
+    - Show success toast "Rating updated"
+    - Show error toast "Failed to update rating" on failure
+    - _Requirements: 6.4, 6.5, 6.6, 9.5_
+  - [x] 3.5 Implement useRemoveFromReadingList mutation hook
+    - Implement mutation with removeFromReadingList API call
+    - Invalidate ['readingList'] queries on success
+    - Show success toast "Removed from reading list"
+    - Show error toast "Failed to remove from reading list" on failure
+    - _Requirements: 7.1, 7.3, 7.4, 7.5, 9.5_
+
+- [x] 4. Checkpoint - Verify API integration
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 5. Create RatingSelector component
+  - [x] 5.1 Implement RatingSelector component structure
+    - Create frontend/components/reading-list/RatingSelector.tsx
+    - Accept props: rating (number | null), onChange, disabled, size ('sm' | 'md' | 'lg')
+    - Render 5 star icons from lucide-react
+    - Apply size variants: sm (h-4 w-4), md (h-5 w-5), lg (h-6 w-6)
+    - _Requirements: 6.1, 6.2_
+  - [x] 5.2 Implement rating interaction logic
+    - Handle click to set rating (1-5)
+    - Handle click on current rating to clear (set to null)
+    - Implement hover preview (fill stars up to hovered position)
+    - Disable interactions when disabled prop is true
+    - _Requirements: 6.1, 6.2, 6.3, 6.4_
+  - [x] 5.3 Add accessibility features to RatingSelector
+    - Add ARIA label describing current rating (e.g., "Rate article 3 out of 5 stars")
+    - Implement keyboard navigation with Arrow keys to change rating
+    - Add visible focus indicators (ring-2 ring-primary)
+    - Support Enter/Space to confirm rating
+    - _Requirements: 10.4, 10.5, 11.3_
+  - [x] 5.4 Style RatingSelector with proper colors and transitions
+    - Filled stars: fill-yellow-400 text-yellow-400
+    - Empty stars: text-gray-300 dark:text-gray-600
+    - Hover preview: fill-yellow-300 text-yellow-300
+    - Add smooth transition for fill changes
+    - Respect prefers-reduced-motion for transitions
+    - _Requirements: 14.1, 14.3_
+  - [x] 5.5 Write unit tests for RatingSelector
+    - Test setting rating 1-5
+    - Test clearing rating by clicking current value
+    - Test hover preview
+    - Test keyboard navigation
+    - Test disabled state
+    - _Requirements: 6.1, 6.2, 6.3_
+
+- [x] 6. Create StatusFilterTabs component
+  - [x] 6.1 Implement StatusFilterTabs component structure
+    - Create frontend/components/reading-list/StatusFilterTabs.tsx
+    - Accept props: selectedStatus, onStatusChange, counts (optional)
+    - Use @radix-ui/react-tabs for accessible tabs
+    - Render tabs for All, Unread, Read, Archived
+    - _Requirements: 2.1, 2.2_
+  - [x] 6.2 Implement tab interaction and styling
+    - Highlight active tab with primary color and underline
+    - Display item counts next to tab labels (if counts provided)
+    - Handle tab click to call onStatusChange
+    - Implement horizontal scroll on mobile (overflow-x-auto)
+    - _Requirements: 2.2, 2.3, 2.4_
+  - [x] 6.3 Add accessibility features to StatusFilterTabs
+    - Use ARIA selected attribute on active tab
+    - Support Arrow keys to navigate between tabs
+    - Add visible focus indicators
+    - Use semantic nav element
+    - _Requirements: 10.3, 10.5, 11.1, 11.5_
+  - [x] 6.4 Write unit tests for StatusFilterTabs
+    - Test tab selection
+    - Test count display
+    - Test onStatusChange callback
+    - Test keyboard navigation
+    - _Requirements: 2.2, 2.3_
+
+- [x] 7. Create ReadingListItem component
+  - [x] 7.1 Implement ReadingListItem component structure
+    - Create frontend/components/reading-list/ReadingListItem.tsx
+    - Accept props: item (ReadingListItem), onStatusChange, onRatingChange, onRemove
+    - Use semantic article element for structure
+    - Display title as clickable link to original URL
+    - Display category badge, status badge, added date
+    - _Requirements: 1.4, 11.1_
+  - [x] 7.2 Implement action buttons (Mark as Read, Archive, Remove)
+    - Add "Mark as Read" button (only show if status is Unread)
+    - Add "Mark as Archived" button
+    - Add "Remove" button with destructive styling
+    - Show loading spinner in button during API request
+    - Disable all action buttons during loading
+    - Add ARIA labels on icon-only buttons (mobile)
+    - _Requirements: 5.1, 5.2, 5.3, 7.1, 7.2, 11.2_
+  - [x] 7.3 Integrate RatingSelector into ReadingListItem
+    - Render RatingSelector with current rating
+    - Handle rating change by calling onRatingChange prop
+    - Show subtle loading indicator during rating update
+    - _Requirements: 6.1, 6.4_
+  - [x] 7.4 Style ReadingListItem with responsive layout
+    - Card with hover shadow effect (hover:shadow-lg transition-shadow)
+    - Title: text-xl, line-clamp-2 (truncate after 2 lines)
+    - Status badge colors: Unread (blue), Read (green), Archived (gray)
+    - Format added date with date-fns as relative time ("2 days ago")
+    - Show absolute date if > 7 days old
+    - Stack layout on mobile, horizontal on desktop
+    - _Requirements: 15.1, 15.2, 15.3, 17.1, 17.4_
+  - [x] 7.5 Ensure accessibility and color contrast
+    - Ensure all text has 4.5:1 contrast ratio (WCAG AA)
+    - Add visible focus indicators on all interactive elements
+    - Don't rely on color alone for status (use text labels)
+    - Sanitize URLs before rendering as links
+    - _Requirements: 16.1, 16.2, 16.4, 16.5, 18.3_
+  - [x] 7.6 Write unit tests for ReadingListItem
+    - Test action button clicks
+    - Test status badge colors
+    - Test date formatting
+    - Test rating display
+    - Test loading states
+    - _Requirements: 5.1, 5.3, 15.1_
+
+- [x] 8. Create ReadingListPage component
+  - [x] 8.1 Implement ReadingListPage component structure
+    - Create frontend/app/reading-list/page.tsx
+    - Wrap with ProtectedRoute for authentication
+    - Initialize state: selectedStatus (null), page (1)
+    - Use useReadingList hook to fetch data
+    - _Requirements: 1.1, 8.1, 8.2_
+  - [x] 8.2 Implement loading and empty states
+    - Show skeleton loaders for 3-4 items during initial load
+    - Show empty state when no items: "Your reading list is empty" with link to dashboard
+    - Show loading indicator when changing status filter (fade out items, show spinner)
+    - _Requirements: 1.2, 1.3, 2.5_
+  - [x] 8.3 Render StatusFilterTabs and reading list grid
+    - Render StatusFilterTabs with selectedStatus and onStatusChange handler
+    - Render grid of ReadingListItem components
+    - Pass mutation handlers (onStatusChange, onRatingChange, onRemove) to items
+    - Use responsive grid layout (single column on mobile/tablet, max-w-6xl on desktop)
+    - _Requirements: 1.5, 2.1, 2.2, 17.1, 17.3, 17.4_
+  - [x] 8.4 Implement pagination with "Load More" button
+    - Show "Load More" button if hasNextPage is true
+    - Handle click to increment page and fetch next page
+    - Append new items to current list
+    - Show spinner below last item during loading
+    - Disable button during loading
+    - Hide button when all items loaded
+    - Maintain scroll position when appending items
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
+  - [x] 8.5 Implement error handling and retry logic
+    - Show error toast on fetch failure: "Failed to load reading list. Please try again."
+    - Display retry button in place of content on error
+    - Handle 401 errors by redirecting to login (via API client)
+    - Show specific error messages for different error types (network, server, validation)
+    - _Requirements: 8.3, 12.1, 12.2, 12.3, 12.4, 12.5_
+  - [x] 8.6 Add keyboard navigation support
+    - Ensure Tab moves focus in logical order
+    - Ensure Enter/Space activates focused buttons
+    - Add visible focus indicators (ring-2 ring-primary)
+    - _Requirements: 10.1, 10.2, 10.5_
+  - [x] 8.7 Write integration tests for ReadingListPage
+    - Test fetch and display items
+    - Test status filter changes
+    - Test pagination
+    - Test error handling and retry
+    - Test empty state
+    - _Requirements: 1.1, 2.2, 3.1, 12.1_
+
+- [x] 9. Checkpoint - Verify reading list page functionality
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 10. Enhance ArticleCard with "Add to Reading List" functionality
+  - [x] 10.1 Connect ArticleCard button to API
+    - Locate existing ArticleCard component (likely in frontend/components/dashboard/)
+    - Replace TODO comment with useAddToReadingList mutation hook
+    - Handle button click to call mutation with article ID
+    - _Requirements: 4.1_
+  - [x] 10.2 Implement loading and success states
+    - Show Loader2 spinning icon during API request
+    - Disable button during request
+    - Show BookmarkCheck icon briefly on success
+    - Disable button after successful add
+    - _Requirements: 4.2, 4.3_
+  - [x] 10.3 Handle errors and edge cases
+    - Show error toast on failure: "Failed to add to reading list"
+    - Handle 409 conflict: "Article already in reading list" and disable button
+    - Revert button state on error
+    - _Requirements: 4.4, 4.5_
+  - [x] 10.4 Write integration tests for ArticleCard add functionality
+    - Test successful add
+    - Test error handling
+    - Test duplicate add (409 conflict)
+    - Test loading state
+    - _Requirements: 4.1, 4.3, 4.5_
+
+- [x] 11. Implement backend PATCH endpoints (if not already implemented)
+  - [x] 11.1 Add PATCH /api/reading-list/:id/status endpoint
+    - Implement in backend/app/api/reading_list.py
+    - Use UpdateStatusRequest schema from backend/app/schemas/reading_list.py
+    - Validate status is one of: Unread, Read, Archived
+    - Update reading_list table in database
+    - Return success message with updated status
+    - _Requirements: 5.1, 5.2, 13.2_
+  - [x] 11.2 Add PATCH /api/reading-list/:id/rating endpoint
+    - Implement in backend/app/api/reading_list.py
+    - Use UpdateRatingRequest schema from backend/app/schemas/reading_list.py
+    - Validate rating is 1-5 or null
+    - Update reading_list table in database
+    - Return success message with updated rating
+    - _Requirements: 6.1, 13.1_
+  - [x] 11.3 Write backend tests for PATCH endpoints
+    - Test status update with valid values
+    - Test rating update with valid values
+    - Test validation errors (invalid status, invalid rating)
+    - Test 404 for non-existent items
+    - Test authentication requirement
+    - _Requirements: 5.1, 6.1, 13.1, 13.2_
+
+- [x] 12. Add input validation and security measures
+  - [x] 12.1 Implement frontend input validation
+    - Validate rating values are 1-5 or null before API call
+    - Validate status values are from ReadingListStatus enum
+    - Validate article IDs are valid UUIDs using TypeScript types
+    - Show error toast for invalid input: "Invalid input data"
+    - _Requirements: 13.1, 13.2, 13.3, 13.4_
+  - [x] 12.2 Implement XSS prevention measures
+    - Verify React's built-in escaping is used for all text content
+    - Ensure no dangerouslySetInnerHTML is used
+    - Sanitize URLs before rendering as links (use URL constructor validation)
+    - _Requirements: 18.1, 18.2, 18.3_
+  - [x] 12.3 Implement rate limiting protection
+    - Debounce rating updates by 300ms to prevent rapid requests
+    - Ensure buttons are disabled during API requests
+    - Verify React Query deduplicates simultaneous requests
+    - _Requirements: 19.1, 19.2, 19.3_
+  - [x] 12.4 Write property test for input validation
+    - **Property 7: Rating Bounds**
+    - **Validates: Requirements 13.1**
+  - [x] 12.5 Write property test for status validation
+    - **Property 8: Status Transitions**
+    - **Validates: Requirements 13.2**
+
+- [x] 13. Implement accessibility features
+  - [x] 13.1 Add ARIA labels and semantic HTML
+    - Verify all icon-only buttons have ARIA labels
+    - Verify semantic HTML elements used (article, nav, button)
+    - Add ARIA live regions for toast notifications
+    - Add ARIA selected attribute on active tab
+    - _Requirements: 11.1, 11.2, 11.4, 11.5_
+  - [x] 13.2 Implement motion preference support
+    - Add CSS media query for prefers-reduced-motion
+    - Disable transition animations when user prefers reduced motion
+    - Disable hover scale effects when user prefers reduced motion
+    - Maintain color and opacity feedback as alternatives
+    - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5_
+  - [x] 13.3 Verify color contrast compliance
+    - Test all text elements have 4.5:1 contrast ratio (WCAG AA)
+    - Test status badge text contrast in light and dark modes
+    - Test star icon visibility in filled and empty states
+    - Test action button text contrast
+    - Use browser DevTools or axe to verify
+    - _Requirements: 16.1, 16.2, 16.3, 16.4_
+  - [x] 13.4 Run accessibility audit with jest-axe
+    - Test ReadingListPage with jest-axe
+    - Test ReadingListItem with jest-axe
+    - Test RatingSelector with jest-axe
+    - Test StatusFilterTabs with jest-axe
+    - Fix any violations found
+    - _Requirements: 11.1, 11.2, 16.1_
+
+- [x] 14. Implement responsive design
+  - [x] 14.1 Verify mobile layout (375px-767px)
+    - Single column layout
+    - Compact spacing (p-4)
+    - Icon-only action buttons
+    - Horizontal scrolling tabs
+    - Test on mobile viewport
+    - _Requirements: 17.1, 17.2_
+  - [x] 14.2 Verify tablet layout (768px-1023px)
+    - Single column layout
+    - Medium spacing (p-6)
+    - Action buttons with icons + text
+    - Full-width tabs
+    - Test on tablet viewport
+    - _Requirements: 17.3_
+  - [x] 14.3 Verify desktop layout (1024px+)
+    - Max-width container (max-w-6xl)
+    - Generous spacing (p-8)
+    - Horizontal action buttons
+    - Full-width tabs
+    - Test on desktop viewport
+    - _Requirements: 17.4_
+  - [x] 14.4 Verify no horizontal scrolling on any screen size
+    - Test at 375px, 768px, 1024px, 1440px
+    - Ensure content width never exceeds viewport
+    - _Requirements: 17.5_
+  - [x] 14.5 Write property test for responsive layout
+    - **Property 10: Responsive Layout Adaptation**
+    - **Validates: Requirements 17.1, 17.3, 17.4**
+
+- [x] 15. Final integration and polish
+  - [x] 15.1 Add navigation link to reading list page
+    - Add "Reading List" link to main navigation
+    - Use BookmarkIcon from lucide-react
+    - Highlight when on /reading-list route
+    - _Requirements: 1.1_
+  - [x] 15.2 Verify authentication flow
+    - Test unauthenticated access redirects to login
+    - Test 401 response triggers logout and redirect
+    - Test JWT token included in all API requests
+    - Test logout clears cached reading list data
+    - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
+  - [x] 15.3 Verify cache invalidation and refetching
+    - Test cache serves data within 30 seconds
+    - Test background refetch after stale time
+    - Test cache invalidation after mutations
+    - Test request deduplication
+    - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5_
+  - [x] 15.4 Test error handling for all scenarios
+    - Test network errors show retry button
+    - Test 401 errors redirect to login
+    - Test 404 errors show appropriate message
+    - Test 500 errors show generic error message
+    - Test validation errors show specific messages
+    - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5_
+  - [x] 15.5 Write end-to-end tests with Playwright
+    - Test complete user flow: login → add article → view reading list → update status → rate → remove
+    - Test pagination flow
+    - Test status filter flow
+    - Test error recovery flow
+    - _Requirements: 1.1, 2.2, 3.1, 4.1, 5.1, 6.1, 7.1_
+
+- [x] 16. Final checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+## Notes
+
+- Tasks marked with `*` are optional and can be skipped for faster MVP
+- Each task references specific requirements for traceability
+- Checkpoints ensure incremental validation
+- Property tests validate universal correctness properties
+- Unit tests validate specific examples and edge cases
+- The implementation follows existing patterns from dashboard and subscriptions pages
+- React Query provides intelligent caching and optimistic updates
+- All components use shadcn/ui and Tailwind CSS for consistent styling
+- Accessibility is a first-class concern with ARIA labels, keyboard navigation, and WCAG AA compliance

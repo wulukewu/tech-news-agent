@@ -1,0 +1,607 @@
+# Implementation Plan: New User Onboarding System
+
+## Overview
+
+本實作計畫將新用戶引導系統分為 7 個階段，涵蓋資料庫架構、後端服務、前端組件、Discord Bot 增強、整合測試、分析監控和文件發布。每個任務都參考具體的需求條款，並包含屬性測試以驗證正確性。
+
+## Tasks
+
+- [x] 1. Phase 1: Database Schema
+  - [x] 1.1 建立 user_preferences 表格
+    - 建立 SQL migration 檔案，包含所有欄位（onboarding_completed, onboarding_step, onboarding_skipped, tooltip_tour_completed 等）
+    - 建立索引以優化查詢效能
+    - _Requirements: 1.4, 10.1, 10.2, 11.7_
+  - [x] 1.2 擴展 feeds 表格
+    - 新增 is_recommended, recommendation_priority, description, updated_at 欄位
+    - 建立索引以支援推薦來源查詢
+    - _Requirements: 12.1, 12.2, 12.3, 12.4_
+  - [x] 1.3 建立 analytics_events 表格
+    - 建立表格結構，包含 user_id, event_type, event_data (JSONB), created_at
+    - 建立索引以支援分析查詢
+    - _Requirements: 14.1, 14.2, 14.3_
+  - [x] 1.4 建立推薦來源種子資料
+    - 準備至少 20 個推薦來源，涵蓋 AI、Web Development、Security 等分類
+    - 設定 recommendation_priority 和 description
+    - _Requirements: 2.2, 2.3, 12.5_
+
+- [x] 2. Phase 2: Backend Services - OnboardingService
+  - [x] 2.1 實作 OnboardingService 核心方法
+    - 實作 get_onboarding_status(), update_onboarding_progress(), mark_onboarding_completed(), mark_onboarding_skipped(), reset_onboarding()
+    - 使用 Pydantic models 定義資料結構
+    - _Requirements: 1.4, 1.5, 1.6, 10.3, 10.6_
+  - [x] 2.2 撰寫 OnboardingService 屬性測試
+    - **Property 1: Onboarding Progress Persistence**
+    - **Validates: Requirements 1.4, 10.1, 10.3**
+  - [x] 2.3 撰寫 OnboardingService 屬性測試
+    - **Property 2: Onboarding Completion State Transition**
+    - **Validates: Requirements 1.5**
+  - [x] 2.4 撰寫 OnboardingService 屬性測試
+    - **Property 3: Skip Functionality Persistence**
+    - **Validates: Requirements 1.6, 1.7**
+  - [x] 2.5 撰寫 OnboardingService 屬性測試
+    - **Property 24: Onboarding UI Conditional Display**
+    - **Validates: Requirements 10.4, 10.5**
+  - [x] 2.6 撰寫 OnboardingService 屬性測試
+    - **Property 25: Onboarding Restart State Reset**
+    - **Validates: Requirements 10.6, 10.7**
+
+- [x] 3. Phase 2: Backend Services - RecommendationService
+  - [x] 3.1 實作 RecommendationService
+    - 實作 get_recommended_feeds(), get_feeds_by_category(), update_recommendation_status()
+    - 依照 recommendation_priority 排序
+    - _Requirements: 2.1, 2.2, 4.1, 12.1, 12.4_
+  - [x] 3.2 撰寫 RecommendationService 屬性測試
+    - **Property 29: Recommended Feeds Query**
+    - **Validates: Requirements 12.1, 12.4**
+  - [x] 3.3 撰寫 RecommendationService 屬性測試
+    - **Property 30: Recommended Feed Real-Time Updates**
+    - **Validates: Requirements 12.7**
+
+- [x] 4. Phase 2: Backend Services - AnalyticsService & Subscriptions
+  - [x] 4.1 實作 AnalyticsService
+    - 實作 log_event(), get_onboarding_completion_rate(), get_drop_off_rates(), get_average_time_per_step()
+    - 支援所有引導事件類型（onboarding_started, step_completed, onboarding_skipped, onboarding_finished）
+    - _Requirements: 14.1, 14.3, 14.4, 14.5, 14.6_
+  - [x] 4.2 撰寫 AnalyticsService 屬性測試
+    - **Property 32: Analytics Event Logging**
+    - **Validates: Requirements 14.1, 14.3**
+  - [x] 4.3 撰寫 AnalyticsService 屬性測試
+    - **Property 33: Skip Event Step Tracking**
+    - **Validates: Requirements 14.4**
+  - [x] 4.4 撰寫 AnalyticsService 屬性測試
+    - **Property 34: Step Time Tracking**
+    - **Validates: Requirements 14.5**
+  - [x] 4.5 實作批次訂閱功能
+    - 實作 batch_subscribe() 方法，支援一次訂閱多個來源
+    - 處理部分失敗情況，回傳成功和失敗數量
+    - _Requirements: 2.6, 2.7_
+  - [x] 4.6 撰寫批次訂閱屬性測試
+    - **Property 4: Feed Subscription from Onboarding**
+    - **Validates: Requirements 2.6, 2.7**
+  - [x] 4.7 撰寫訂閱數量屬性測試
+    - **Property 10: Subscription Count Accuracy**
+    - **Validates: Requirements 4.7**
+
+- [x] 5. Phase 2: Backend Services - API Endpoints
+  - [x] 5.1 建立 Onboarding API 端點
+    - 實作 GET /api/onboarding/status, POST /api/onboarding/progress, POST /api/onboarding/complete, POST /api/onboarding/skip, POST /api/onboarding/reset
+    - 加入 JWT 驗證和錯誤處理
+    - _Requirements: 1.4, 1.5, 1.6, 10.3, 10.6_
+  - [x] 5.2 建立 Recommendation API 端點
+    - 實作 GET /api/feeds/recommended, POST /api/subscriptions/batch
+    - 支援分類分組回傳
+    - _Requirements: 2.1, 2.6, 4.1_
+  - [x] 5.3 建立 Analytics API 端點
+    - 實作 POST /api/analytics/event, GET /api/analytics/onboarding/completion-rate, GET /api/analytics/onboarding/drop-off
+    - 加入 rate limiting 防止濫用
+    - _Requirements: 14.1, 14.6, 14.7_
+  - [x] 5.4 撰寫 API 整合測試
+    - 測試所有端點的正常流程和錯誤處理
+    - 驗證 JWT 驗證和權限控制
+
+- [x] 6. Checkpoint - Backend Services Complete
+  - 確保所有後端服務測試通過，API 端點正常運作，如有問題請詢問用戶
+
+- [ ] 7. Phase 3: Frontend Components - OnboardingModal
+  - [x] 7.1 建立 OnboardingModal 組件結構
+    - 建立 TypeScript interfaces (OnboardingModalProps, OnboardingModalState)
+    - 實作三個步驟：welcome, recommendations, complete
+    - 使用 shadcn/ui Dialog 組件作為基礎
+    - _Requirements: 1.1, 1.2, 1.3_
+  - [x] 7.2 實作 Welcome 步驟
+    - 顯示平台介紹和價值主張
+    - 提供「開始使用」和「稍後再說」按鈕
+    - _Requirements: 1.1, 1.2, 1.6_
+  - [x] 7.3 實作 Recommendations 步驟
+    - 顯示推薦來源清單，按分類分組
+    - 支援多選 checkbox，預選 3-5 個熱門來源
+    - 顯示來源名稱、描述和分類
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
+  - [x] 7.4 實作 Complete 步驟和訂閱邏輯
+    - 呼叫 batch_subscribe API
+    - 顯示成功訊息和訂閱數量
+    - 更新 onboarding_completed 狀態
+    - _Requirements: 2.6, 2.7, 1.5_
+  - [x] 7.5 實作 Skip 功能
+    - 處理「稍後再說」按鈕點擊
+    - 呼叫 /api/onboarding/skip
+    - 關閉 Modal 且不再顯示
+    - _Requirements: 1.6, 1.7_
+  - [x] 7.6 撰寫 OnboardingModal 單元測試
+    - 測試三個步驟的渲染
+    - 測試按鈕點擊行為
+    - 測試 API 呼叫
+
+- [ ] 8. Phase 3: Frontend Components - EmptyState
+  - [x] 8.1 建立 EmptyState 組件
+    - 建立 TypeScript interface (EmptyStateProps)
+    - 支援三種變體：no-subscriptions, no-articles, no-reading-list
+    - 使用 Lucide Icons 提供視覺圖示
+    - _Requirements: 3.1, 3.2, 3.6_
+  - [x] 8.2 實作 NoSubscriptionsEmpty 變體
+    - 顯示「還沒有訂閱」標題和說明
+    - 提供「管理訂閱」CTA 按鈕
+    - _Requirements: 3.1, 3.2, 3.3, 3.4_
+  - [x] 8.3 實作 NoArticlesEmpty 變體
+    - 顯示「還沒有文章」標題
+    - 說明原因（排程器尚未執行）
+    - 提供「管理訂閱」和「手動觸發抓取」兩個 CTA
+    - 整合 SchedulerStatus 資訊
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.7_
+  - [x] 8.4 實作 NoReadingListEmpty 變體
+    - 顯示「閱讀清單為空」標題
+    - 提供使用建議
+    - _Requirements: 9.6_
+  - [x] 8.5 撰寫 EmptyState 屬性測試
+    - **Property 5: Empty State Conditional Display**
+    - **Validates: Requirements 3.1**
+  - [x] 8.6 撰寫 EmptyState 屬性測試
+    - **Property 6: Scheduler Status Conditional Display**
+    - **Validates: Requirements 3.7**
+
+- [ ] 9. Phase 3: Frontend Components - SchedulerStatusIndicator
+  - [x] 9.1 建立 SchedulerStatusIndicator 組件
+    - 建立 TypeScript interfaces (SchedulerStatusIndicatorProps, SchedulerStatus)
+    - 顯示上次執行時間和下次排程時間
+    - 顯示預計文章出現時間
+    - _Requirements: 5.1, 5.2, 5.3, 5.6_
+  - [x] 9.2 實作執行中狀態指示
+    - 當 isRunning 為 true 時顯示 loading indicator
+    - 顯示進度 toast notification
+    - _Requirements: 5.4, 5.5_
+  - [x] 9.3 實作完成通知
+    - 排程器完成後顯示 success notification
+    - 顯示新抓取的文章數量
+    - _Requirements: 5.7_
+  - [x] 9.4 撰寫 SchedulerStatus 屬性測試
+    - **Property 11: Scheduler Status Running Indicator**
+    - **Validates: Requirements 5.4**
+  - [x] 9.5 撰寫手動觸發屬性測試
+    - **Property 12: Manual Fetch Feedback**
+    - **Validates: Requirements 5.5, 9.7**
+  - [x] 9.6 撰寫完成通知屬性測試
+    - **Property 13: Scheduler Completion Notification**
+    - **Validates: Requirements 5.7**
+
+- [ ] 10. Phase 3: Frontend Components - SubscriptionPage Enhancements
+  - [x] 10.1 實作分類分組功能
+    - 將 feeds 按 category 分組
+    - 實作 collapsible sections（可展開/收合）
+    - 推薦分類預設展開，其他分類預設收合
+    - _Requirements: 4.1, 4.3, 4.4_
+  - [x] 10.2 實作推薦標記和數量顯示
+    - 為 is_recommended 的來源顯示「推薦」badge
+    - 收合的分類顯示來源數量
+    - 頁面頂部顯示訂閱數量（例如：「已訂閱 5/30 個來源」）
+    - _Requirements: 4.2, 4.5, 4.7_
+  - [x] 10.3 實作快速訂閱功能
+    - 提供「訂閱所有推薦」按鈕
+    - 呼叫 batch_subscribe API
+    - _Requirements: 4.6_
+  - [x] 10.4 撰寫分類分組屬性測試
+    - **Property 7: Feed Grouping by Category**
+    - **Validates: Requirements 2.1, 4.1**
+  - [x] 10.5 撰寫推薦標記屬性測試
+    - **Property 8: Recommended Feed Badge Display**
+    - **Validates: Requirements 4.2**
+  - [x] 10.6 撰寫分類數量屬性測試
+    - **Property 9: Category Feed Count Display**
+    - **Validates: Requirements 4.5**
+
+- [ ] 11. Phase 3: Frontend Components - TooltipTour
+  - [x] 11.1 建立 TooltipTour 組件
+    - 建立 TypeScript interfaces (TooltipTourProps, TooltipStep, TooltipTourState)
+    - 實作順序顯示邏輯
+    - 使用 spotlight effect 高亮目標元素
+    - _Requirements: 11.1, 11.2, 11.3_
+  - [x] 11.2 實作導航控制
+    - 提供「下一步」和「跳過」按鈕
+    - 實作 nextStep(), previousStep(), skipTour(), completeTour() 方法
+    - _Requirements: 11.5, 11.6_
+  - [x] 11.3 定義 Tooltip 步驟
+    - 為訂閱按鈕、篩選選單、觸發排程器按鈕建立 tooltip
+    - 設定 target selector 和 placement
+    - _Requirements: 11.4_
+  - [x] 11.4 實作持久化
+    - 完成或跳過後更新 tooltip_tour_completed 或 tooltip_tour_skipped
+    - 下次訪問不再顯示
+    - _Requirements: 11.7_
+  - [x] 11.5 撰寫 TooltipTour 屬性測試
+    - **Property 26: Tooltip Sequential Display**
+    - **Validates: Requirements 11.2, 11.5, 11.6**
+  - [x] 11.6 撰寫 Tooltip 高亮屬性測試
+    - **Property 27: Tooltip Highlight Effect**
+    - **Validates: Requirements 11.3**
+  - [x] 11.7 撰寫 Tooltip 持久化屬性測試
+    - **Property 28: Tooltip Persistence**
+    - **Validates: Requirements 11.7**
+
+- [ ] 12. Phase 3: Frontend Components - Performance Optimization
+  - [x] 12.1 實作 Lazy Loading
+    - 使用 React.lazy() 延遲載入 OnboardingModal 和 TooltipTour
+    - 使用 Suspense 提供 loading skeleton
+    - _Requirements: 15.1, 15.4_
+  - [x] 12.2 實作快取策略
+    - 推薦來源快取 24 小時
+    - User preferences 記憶體快取
+    - _Requirements: 15.3_
+  - [x] 12.3 實作預載入
+    - 在當前步驟時預載入下一步驟內容
+    - _Requirements: 15.5_
+  - [x] 12.4 撰寫效能屬性測試
+    - **Property 35: Welcome Modal Performance**
+    - **Validates: Requirements 15.2**
+  - [x] 12.5 撰寫快取屬性測試
+    - **Property 36: Recommended Feeds Caching**
+    - **Validates: Requirements 15.3**
+  - [x] 12.6 撰寫 Loading Skeleton 屬性測試
+    - **Property 37: Loading Skeleton Display**
+    - **Validates: Requirements 15.4**
+  - [x] 12.7 撰寫預載入屬性測試
+    - **Property 38: Content Prefetching**
+    - **Validates: Requirements 15.5**
+
+- [x] 13. Checkpoint - Frontend Components Complete
+  - 確保所有前端組件測試通過，UI 正常運作，如有問題請詢問用戶
+
+- [ ] 14. Phase 4: Discord Bot Enhancements - /start Command
+  - [x] 14.1 實作 /start 指令
+    - 使用 discord.py app_commands 建立指令
+    - 顯示歡迎訊息和平台概述
+    - 列出可用指令和簡短說明
+    - _Requirements: 6.1, 6.2, 6.3_
+  - [x] 14.2 實作快速開始指南
+    - 提供「快速開始」區塊，列出建議的首次步驟
+    - 使用 Discord Embed 格式化訊息
+    - _Requirements: 6.4_
+  - [x] 14.3 實作推薦來源快速訂閱
+    - 顯示推薦來源清單
+    - 提供 Discord Button 快速訂閱
+    - _Requirements: 6.5_
+  - [x] 14.4 實作首次使用偵測
+    - 檢查用戶是否首次執行指令
+    - 自動觸發 /start 引導或顯示提示
+    - _Requirements: 6.6, 6.7_
+  - [x] 14.5 撰寫首次使用屬性測試
+    - **Property 14: Discord First-Time Command Detection**
+    - **Validates: Requirements 6.6, 6.7**
+
+- [ ] 15. Phase 4: Discord Bot Enhancements - /help Command
+  - [x] 15.1 改善 /help 指令
+    - 將指令按分類分組（訂閱管理、文章瀏覽、閱讀清單）
+    - 顯示指令語法和參數說明
+    - 提供使用範例
+    - _Requirements: 7.1, 7.2, 7.3, 7.4_
+  - [x] 15.2 實作 Ephemeral 回應
+    - 使用 ephemeral=True 讓回應只對觸發用戶可見
+    - _Requirements: 7.7_
+  - [x] 15.3 實作情境式幫助
+    - 當指令失敗時提供下一步建議
+    - 在錯誤訊息中包含相關指令提示
+    - _Requirements: 7.5, 7.6_
+  - [x] 15.4 撰寫 /help 指令屬性測試
+    - **Property 15: Help Command Grouping**
+    - **Validates: Requirements 7.2, 7.3**
+  - [x] 15.5 撰寫範例顯示屬性測試
+    - **Property 16: Help Command Examples**
+    - **Validates: Requirements 7.4**
+
+- [ ] 16. Phase 4: Discord Bot Enhancements - Error Messages
+  - [x] 16.1 實作友善錯誤訊息轉換
+    - 將技術性錯誤（資料庫錯誤、API 錯誤）轉換為用戶友善說明
+    - 不暴露技術細節
+    - _Requirements: 8.4, 8.7_
+  - [x] 16.2 實作無訂閱錯誤處理
+    - 當用戶執行 /news_now 但沒有訂閱時，說明原因
+    - 提供訂閱來源的建議
+    - _Requirements: 8.1, 8.3_
+  - [x] 16.3 實作 Rate Limit 錯誤處理
+    - 當 API quota 超過時，說明限制
+    - 提供預估等待時間和替代方案
+    - _Requirements: 8.5, 8.6_
+  - [x] 16.4 實作 CTA 按鈕和指令建議
+    - 在錯誤訊息中包含 CTA 按鈕或指令建議
+    - 提供可執行的下一步動作
+    - _Requirements: 7.5, 8.2_
+  - [x] 16.5 撰寫錯誤建議屬性測試
+    - **Property 17: Error Message with Suggestions**
+    - **Validates: Requirements 7.5, 8.2**
+  - [x] 16.6 撰寫友善錯誤屬性測試
+    - **Property 18: User-Friendly Error Transformation**
+    - **Validates: Requirements 8.4, 8.7**
+  - [x] 16.7 撰寫無訂閱錯誤屬性測試
+    - **Property 19: No Subscription Error Explanation**
+    - **Validates: Requirements 8.1, 8.3**
+  - [x] 16.8 撰寫 Rate Limit 屬性測試
+    - **Property 20: Rate Limit Feedback**
+    - **Validates: Requirements 8.5, 8.6**
+
+- [ ] 17. Phase 4: Discord Bot Enhancements - Interactive Components
+  - [x] 17.1 改善 Deep Dive Button
+    - 加入 tooltip 或說明，解釋會使用 API quota
+    - 首次點擊時顯示一次性說明
+    - _Requirements: 9.1, 9.3_
+  - [x] 17.2 改善 Rating Select
+    - 加入說明，解釋評分如何影響推薦
+    - _Requirements: 9.2_
+  - [x] 17.3 改善 Filter Menu
+    - 顯示每個分類的文章數量
+    - _Requirements: 9.4_
+  - [x] 17.4 改善 Read Later Button
+    - 成功加入時顯示回饋訊息
+    - 閱讀清單為空時提供使用建議
+    - _Requirements: 9.5, 9.6_
+  - [x] 17.5 實作互動回饋
+    - 所有按鈕互動在 2 秒內提供視覺回饋
+    - _Requirements: 9.7_
+  - [x] 17.6 撰寫 Filter Menu 屬性測試
+    - **Property 21: Filter Menu Article Count**
+    - **Validates: Requirements 9.4**
+  - [x] 17.7 撰寫 Read Later 屬性測試
+    - **Property 22: Read Later Button Feedback**
+    - **Validates: Requirements 9.5, 9.7**
+  - [x] 17.8 撰寫空閱讀清單屬性測試
+    - **Property 23: Empty Reading List Suggestion**
+    - **Validates: Requirements 9.6**
+
+- [x] 18. Checkpoint - Discord Bot Enhancements Complete
+  - 確保所有 Discord Bot 功能測試通過，指令正常運作，如有問題請詢問用戶
+
+- [ ] 19. Phase 5: Integration & Testing - Integration Tests
+  - [x] 19.1 撰寫 API 整合測試
+    - 測試 Onboarding API 端點的完整流程
+    - 測試 Recommendation API 端點
+    - 測試 Analytics API 端點
+    - 驗證 JWT 驗證和權限控制
+    - _Requirements: All API-related requirements_
+  - [x] 19.2 撰寫資料庫整合測試
+    - 測試 user_preferences 表格操作
+    - 測試 feeds 表格查詢和更新
+    - 測試 analytics_events 表格插入和查詢
+    - 驗證索引效能
+    - _Requirements: 10.1, 12.1, 14.1_
+  - [x] 19.3 撰寫 Discord Bot 整合測試
+    - 測試 /start 和 /help 指令
+    - 測試錯誤處理流程
+    - 測試互動組件（按鈕、選單）
+    - _Requirements: 6.1, 7.1, 8.1, 9.1_
+
+- [ ] 20. Phase 5: Integration & Testing - E2E Tests
+  - [x] 20.1 撰寫完整引導流程 E2E 測試
+    - 使用 Playwright 模擬新用戶登入
+    - 測試 Welcome Modal 顯示
+    - 測試推薦來源選擇和訂閱
+    - 驗證 onboarding_completed 狀態
+    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 2.1, 2.6_
+  - [x] 20.2 撰寫跳過引導流程 E2E 測試
+    - 測試「稍後再說」按鈕
+    - 驗證 Modal 關閉
+    - 驗證重新載入後不再顯示
+    - _Requirements: 1.6, 1.7_
+  - [x] 20.3 撰寫空狀態 E2E 測試
+    - 測試無訂閱時的 Empty State
+    - 測試有訂閱但無文章時的 Empty State
+    - 測試 CTA 按鈕導航
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
+  - [x] 20.4 撰寫 Tooltip Tour E2E 測試
+    - 測試 tooltip 順序顯示
+    - 測試「下一步」和「跳過」按鈕
+    - 驗證 spotlight 效果
+    - _Requirements: 11.1, 11.2, 11.3, 11.5, 11.6_
+  - [x] 20.5 撰寫行動裝置響應式測試
+    - 測試 375px, 768px, 1024px, 1440px 寬度
+    - 驗證無水平捲動
+    - 驗證觸控互動
+    - _Requirements: 15.1, 15.2_
+
+- [ ] 21. Phase 5: Integration & Testing - Performance Tests
+  - [x] 21.1 測試 Modal 載入時間
+    - 驗證 Welcome Modal 在 500ms 內出現
+    - 測試 lazy loading 效果
+    - _Requirements: 15.2_
+  - [x] 21.2 測試 API 回應時間
+    - GET /api/onboarding/status < 100ms
+    - POST /api/onboarding/progress < 200ms
+    - GET /api/feeds/recommended < 150ms
+    - POST /api/analytics/event < 50ms
+    - _Requirements: Performance targets from design_
+  - [x] 21.3 測試資料庫查詢效能
+    - 驗證索引使用
+    - 測試推薦來源查詢效能
+    - 測試分析事件插入效能
+    - _Requirements: Database optimization from design_
+  - [x] 21.4 測試快取效果
+    - 驗證推薦來源 24 小時快取
+    - 測試快取失效和更新
+    - _Requirements: 15.3_
+
+- [x] 22. Checkpoint - Integration & Testing Complete
+  - 確保所有整合測試和 E2E 測試通過，效能符合目標，如有問題請詢問用戶
+
+- [ ] 23. Phase 6: Analytics & Monitoring - Analytics Dashboard
+  - [x] 23.1 建立引導完成率視覺化
+    - 顯示完成率、跳過率、總用戶數
+    - 使用圖表呈現趨勢
+    - _Requirements: 14.6_
+  - [x] 23.2 建立流失率圖表
+    - 顯示每個步驟的流失率
+    - 識別主要流失點
+    - _Requirements: 14.7_
+  - [x] 23.3 建立平均時間統計
+    - 顯示每個步驟的平均完成時間
+    - 識別瓶頸步驟
+    - _Requirements: 14.5_
+  - [x] 23.4 建立用戶流程圖
+    - 視覺化用戶在引導流程中的路徑
+    - 顯示常見的跳過點
+    - _Requirements: 14.6, 14.7_
+
+- [ ] 24. Phase 6: Analytics & Monitoring - Monitoring Setup
+  - [x] 24.1 設定錯誤追蹤
+    - 整合 Sentry 或類似工具
+    - 追蹤前端和後端錯誤
+    - 設定錯誤通知
+    - _Requirements: Error handling from design_
+  - [x] 24.2 設定效能監控
+    - 追蹤 API 回應時間
+    - 追蹤資料庫查詢時間
+    - 追蹤前端載入時間
+    - _Requirements: 15.2, Performance targets from design_
+  - [x] 24.3 設定用戶行為追蹤
+    - 追蹤引導事件
+    - 追蹤 CTA 點擊率
+    - 追蹤 tooltip 互動
+    - _Requirements: 14.1, 14.3_
+  - [x] 24.4 設定告警規則
+    - 完成率低於 50% 時發送 critical alert
+    - API 錯誤率超過 5% 時發送 critical alert
+    - Modal 載入時間超過 1 秒時發送 warning alert
+    - 任何步驟流失率超過 30% 時發送 warning alert
+    - _Requirements: Monitoring from design_
+
+- [ ] 25. Phase 6: Analytics & Monitoring - A/B Testing Framework
+  - [x] 25.1 建立 Feature Flag 系統
+    - 實作 feature flag 配置（ONBOARDING_MODAL, TOOLTIP_TOUR, RECOMMENDED_FEEDS, ANALYTICS_TRACKING）
+    - 支援按用戶百分比啟用
+    - _Requirements: Deployment strategy from design_
+  - [x] 25.2 建立 A/B 測試基礎設施
+    - 支援測試不同的引導流程
+    - 支援測試不同的推薦來源
+    - 支援測試不同的訊息文案
+    - _Requirements: Future enhancements from design_
+  - [x] 25.3 建立 A/B 測試分析
+    - 比較不同變體的完成率
+    - 自動識別勝出變體
+    - _Requirements: Future enhancements from design_
+
+- [x] 26. Checkpoint - Analytics & Monitoring Complete
+  - 確保分析儀表板正常運作，監控和告警設定完成，如有問題請詢問用戶
+
+- [ ] 27. Phase 7: Documentation & Launch - User Documentation
+  - [x] 27.1 撰寫網頁引導使用指南
+    - 說明首次登入流程
+    - 說明如何選擇推薦來源
+    - 說明如何跳過和重新啟動引導
+    - _Requirements: 1.1, 1.6, 10.6_
+  - [x] 27.2 撰寫 Discord Bot 指令指南
+    - 列出所有可用指令
+    - 提供使用範例
+    - 說明錯誤處理
+    - _Requirements: 6.1, 7.1, 8.1_
+  - [x] 27.3 撰寫 FAQ
+    - 常見問題和解答
+    - 疑難排解指南
+    - _Requirements: General user support_
+
+- [ ] 28. Phase 7: Documentation & Launch - Developer Documentation
+  - [x] 28.1 撰寫 API 文件
+    - 記錄所有 Onboarding API 端點
+    - 記錄所有 Recommendation API 端點
+    - 記錄所有 Analytics API 端點
+    - 提供請求/回應範例
+    - _Requirements: API endpoints from design_
+  - [x] 28.2 撰寫組件文件
+    - 記錄所有前端組件的 props 和用法
+    - 提供 Storybook stories
+    - _Requirements: Frontend components from design_
+  - [x] 28.3 撰寫測試指南
+    - 說明如何執行單元測試
+    - 說明如何執行屬性測試
+    - 說明如何執行整合測試和 E2E 測試
+    - _Requirements: Testing strategy from design_
+  - [x] 28.4 撰寫部署指南
+    - 說明資料庫 migration 流程
+    - 說明 feature flag 配置
+    - 說明漸進式發布計畫
+    - 說明 rollback 程序
+    - _Requirements: Deployment strategy from design_
+
+- [ ] 29. Phase 7: Documentation & Launch - Launch Preparation
+  - [x] 29.1 準備 Feature Flags
+    - 設定所有 feature flags 為關閉狀態
+    - 準備漸進式啟用計畫（5% → 25% → 100%）
+    - _Requirements: Deployment strategy from design_
+  - [x] 29.2 準備資料庫 Migration
+    - 驗證 migration scripts
+    - 準備 rollback scripts
+    - 在 staging 環境測試
+    - _Requirements: Database schema from design_
+  - [x] 29.3 準備推薦來源種子資料
+    - 驗證至少 20 個推薦來源
+    - 確認分類涵蓋 AI、Web Development、Security 等
+    - 設定合理的 recommendation_priority
+    - _Requirements: 2.2, 12.5_
+  - [x] 29.4 準備監控和告警
+    - 驗證所有監控指標正常收集
+    - 驗證告警規則正確設定
+    - 準備 on-call 輪值
+    - _Requirements: Monitoring from design_
+  - [x] 29.5 執行最終測試
+    - 在 staging 環境執行完整 E2E 測試
+    - 驗證所有功能正常運作
+    - 驗證效能符合目標
+    - _Requirements: All requirements_
+
+- [ ] 30. Phase 7: Documentation & Launch - Launch Execution
+  - [x] 30.1 執行資料庫 Migration
+    - 在 production 執行 migration
+    - 驗證表格和索引建立成功
+    - 插入推薦來源種子資料
+    - _Requirements: Database schema from design_
+  - [x] 30.2 部署後端服務
+    - 部署新的 API 端點
+    - 驗證服務健康狀態
+    - _Requirements: Backend services from design_
+  - [x] 30.3 部署前端組件
+    - 部署新的前端組件
+    - 驗證 lazy loading 正常運作
+    - _Requirements: Frontend components from design_
+  - [x] 30.4 部署 Discord Bot 更新
+    - 部署新的指令和錯誤處理
+    - 驗證 Bot 正常回應
+    - _Requirements: Discord bot from design_
+  - [x] 30.5 啟用 Feature Flags（5% 用戶）
+    - 啟用 ONBOARDING_MODAL 給 5% 新用戶
+    - 監控完成率和錯誤率
+    - 收集用戶回饋
+    - _Requirements: Deployment strategy from design_
+  - [x] 30.6 擴大發布（25% 用戶）
+    - 如果 5% 測試成功，擴大到 25%
+    - 持續監控指標
+    - 根據數據優化
+    - _Requirements: Deployment strategy from design_
+  - [x] 30.7 完整發布（100% 用戶）
+    - 啟用給所有新用戶
+    - 持續監控和迭代
+    - _Requirements: Deployment strategy from design_
+
+- [x] 31. Final Checkpoint - Launch Complete
+  - 確保所有功能已部署並正常運作，監控指標正常，如有問題請詢問用戶
+
+## Notes
+
+- 標記 `*` 的任務為可選的測試任務，可以跳過以加快 MVP 開發
+- 每個任務都參考具體的需求條款以確保可追溯性
+- Checkpoint 任務確保階段性驗證
+- 屬性測試驗證通用正確性屬性
+- 單元測試驗證具體範例和邊界情況

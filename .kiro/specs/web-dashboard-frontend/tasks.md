@@ -1,0 +1,373 @@
+# Implementation Plan: Web Dashboard Frontend
+
+## Overview
+
+本實作計劃將建立一個基於 Next.js 14+ 的現代化 Web 前端應用，提供 Discord OAuth2 登入、訂閱管理、文章動態瀏覽等功能。實作將採用 TypeScript、TailwindCSS 和 shadcn/ui 元件庫，確保響應式設計和可訪問性。
+
+## Tasks
+
+- [x] 1. 專案初始化與基礎配置
+  - 在 `frontend/` 目錄初始化 Next.js 14+ 專案，使用 App Router 和 TypeScript
+  - 配置 TailwindCSS 和 shadcn/ui
+  - 設置環境變數（.env.local, .env.example）
+  - 建立基礎配置檔案（next.config.js, tailwind.config.ts, tsconfig.json）
+  - 建立 frontend/Dockerfile 用於容器化部署
+  - 更新根目錄的 docker-compose.yml 以包含前端服務
+  - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 2.1, 2.2, 2.3, 2.4, 30.1_
+
+- [x] 2. 型別定義與資料模型
+  - [x] 2.1 建立認證相關型別定義
+    - 建立 types/auth.ts，定義 User, AuthContextType, AuthError 介面
+    - _Requirements: 5.2_
+  - [x] 2.2 建立 Feed 相關型別定義
+    - 建立 types/feed.ts，定義 Feed, SubscriptionToggleRequest, SubscriptionToggleResponse 介面
+    - _Requirements: 8.3, 8.4_
+  - [x] 2.3 建立 Article 相關型別定義
+    - 建立 types/article.ts，定義 Article, ArticleListResponse, ArticleFilters 介面
+    - _Requirements: 10.3, 10.4_
+  - [x] 2.4 建立 Reading List 相關型別定義
+    - 建立 types/readingList.ts，定義 ReadingListItem, ReadingListResponse, UpdateReadingListRequest 介面
+    - _Requirements: 13.2, 13.3_
+
+- [x] 3. API 客戶端層實作
+  - [x] 3.1 實作 API Client 基礎類別
+    - 建立 lib/api/client.ts，實作 ApiClient 類別
+    - 實作 request, get, post, patch, delete 方法
+    - 配置 credentials: 'include' 和錯誤處理
+    - 處理 401 Unauthorized 觸發 logout
+    - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.6, 7.7, 7.8_
+  - [x] 3.2 撰寫 API Client 屬性測試 (Optional - Skipped)
+    - **Property 13: API Client Credentials Inclusion**
+    - **Property 16: API Client Request Headers**
+    - **Validates: Requirements 7.2, 7.8**
+  - [x] 3.3 實作認證 API 函式
+    - 建立 lib/api/auth.ts
+    - 實作 checkAuthStatus, logout, refreshToken 函式
+    - _Requirements: 7.5_
+  - [x] 3.4 實作訂閱 API 函式
+    - 建立 lib/api/feeds.ts
+    - 實作 fetchFeeds, toggleSubscription 函式
+    - _Requirements: 7.5, 8.2, 8.6_
+  - [x] 3.5 實作文章 API 函式
+    - 建立 lib/api/articles.ts
+    - 實作 fetchMyArticles 函式，支援分頁參數
+    - _Requirements: 7.5, 10.2_
+
+- [x] 4. 認證模組實作
+  - [x] 4.1 實作 Auth Context
+    - 建立 contexts/AuthContext.tsx
+    - 實作 AuthProvider 元件，管理認證狀態
+    - 實作 login, logout, checkAuth 函式
+    - 處理 Token 驗證和狀態持久化
+    - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8_
+  - [x] 4.2 撰寫 Auth Context 屬性測試 (Optional - Skipped)
+    - **Property 7: Auth Context State Persistence**
+    - **Property 8: Invalid Token Handling**
+    - **Property 9: Auth Check Loading State**
+    - **Validates: Requirements 5.5, 5.6, 5.7, 5.8**
+  - [x] 4.3 實作 useAuth Hook
+    - 建立 lib/hooks/useAuth.ts
+    - 封裝 Auth Context 的使用
+    - _Requirements: 5.3_
+  - [x] 4.4 實作 Protected Route 元件
+    - 建立 components/ProtectedRoute.tsx
+    - 檢查認證狀態，未登入重導向至登入頁
+    - 保存目標 URL 以便登入後返回
+    - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7_
+  - [x] 4.5 撰寫 Protected Route 屬性測試 (Optional - Skipped)
+    - **Property 10: Protected Route Access Control**
+    - **Property 11: Destination URL Preservation**
+    - **Property 12: Protected Route Loading State**
+    - **Validates: Requirements 6.2, 6.3, 6.4, 6.5**
+
+- [x] 5. 登入與 OAuth Callback 頁面
+  - [x] 5.1 實作登入頁面
+    - 建立 app/page.tsx
+    - 顯示「Login with Discord」按鈕
+    - 處理已登入使用者重導向至 Dashboard
+    - 使用 shadcn/ui Card 和 Button 元件
+    - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7_
+  - [x] 5.2 撰寫登入頁面屬性測試 (Optional - Skipped)
+    - **Property 1: Login Button Redirect**
+    - **Property 2: Authenticated User Redirect from Login**
+    - **Validates: Requirements 3.4, 3.7**
+  - [x] 5.3 實作 OAuth Callback 頁面
+    - 建立 app/auth/callback/page.tsx
+    - 處理 OAuth 授權回調
+    - 呼叫 checkAuth 更新認證狀態
+    - 處理錯誤情況並顯示錯誤訊息
+    - 顯示載入指示器
+    - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7_
+  - [x] 5.4 撰寫 Callback 頁面屬性測試 (Optional - Skipped)
+    - **Property 3: OAuth Callback Token Extraction**
+    - **Property 4: Post-Authentication Navigation**
+    - **Property 5: Authentication Failure Handling**
+    - **Property 6: Callback Loading State**
+    - **Validates: Requirements 4.2, 4.3, 4.4, 4.5, 4.6, 4.7**
+
+- [x] 6. 共用 UI 元件實作
+  - [x] 6.1 安裝並配置 shadcn/ui 基礎元件
+    - 安裝 Button, Card, Input, Badge, Switch, Skeleton, Toast 等元件
+    - 配置 components/ui/ 目錄
+    - _Requirements: 1.5_
+  - [x] 6.2 實作 Navigation 元件
+    - 建立 components/Navigation.tsx
+    - 顯示導航連結（Dashboard, Subscriptions, Reading List）
+    - 顯示使用者資訊和登出按鈕
+    - 實作響應式行動版選單
+    - 高亮當前頁面
+    - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 14.6, 14.7, 14.8_
+  - [x] 6.3 撰寫 Navigation 元件屬性測試 (Optional - Skipped)
+    - **Property 29: Navigation Active State**
+    - **Property 30: Logout Flow**
+    - **Property 31: Responsive Navigation Collapse**
+    - **Validates: Requirements 14.5, 14.6, 14.7, 17.5**
+  - [x] 6.4 實作 Loading Skeleton 元件
+    - 建立 components/LoadingSkeleton.tsx
+    - 實作 FeedGridSkeleton 和 ArticleListSkeleton
+    - 確保 Skeleton 佈局與實際內容匹配
+    - _Requirements: 15.1, 15.2, 15.5_
+  - [x] 6.5 撰寫 Loading Skeleton 屬性測試 (Optional - Skipped)
+    - **Property 32: Loading Skeleton Layout Matching**
+    - **Property 33: Loading State Accessibility**
+    - **Validates: Requirements 15.5, 15.7**
+  - [x] 6.6 實作 Error Boundary 元件
+    - 建立 components/ErrorBoundary.tsx
+    - 捕捉 React 元件錯誤
+    - 顯示錯誤訊息和重新載入按鈕
+    - _Requirements: 16.3_
+  - [x] 6.7 配置 Toast 通知系統
+    - 建立 lib/toast.ts
+    - 封裝 sonner toast 函式（success, error, loading, promise）
+    - _Requirements: 16.1, 16.8, 26.1, 26.2, 26.3, 26.4_
+
+- [x] 7. 訂閱管理模組實作
+  - [x] 7.1 實作 Feed Card 元件
+    - 建立 components/FeedCard.tsx
+    - 顯示 Feed 名稱、分類、URL
+    - 實作訂閱切換開關
+    - 根據訂閱狀態顯示不同樣式
+    - 處理載入狀態
+    - _Requirements: 8.4, 8.5, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 9.8, 9.9, 9.10_
+  - [x] 7.2 撰寫 Feed Card 元件屬性測試 (Optional - Skipped)
+    - **Property 17: Feed Card Content Display**
+    - **Property 18: Subscription Toggle API Call**
+    - **Property 20: Feed Card Subscription State Styling**
+    - **Validates: Requirements 8.4, 8.5, 8.6, 9.3, 9.4, 9.5, 9.7, 9.9**
+  - [x] 7.3 實作訂閱管理頁面
+    - 建立 app/subscriptions/page.tsx
+    - 載入並顯示所有 Feeds
+    - 實作搜尋功能（即時篩選）
+    - 實作分類篩選按鈕
+    - 實作 Optimistic Update 和錯誤回滾
+    - 顯示載入 Skeleton
+    - 處理空狀態
+    - _Requirements: 8.1, 8.2, 8.3, 8.6, 8.7, 8.8, 8.9, 8.10, 8.11, 8.12, 18.1, 18.2, 18.3, 18.4, 18.5_
+  - [x] 7.4 撰寫訂閱管理頁面屬性測試 (Optional - Skipped)
+    - **Property 19: Optimistic Update and Rollback**
+    - **Property 43: Case-Insensitive Search**
+    - **Property 44: Debounced Search Updates**
+    - **Property 45: Category Filter Behavior**
+    - **Validates: Requirements 8.7, 8.8, 18.2, 18.3, 18.5**
+
+- [x] 8. 文章動態模組實作
+  - [x] 8.1 實作 Article Card 元件
+    - 建立 components/ArticleCard.tsx
+    - 顯示文章標題（可點擊連結）、Feed 名稱、分類、發布時間
+    - 實作 Tinkering Index 視覺化（星星評分）
+    - 顯示 AI 摘要，支援展開/收合
+    - 實作「Add to Reading List」按鈕
+    - _Requirements: 10.4, 10.5, 10.6, 10.7, 11.1, 11.2, 11.3, 11.4, 11.5, 11.6, 11.7, 11.8, 11.9, 11.10, 11.11_
+  - [x] 8.2 撰寫 Article Card 元件屬性測試 (Optional - Skipped)
+    - **Property 21: Article Card Content Display**
+    - **Property 22: Article Title Link**
+    - **Property 23: Tinkering Index Visual Representation**
+    - **Property 24: AI Summary Expansion**
+    - **Property 25: Add to Reading List Action**
+    - **Validates: Requirements 10.4, 10.5, 10.6, 11.3, 11.4, 11.5, 11.6, 11.7, 11.9, 11.10**
+  - [x] 8.3 實作無限滾動 Hook
+    - 建立 lib/hooks/useInfiniteScroll.ts
+    - 偵測滾動位置，觸發載入更多
+    - 實作 throttle 函式
+    - 防止重複請求
+    - _Requirements: 12.1, 12.2, 12.3, 12.5, 12.6, 12.8, 19.4_
+  - [x] 8.4 撰寫無限滾動 Hook 屬性測試 (Optional - Skipped)
+    - **Property 26: Infinite Scroll Trigger**
+    - **Property 27: Article List Accumulation**
+    - **Property 28: Duplicate Request Prevention**
+    - **Validates: Requirements 12.2, 12.3, 12.4, 12.5**
+  - [x] 8.5 實作文章動態頁面（Dashboard）
+    - 建立 app/dashboard/page.tsx
+    - 載入並顯示個人化文章列表
+    - 整合無限滾動功能
+    - 實作分類和 Tinkering Index 篩選
+    - 處理空訂閱和無文章狀態
+    - 顯示載入指示器
+    - _Requirements: 10.1, 10.2, 10.7, 10.8, 10.9, 10.10, 10.11, 10.12, 12.4, 12.7_
+  - [x] 8.6 撰寫文章動態頁面屬性測試 (Optional - Skipped)
+    - **Property 46: Combinable Filters**
+    - **Property 47: Filtered Results Count**
+    - **Validates: Requirements 18.8, 18.9**
+
+- [x] 9. Root Layout 與全域配置
+  - [x] 9.1 實作 Root Layout
+    - 建立 app/layout.tsx
+    - 包裹 AuthProvider
+    - 整合 Navigation 元件
+    - 配置全域樣式和字型
+    - 整合 Toast 通知系統（Toaster 元件）
+    - _Requirements: 5.1_
+  - [x] 9.2 配置環境變數驗證
+    - 建立 lib/env.ts
+    - 實作 validateEnv 函式
+    - 驗證必要環境變數存在
+    - _Requirements: 2.4, 2.5_
+
+- [x] 10. 錯誤處理與使用者反饋
+  - [x] 10.1 實作錯誤處理邏輯
+    - 在 API Client 中處理各種 HTTP 錯誤（400, 401, 404, 422, 429, 500）
+    - 實作網路錯誤處理
+    - 實作超時錯誤處理
+    - _Requirements: 16.1, 16.4, 16.5, 16.6_
+  - [x] 10.2 撰寫錯誤處理屬性測試 (Optional - Skipped)
+    - **Property 14: API Client Error Handling**
+    - **Property 15: Unauthorized Request Handling**
+    - **Property 34: API Error Message Display**
+    - **Property 35: Error Recovery UI**
+    - **Property 36: Network Error Handling**
+    - **Property 37: Unauthorized Error Redirect**
+    - **Property 39: Error Logging**
+    - **Validates: Requirements 7.4, 7.6, 16.1, 16.2, 16.4, 16.5, 16.8, 16.9**
+  - [x] 10.3 實作空狀態元件
+    - 建立 components/EmptyState.tsx
+    - 處理無訂閱、無文章、空閱讀清單等情況
+    - _Requirements: 8.12, 10.10, 10.11, 13.11_
+
+- [x] 11. 響應式設計與樣式
+  - [x] 11.1 實作響應式網格佈局
+    - 配置 Feed 卡片網格（mobile: 1 column, tablet: 2 columns, desktop: 3-4 columns）
+    - 配置 Article 卡片佈局（mobile: 1 column, desktop: 2 columns）
+    - _Requirements: 17.1, 17.2, 17.3, 17.4_
+  - [x] 11.2 撰寫響應式佈局屬性測試 (Optional - Skipped)
+    - **Property 40: Responsive Grid Layout**
+    - **Property 41: Responsive Article Layout**
+    - **Property 42: Responsive Typography**
+    - **Validates: Requirements 17.2, 17.3, 17.4, 17.6**
+  - [x] 11.3 實作深色模式支援
+    - 實作主題切換按鈕
+    - 配置 TailwindCSS dark mode
+    - 持久化主題偏好至 localStorage
+    - 尊重系統主題偏好
+    - _Requirements: 21.1, 21.2, 21.3, 21.4, 21.5, 21.6, 21.7_
+  - [x] 11.4 確保觸控裝置可用性
+    - 測試觸控手勢
+    - 確保按鈕和互動元素大小適合觸控
+    - _Requirements: 17.7, 17.8_
+
+- [x] 12. 可訪問性改進
+  - [x] 12.1 實作語意化 HTML 結構
+    - 使用 header, nav, main, article, section 等語意標籤
+    - _Requirements: 20.1_
+  - [x] 12.2 新增 ARIA 標籤和屬性
+    - 為圖片新增 alt 文字
+    - 為圖示按鈕新增 ARIA labels
+    - 為動態內容新增 ARIA live regions
+    - _Requirements: 20.2, 20.3, 20.7_
+  - [x] 12.3 撰寫可訪問性屬性測試 (Optional - Skipped)
+    - **Property 48: Semantic HTML Usage**
+    - **Property 49: Image Alt Text**
+    - **Property 50: ARIA Labels for Icon Buttons**
+    - **Property 51: Keyboard Navigation Support**
+    - **Property 52: Visible Focus Indicators**
+    - **Property 53: Color Contrast Compliance**
+    - **Property 54: Dynamic Content Announcements**
+    - **Validates: Requirements 20.1, 20.2, 20.3, 20.4, 20.5, 20.6, 20.7**
+  - [x] 12.4 實作鍵盤導航支援
+    - 確保所有互動元素可透過鍵盤操作
+    - 實作可見的 focus 指示器
+    - 實作 skip links
+    - _Requirements: 20.4, 20.5, 20.8_
+  - [x] 12.5 驗證色彩對比度
+    - 確保文字與背景對比度符合 WCAG AA 標準（4.5:1）
+    - _Requirements: 20.6_
+
+- [x] 13. 效能優化
+  - [x] 13.1 實作程式碼分割
+    - 配置 Next.js 動態匯入
+    - 為不同路由實作 code splitting
+    - _Requirements: 19.1_
+  - [x] 13.2 實作圖片優化
+    - 使用 Next.js Image 元件
+    - 配置圖片 lazy loading
+    - _Requirements: 19.2_
+  - [x] 13.3 實作搜尋輸入 debounce
+    - 在搜尋功能中實作 300ms debounce
+    - _Requirements: 19.3, 18.3_
+  - [x] 13.4 實作 Optimistic Updates
+    - 在訂閱切換時實作 optimistic update
+    - _Requirements: 19.6_
+  - [x] 13.5 配置快取策略
+    - 考慮使用 React Query 或 SWR 進行資料快取
+    - 實作 prefetch 機制
+    - _Requirements: 19.5, 19.7_
+
+- [x] 14. 測試實作
+  - [x] 14.1 配置測試環境
+    - 安裝 Jest, React Testing Library, fast-check
+    - 配置 jest.config.js 和 jest.setup.js
+    - 設置 MSW (Mock Service Worker) 進行 API mocking
+    - _Requirements: 29.1_
+  - [x] 14.2 撰寫元件單元測試
+    - 測試 FeedCard, ArticleCard, Navigation 元件
+    - 測試 Auth Context 和 useAuth Hook
+    - 測試 API Client 函式
+    - _Requirements: 29.2, 29.3, 29.4, 29.5_
+  - [x] 14.3 配置 E2E 測試
+    - 安裝 Playwright
+    - 撰寫登入流程、訂閱管理、文章瀏覽的 E2E 測試
+    - 測試響應式行為
+    - _Requirements: 29.6, 29.7_
+  - [x] 14.4 執行測試並驗證覆蓋率
+    - 執行所有測試
+    - 確保程式碼覆蓋率 > 70%
+    - _Requirements: 29.5_
+
+- [x] 15. 部署準備與配置
+  - [x] 15.1 配置生產環境設定
+    - 配置環境變數
+    - 設置 CORS 允許的來源
+    - 配置 HTTPS
+    - _Requirements: 30.3, 30.4, 30.6, 30.7_
+  - [x] 15.2 實作安全標頭
+    - 配置 CSP, HSTS, X-Frame-Options 等安全標頭
+    - _Requirements: 30.8_
+  - [x] 15.3 驗證 Docker Compose 部署
+    - 確認 frontend/Dockerfile 正確建置
+    - 測試 docker-compose up 能同時啟動前後端服務
+    - 驗證前端能正確連接到後端 API (http://backend:8000)
+    - 測試容器間網路通訊
+    - _Requirements: 30.1, 30.2_
+  - [x] 15.4 配置部署腳本
+    - 提供 Vercel/Netlify 部署配置
+    - 或提供 Docker 部署指南
+    - 更新 README_DOCKER.md 文件
+    - _Requirements: 30.3_
+  - [x] 15.5 實作健康檢查端點
+    - 建立 /api/health 端點
+    - _Requirements: 30.5_
+
+- [x] 16. 最終檢查點
+  - 確保所有測試通過
+  - 驗證所有功能正常運作
+  - 檢查可訪問性和響應式設計
+  - 驗證效能指標（Lighthouse score > 80）
+  - 詢問使用者是否有任何問題或需要調整
+
+## Notes
+
+- 標記 `*` 的任務為可選的測試任務，可根據時間和資源決定是否實作
+- 每個任務都明確標註對應的需求編號，確保可追溯性
+- 屬性測試任務明確標註對應的設計文件屬性編號
+- 實作過程中應持續執行測試，確保程式碼品質
+- 建議按照任務順序執行，因為後續任務依賴前面任務的實作
+- Checkpoint 任務確保在關鍵階段驗證功能完整性

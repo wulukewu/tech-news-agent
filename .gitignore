@@ -54,7 +54,10 @@ backend/lib64/
 logs/
 *.log
 
-.kiro/
+# Kiro - exclude generated/cache files only
+.kiro/**/.DS_Store
+.kiro/**/.config.kiro
+.kiro/steering/ui-ux-pro-max/scripts/__pycache__/
 
 # Hypothesis (property-based testing cache)
 .hypothesis/
