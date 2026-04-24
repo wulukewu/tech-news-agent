@@ -23,6 +23,7 @@ import {
   type PreferenceModel,
   type LearningSettings,
 } from '@/lib/api/proactive-learning';
+import { useI18n } from '@/contexts/I18nContext';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -55,6 +56,7 @@ function ConversationCard({
   conv: LearningConversation;
   onAnswered: (id: string) => void;
 }) {
+  const { t } = useI18n();
   const [response, setResponse] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -65,10 +67,10 @@ function ConversationCard({
     setSubmitting(true);
     try {
       await respondToConversation(conv.id, answer);
-      toast.success('Response submitted!');
+      toast.success(t('preferences.response-submitted'));
       onAnswered(conv.id);
     } catch {
-      toast.error('Failed to submit response.');
+      toast.error(t('preferences.response-failed'));
     } finally {
       setSubmitting(false);
     }
@@ -101,10 +103,10 @@ function ConversationCard({
         <textarea
           value={response}
           onChange={(e) => setResponse(e.target.value)}
-          placeholder="Type your response…"
+          placeholder={t('preferences.response-placeholder')}
           rows={2}
           className="w-full rounded-lg border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Your response"
+          aria-label={t('preferences.response-placeholder')}
         />
       )}
 
@@ -115,7 +117,7 @@ function ConversationCard({
         className="cursor-pointer"
       >
         <Send className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
-        {submitting ? 'Sending…' : 'Submit'}
+        {submitting ? t('preferences.submitting') : t('preferences.submit')}
       </Button>
     </div>
   );
@@ -124,6 +126,7 @@ function ConversationCard({
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PreferencesPage() {
+  const { t } = useI18n();
   const [conversations, setConversations] = useState<LearningConversation[]>([]);
   const [prefs, setPrefs] = useState<PreferenceModel | null>(null);
   const [settings, setSettings] = useState<LearningSettings | null>(null);
@@ -143,11 +146,11 @@ export default function PreferencesPage() {
       setPrefs(prefsData);
       setSettings(settingsData);
     } catch {
-      toast.error('Failed to load preferences.');
+      toast.error(t('preferences.save-failed'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     load();
@@ -163,9 +166,9 @@ export default function PreferencesPage() {
     try {
       await updateLearningSettings({ learning_enabled: newVal });
       setSettings((s) => (s ? { ...s, learning_enabled: newVal } : s));
-      toast.success(newVal ? 'Proactive learning enabled.' : 'Proactive learning disabled.');
+      toast.success(newVal ? t('preferences.settings-updated') : t('preferences.settings-updated'));
     } catch {
-      toast.error('Failed to update settings.');
+      toast.error(t('preferences.settings-failed'));
     }
   };
 
@@ -175,12 +178,12 @@ export default function PreferencesPage() {
       const result = await triggerLearning();
       if (result.triggered && result.conversation) {
         setConversations((prev) => [result.conversation!, ...prev]);
-        toast.success('New learning question generated!');
+        toast.success(t('preferences.new-question'));
       } else {
-        toast.success(result.reason ?? 'No trigger condition met right now.');
+        toast.success(result.reason ?? t('preferences.no-pending'));
       }
     } catch {
-      toast.error('Failed to trigger analysis.');
+      toast.error(t('preferences.trigger-failed'));
     } finally {
       setTriggering(false);
     }
@@ -194,10 +197,8 @@ export default function PreferencesPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Learning Preferences</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Proactive AI that learns your reading interests
-          </p>
+          <h1 className="text-2xl font-bold">{t('preferences.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t('preferences.description')}</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -206,13 +207,13 @@ export default function PreferencesPage() {
             onClick={handleTrigger}
             disabled={triggering || settings?.learning_enabled === false}
             className="cursor-pointer"
-            aria-label="Trigger behavior analysis"
+            aria-label={t('preferences.analyse-now')}
           >
             <RefreshCw
               className={`h-4 w-4 mr-1.5 ${triggering ? 'animate-spin' : ''}`}
               aria-hidden="true"
             />
-            Analyse Now
+            {t('preferences.analyse-now')}
           </Button>
         </div>
       </div>
@@ -228,13 +229,15 @@ export default function PreferencesPage() {
           {/* Settings card */}
           {settings && (
             <div className="rounded-xl border bg-card p-5 shadow-sm">
-              <h2 className="text-base font-semibold mb-4">Settings</h2>
+              <h2 className="text-base font-semibold mb-4">{t('preferences.settings-title')}</h2>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium">Proactive Learning</p>
+                  <p className="text-sm font-medium">{t('preferences.proactive-learning')}</p>
                   <p className="text-xs text-muted-foreground">
-                    {settings.conversations_this_week}/{settings.max_weekly_conversations}{' '}
-                    conversations this week
+                    {t('preferences.conversations-this-week', {
+                      current: settings.conversations_this_week,
+                      max: settings.max_weekly_conversations,
+                    })}
                   </p>
                 </div>
                 <button
@@ -242,8 +245,8 @@ export default function PreferencesPage() {
                   className="cursor-pointer"
                   aria-label={
                     settings.learning_enabled
-                      ? 'Disable proactive learning'
-                      : 'Enable proactive learning'
+                      ? t('preferences.proactive-learning')
+                      : t('preferences.proactive-learning')
                   }
                 >
                   {settings.learning_enabled ? (
@@ -260,7 +263,7 @@ export default function PreferencesPage() {
           {conversations.length > 0 && (
             <section aria-labelledby="conversations-heading">
               <h2 id="conversations-heading" className="text-base font-semibold mb-3">
-                Pending Questions
+                {t('preferences.pending-questions')}
                 <span className="ml-2 text-xs bg-primary/10 text-primary rounded-full px-2 py-0.5">
                   {conversations.length}
                 </span>
@@ -275,7 +278,7 @@ export default function PreferencesPage() {
 
           {conversations.length === 0 && settings?.learning_enabled && (
             <div className="rounded-xl border bg-card p-5 text-center text-sm text-muted-foreground">
-              No pending questions. The system will ask when it detects interest changes.
+              {t('preferences.no-pending')}
             </div>
           )}
 
@@ -287,7 +290,7 @@ export default function PreferencesPage() {
               aria-expanded={showWeights}
               id="weights-heading"
             >
-              Interest Weights
+              {t('preferences.interest-weights')}
               {showWeights ? (
                 <ChevronUp className="h-4 w-4" />
               ) : (
@@ -302,9 +305,7 @@ export default function PreferencesPage() {
                     .sort(([, a], [, b]) => b - a)
                     .map(([cat, w]) => <WeightBar key={cat} label={cat} value={w} />)
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No preference data yet. Start reading and rating articles to build your profile.
-                  </p>
+                  <p className="text-sm text-muted-foreground">{t('preferences.no-weights')}</p>
                 )}
               </div>
             )}
