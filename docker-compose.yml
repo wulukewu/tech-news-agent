@@ -29,7 +29,6 @@ services:
       - '3000:3000'
     volumes:
       - ./frontend:/app
-      - /app/.next
     environment:
       - NODE_ENV=development
     depends_on:
