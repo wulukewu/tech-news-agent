@@ -80,9 +80,9 @@ class ArticleAnalyzer:
         }
 
     async def analyze_articles(
-        self, articles: list[dict[str, Any]], batch_size: int = 10
+        self, articles: list[dict[str, Any]], batch_size: int = 5
     ) -> list[dict[str, Any]]:
-        """Analyze a list of articles in batches."""
+        """Analyze a list of articles in small batches with delay to respect Groq TPM limits."""
         import asyncio
 
         results: list[dict[str, Any]] = []
@@ -106,4 +106,7 @@ class ArticleAnalyzer:
                     )
                 else:
                     results.append(result)
+            # Respect Groq TPM limit (6000/min): wait 12s between batches of 5
+            if i + batch_size < len(articles):
+                await asyncio.sleep(12)
         return results

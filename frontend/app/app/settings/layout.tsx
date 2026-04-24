@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Bell, Palette, User, Settings as SettingsIcon } from 'lucide-react';
+import { Bell, Palette, User, Brain } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 
 interface SettingsLayoutProps {
@@ -33,7 +33,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
     {
       title: t('nav.preferences'),
       href: '/app/settings/preferences',
-      icon: SettingsIcon,
+      icon: Brain,
     },
   ];
 

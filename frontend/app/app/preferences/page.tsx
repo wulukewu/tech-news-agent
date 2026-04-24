@@ -204,7 +204,7 @@ export default function PreferencesPage() {
             variant="outline"
             size="sm"
             onClick={handleTrigger}
-            disabled={triggering || !settings?.learning_enabled}
+            disabled={triggering || settings?.learning_enabled === false}
             className="cursor-pointer"
             aria-label="Trigger behavior analysis"
           >
