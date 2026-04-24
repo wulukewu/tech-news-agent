@@ -180,7 +180,7 @@ function CallbackPageContent() {
         const storedRedirect =
           typeof window !== 'undefined' ? sessionStorage.getItem('auth_redirect') : null;
 
-        const redirectPath = redirectParam || storedRedirect || '/dashboard/articles';
+        const redirectPath = redirectParam || storedRedirect || '/app/articles';
 
         // Clear stored redirect after using it
         if (typeof window !== 'undefined') {

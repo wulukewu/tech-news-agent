@@ -7,7 +7,7 @@ JWT 認證工具模組
 import asyncio
 from datetime import datetime, timedelta
 from typing import Any
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 from uuid import UUID
 
 import httpx
@@ -363,7 +363,7 @@ async def discord_callback(
     # 重定向到前端的 callback 頁面，並將 token 作為 URL 參數傳遞
     # 前端會接收 token 並設置為 Cookie
     response = RedirectResponse(
-        url=f"{frontend_url}/auth/callback?token={jwt_token}", status_code=302
+        url=f"{frontend_url}/auth/callback?token={quote(jwt_token, safe='')}", status_code=302
     )
 
     return response
