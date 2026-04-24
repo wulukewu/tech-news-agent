@@ -607,7 +607,14 @@
       "select-source-desc": "Set notification preferences for specific sources",
       "no-available-sources": "No RSS sources available",
       "advanced-title": "Advanced Features",
-      "advanced-desc": "Additional notification features and settings"
+      "advanced-desc": "Additional notification features and settings",
+      "tab-schedule": "Schedule",
+      "tab-quiet-hours": "Quiet Hours",
+      "tab-filters": "Depth Filter",
+      "tab-feeds": "Feed Settings",
+      "tab-history": "History",
+      "status-active": "Scheduled",
+      "status-inactive": "Inactive"
     }
   },
   "reading-list-page": {

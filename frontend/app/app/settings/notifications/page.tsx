@@ -5,10 +5,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ErrorMessage } from '@/components/ui/error-message';
 import { toast } from '@/lib/toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import {
   getNotificationSettings,
   updateNotificationSettings,
-  sendTestNotification,
+  getNotificationStatus,
 } from '@/lib/api/notifications';
 import { NotificationSettings } from '@/types/notification';
 import { QuietHoursSettings } from '@/features/notifications/components/QuietHoursSettings';
@@ -17,7 +19,7 @@ import { FeedNotificationSettings } from '@/features/notifications/components/Fe
 import { NotificationHistoryPanel } from '@/features/notifications/components/NotificationHistoryPanel';
 import { NotificationPreview } from '@/features/notifications/components/NotificationPreview';
 import { PersonalizedNotificationSettings } from '@/features/notifications/components/PersonalizedNotificationSettings';
-
+import { Bell, Moon, Brain, Rss, History, CheckCircle, AlertCircle } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 
 export default function NotificationSettingsPage() {
@@ -25,7 +27,6 @@ export default function NotificationSettingsPage() {
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
 
-  // Fetch notification settings
   const {
     data: settings,
     isLoading,
@@ -33,28 +34,27 @@ export default function NotificationSettingsPage() {
   } = useQuery({
     queryKey: ['notificationSettings'],
     queryFn: getNotificationSettings,
-    staleTime: 0, // Always fetch fresh data
+    staleTime: 0,
   });
 
-  // Update notification settings mutation
+  const { data: status } = useQuery({
+    queryKey: ['notificationStatus'],
+    queryFn: getNotificationStatus,
+    refetchInterval: 30000,
+    retry: 3,
+  });
+
   const updateMutation = useMutation({
     mutationFn: (updates: Partial<NotificationSettings>) => updateNotificationSettings(updates),
-    onMutate: () => {
-      setIsSaving(true);
-    },
+    onMutate: () => setIsSaving(true),
     onSuccess: (updatedSettings) => {
       queryClient.setQueryData(['notificationSettings'], updatedSettings);
-      // Also invalidate personalized preferences to ensure consistency
       queryClient.invalidateQueries({ queryKey: ['notificationPreferences'] });
       queryClient.invalidateQueries({ queryKey: ['notificationStatus'] });
       toast.success(t('success.settings-saved'));
     },
-    onError: () => {
-      toast.error(t('errors.server-error'));
-    },
-    onSettled: () => {
-      setIsSaving(false);
-    },
+    onError: () => toast.error(t('errors.server-error')),
+    onSettled: () => setIsSaving(false),
   });
 
   const handleUpdate = (updates: Partial<NotificationSettings>) => {
@@ -72,10 +72,7 @@ export default function NotificationSettingsPage() {
   if (error) {
     return (
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('settings.notifications.title')}</h1>
-          <p className="text-muted-foreground">{t('settings.notifications.description')}</p>
-        </div>
+        <PageHeader status={status} />
         <ErrorMessage
           message={(error as Error).message || t('errors.server-error')}
           onRetry={() => queryClient.invalidateQueries({ queryKey: ['notificationSettings'] })}
@@ -84,61 +81,122 @@ export default function NotificationSettingsPage() {
     );
   }
 
-  if (!settings) {
-    return null;
-  }
+  if (!settings) return null;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t('settings.notifications.title')}</h1>
-        <p className="text-muted-foreground">{t('settings.notifications.description')}</p>
-      </div>
+      <PageHeader status={status} />
 
-      {/* Main Settings Grid */}
-      <div className="grid gap-6">
-        {/* Personalized Notification Settings - Main Interface */}
-        <PersonalizedNotificationSettings />
+      <Tabs defaultValue="schedule" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-5 h-auto">
+          <TabsTrigger
+            value="schedule"
+            className="flex items-center gap-1.5 py-2 text-xs sm:text-sm"
+          >
+            <Bell className="h-3.5 w-3.5 flex-shrink-0" />
+            <span className="hidden sm:inline">{t('settings.notifications.tab-schedule')}</span>
+            <span className="sm:hidden">排程</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="quiet-hours"
+            className="flex items-center gap-1.5 py-2 text-xs sm:text-sm"
+          >
+            <Moon className="h-3.5 w-3.5 flex-shrink-0" />
+            <span className="hidden sm:inline">{t('settings.notifications.tab-quiet-hours')}</span>
+            <span className="sm:hidden">勿擾</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="filters"
+            className="flex items-center gap-1.5 py-2 text-xs sm:text-sm"
+          >
+            <Brain className="h-3.5 w-3.5 flex-shrink-0" />
+            <span className="hidden sm:inline">{t('settings.notifications.tab-filters')}</span>
+            <span className="sm:hidden">篩選</span>
+          </TabsTrigger>
+          <TabsTrigger value="feeds" className="flex items-center gap-1.5 py-2 text-xs sm:text-sm">
+            <Rss className="h-3.5 w-3.5 flex-shrink-0" />
+            <span className="hidden sm:inline">{t('settings.notifications.tab-feeds')}</span>
+            <span className="sm:hidden">來源</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="history"
+            className="flex items-center gap-1.5 py-2 text-xs sm:text-sm"
+          >
+            <History className="h-3.5 w-3.5 flex-shrink-0" />
+            <span className="hidden sm:inline">{t('settings.notifications.tab-history')}</span>
+            <span className="sm:hidden">歷史</span>
+          </TabsTrigger>
+        </TabsList>
 
-        {/* Additional Legacy Features */}
-        <div className="space-y-6">
-          <div className="border-t pt-6">
-            <h2 className="text-xl font-semibold mb-4">
-              {t('settings.notifications.advanced-title')}
-            </h2>
-            <p className="text-sm text-muted-foreground mb-6">
-              {t('settings.notifications.advanced-desc')}
-            </p>
-          </div>
+        {/* Schedule Tab */}
+        <TabsContent value="schedule" className="space-y-4">
+          <PersonalizedNotificationSettings />
+          {settings && <NotificationPreview settings={settings} />}
+        </TabsContent>
 
-          {/* Quiet Hours - Only if not covered in PersonalizedNotificationSettings */}
+        {/* Quiet Hours Tab */}
+        <TabsContent value="quiet-hours">
           <QuietHoursSettings
             quietHours={settings?.quietHours}
             onQuietHoursChange={(quietHours) => handleUpdate({ quietHours })}
             disabled={isSaving}
           />
+        </TabsContent>
 
-          {/* Tinkering Index Threshold */}
+        {/* Filters Tab */}
+        <TabsContent value="filters">
           <TinkeringIndexThreshold
             threshold={settings?.minTinkeringIndex}
             onThresholdChange={(minTinkeringIndex) => handleUpdate({ minTinkeringIndex })}
             disabled={isSaving}
           />
+        </TabsContent>
 
-          {/* Feed-specific Notification Settings */}
+        {/* Feeds Tab */}
+        <TabsContent value="feeds">
           <FeedNotificationSettings
             feedSettings={settings?.feedSettings}
             onFeedSettingsChange={(feedSettings) => handleUpdate({ feedSettings })}
             disabled={isSaving}
           />
+        </TabsContent>
 
-          {/* Notification Preview */}
-          {settings && <NotificationPreview settings={settings} />}
-
-          {/* Notification History */}
+        {/* History Tab */}
+        <TabsContent value="history">
           <NotificationHistoryPanel />
-        </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function PageHeader({ status }: { status: any }) {
+  const { t } = useI18n();
+
+  const isActive = status?.scheduled;
+  const isDisabled = !status?.scheduled && status !== undefined;
+
+  return (
+    <div className="flex items-start justify-between gap-4">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">{t('settings.notifications.title')}</h1>
+        <p className="text-muted-foreground mt-1">{t('settings.notifications.description')}</p>
+      </div>
+      <div className="flex-shrink-0 mt-1">
+        {isActive ? (
+          <Badge
+            variant="outline"
+            className="text-green-600 border-green-300 dark:border-green-700 gap-1.5"
+          >
+            <CheckCircle className="h-3.5 w-3.5" />
+            {t('settings.notifications.status-active')}
+          </Badge>
+        ) : isDisabled ? (
+          <Badge variant="outline" className="text-muted-foreground gap-1.5">
+            <AlertCircle className="h-3.5 w-3.5" />
+            {t('settings.notifications.status-inactive')}
+          </Badge>
+        ) : null}
       </div>
     </div>
   );

@@ -607,7 +607,14 @@
       "select-source-desc": "為特定來源設定通知偏好",
       "no-available-sources": "目前沒有可用的 RSS 來源",
       "advanced-title": "進階功能",
-      "advanced-desc": "額外的通知功能和設定選項"
+      "advanced-desc": "額外的通知功能和設定選項",
+      "tab-schedule": "排程設定",
+      "tab-quiet-hours": "勿擾時段",
+      "tab-filters": "深度篩選",
+      "tab-feeds": "來源設定",
+      "tab-history": "通知歷史",
+      "status-active": "已排程",
+      "status-inactive": "未啟用"
     }
   },
   "reading-list-page": {
