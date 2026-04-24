@@ -827,7 +827,7 @@ function HistoryView({
   histSending: boolean;
   histInput: string;
   onHistInputChange: (v: string) => void;
-  onSendHistMessage: () => void;
+  onSendHistMessage: (override?: string) => void;
   onStartNewChat: () => void;
   onFollowUp: (q: string) => void;
   messagesEndRef: React.RefObject<HTMLDivElement>;
@@ -1261,37 +1261,82 @@ export function ChatShell({ initialId }: { initialId: string | null }) {
   );
 
   // Send message in HISTORY conversation
-  const sendHistMessage = useCallback(async () => {
-    const content = histInput.trim();
-    if (!content || histSending || !activeId) return;
+  const sendHistMessage = useCallback(
+    async (overrideContent?: string) => {
+      const content = (overrideContent ?? histInput).trim();
+      if (!content || histSending || !activeId) return;
 
-    const optimistic: ConversationMessage = {
-      id: `optimistic-${Date.now()}`,
-      conversation_id: activeId,
-      role: 'user',
-      content,
-      platform: 'web',
-      created_at: new Date().toISOString(),
-    };
+      const optimistic: ConversationMessage = {
+        id: `optimistic-${Date.now()}`,
+        conversation_id: activeId,
+        role: 'user',
+        content,
+        platform: 'web',
+        created_at: new Date().toISOString(),
+      };
 
-    setHistMessages((prev) => [...prev, optimistic]);
-    setHistInput('');
-    setHistSending(true);
+      setHistMessages((prev) => [...prev, optimistic]);
+      if (!overrideContent) setHistInput('');
+      setHistSending(true);
 
-    try {
-      const saved = await addMessage(activeId, { role: 'user', content, platform: 'web' });
-      setHistMessages((prev) => prev.map((m) => (m.id === optimistic.id ? saved : m)));
-      setHistConversation((prev) =>
-        prev ? { ...prev, message_count: prev.message_count + 1 } : prev
-      );
-    } catch {
-      setHistMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
-      setHistInput(content);
-    } finally {
-      setHistSending(false);
-      setTimeout(() => inputRef.current?.focus(), 100);
-    }
-  }, [activeId, histInput, histSending]);
+      try {
+        // Call QA continue endpoint to get AI response
+        const res = await apiClient.post<{ success: boolean; data: QAResponse }>(
+          `/api/qa/conversations/${activeId}/continue`,
+          { query: content }
+        );
+        const qaData = res.data.data;
+
+        const userMsg: ConversationMessage = {
+          id: `user-${Date.now()}`,
+          conversation_id: activeId,
+          role: 'user',
+          content,
+          platform: 'web',
+          created_at: new Date().toISOString(),
+        };
+        const assistantMsg: ConversationMessage = {
+          id: `assistant-${Date.now()}`,
+          conversation_id: activeId,
+          role: 'assistant',
+          content: qaData.insights?.join('\n') || '',
+          platform: 'web',
+          created_at: new Date().toISOString(),
+          metadata: {
+            articles: qaData.articles,
+            insights: qaData.insights,
+            recommendations: qaData.recommendations,
+            response_time: qaData.response_time,
+          },
+        };
+
+        setHistMessages((prev) => [
+          ...prev.filter((m) => m.id !== optimistic.id),
+          userMsg,
+          assistantMsg,
+        ]);
+        setHistConversation((prev) =>
+          prev ? { ...prev, message_count: prev.message_count + 2 } : prev
+        );
+      } catch {
+        // QA failed — fall back to just saving the user message
+        try {
+          const saved = await addMessage(activeId, { role: 'user', content, platform: 'web' });
+          setHistMessages((prev) => prev.map((m) => (m.id === optimistic.id ? saved : m)));
+          setHistConversation((prev) =>
+            prev ? { ...prev, message_count: prev.message_count + 1 } : prev
+          );
+        } catch {
+          setHistMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
+          if (!overrideContent) setHistInput(content);
+        }
+      } finally {
+        setHistSending(false);
+        setTimeout(() => inputRef.current?.focus(), 100);
+      }
+    },
+    [activeId, histInput, histSending]
+  );
 
   const handleExport = async () => {
     if (histExporting || !activeId) return;
@@ -1414,7 +1459,7 @@ export function ChatShell({ initialId }: { initialId: string | null }) {
                 onHistInputChange={setHistInput}
                 onSendHistMessage={sendHistMessage}
                 onStartNewChat={startNewChat}
-                onFollowUp={setHistInput}
+                onFollowUp={(q) => sendHistMessage(q)}
                 messagesEndRef={messagesEndRef}
                 inputRef={inputRef}
               />

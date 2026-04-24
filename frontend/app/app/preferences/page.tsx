@@ -9,9 +9,11 @@ import {
   Send,
   ChevronDown,
   ChevronUp,
+  Sparkles,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/lib/toast';
+import { useI18n } from '@/contexts/I18nContext';
 import {
   getPendingConversations,
   respondToConversation,
@@ -19,6 +21,8 @@ import {
   getLearningSettings,
   updateLearningSettings,
   triggerLearning,
+  completeOnboarding,
+  ONBOARDING_CATEGORIES,
   type LearningConversation,
   type PreferenceModel,
   type LearningSettings,
@@ -46,6 +50,86 @@ function WeightBar({ label, value }: { label: string; value: number }) {
   );
 }
 
+// ── Onboarding ────────────────────────────────────────────────────────────────
+
+function OnboardingCard({
+  onComplete,
+}: {
+  onComplete: (conv: LearningConversation | null) => void;
+}) {
+  const { t } = useI18n();
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [submitting, setSubmitting] = useState(false);
+
+  const toggle = (cat: string) =>
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(cat) ? next.delete(cat) : next.add(cat);
+      return next;
+    });
+
+  const handleSubmit = async () => {
+    if (selected.size === 0) return;
+    setSubmitting(true);
+    try {
+      const result = await completeOnboarding([...selected]);
+      toast.success(t('preferences.saved'));
+      onComplete(result.initial_conversation);
+    } catch {
+      toast.error(t('preferences.save-failed'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="rounded-xl border bg-card p-6 shadow-sm space-y-5">
+      <div className="flex items-start gap-3">
+        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+          <Sparkles className="h-5 w-5 text-primary" aria-hidden="true" />
+        </div>
+        <div>
+          <h2 className="text-base font-semibold">{t('preferences.onboarding-title')}</h2>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {t('preferences.onboarding-description')}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {ONBOARDING_CATEGORIES.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => toggle(cat)}
+            className={`px-3 py-1.5 rounded-full text-sm border transition-colors cursor-pointer ${
+              selected.has(cat)
+                ? 'bg-primary text-primary-foreground border-primary'
+                : 'bg-background hover:bg-muted border-border'
+            }`}
+          >
+            {cat}
+          </button>
+        ))}
+      </div>
+
+      <Button
+        onClick={handleSubmit}
+        disabled={submitting || selected.size === 0}
+        className="cursor-pointer w-full sm:w-auto"
+      >
+        {submitting ? (
+          <RefreshCw className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
+        ) : (
+          <Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
+        )}
+        {submitting
+          ? t('preferences.saving')
+          : t('preferences.get-started', { count: selected.size })}
+      </Button>
+    </div>
+  );
+}
+
 // ── Conversation Card ─────────────────────────────────────────────────────────
 
 function ConversationCard({
@@ -55,6 +139,7 @@ function ConversationCard({
   conv: LearningConversation;
   onAnswered: (id: string) => void;
 }) {
+  const { t } = useI18n();
   const [response, setResponse] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -65,10 +150,10 @@ function ConversationCard({
     setSubmitting(true);
     try {
       await respondToConversation(conv.id, answer);
-      toast.success('Response submitted!');
+      toast.success(t('preferences.response-submitted'));
       onAnswered(conv.id);
     } catch {
-      toast.error('Failed to submit response.');
+      toast.error(t('preferences.response-failed'));
     } finally {
       setSubmitting(false);
     }
@@ -101,10 +186,10 @@ function ConversationCard({
         <textarea
           value={response}
           onChange={(e) => setResponse(e.target.value)}
-          placeholder="Type your response…"
+          placeholder={t('preferences.response-placeholder')}
           rows={2}
           className="w-full rounded-lg border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Your response"
+          aria-label={t('preferences.response-placeholder')}
         />
       )}
 
@@ -115,7 +200,7 @@ function ConversationCard({
         className="cursor-pointer"
       >
         <Send className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
-        {submitting ? 'Sending…' : 'Submit'}
+        {submitting ? t('preferences.submitting') : t('preferences.submit')}
       </Button>
     </div>
   );
@@ -124,6 +209,7 @@ function ConversationCard({
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PreferencesPage() {
+  const { t } = useI18n();
   const [conversations, setConversations] = useState<LearningConversation[]>([]);
   const [prefs, setPrefs] = useState<PreferenceModel | null>(null);
   const [settings, setSettings] = useState<LearningSettings | null>(null);
@@ -143,15 +229,23 @@ export default function PreferencesPage() {
       setPrefs(prefsData);
       setSettings(settingsData);
     } catch {
-      toast.error('Failed to load preferences.');
+      toast.error(t('preferences.save-failed'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  const handleOnboardingComplete = (newConv: LearningConversation | null) => {
+    load().then(() => {
+      if (newConv) {
+        setConversations((prev) => [newConv, ...prev.filter((c) => c.id !== newConv.id)]);
+      }
+    });
+  };
 
   const handleAnswered = (id: string) => {
     setConversations((prev) => prev.filter((c) => c.id !== id));
@@ -163,9 +257,9 @@ export default function PreferencesPage() {
     try {
       await updateLearningSettings({ learning_enabled: newVal });
       setSettings((s) => (s ? { ...s, learning_enabled: newVal } : s));
-      toast.success(newVal ? 'Proactive learning enabled.' : 'Proactive learning disabled.');
+      toast.success(t('preferences.settings-updated'));
     } catch {
-      toast.error('Failed to update settings.');
+      toast.error(t('preferences.settings-failed'));
     }
   };
 
@@ -175,12 +269,12 @@ export default function PreferencesPage() {
       const result = await triggerLearning();
       if (result.triggered && result.conversation) {
         setConversations((prev) => [result.conversation!, ...prev]);
-        toast.success('New learning question generated!');
+        toast.success(t('preferences.new-question'));
       } else {
-        toast.success(result.reason ?? 'No trigger condition met right now.');
+        toast.success(result.reason ?? t('preferences.settings-updated'));
       }
     } catch {
-      toast.error('Failed to trigger analysis.');
+      toast.error(t('preferences.trigger-failed'));
     } finally {
       setTriggering(false);
     }
@@ -188,33 +282,30 @@ export default function PreferencesPage() {
 
   const weights = prefs?.category_weights ?? {};
   const hasWeights = Object.keys(weights).length > 0;
+  const isNewUser = !loading && !hasWeights;
 
   return (
     <main id="main-content" className="container mx-auto px-4 py-6 max-w-3xl">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Learning Preferences</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Proactive AI that learns your reading interests
-          </p>
+          <h1 className="text-2xl font-bold">{t('preferences.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t('preferences.description')}</p>
         </div>
-        <div className="flex gap-2">
+        {!isNewUser && (
           <Button
             variant="outline"
             size="sm"
             onClick={handleTrigger}
             disabled={triggering || settings?.learning_enabled === false}
             className="cursor-pointer"
-            aria-label="Trigger behavior analysis"
           >
             <RefreshCw
               className={`h-4 w-4 mr-1.5 ${triggering ? 'animate-spin' : ''}`}
               aria-hidden="true"
             />
-            Analyse Now
+            {t('preferences.analyse-now')}
           </Button>
-        </div>
+        )}
       </div>
 
       {loading ? (
@@ -225,27 +316,22 @@ export default function PreferencesPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Settings card */}
-          {settings && (
+          {isNewUser && <OnboardingCard onComplete={handleOnboardingComplete} />}
+
+          {!isNewUser && settings && (
             <div className="rounded-xl border bg-card p-5 shadow-sm">
-              <h2 className="text-base font-semibold mb-4">Settings</h2>
+              <h2 className="text-base font-semibold mb-4">{t('preferences.settings-title')}</h2>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium">Proactive Learning</p>
+                  <p className="text-sm font-medium">{t('preferences.proactive-learning')}</p>
                   <p className="text-xs text-muted-foreground">
-                    {settings.conversations_this_week}/{settings.max_weekly_conversations}{' '}
-                    conversations this week
+                    {t('preferences.conversations-this-week', {
+                      current: settings.conversations_this_week,
+                      max: settings.max_weekly_conversations,
+                    })}
                   </p>
                 </div>
-                <button
-                  onClick={handleToggleLearning}
-                  className="cursor-pointer"
-                  aria-label={
-                    settings.learning_enabled
-                      ? 'Disable proactive learning'
-                      : 'Enable proactive learning'
-                  }
-                >
+                <button onClick={handleToggleLearning} className="cursor-pointer">
                   {settings.learning_enabled ? (
                     <ToggleRight className="h-8 w-8 text-primary" />
                   ) : (
@@ -256,11 +342,10 @@ export default function PreferencesPage() {
             </div>
           )}
 
-          {/* Pending conversations */}
           {conversations.length > 0 && (
             <section aria-labelledby="conversations-heading">
               <h2 id="conversations-heading" className="text-base font-semibold mb-3">
-                Pending Questions
+                {t('preferences.pending-questions')}
                 <span className="ml-2 text-xs bg-primary/10 text-primary rounded-full px-2 py-0.5">
                   {conversations.length}
                 </span>
@@ -273,42 +358,41 @@ export default function PreferencesPage() {
             </section>
           )}
 
-          {conversations.length === 0 && settings?.learning_enabled && (
+          {!isNewUser && conversations.length === 0 && settings?.learning_enabled && (
             <div className="rounded-xl border bg-card p-5 text-center text-sm text-muted-foreground">
-              No pending questions. The system will ask when it detects interest changes.
+              {t('preferences.no-pending')}
             </div>
           )}
 
-          {/* Category weights */}
-          <section aria-labelledby="weights-heading">
-            <button
-              className="flex items-center gap-2 text-base font-semibold mb-3 cursor-pointer hover:text-primary transition-colors"
-              onClick={() => setShowWeights((v) => !v)}
-              aria-expanded={showWeights}
-              id="weights-heading"
-            >
-              Interest Weights
-              {showWeights ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </button>
-
-            {showWeights && (
-              <div className="rounded-xl border bg-card p-5 shadow-sm space-y-3">
-                {hasWeights ? (
-                  Object.entries(weights)
-                    .sort(([, a], [, b]) => b - a)
-                    .map(([cat, w]) => <WeightBar key={cat} label={cat} value={w} />)
+          {!isNewUser && (
+            <section aria-labelledby="weights-heading">
+              <button
+                className="flex items-center gap-2 text-base font-semibold mb-3 cursor-pointer hover:text-primary transition-colors"
+                onClick={() => setShowWeights((v) => !v)}
+                aria-expanded={showWeights}
+                id="weights-heading"
+              >
+                {t('preferences.interest-weights')}
+                {showWeights ? (
+                  <ChevronUp className="h-4 w-4" />
                 ) : (
-                  <p className="text-sm text-muted-foreground">
-                    No preference data yet. Start reading and rating articles to build your profile.
-                  </p>
+                  <ChevronDown className="h-4 w-4" />
                 )}
-              </div>
-            )}
-          </section>
+              </button>
+
+              {showWeights && (
+                <div className="rounded-xl border bg-card p-5 shadow-sm space-y-3">
+                  {hasWeights ? (
+                    Object.entries(weights)
+                      .sort(([, a], [, b]) => b - a)
+                      .map(([cat, w]) => <WeightBar key={cat} label={cat} value={w} />)
+                  ) : (
+                    <p className="text-sm text-muted-foreground">{t('preferences.no-weights')}</p>
+                  )}
+                </div>
+              )}
+            </section>
+          )}
         </div>
       )}
     </main>

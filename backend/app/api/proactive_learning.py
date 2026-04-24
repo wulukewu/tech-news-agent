@@ -49,6 +49,10 @@ class BehaviorEventRequest(BaseModel):
     duration_seconds: int | None = None
 
 
+class OnboardingRequest(BaseModel):
+    selected_categories: list[str]
+
+
 # ── Endpoints ────────────────────────────────────────────────────────────────
 
 
@@ -57,7 +61,7 @@ async def get_pending_conversations(
     current_user: dict[str, Any] = Depends(get_current_user),
 ):
     """Return all pending learning conversations for the current user."""
-    user_id = str(current_user["id"])
+    user_id = str(current_user["user_id"])
     mgr = ConversationManager()
     conversations = await mgr.get_pending_conversations(user_id)
     return success_response({"conversations": conversations, "count": len(conversations)})
@@ -73,7 +77,7 @@ async def respond_to_conversation(
     Submit user response to a learning conversation.
     Processes feedback and updates preference weights.
     """
-    user_id = str(current_user["id"])
+    user_id = str(current_user["user_id"])
 
     # Fetch conversation to get question + context
     from app.services.supabase_service import SupabaseService
@@ -134,7 +138,7 @@ async def get_preferences(
     current_user: dict[str, Any] = Depends(get_current_user),
 ):
     """Return the current preference model for the user."""
-    user_id = str(current_user["id"])
+    user_id = str(current_user["user_id"])
     model = PreferenceModel()
     prefs = await model.get(user_id)
     return success_response(prefs)
@@ -146,7 +150,7 @@ async def update_preferences(
     current_user: dict[str, Any] = Depends(get_current_user),
 ):
     """Manually set category weights."""
-    user_id = str(current_user["id"])
+    user_id = str(current_user["user_id"])
     if not body.category_weights:
         raise HTTPException(status_code=422, detail="category_weights required.")
     model = PreferenceModel()
@@ -160,7 +164,7 @@ async def get_settings(
     current_user: dict[str, Any] = Depends(get_current_user),
 ):
     """Return learning agent settings for the user."""
-    user_id = str(current_user["id"])
+    user_id = str(current_user["user_id"])
     model = PreferenceModel()
     prefs = await model.get(user_id)
     return success_response(
@@ -178,7 +182,7 @@ async def update_settings(
     current_user: dict[str, Any] = Depends(get_current_user),
 ):
     """Update learning agent settings (enabled, frequency)."""
-    user_id = str(current_user["id"])
+    user_id = str(current_user["user_id"])
     update: dict[str, Any] = {}
     if body.learning_enabled is not None:
         update["learning_enabled"] = body.learning_enabled
@@ -199,7 +203,7 @@ async def record_behavior_event(
     current_user: dict[str, Any] = Depends(get_current_user),
 ):
     """Record a user behavior event (read, rate, click, etc.)."""
-    user_id = str(current_user["id"])
+    user_id = str(current_user["user_id"])
     analyzer = BehaviorAnalyzer()
     await analyzer.record_event(
         user_id=user_id,
@@ -217,7 +221,7 @@ async def manual_trigger(
     current_user: dict[str, Any] = Depends(get_current_user),
 ):
     """Manually trigger behavior analysis and create a conversation if warranted."""
-    user_id = str(current_user["id"])
+    user_id = str(current_user["user_id"])
     trigger = LearningTrigger()
     should, context = await trigger.should_trigger(user_id)
     if not should:
@@ -227,3 +231,61 @@ async def manual_trigger(
     conv = await mgr.create_conversation(user_id, context)
     await trigger.increment_conversation_count(user_id)
     return success_response({"triggered": True, "conversation": conv})
+
+
+@router.post("/learning/onboarding")
+async def complete_onboarding(
+    body: OnboardingRequest,
+    current_user: dict[str, Any] = Depends(get_current_user),
+):
+    """
+    Initialize preference weights from user-selected categories.
+    Sets selected categories to 0.8, others to 0.3.
+    Also creates an initial learning conversation if none exist.
+    """
+    user_id = str(current_user["user_id"])
+
+    if not body.selected_categories:
+        raise HTTPException(status_code=422, detail="At least one category required.")
+
+    # Build initial weights
+    ALL_CATEGORIES = [
+        "AI/ML",
+        "Web Development",
+        "DevOps",
+        "Security",
+        "Cloud",
+        "Mobile",
+        "Data Science",
+        "Open Source",
+        "Startup",
+        "Hardware",
+    ]
+    weights: dict[str, float] = {}
+    for cat in ALL_CATEGORIES:
+        weights[cat] = 0.8 if cat in body.selected_categories else 0.3
+    for cat in body.selected_categories:
+        if cat not in weights:
+            weights[cat] = 0.8
+
+    model = PreferenceModel()
+    await model.set_weights(user_id, weights)
+
+    # Create initial conversation if none pending
+    mgr = ConversationManager()
+    existing = await mgr.get_pending_conversations(user_id)
+    initial_conv = None
+    if not existing:
+        context = {
+            "reason": "onboarding",
+            "selected_categories": body.selected_categories,
+        }
+        initial_conv = await mgr.create_conversation(user_id, context)
+
+    updated = await model.get(user_id)
+    return success_response(
+        {
+            "weights": updated.get("category_weights", {}),
+            "initial_conversation": initial_conv,
+        }
+    )

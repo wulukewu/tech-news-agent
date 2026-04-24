@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/lib/toast';
+import { useI18n } from '@/contexts/I18nContext';
 import {
   generateWeeklyInsights,
   getLatestInsights,
@@ -60,32 +61,38 @@ function TrendBar({ value, max }: { value: number; max: number }) {
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
 function ExecutiveSummaryCard({ report }: { report: InsightReport }) {
+  const { t } = useI18n();
   return (
     <div className="rounded-xl border bg-card p-5 shadow-sm">
-      <h2 className="text-lg font-semibold mb-2">Executive Summary</h2>
+      <h2 className="text-lg font-semibold mb-2">{t('insights.executive-summary')}</h2>
       <p className="text-sm text-muted-foreground leading-relaxed">{report.executive_summary}</p>
       <div className="mt-3 flex flex-wrap gap-4 text-xs text-muted-foreground">
         <span>
-          <strong className="text-foreground">{report.article_count}</strong> articles analysed
+          <strong className="text-foreground">{report.article_count}</strong>{' '}
+          {t('insights.articles-analysed', { count: report.article_count })}
         </span>
         <span>
-          Period: {formatDate(report.period_start)} – {formatDate(report.period_end)}
+          {t('insights.period', {
+            start: formatDate(report.period_start),
+            end: formatDate(report.period_end),
+          })}
         </span>
-        <span>Generated: {formatDate(report.created_at)}</span>
+        <span>{t('insights.generated', { date: formatDate(report.created_at) })}</span>
       </div>
     </div>
   );
 }
 
 function TrendsSection({ trends }: { trends: TrendItem[] }) {
-  const maxCount = Math.max(...trends.map((t) => t.current_count), 1);
-  const rising = trends.filter((t) => t.direction === 'rising');
-  const others = trends.filter((t) => t.direction !== 'rising');
+  const { t } = useI18n();
+  const maxCount = Math.max(...trends.map((tr) => tr.current_count), 1);
+  const rising = trends.filter((tr) => tr.direction === 'rising');
+  const others = trends.filter((tr) => tr.direction !== 'rising');
 
   return (
     <section aria-labelledby="trends-heading">
       <h2 id="trends-heading" className="text-lg font-semibold mb-3">
-        Technology Trends
+        {t('insights.trends-title')}
       </h2>
       <div className="space-y-2">
         {[...rising, ...others].slice(0, 15).map((trend) => (
@@ -98,7 +105,7 @@ function TrendsSection({ trends }: { trends: TrendItem[] }) {
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm font-medium truncate">{trend.name}</span>
                 <span className="text-xs text-muted-foreground ml-2 flex-shrink-0">
-                  {trend.current_count} mentions
+                  {t('insights.mentions', { count: trend.current_count })}
                 </span>
               </div>
               <TrendBar value={trend.current_count} max={maxCount} />
@@ -114,6 +121,7 @@ function TrendsSection({ trends }: { trends: TrendItem[] }) {
 }
 
 function ClusterCard({ cluster }: { cluster: ClusterItem }) {
+  const { t } = useI18n();
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -126,7 +134,7 @@ function ClusterCard({ cluster }: { cluster: ClusterItem }) {
         <div className="flex items-center gap-3">
           <span className="font-semibold">{cluster.name}</span>
           <span className="text-xs bg-primary/10 text-primary rounded-full px-2 py-0.5">
-            {cluster.article_count} articles
+            {t('insights.articles-count', { count: cluster.article_count })}
           </span>
         </div>
         {expanded ? (
@@ -178,10 +186,11 @@ function HistoryList({
   items: InsightHistoryItem[];
   onSelect: (id: string) => void;
 }) {
+  const { t } = useI18n();
   return (
     <section aria-labelledby="history-heading">
       <h2 id="history-heading" className="text-lg font-semibold mb-3">
-        Report History
+        {t('insights.history-title')}
       </h2>
       <ul className="space-y-2">
         {items.map((item) => (
@@ -194,7 +203,9 @@ function HistoryList({
                 <span className="text-sm font-medium">
                   {formatDate(item.period_start)} – {formatDate(item.period_end)}
                 </span>
-                <span className="text-xs text-muted-foreground">{item.article_count} articles</span>
+                <span className="text-xs text-muted-foreground">
+                  {t('insights.articles-count', { count: item.article_count })}
+                </span>
               </div>
               <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
                 {item.executive_summary}
@@ -210,6 +221,7 @@ function HistoryList({
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function InsightsPage() {
+  const { t } = useI18n();
   const [report, setReport] = useState<InsightReport | null>(null);
   const [history, setHistory] = useState<InsightHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -222,11 +234,11 @@ export default function InsightsPage() {
       setReport(latest);
       setHistory(hist.reports);
     } catch {
-      toast.error('Failed to load insights.');
+      toast.error(t('insights.load-failed'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadLatest();
@@ -237,12 +249,17 @@ export default function InsightsPage() {
     try {
       const newReport = await generateWeeklyInsights();
       setReport(newReport);
-      toast.success('Weekly insights generated!');
-      // Refresh history
+      toast.success(t('insights.generate'));
       const hist = await getInsightsHistory(1, 5);
       setHistory(hist.reports);
     } catch {
-      toast.error('Failed to generate insights. Please try again.');
+      toast.error(t('insights.generate-failed'));
+      try {
+        const latest = await getLatestInsights();
+        if (latest) setReport(latest);
+      } catch {
+        /* ignore */
+      }
     } finally {
       setGenerating(false);
     }
@@ -255,31 +272,23 @@ export default function InsightsPage() {
       setReport(r);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch {
-      toast.error('Failed to load report.');
+      toast.error(t('insights.load-failed'));
     }
   };
 
   return (
     <main id="main-content" className="container mx-auto px-4 py-6 max-w-4xl">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Weekly Insights</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            AI-powered analysis of this week&apos;s tech articles
-          </p>
+          <h1 className="text-2xl font-bold">{t('insights.title')}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t('insights.description')}</p>
         </div>
-        <Button
-          onClick={handleGenerate}
-          disabled={generating}
-          className="cursor-pointer"
-          aria-label="Generate new weekly insights report"
-        >
+        <Button onClick={handleGenerate} disabled={generating} className="cursor-pointer">
           <RefreshCw
             className={`h-4 w-4 mr-2 ${generating ? 'animate-spin' : ''}`}
             aria-hidden="true"
           />
-          {generating ? 'Generating…' : 'Generate Report'}
+          {generating ? t('insights.generating') : t('insights.generate')}
         </Button>
       </div>
 
@@ -298,7 +307,7 @@ export default function InsightsPage() {
           {report.clusters.length > 0 && (
             <section aria-labelledby="clusters-heading">
               <h2 id="clusters-heading" className="text-lg font-semibold mb-3">
-                Theme Clusters
+                {t('insights.clusters-title')}
               </h2>
               <div className="space-y-2">
                 {report.clusters.map((cluster) => (
@@ -311,7 +320,7 @@ export default function InsightsPage() {
           {report.missed_articles.length > 0 && (
             <section aria-labelledby="missed-heading">
               <h2 id="missed-heading" className="text-lg font-semibold mb-3">
-                You Might Have Missed
+                {t('insights.missed-title')}
               </h2>
               <ul className="space-y-2">
                 {report.missed_articles.map((a) => (
@@ -326,7 +335,7 @@ export default function InsightsPage() {
                       <span>{a.title}</span>
                     </a>
                     <span className="text-xs text-muted-foreground mt-1 block">
-                      Tinkering index: {a.tinkering_index}
+                      {t('insights.tinkering-index', { value: a.tinkering_index })}
                     </span>
                   </li>
                 ))}
@@ -338,13 +347,14 @@ export default function InsightsPage() {
         </div>
       ) : (
         <div className="text-center py-16 text-muted-foreground">
-          <p className="text-lg mb-4">No insights report yet.</p>
+          <p className="text-lg mb-2">{t('insights.no-report')}</p>
+          <p className="text-sm mb-6">{t('insights.no-report-description')}</p>
           <Button onClick={handleGenerate} disabled={generating} className="cursor-pointer">
             <RefreshCw
               className={`h-4 w-4 mr-2 ${generating ? 'animate-spin' : ''}`}
               aria-hidden="true"
             />
-            {generating ? 'Generating…' : 'Generate First Report'}
+            {generating ? t('insights.generating') : t('insights.generate-first')}
           </Button>
         </div>
       )}

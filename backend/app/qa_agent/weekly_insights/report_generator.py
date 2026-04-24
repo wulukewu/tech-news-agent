@@ -67,6 +67,12 @@ class InsightReportGenerator:
         # 2. Analyze articles (extract themes/technologies)
         analyzed = await self.analyzer.analyze_articles(articles)
 
+        # Fallback: if LLM analysis yielded no themes at all, use keyword-based analysis
+        has_themes = any(a.get("themes") for a in analyzed)
+        if not has_themes:
+            logger.info("LLM analysis produced no themes, using keyword fallback")
+            analyzed = [self._keyword_analyze(a) for a in articles]
+
         # 3. Cluster themes
         clusters = self.clusterer.cluster(analyzed)
 
@@ -141,6 +147,81 @@ class InsightReportGenerator:
             f"Top themes: {themes_str}. "
             f"Rising trends: {trends_str}."
         )
+
+    def _keyword_analyze(self, article: dict[str, Any]) -> dict[str, Any]:
+        """
+        Fallback keyword-based analysis when LLM is unavailable.
+        Extracts themes/technologies from title + summary using simple keyword matching.
+        """
+        KEYWORD_MAP: dict[str, tuple[str, str]] = {
+            # (domain, theme)
+            "react": ("frontend", "React"),
+            "vue": ("frontend", "Vue"),
+            "angular": ("frontend", "Angular"),
+            "next.js": ("frontend", "Next.js"),
+            "typescript": ("frontend", "TypeScript"),
+            "javascript": ("frontend", "JavaScript"),
+            "css": ("frontend", "CSS"),
+            "python": ("backend", "Python"),
+            "rust": ("backend", "Rust"),
+            "go": ("backend", "Go"),
+            "java": ("backend", "Java"),
+            "node": ("backend", "Node.js"),
+            "fastapi": ("backend", "FastAPI"),
+            "django": ("backend", "Django"),
+            "docker": ("devops", "Docker"),
+            "kubernetes": ("devops", "Kubernetes"),
+            "ci/cd": ("devops", "CI/CD"),
+            "github": ("devops", "GitHub"),
+            "terraform": ("devops", "Terraform"),
+            "llm": ("ai_ml", "LLM"),
+            "gpt": ("ai_ml", "GPT"),
+            "openai": ("ai_ml", "OpenAI"),
+            "machine learning": ("ai_ml", "Machine Learning"),
+            "deep learning": ("ai_ml", "Deep Learning"),
+            "ai": ("ai_ml", "AI"),
+            "neural": ("ai_ml", "Neural Networks"),
+            "security": ("security", "Security"),
+            "vulnerability": ("security", "Security"),
+            "encryption": ("security", "Encryption"),
+            "aws": ("cloud", "AWS"),
+            "azure": ("cloud", "Azure"),
+            "gcp": ("cloud", "GCP"),
+            "cloud": ("cloud", "Cloud"),
+            "ios": ("mobile", "iOS"),
+            "android": ("mobile", "Android"),
+            "swift": ("mobile", "Swift"),
+            "flutter": ("mobile", "Flutter"),
+            "postgresql": ("database", "PostgreSQL"),
+            "mysql": ("database", "MySQL"),
+            "redis": ("database", "Redis"),
+            "mongodb": ("database", "MongoDB"),
+        }
+        text = ((article.get("title") or "") + " " + (article.get("ai_summary") or "")).lower()
+
+        themes: list[str] = []
+        technologies: list[str] = []
+        domain = "other"
+        keywords: list[str] = []
+
+        for kw, (dom, theme) in KEYWORD_MAP.items():
+            if kw in text:
+                if theme not in themes:
+                    themes.append(theme)
+                if theme not in technologies:
+                    technologies.append(theme)
+                if domain == "other":
+                    domain = dom
+                if kw not in keywords:
+                    keywords.append(kw)
+
+        return {
+            **article,
+            "themes": themes[:5],
+            "technologies": technologies[:5],
+            "domain": domain,
+            "keywords": keywords[:5],
+        }
 
     def _empty_report(self, start_date: datetime, end_date: datetime) -> dict[str, Any]:
         return {

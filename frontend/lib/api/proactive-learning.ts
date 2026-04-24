@@ -120,3 +120,28 @@ export async function triggerLearning(): Promise<{
   }>('/api/learning/trigger', {});
   return res.data.data;
 }
+
+/** Complete onboarding: set initial category weights and get first question. */
+export async function completeOnboarding(selectedCategories: string[]): Promise<{
+  weights: Record<string, number>;
+  initial_conversation: LearningConversation | null;
+}> {
+  const res = await apiClient.post<{
+    success: boolean;
+    data: { weights: Record<string, number>; initial_conversation: LearningConversation | null };
+  }>('/api/learning/onboarding', { selected_categories: selectedCategories });
+  return res.data.data;
+}
+
+export const ONBOARDING_CATEGORIES = [
+  'AI/ML',
+  'Web Development',
+  'DevOps',
+  'Security',
+  'Cloud',
+  'Mobile',
+  'Data Science',
+  'Open Source',
+  'Startup',
+  'Hardware',
+] as const;
