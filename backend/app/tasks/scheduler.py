@@ -516,6 +516,46 @@ async def weekly_insights_job():
         logger.error("Weekly insights job failed: %s", exc, exc_info=True)
 
 
+async def proactive_learning_job():
+    """
+    Scheduled job: run behavior analysis for all active users daily at 10:00.
+    Triggers learning conversations where warranted.
+    Requirements: 2.1
+    """
+    logger.info("Starting proactive learning behavior analysis job...")
+    try:
+        from app.qa_agent.proactive_learning.conversation_manager import ConversationManager
+        from app.qa_agent.proactive_learning.learning_trigger import LearningTrigger
+        from app.services.supabase_service import SupabaseService
+
+        supabase = SupabaseService()
+        # Fetch users who have learning enabled
+        resp = (
+            supabase.client.table("preference_model")
+            .select("user_id")
+            .eq("learning_enabled", True)
+            .execute()
+        )
+        user_rows = resp.data or []
+        trigger = LearningTrigger(supabase)
+        mgr = ConversationManager(supabase)
+
+        triggered = 0
+        for row in user_rows:
+            uid = row.get("user_id")
+            if not uid:
+                continue
+            should, context = await trigger.should_trigger(uid)
+            if should:
+                await mgr.create_conversation(uid, context)
+                await trigger.increment_conversation_count(uid)
+                triggered += 1
+
+        logger.info("Proactive learning job complete: %d conversations created", triggered)
+    except Exception as exc:
+        logger.error("Proactive learning job failed: %s", exc, exc_info=True)
+
+
 def setup_scheduler():
     """
     Register jobs to the scheduler with configurable CRON expression.
@@ -612,6 +652,18 @@ def setup_scheduler():
     )
     logger.info(
         f"Weekly insights job registered: Runs every Monday at 09:00 in timezone '{scheduler_tz}'"
+    )
+
+    # Register proactive learning behavior analysis job (daily at 10:00)
+    _scheduler.add_job(
+        proactive_learning_job,
+        trigger=CronTrigger(hour=10, minute=0, timezone=scheduler_tz),
+        id="proactive_learning",
+        name="Proactive Learning Behavior Analysis",
+        replace_existing=True,
+    )
+    logger.info(
+        f"Proactive learning job registered: Runs daily at 10:00 in timezone '{scheduler_tz}'"
     )
 
     # Log the configured schedule

@@ -16,6 +16,7 @@ import {
   Monitor,
   MessageSquare,
   Lightbulb,
+  Brain,
 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useUser } from '@/contexts/UserContext';
@@ -47,6 +48,7 @@ const mainNavItems: NavItem[] = [
 
 // Secondary items moved to user menu (Req 4.2)
 const secondaryNavItems: NavItem[] = [
+  { href: '/app/preferences', labelKey: 'nav.preferences', icon: Brain },
   { href: '/app/recommendations', labelKey: 'nav.recommendations', icon: Heart },
   { href: '/app/analytics', labelKey: 'nav.analytics', icon: BarChart3 },
   { href: '/app/settings', labelKey: 'nav.settings', icon: Settings },
