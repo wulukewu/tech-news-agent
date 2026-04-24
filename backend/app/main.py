@@ -71,20 +71,29 @@ async def lifespan(app: FastAPI):
 
     # 0. Initialize QA Agent Database Manager
     try:
-        # Try direct PostgreSQL connection first
-        try:
-            from app.qa_agent.database import get_database_manager
+        # Only attempt direct PostgreSQL if explicitly configured via DATABASE_URL or DATABASE_HOST.
+        # Without explicit config, the auto-derived db.<project>.supabase.co:5432 is blocked
+        # in most network environments (including Docker). Default to Supabase REST API.
+        use_direct_pg = bool(settings.database_url or settings.database_host)
 
-            logger.info("Initializing QA Agent database manager (PostgreSQL)...")
-            db_manager = await get_database_manager()
-            health = await db_manager.health_check()
-            if health["healthy"]:
-                logger.info("QA Agent database manager (PostgreSQL) initialized successfully.")
-            else:
-                raise Exception(f"PostgreSQL health check failed: {health}")
-        except Exception as pg_error:
-            logger.warning(f"PostgreSQL connection failed, trying Supabase REST API: {pg_error}")
-            # Fallback to Supabase REST API
+        if use_direct_pg:
+            try:
+                from app.qa_agent.database import get_database_manager
+
+                logger.info("Initializing QA Agent database manager (PostgreSQL)...")
+                db_manager = await get_database_manager()
+                health = await db_manager.health_check()
+                if health["healthy"]:
+                    logger.info("QA Agent database manager (PostgreSQL) initialized successfully.")
+                else:
+                    raise Exception(f"PostgreSQL health check failed: {health}")
+            except Exception as pg_error:
+                logger.warning(
+                    f"PostgreSQL connection failed, falling back to Supabase REST API: {pg_error}"
+                )
+                use_direct_pg = False
+
+        if not use_direct_pg:
             from app.qa_agent.supabase_database import get_supabase_database_manager
 
             logger.info("Initializing QA Agent database manager (Supabase REST API)...")
