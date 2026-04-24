@@ -31,7 +31,7 @@ const Switch = React.forwardRef<
       // Base styles - switch track is 44x24px
       'peer inline-flex h-6 w-11 shrink-0 items-center rounded-full border-2 border-transparent',
       // Touch target - minimum 44x44px clickable area
-      'min-h-44 min-w-44',
+      'relative',
       // Focus indicator - 2px ring with primary color (Req 15.3)
       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background',
       // States - clear visual distinction between on/off

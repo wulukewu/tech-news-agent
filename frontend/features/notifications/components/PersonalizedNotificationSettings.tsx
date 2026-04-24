@@ -228,38 +228,38 @@ export function PersonalizedNotificationSettings({
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Clock className="h-5 w-5 text-blue-600" />
+              <Clock className="h-5 w-5 text-muted-foreground" />
               <div>
                 <CardTitle>個人化通知設定</CardTitle>
                 <CardDescription>自訂您的通知頻率、時間和偏好</CardDescription>
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-sm">
               {statusLoading ? (
-                <div className="flex items-center gap-2 text-blue-500">
+                <span className="text-muted-foreground flex items-center gap-1.5">
                   <LoadingSpinner size="sm" />
-                  <span className="text-sm font-medium">檢查中...</span>
-                </div>
+                  檢查中...
+                </span>
               ) : statusError ? (
-                <div className="flex items-center gap-2 text-yellow-500">
+                <span className="text-yellow-600 dark:text-yellow-400 flex items-center gap-1.5">
                   <AlertCircle className="h-4 w-4" />
-                  <span className="text-sm font-medium">狀態未知</span>
-                </div>
+                  狀態未知
+                </span>
               ) : status?.scheduled ? (
-                <div className="flex items-center gap-2 text-green-600">
+                <span className="text-green-600 dark:text-green-400 flex items-center gap-1.5">
                   <CheckCircle className="h-4 w-4" />
-                  <span className="text-sm font-medium">已排程</span>
-                </div>
+                  已排程
+                </span>
               ) : preferences.frequency === 'disabled' || !preferences.dmEnabled ? (
-                <div className="flex items-center gap-2 text-gray-500">
+                <span className="text-muted-foreground flex items-center gap-1.5">
                   <AlertCircle className="h-4 w-4" />
-                  <span className="text-sm font-medium">已停用</span>
-                </div>
+                  已停用
+                </span>
               ) : (
-                <div className="flex items-center gap-2 text-orange-500">
+                <span className="text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
                   <AlertCircle className="h-4 w-4" />
-                  <span className="text-sm font-medium">未排程</span>
-                </div>
+                  未排程
+                </span>
               )}
             </div>
           </div>
@@ -272,19 +272,15 @@ export function PersonalizedNotificationSettings({
           <CardTitle>通知管道</CardTitle>
           <CardDescription>選擇您希望接收通知的方式</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
+        <CardContent className="divide-y">
+          <div className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
             <div className="flex items-center gap-3">
-              <MessageSquare
-                className={`h-5 w-5 ${
-                  preferences.dmEnabled ? 'text-green-600' : 'text-muted-foreground'
-                }`}
-              />
+              <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <div>
-                <Label htmlFor="dm-enabled" className="font-medium">
+                <Label htmlFor="dm-enabled" className="font-medium cursor-pointer">
                   Discord 私訊
                 </Label>
-                <p className="text-sm text-muted-foreground">透過 Discord 私訊接收通知</p>
+                <p className="text-xs text-muted-foreground mt-0.5">透過 Discord 私訊接收通知</p>
               </div>
             </div>
             <Switch
@@ -295,89 +291,79 @@ export function PersonalizedNotificationSettings({
             />
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
             <div className="flex items-center gap-3">
-              <Mail className="h-5 w-5 text-muted-foreground" />
+              <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <div>
-                <Label htmlFor="email-enabled" className="font-medium">
-                  電子郵件
-                  <span className="ml-2 text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="email-enabled" className="font-medium">
+                    電子郵件
+                  </Label>
+                  <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
                     即將推出
                   </span>
-                </Label>
-                <p className="text-sm text-muted-foreground">透過電子郵件接收通知</p>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">透過電子郵件接收通知</p>
               </div>
             </div>
             <Switch
               id="email-enabled"
               checked={preferences.emailEnabled}
               onCheckedChange={(checked) => handleUpdate({ emailEnabled: checked })}
-              disabled={true} // Disabled until email functionality is implemented
+              disabled={true}
             />
           </div>
 
-          <div className="pt-4 border-t">
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={async () => {
-                  try {
-                    const { sendTestNotification } = await import('@/lib/api/notifications');
-                    await sendTestNotification();
-                    toast.success('✅ 測試通知已發送！請檢查您的Discord私訊。');
-                  } catch (error: any) {
-                    console.error('Test notification failed:', error);
-
-                    // 提供更詳細的錯誤信息
-                    if (error?.response?.status === 400) {
-                      toast.error('❌ 通知設定有誤，請檢查您的設定');
-                    } else if (error?.response?.status === 500) {
-                      toast.error('❌ 服務器錯誤，請稍後再試');
-                    } else if (error?.message?.includes('Network')) {
-                      toast.error('❌ 網絡連接錯誤，請檢查網絡');
-                    } else {
-                      toast.error('❌ 發送失敗，請稍後再試');
-                    }
+          <div className="pt-3 flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                try {
+                  const { sendTestNotification } = await import('@/lib/api/notifications');
+                  await sendTestNotification();
+                  toast.success('✅ 測試通知已發送！請檢查您的Discord私訊。');
+                } catch (error: any) {
+                  if (error?.response?.status === 400) {
+                    toast.error('❌ 通知設定有誤，請檢查您的設定');
+                  } else {
+                    toast.error('❌ 發送失敗，請稍後再試');
                   }
-                }}
-                disabled={isSaving || !preferences.dmEnabled}
-                className="flex-1"
-              >
-                <MessageSquare className="mr-2 h-4 w-4" />
-                發送測試通知
-              </Button>
+                }
+              }}
+              disabled={isSaving || !preferences.dmEnabled}
+            >
+              <MessageSquare className="mr-2 h-4 w-4" />
+              發送測試通知
+            </Button>
 
-              {!status?.scheduled &&
-                preferences.frequency !== 'disabled' &&
-                preferences.dmEnabled && (
-                  <Button
-                    variant="outline"
-                    onClick={async () => {
-                      try {
-                        const { rescheduleUserNotification } = await import(
-                          '@/lib/api/notifications'
-                        );
-                        const result = await rescheduleUserNotification();
-
-                        if (result.success) {
-                          toast.success(result.message);
-                          // Refresh status
-                          queryClient.invalidateQueries({ queryKey: ['notificationStatus'] });
-                        } else {
-                          toast.error(result.message);
-                        }
-                      } catch (error) {
-                        toast.error('重新排程失敗，請稍後再試');
+            {!status?.scheduled &&
+              preferences.frequency !== 'disabled' &&
+              preferences.dmEnabled && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={async () => {
+                    try {
+                      const { rescheduleUserNotification } =
+                        await import('@/lib/api/notifications');
+                      const result = await rescheduleUserNotification();
+                      if (result.success) {
+                        toast.success(result.message);
+                        queryClient.invalidateQueries({ queryKey: ['notificationStatus'] });
+                      } else {
+                        toast.error(result.message);
                       }
-                    }}
-                    disabled={isSaving}
-                    className="flex-1"
-                  >
-                    <Clock className="mr-2 h-4 w-4" />
-                    重新排程
-                  </Button>
-                )}
-            </div>
+                    } catch {
+                      toast.error('重新排程失敗，請稍後再試');
+                    }
+                  }}
+                  disabled={isSaving}
+                >
+                  <Clock className="mr-2 h-4 w-4" />
+                  重新排程
+                </Button>
+              )}
           </div>
         </CardContent>
       </Card>

@@ -161,33 +161,33 @@ export function QuietHoursSettings({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Moon className="h-5 w-5 text-purple-600" />
+            <Moon className="h-5 w-5 text-muted-foreground" />
             <div>
               <CardTitle>勿擾時段</CardTitle>
               <CardDescription>設定您不希望接收通知的時段</CardDescription>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-sm">
             {statusLoading ? (
-              <div className="flex items-center gap-2 text-blue-500">
+              <span className="text-muted-foreground flex items-center gap-1.5">
                 <LoadingSpinner size="sm" />
-                <span className="text-sm font-medium">檢查中...</span>
-              </div>
+                檢查中...
+              </span>
             ) : status?.is_in_quiet_hours ? (
-              <div className="flex items-center gap-2 text-orange-500">
+              <span className="text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
                 <Moon className="h-4 w-4" />
-                <span className="text-sm font-medium">勿擾中</span>
-              </div>
+                勿擾中
+              </span>
             ) : quietHours.enabled ? (
-              <div className="flex items-center gap-2 text-green-600">
+              <span className="text-green-600 dark:text-green-400 flex items-center gap-1.5">
                 <CheckCircle className="h-4 w-4" />
-                <span className="text-sm font-medium">已啟用</span>
-              </div>
+                已啟用
+              </span>
             ) : (
-              <div className="flex items-center gap-2 text-gray-500">
+              <span className="text-muted-foreground flex items-center gap-1.5">
                 <AlertCircle className="h-4 w-4" />
-                <span className="text-sm font-medium">已停用</span>
-              </div>
+                已停用
+              </span>
             )}
           </div>
         </div>
@@ -306,8 +306,8 @@ export function QuietHoursSettings({
             )}
 
             {/* Preview */}
-            <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
-              <p className="text-sm text-blue-700 dark:text-blue-300">
+            <div className="p-3 bg-muted rounded-lg">
+              <p className="text-sm text-muted-foreground">
                 通知將在 {formatTime(quietHours.start_time)} 至 {formatTime(quietHours.end_time)}{' '}
                 期間暫停
                 {quietHours.weekdays.length < 7 && (

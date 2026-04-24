@@ -20,6 +20,44 @@ import { FeedSearch } from '@/features/subscriptions/components/FeedSearch';
 import type { OPMLOutline } from '@/features/subscriptions/utils/opml';
 import { useI18n } from '@/contexts/I18nContext';
 
+/** Reusable health stats grid — avoids duplication across tabs */
+function HealthStatsGrid({ feeds, subscribed }: { feeds: Feed[]; subscribed?: boolean }) {
+  const { t } = useI18n();
+  const filtered = subscribed ? feeds.filter((f) => f.is_subscribed) : feeds;
+  const stats = [
+    { key: 'healthy', label: t('ui.health-healthy'), dot: 'bg-green-500' },
+    { key: 'warning', label: t('ui.health-stale'), dot: 'bg-yellow-500' },
+    { key: 'error', label: t('ui.health-error'), dot: 'bg-red-500' },
+    { key: 'unknown', label: t('ui.health-unknown'), dot: 'bg-muted-foreground' },
+  ] as const;
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      {stats.map(({ key, label, dot }) => (
+        <Card key={key}>
+          <CardContent className="p-3">
+            <div className="flex items-center gap-2">
+              <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${dot}`} />
+              <div className="min-w-0">
+                <div className="text-xs text-muted-foreground truncate">{label}</div>
+                <div className="text-lg font-semibold tabular-nums">
+                  {
+                    filtered.filter((f) =>
+                      key === 'unknown'
+                        ? f.health_status === 'unknown' || !f.health_status
+                        : f.health_status === key
+                    ).length
+                  }
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
 export default function SubscriptionsPage() {
   const { isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
@@ -389,482 +427,307 @@ export default function SubscriptionsPage() {
     feeds.reduce((sum, feed) => sum + (feed.average_tinkering_index || 0), 0) / feeds.length || 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted p-4">
-      <div className="max-w-6xl mx-auto py-8">
-        <div className="mb-8">
-          <Button
-            variant="outline"
-            onClick={() => router.push('/dashboard/articles')}
-            className="mb-4"
-          >
-            ← {t('subscriptions.back-to-dashboard')}
-          </Button>
+    <div className="max-w-6xl mx-auto py-6 space-y-6">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-3xl font-bold">{t('subscriptions.title')}</h1>
+        <p className="text-muted-foreground">
+          {t('subscriptions.description', {
+            subscribed: totalSubscribed,
+            total: (feeds || []).length,
+          })}
+        </p>
+      </div>
 
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold">{t('subscriptions.title')}</h1>
-                <p className="text-muted-foreground mt-2">
-                  {t('subscriptions.description', {
-                    subscribed: totalSubscribed,
-                    total: (feeds || []).length,
-                  })}
-                </p>
-              </div>
-            </div>
+      <Tabs
+        value={currentTab}
+        onValueChange={(value) => setCurrentTab(value as 'subscriptions' | 'explore')}
+      >
+        <TabsList>
+          <TabsTrigger value="subscriptions">{t('subscriptions.my-subscriptions')}</TabsTrigger>
+          <TabsTrigger value="explore">{t('subscriptions.explore')}</TabsTrigger>
+        </TabsList>
 
-            {/* Tabs */}
-            <Tabs
-              value={currentTab}
-              onValueChange={(value) => setCurrentTab(value as 'subscriptions' | 'explore')}
+        <TabsContent value="subscriptions" className="space-y-4 mt-4">
+          <FeedStatistics
+            totalArticles={totalArticles}
+            articlesThisWeek={totalArticlesThisWeek}
+            averageTinkeringIndex={avgTinkeringIndex}
+          />
+          <HealthStatsGrid feeds={feeds} subscribed />
+          <FeedSearch
+            feeds={feeds.filter((f) => f.is_subscribed)}
+            onFilteredFeedsChange={handleFilteredFeedsChange}
+          />
+        </TabsContent>
+
+        <TabsContent value="explore" className="space-y-4 mt-4">
+          <FeedStatistics
+            totalArticles={totalArticles}
+            articlesThisWeek={totalArticlesThisWeek}
+            averageTinkeringIndex={avgTinkeringIndex}
+          />
+          <HealthStatsGrid feeds={feeds} />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="default"
+              onClick={handleSubscribeRecommended}
+              disabled={allRecommendedSubscribed || toggling.size > 0}
+              className="gap-2"
             >
-              <TabsList>
-                <TabsTrigger value="subscriptions">
-                  {t('subscriptions.my-subscriptions')}
-                </TabsTrigger>
-                <TabsTrigger value="explore">{t('subscriptions.explore')}</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="subscriptions" className="space-y-4 mt-4">
-                {/* Overall Statistics */}
-                <FeedStatistics
-                  totalArticles={totalArticles}
-                  articlesThisWeek={totalArticlesThisWeek}
-                  averageTinkeringIndex={avgTinkeringIndex}
+              <Star className="w-4 h-4" />
+              {t('subscriptions.subscribe-all-recommended')}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleToggleAll(true)}
+              disabled={allSubscribed || toggling.size > 0}
+            >
+              {t('subscriptions.subscribe-all')}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleToggleAll(false)}
+              disabled={noneSubscribed || toggling.size > 0}
+            >
+              {t('subscriptions.unsubscribe-all')}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleRetryFailedFeeds}
+              disabled={
+                feeds.filter((f) => f.health_status === 'error').length === 0 || toggling.size > 0
+              }
+              className="gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
                 />
-
-                {/* Health Statistics Summary */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <Card className="border-green-200 dark:border-green-800">
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                        <div>
-                          <div className="text-xs text-muted-foreground">
-                            {t('ui.health-healthy')}
-                          </div>
-                          <div className="text-lg font-semibold text-green-600 dark:text-green-400">
-                            {
-                              feeds.filter((f) => f.is_subscribed && f.health_status === 'healthy')
-                                .length
-                            }
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-yellow-200 dark:border-yellow-800">
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                        <div>
-                          <div className="text-xs text-muted-foreground">
-                            {t('ui.health-stale')}
-                          </div>
-                          <div className="text-lg font-semibold text-yellow-600 dark:text-yellow-400">
-                            {
-                              feeds.filter((f) => f.is_subscribed && f.health_status === 'warning')
-                                .length
-                            }
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-red-200 dark:border-red-800">
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                        <div>
-                          <div className="text-xs text-muted-foreground">
-                            {t('ui.health-error')}
-                          </div>
-                          <div className="text-lg font-semibold text-red-600 dark:text-red-400">
-                            {
-                              feeds.filter((f) => f.is_subscribed && f.health_status === 'error')
-                                .length
-                            }
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-gray-200 dark:border-gray-800">
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-gray-500"></div>
-                        <div>
-                          <div className="text-xs text-muted-foreground">
-                            {t('ui.health-unknown')}
-                          </div>
-                          <div className="text-lg font-semibold text-gray-600 dark:text-gray-400">
-                            {
-                              feeds.filter(
-                                (f) =>
-                                  f.is_subscribed &&
-                                  (f.health_status === 'unknown' || !f.health_status)
-                              ).length
-                            }
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Search Bar */}
-                <FeedSearch
-                  feeds={feeds.filter((f) => f.is_subscribed)}
-                  onFilteredFeedsChange={handleFilteredFeedsChange}
-                />
-              </TabsContent>
-
-              <TabsContent value="explore" className="space-y-4 mt-4">
-                {/* Overall Statistics */}
-                <FeedStatistics
-                  totalArticles={totalArticles}
-                  articlesThisWeek={totalArticlesThisWeek}
-                  averageTinkeringIndex={avgTinkeringIndex}
-                />
-
-                {/* Health Statistics Summary */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <Card className="border-green-200 dark:border-green-800">
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                        <div>
-                          <div className="text-xs text-muted-foreground">
-                            {t('ui.health-healthy')}
-                          </div>
-                          <div className="text-lg font-semibold text-green-600 dark:text-green-400">
-                            {feeds.filter((f) => f.health_status === 'healthy').length}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-yellow-200 dark:border-yellow-800">
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                        <div>
-                          <div className="text-xs text-muted-foreground">
-                            {t('ui.health-stale')}
-                          </div>
-                          <div className="text-lg font-semibold text-yellow-600 dark:text-yellow-400">
-                            {feeds.filter((f) => f.health_status === 'warning').length}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-red-200 dark:border-red-800">
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                        <div>
-                          <div className="text-xs text-muted-foreground">
-                            {t('ui.health-error')}
-                          </div>
-                          <div className="text-lg font-semibold text-red-600 dark:text-red-400">
-                            {feeds.filter((f) => f.health_status === 'error').length}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-gray-200 dark:border-gray-800">
-                    <CardContent className="p-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-gray-500"></div>
-                        <div>
-                          <div className="text-xs text-muted-foreground">
-                            {t('ui.health-unknown')}
-                          </div>
-                          <div className="text-lg font-semibold text-gray-600 dark:text-gray-400">
-                            {
-                              feeds.filter((f) => f.health_status === 'unknown' || !f.health_status)
-                                .length
-                            }
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Action Bar */}
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    variant="default"
-                    onClick={handleSubscribeRecommended}
-                    disabled={allRecommendedSubscribed || toggling.size > 0}
-                    className="gap-2"
-                  >
-                    <Star className="w-4 h-4" />
-                    {t('subscriptions.subscribe-all-recommended')}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleToggleAll(true)}
-                    disabled={allSubscribed || toggling.size > 0}
-                  >
-                    {t('subscriptions.subscribe-all')}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={() => handleToggleAll(false)}
-                    disabled={noneSubscribed || toggling.size > 0}
-                  >
-                    {t('subscriptions.unsubscribe-all')}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    onClick={handleRetryFailedFeeds}
-                    disabled={
-                      feeds.filter((f) => f.health_status === 'error').length === 0 ||
-                      toggling.size > 0
-                    }
-                    className="gap-2"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                      />
-                    </svg>
-                    {t('subscriptions.retry-failed')}
-                  </Button>
-
-                  <div className="flex-1" />
-
-                  <AddCustomFeedDialog
-                    onAddFeed={handleAddCustomFeed}
-                    onPreviewFeed={handlePreviewFeed}
-                  />
-
-                  <OPMLImportExport feeds={feeds} onImport={handleOPMLImport} />
-                </div>
-
-                {/* Search Bar */}
-                <FeedSearch feeds={feeds} onFilteredFeedsChange={handleFilteredFeedsChange} />
-              </TabsContent>
-            </Tabs>
+              </svg>
+              {t('subscriptions.retry-failed')}
+            </Button>
+            <div className="flex-1" />
+            <AddCustomFeedDialog
+              onAddFeed={handleAddCustomFeed}
+              onPreviewFeed={handlePreviewFeed}
+            />
+            <OPMLImportExport feeds={feeds} onImport={handleOPMLImport} />
           </div>
+          <FeedSearch feeds={feeds} onFilteredFeedsChange={handleFilteredFeedsChange} />
+        </TabsContent>
+      </Tabs>
+
+      {error && (
+        <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive text-sm">
+          {error}
         </div>
+      )}
 
-        {error && (
-          <div className="mb-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive">
-            {error}
-          </div>
-        )}
+      <div className="space-y-4">
+        {sortedCategories.map((category) => {
+          const categoryFeeds = feedsByCategory[category];
+          const subscribedCount = categoryFeeds.filter((f) => f.is_subscribed).length;
+          const allCategorySubscribed = subscribedCount === categoryFeeds.length;
+          const noneCategorySubscribed = subscribedCount === 0;
+          const isCollapsed = collapsedCategories.has(category);
+          const hasRecommended = categoryFeeds.some((f) => f.is_recommended);
 
-        <div className="space-y-6">
-          {sortedCategories.map((category) => {
-            const categoryFeeds = feedsByCategory[category];
-            const subscribedCount = categoryFeeds.filter((f) => f.is_subscribed).length;
-            const allCategorySubscribed = subscribedCount === categoryFeeds.length;
-            const noneCategorySubscribed = subscribedCount === 0;
-            const isCollapsed = collapsedCategories.has(category);
-            const hasRecommended = categoryFeeds.some((f) => f.is_recommended);
-
-            return (
-              <Card key={category}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <button
-                      onClick={() => toggleCategoryCollapse(category)}
-                      className="flex items-center gap-2 flex-1 text-left hover:opacity-80 transition-opacity"
-                    >
-                      {isCollapsed ? (
-                        <ChevronRight className="w-5 h-5" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5" />
-                      )}
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <CardTitle>{category}</CardTitle>
-                          {hasRecommended && (
-                            <Badge variant="secondary" className="gap-1">
-                              <Star className="w-3 h-3" />
-                              {t('ui.recommended')}
-                            </Badge>
-                          )}
-                        </div>
-                        <CardDescription>
-                          {subscribedCount} / {categoryFeeds.length}{' '}
-                          {t('subscriptions.subscribed-simple')}
-                        </CardDescription>
-                      </div>
-                    </button>
-                    {!isCollapsed && (
-                      <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleCategoryToggle(category, true)}
-                          disabled={allCategorySubscribed || toggling.size > 0}
-                        >
-                          {t('ui.select-all')}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleCategoryToggle(category, false)}
-                          disabled={noneCategorySubscribed || toggling.size > 0}
-                        >
-                          {t('ui.deselect-all')}
-                        </Button>
-                      </div>
+          return (
+            <Card key={category}>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => toggleCategoryCollapse(category)}
+                    className="flex items-center gap-2 flex-1 text-left hover:opacity-80 transition-opacity"
+                  >
+                    {isCollapsed ? (
+                      <ChevronRight className="w-5 h-5" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5" />
                     )}
-                  </div>
-                </CardHeader>
-                {!isCollapsed && (
-                  <CardContent className="animate-in slide-in-from-top-2 duration-300">
-                    <div className="space-y-3">
-                      {categoryFeeds.map((feed) => (
-                        <div
-                          key={feed.id}
-                          className="flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-3 p-4 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-muted"
-                        >
-                          <div className="flex items-start space-x-3 flex-1">
-                            <Checkbox
-                              id={feed.id}
-                              checked={feed.is_subscribed}
-                              onCheckedChange={() => handleToggle(feed.id)}
-                              disabled={toggling.has(feed.id)}
-                              className="mt-1 flex-shrink-0"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <label htmlFor={feed.id} className="cursor-pointer block">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="font-medium">{feed.name}</span>
-                                  {feed.is_recommended && (
-                                    <Badge variant="outline" className="text-xs">
-                                      {t('ui.recommended')}
-                                    </Badge>
-                                  )}
-                                  {feed.tags && feed.tags.length > 0 && (
-                                    <>
-                                      {feed.tags.map((tag) => (
-                                        <Badge key={tag} variant="secondary" className="text-xs">
-                                          {tag}
-                                        </Badge>
-                                      ))}
-                                    </>
-                                  )}
-                                </div>
-                                {feed.description && (
-                                  <div className="text-sm text-muted-foreground mt-1">
-                                    {feed.description}
-                                  </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <CardTitle>{category}</CardTitle>
+                        {hasRecommended && (
+                          <Badge variant="secondary" className="gap-1">
+                            <Star className="w-3 h-3" />
+                            {t('ui.recommended')}
+                          </Badge>
+                        )}
+                      </div>
+                      <CardDescription>
+                        {subscribedCount} / {categoryFeeds.length}{' '}
+                        {t('subscriptions.subscribed-simple')}
+                      </CardDescription>
+                    </div>
+                  </button>
+                  {!isCollapsed && (
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleCategoryToggle(category, true)}
+                        disabled={allCategorySubscribed || toggling.size > 0}
+                      >
+                        {t('ui.select-all')}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleCategoryToggle(category, false)}
+                        disabled={noneCategorySubscribed || toggling.size > 0}
+                      >
+                        {t('ui.deselect-all')}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+              {!isCollapsed && (
+                <CardContent className="animate-in slide-in-from-top-2 duration-300">
+                  <div className="space-y-3">
+                    {categoryFeeds.map((feed) => (
+                      <div
+                        key={feed.id}
+                        className="flex flex-col sm:flex-row sm:items-start space-y-3 sm:space-y-0 sm:space-x-3 p-4 rounded-lg hover:bg-muted/50 transition-colors border border-transparent hover:border-muted"
+                      >
+                        <div className="flex items-start space-x-3 flex-1">
+                          <Checkbox
+                            id={feed.id}
+                            checked={feed.is_subscribed}
+                            onCheckedChange={() => handleToggle(feed.id)}
+                            disabled={toggling.has(feed.id)}
+                            className="mt-1 flex-shrink-0"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <label htmlFor={feed.id} className="cursor-pointer block">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-medium">{feed.name}</span>
+                                {feed.is_recommended && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {t('ui.recommended')}
+                                  </Badge>
                                 )}
-                                <div className="text-sm text-muted-foreground mt-1 break-all">
-                                  {feed.url}
-                                </div>
-                              </label>
-
-                              {/* Feed Health and Statistics - Stacked on mobile */}
-                              <div className="mt-3 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3">
-                                {feed.last_updated && (
-                                  <FeedHealthIndicator
-                                    lastUpdateTime={feed.last_updated}
-                                    status={feed.health_status || 'unknown'}
-                                    errorMessage={feed.error_message}
-                                  />
-                                )}
-
-                                {feed.is_subscribed && (
-                                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                                    <div className="flex flex-wrap gap-2">
-                                      {feed.total_articles !== undefined && (
-                                        <Badge variant="outline" className="text-xs">
-                                          {feed.total_articles} {t('ui.articles')}
-                                        </Badge>
-                                      )}
-                                      {feed.articles_this_week !== undefined && (
-                                        <Badge variant="outline" className="text-xs">
-                                          {t('ui.articles-this-week', {
-                                            count: feed.articles_this_week,
-                                          })}
-                                        </Badge>
-                                      )}
-                                      {feed.average_tinkering_index !== undefined && (
-                                        <Badge
-                                          variant="outline"
-                                          className="text-xs flex items-center gap-1"
-                                        >
-                                          <div className="flex">
-                                            {Array.from({ length: 5 }).map((_, i) => (
-                                              <Star
-                                                key={i}
-                                                className={`w-2.5 h-2.5 ${
-                                                  i < Math.floor(feed.average_tinkering_index!)
-                                                    ? 'fill-yellow-400 text-yellow-400'
-                                                    : 'text-gray-300'
-                                                }`}
-                                              />
-                                            ))}
-                                          </div>
-                                          {feed.average_tinkering_index.toFixed(1)}
-                                        </Badge>
-                                      )}
-                                    </div>
-
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() =>
-                                        toggleNotification(
-                                          feed.id,
-                                          feed.notification_enabled || false
-                                        )
-                                      }
-                                      className="h-7 gap-1 self-start sm:self-auto"
-                                    >
-                                      {feed.notification_enabled ? (
-                                        <>
-                                          <Bell className="w-3 h-3" />
-                                          <span className="text-xs">
-                                            {t('subscriptions.notification-enabled')}
-                                          </span>
-                                        </>
-                                      ) : (
-                                        <>
-                                          <BellOff className="w-3 h-3" />
-                                          <span className="text-xs">
-                                            {t('subscriptions.enable-notification')}
-                                          </span>
-                                        </>
-                                      )}
-                                    </Button>
-                                  </div>
+                                {feed.tags && feed.tags.length > 0 && (
+                                  <>
+                                    {feed.tags.map((tag) => (
+                                      <Badge key={tag} variant="secondary" className="text-xs">
+                                        {tag}
+                                      </Badge>
+                                    ))}
+                                  </>
                                 )}
                               </div>
+                              {feed.description && (
+                                <div className="text-sm text-muted-foreground mt-1">
+                                  {feed.description}
+                                </div>
+                              )}
+                              <div className="text-sm text-muted-foreground mt-1 break-all">
+                                {feed.url}
+                              </div>
+                            </label>
+
+                            {/* Feed Health and Statistics - Stacked on mobile */}
+                            <div className="mt-3 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3">
+                              {feed.last_updated && (
+                                <FeedHealthIndicator
+                                  lastUpdateTime={feed.last_updated}
+                                  status={feed.health_status || 'unknown'}
+                                  errorMessage={feed.error_message}
+                                />
+                              )}
+
+                              {feed.is_subscribed && (
+                                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                                  <div className="flex flex-wrap gap-2">
+                                    {feed.total_articles !== undefined && (
+                                      <Badge variant="outline" className="text-xs">
+                                        {feed.total_articles} {t('ui.articles')}
+                                      </Badge>
+                                    )}
+                                    {feed.articles_this_week !== undefined && (
+                                      <Badge variant="outline" className="text-xs">
+                                        {t('ui.articles-this-week', {
+                                          count: feed.articles_this_week,
+                                        })}
+                                      </Badge>
+                                    )}
+                                    {feed.average_tinkering_index !== undefined && (
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs flex items-center gap-1"
+                                      >
+                                        <div className="flex">
+                                          {Array.from({ length: 5 }).map((_, i) => (
+                                            <Star
+                                              key={i}
+                                              className={`w-2.5 h-2.5 ${
+                                                i < Math.floor(feed.average_tinkering_index!)
+                                                  ? 'fill-yellow-400 text-yellow-400'
+                                                  : 'text-gray-300'
+                                              }`}
+                                            />
+                                          ))}
+                                        </div>
+                                        {feed.average_tinkering_index.toFixed(1)}
+                                      </Badge>
+                                    )}
+                                  </div>
+
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() =>
+                                      toggleNotification(
+                                        feed.id,
+                                        feed.notification_enabled || false
+                                      )
+                                    }
+                                    className="h-7 gap-1 self-start sm:self-auto"
+                                  >
+                                    {feed.notification_enabled ? (
+                                      <>
+                                        <Bell className="w-3 h-3" />
+                                        <span className="text-xs">
+                                          {t('subscriptions.notification-enabled')}
+                                        </span>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <BellOff className="w-3 h-3" />
+                                        <span className="text-xs">
+                                          {t('subscriptions.enable-notification')}
+                                        </span>
+                                      </>
+                                    )}
+                                  </Button>
+                                </div>
+                              )}
                             </div>
                           </div>
-                          {toggling.has(feed.id) && (
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent flex-shrink-0 mt-1 self-start sm:self-auto" />
-                          )}
                         </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                )}
-              </Card>
-            );
-          })}
-        </div>
-
-        {filteredFeeds.length === 0 && !loading && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">{t('subscriptions.no-feeds-found')}</p>
-          </div>
-        )}
+                        {toggling.has(feed.id) && (
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent flex-shrink-0 mt-1 self-start sm:self-auto" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          );
+        })}
       </div>
+
+      {filteredFeeds.length === 0 && !loading && (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground">{t('subscriptions.no-feeds-found')}</p>
+        </div>
+      )}
     </div>
   );
 }

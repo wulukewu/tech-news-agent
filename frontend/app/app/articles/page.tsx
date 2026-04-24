@@ -145,144 +145,62 @@ function DashboardContent() {
         </TabsList>
 
         {/* Filters and Controls */}
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <div className="flex flex-wrap gap-2 items-center">
-            <CategoryFilter
-              categories={categories}
-              selectedCategories={selectedCategories}
-              onToggleCategory={toggleCategory}
-              onSelectAll={selectAllCategories}
-              onClearAll={deselectAllCategories}
-              loading={loadingCategories}
-            />
+        <div className="flex flex-wrap gap-2 items-center justify-between">
+          <CategoryFilter
+            categories={categories}
+            selectedCategories={selectedCategories}
+            onToggleCategory={toggleCategory}
+            onSelectAll={selectAllCategories}
+            onClearAll={deselectAllCategories}
+            loading={loadingCategories}
+          />
+          <div className="flex items-center gap-2 ml-auto flex-shrink-0">
             <SortSelector value={sortOption} onChange={setSortOption} />
+            <ViewModeSelector value={viewMode} onChange={setViewMode} />
           </div>
-          <ViewModeSelector value={viewMode} onChange={setViewMode} />
         </div>
 
-        <TabsContent value="all" className="mt-6">
-          {filteredArticles.length === 0 ? (
-            <EmptyState
-              searchQuery={searchQuery}
-              selectedCategoriesCount={selectedCategories.length}
-              onClearSearch={() => handleSearch('')}
-            />
-          ) : (
-            <>
-              <section aria-label={t('articles-page.article-list-aria')}>
-                <ArticleGrid articles={filteredArticles} />
-              </section>
+        {/* Shared article list content */}
+        {(['all', 'recommended', 'subscribed', 'saved'] as const).map((tab) => {
+          const ariaLabels = {
+            all: t('articles-page.article-list-aria'),
+            recommended: t('articles-page.recommended-aria'),
+            subscribed: t('articles-page.subscribed-aria'),
+            saved: t('articles-page.saved-aria'),
+          };
+          return (
+            <TabsContent key={tab} value={tab} className="mt-6">
+              {filteredArticles.length === 0 ? (
+                <EmptyState
+                  searchQuery={searchQuery}
+                  selectedCategoriesCount={selectedCategories.length}
+                  onClearSearch={() => handleSearch('')}
+                />
+              ) : (
+                <>
+                  <section aria-label={ariaLabels[tab]}>
+                    <ArticleGrid articles={filteredArticles} />
+                  </section>
 
-              {hasNextPage && <div ref={sentinelRef} className="h-px" aria-hidden="true" />}
+                  {hasNextPage && <div ref={sentinelRef} className="h-px" aria-hidden="true" />}
 
-              {loadingMore && (
-                <div className="flex justify-center py-8" role="status" aria-live="polite">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                  <span className="sr-only">{t('articles-page.loading-more-sr')}</span>
-                </div>
+                  {loadingMore && (
+                    <div className="flex justify-center py-8" role="status" aria-live="polite">
+                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                      <span className="sr-only">{t('articles-page.loading-more-sr')}</span>
+                    </div>
+                  )}
+
+                  {!hasNextPage && filteredArticles.length > 0 && (
+                    <div className="text-center py-8 text-muted-foreground" role="status">
+                      {t('articles-page.no-more-articles')}
+                    </div>
+                  )}
+                </>
               )}
-
-              {!hasNextPage && filteredArticles.length > 0 && (
-                <div className="text-center py-8 text-muted-foreground" role="status">
-                  {t('articles-page.no-more-articles')}
-                </div>
-              )}
-            </>
-          )}
-        </TabsContent>
-
-        <TabsContent value="recommended" className="mt-6">
-          {filteredArticles.length === 0 ? (
-            <EmptyState
-              searchQuery={searchQuery}
-              selectedCategoriesCount={selectedCategories.length}
-              onClearSearch={() => handleSearch('')}
-            />
-          ) : (
-            <>
-              <section aria-label={t('articles-page.recommended-aria')}>
-                <ArticleGrid articles={filteredArticles} />
-              </section>
-
-              {hasNextPage && <div ref={sentinelRef} className="h-px" aria-hidden="true" />}
-
-              {loadingMore && (
-                <div className="flex justify-center py-8" role="status" aria-live="polite">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                  <span className="sr-only">{t('articles-page.loading-more-sr')}</span>
-                </div>
-              )}
-
-              {!hasNextPage && filteredArticles.length > 0 && (
-                <div className="text-center py-8 text-muted-foreground" role="status">
-                  {t('articles-page.no-more-articles')}
-                </div>
-              )}
-            </>
-          )}
-        </TabsContent>
-
-        <TabsContent value="subscribed" className="mt-6">
-          {filteredArticles.length === 0 ? (
-            <EmptyState
-              searchQuery={searchQuery}
-              selectedCategoriesCount={selectedCategories.length}
-              onClearSearch={() => handleSearch('')}
-            />
-          ) : (
-            <>
-              <section aria-label={t('articles-page.subscribed-aria')}>
-                <ArticleGrid articles={filteredArticles} />
-              </section>
-
-              {hasNextPage && <div ref={sentinelRef} className="h-px" aria-hidden="true" />}
-
-              {loadingMore && (
-                <div className="flex justify-center py-8" role="status" aria-live="polite">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                  <span className="sr-only">{t('articles-page.loading-more-sr')}</span>
-                </div>
-              )}
-
-              {!hasNextPage && filteredArticles.length > 0 && (
-                <div className="text-center py-8 text-muted-foreground" role="status">
-                  {t('articles-page.no-more-articles')}
-                </div>
-              )}
-            </>
-          )}
-        </TabsContent>
-
-        <TabsContent value="saved" className="mt-6">
-          {filteredArticles.length === 0 ? (
-            <EmptyState
-              searchQuery={searchQuery}
-              selectedCategoriesCount={selectedCategories.length}
-              onClearSearch={() => handleSearch('')}
-            />
-          ) : (
-            <>
-              <section aria-label={t('articles-page.saved-aria')}>
-                <ArticleGrid articles={filteredArticles} />
-              </section>
-
-              {hasNextPage && <div ref={sentinelRef} className="h-px" aria-hidden="true" />}
-
-              {loadingMore && (
-                <div className="flex justify-center py-8" role="status" aria-live="polite">
-                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                  <span className="sr-only">{t('articles-page.loading-more-sr')}</span>
-                </div>
-              )}
-
-              {!hasNextPage && filteredArticles.length > 0 && (
-                <div className="text-center py-8 text-muted-foreground" role="status">
-                  {t('articles-page.no-more-articles')}
-                </div>
-              )}
-            </>
-          )}
-        </TabsContent>
+            </TabsContent>
+          );
+        })}
       </Tabs>
     </div>
   );

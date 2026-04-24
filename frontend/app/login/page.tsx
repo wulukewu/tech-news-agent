@@ -145,8 +145,8 @@ function LoginPageInner() {
       </header>
 
       {/* Main login content - Requirement 2.7: Responsive */}
-      <main className="flex-1 flex items-center justify-center p-4 bg-gradient-to-br from-background to-muted">
-        <Card className="w-full max-w-md shadow-lg">
+      <main className="flex-1 flex items-center justify-center p-4 bg-muted/30">
+        <Card className="w-full max-w-md shadow-lg border-border/50">
           <CardHeader className="space-y-1 text-center">
             <div className="flex justify-center mb-4">
               <Logo size={64} />

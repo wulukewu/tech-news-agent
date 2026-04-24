@@ -21,7 +21,7 @@ export function SortSelector({ value, onChange }: SortSelectorProps) {
 
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="w-[180px]">
+      <SelectTrigger className="w-[140px] h-8 text-sm">
         <SelectValue placeholder="Sort by" />
       </SelectTrigger>
       <SelectContent>

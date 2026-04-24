@@ -138,8 +138,8 @@ export function Sidebar({
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                   // Enhanced active state with stronger visual feedback
                   isActive
-                    ? 'bg-primary text-primary-foreground shadow-md font-semibold border-l-4 border-l-primary-foreground/30'
-                    : 'hover:bg-muted/50',
+                    ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/60',
                   item.disabled && 'opacity-50 cursor-not-allowed pointer-events-none',
                   collapsed && 'justify-center px-2'
                 )}
@@ -298,8 +298,8 @@ export function Sidebar({
                       'hover:bg-accent hover:text-accent-foreground',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                       isActive
-                        ? 'bg-primary text-primary-foreground shadow-lg font-semibold border-l-4 border-l-primary-foreground/30'
-                        : 'hover:bg-muted/50',
+                        ? 'bg-primary text-primary-foreground shadow-sm font-semibold'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/60',
                       item.disabled && 'opacity-50 cursor-not-allowed pointer-events-none'
                     )}
                     aria-current={isActive ? 'page' : undefined}
@@ -336,8 +336,8 @@ export function Sidebar({
                     'hover:bg-accent hover:text-accent-foreground',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                     isActive
-                      ? 'text-primary-foreground bg-primary shadow-md font-semibold'
-                      : 'hover:bg-muted/50',
+                      ? 'text-primary bg-primary/10 font-semibold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/60',
                     item.disabled && 'opacity-50 cursor-not-allowed pointer-events-none'
                   )}
                   aria-current={isActive ? 'page' : undefined}

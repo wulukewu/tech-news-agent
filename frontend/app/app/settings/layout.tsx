@@ -57,12 +57,11 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-2 px-1 py-4 border-b-2 font-medium text-sm whitespace-nowrap transition-all duration-200',
-                  'hover:text-foreground hover:border-border',
+                  'flex items-center gap-2 px-1 py-3 border-b-2 text-sm whitespace-nowrap transition-colors duration-150',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                   isActive
-                    ? 'border-primary text-primary font-semibold shadow-sm'
-                    : 'border-transparent text-muted-foreground hover:text-foreground/80'
+                    ? 'border-primary text-foreground font-medium'
+                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                 )}
               >
                 <Icon className="h-4 w-4" />

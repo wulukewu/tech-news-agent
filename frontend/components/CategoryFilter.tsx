@@ -92,17 +92,12 @@ export function CategoryFilter({
               key={category}
               variant={isSelected ? 'default' : 'outline'}
               className={cn(
-                'cursor-pointer transition-all duration-200',
+                'cursor-pointer transition-colors duration-150',
                 'snap-start',
-                // Minimum touch target size (44px height)
-                'min-h-[44px] px-4 py-2',
-                // Prevent text wrapping
+                'h-7 px-3 py-1',
                 'whitespace-nowrap flex-shrink-0',
-                // Hover effects
                 'hover:shadow-sm',
-                // Focus visible for keyboard navigation
                 'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
-                // Active state
                 isSelected && 'shadow-sm'
               )}
               onClick={() => onToggleCategory(category)}

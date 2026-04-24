@@ -103,8 +103,6 @@ export function Header({
             aria-label={t('ui.notifications')}
           >
             <Bell className="h-5 w-5" />
-            {/* Notification badge */}
-            <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full"></span>
           </Button>
         )}
 

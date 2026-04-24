@@ -56,12 +56,9 @@ export function AppLayout({
           <aside
             className={cn(
               'hidden lg:flex lg:flex-col lg:fixed lg:inset-y-0 lg:z-40 transition-all duration-300 ease-in-out',
-              header && 'lg:pt-16',
+              header && 'lg:top-16',
               collapsed ? 'lg:w-16' : 'lg:w-64'
             )}
-            style={{
-              width: collapsed ? '64px' : '256px',
-            }}
             aria-label={t('aria-labels.sidebar-navigation')}
           >
             <div className="flex flex-col flex-1 min-h-0 border-r bg-background/95 backdrop-blur">
@@ -77,12 +74,10 @@ export function AppLayout({
         <main
           className={cn(
             'flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out',
-            'pt-4 md:pt-0', // Add top padding for mobile to account for fixed header
-            'pb-16 lg:pb-0' // Add bottom padding for mobile bottom nav
+            'pt-4 md:pt-0',
+            'pb-16 lg:pb-0',
+            sidebar && (collapsed ? 'lg:ml-16' : 'lg:ml-64')
           )}
-          style={{
-            marginLeft: sidebar ? (collapsed ? '64px' : '256px') : '0',
-          }}
           id="main-content"
           tabIndex={-1}
         >
