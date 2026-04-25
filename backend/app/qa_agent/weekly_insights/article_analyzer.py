@@ -82,12 +82,25 @@ class ArticleAnalyzer:
     async def analyze_articles(
         self, articles: list[dict[str, Any]], batch_size: int = 5
     ) -> list[dict[str, Any]]:
-        """Analyze a list of articles in small batches with delay to respect Groq TPM limits."""
+        """Analyze a list of articles in small batches with delay to respect Groq TPM limits.
+        Falls back to empty themes on rate limit so the keyword fallback in the generator kicks in.
+        """
         import asyncio
 
         results: list[dict[str, Any]] = []
+        rate_limited = False  # once we hit 429, skip remaining LLM calls
+
         for i in range(0, len(articles), batch_size):
             batch = articles[i : i + batch_size]
+
+            if rate_limited:
+                # Skip LLM entirely for remaining articles; generator will use keyword fallback
+                for a in batch:
+                    results.append(
+                        {**a, "themes": [], "technologies": [], "domain": "other", "keywords": []}
+                    )
+                continue
+
             analyzed = await asyncio.gather(
                 *[self.analyze_article(a) for a in batch],
                 return_exceptions=True,
@@ -106,7 +119,13 @@ class ArticleAnalyzer:
                     )
                 else:
                     results.append(result)
-            # Respect Groq TPM limit (6000/min): wait 12s between batches of 5
+
+            # Check if any article in this batch hit a rate limit
+            if any(isinstance(r, Exception) and "rate_limit" in str(r).lower() for r in analyzed):
+                rate_limited = True
+                logger.info("Rate limit hit — switching to keyword fallback for remaining articles")
+                continue
+
             if i + batch_size < len(articles):
                 await asyncio.sleep(12)
         return results

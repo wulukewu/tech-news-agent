@@ -67,11 +67,8 @@ class InsightReportGenerator:
         # 2. Analyze articles (extract themes/technologies)
         analyzed = await self.analyzer.analyze_articles(articles)
 
-        # Fallback: if LLM analysis yielded no themes at all, use keyword-based analysis
-        has_themes = any(a.get("themes") for a in analyzed)
-        if not has_themes:
-            logger.info("LLM analysis produced no themes, using keyword fallback")
-            analyzed = [self._keyword_analyze(a) for a in articles]
+        # Fallback: apply keyword analysis to any article that has no themes
+        analyzed = [a if a.get("themes") else self._keyword_analyze(a) for a in analyzed]
 
         # 3. Cluster themes
         clusters = self.clusterer.cluster(analyzed)
