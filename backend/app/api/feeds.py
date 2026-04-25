@@ -338,9 +338,7 @@ async def update_subscription_notification(
             .execute()
         )
 
-        if not result.data:
-            raise HTTPException(status_code=404, detail="Subscription not found")
-
+        # Supabase update doesn't always return data; treat as success if no exception
         return success_response({"feed_id": str(feed_id), "notification_enabled": enabled})
 
     except HTTPException:

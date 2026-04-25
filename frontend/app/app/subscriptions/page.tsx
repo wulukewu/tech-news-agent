@@ -351,6 +351,11 @@ export default function SubscriptionsPage() {
           feed.id === feedId ? { ...feed, notification_enabled: !currentState } : feed
         )
       );
+      setFilteredFeeds((prev) =>
+        prev.map((feed) =>
+          feed.id === feedId ? { ...feed, notification_enabled: !currentState } : feed
+        )
+      );
       toast.success(
         t('subscriptions.notification-toggled', {
           status: !currentState ? t('subscriptions.enabled') : t('subscriptions.disabled'),
