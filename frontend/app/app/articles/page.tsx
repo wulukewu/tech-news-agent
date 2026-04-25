@@ -169,7 +169,11 @@ function DashboardContent() {
         </TabsList>
 
         {/* Filters and Controls */}
-        <div className="flex flex-wrap gap-2 items-center justify-between">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 justify-end">
+            <SortSelector value={sortOption} onChange={setSortOption} />
+            <ViewModeSelector value={viewMode} onChange={setViewMode} />
+          </div>
           <CategoryFilter
             categories={categories}
             selectedCategories={selectedCategories}
@@ -178,10 +182,6 @@ function DashboardContent() {
             onClearAll={deselectAllCategories}
             loading={loadingCategories}
           />
-          <div className="flex items-center gap-2 ml-auto flex-shrink-0">
-            <SortSelector value={sortOption} onChange={setSortOption} />
-            <ViewModeSelector value={viewMode} onChange={setViewMode} />
-          </div>
         </div>
 
         <TabsContent value="all" className="mt-6">

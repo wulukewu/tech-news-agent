@@ -69,53 +69,51 @@ export function CategoryFilter({
         </Button>
       </div>
 
-      {/* Horizontal scroll container for mobile */}
-      <div
-        className={cn(
-          'flex gap-2 overflow-x-auto pb-2',
-          // Hide scrollbar but keep functionality
-          'scrollbar-hide',
-          // Smooth scrolling
-          'scroll-smooth',
-          // Snap to items on mobile for better UX
-          'snap-x snap-mandatory md:snap-none',
-          // Add padding for better mobile scroll experience
-          'px-1 -mx-1'
-        )}
-        role="group"
-        aria-label="Category filters"
-      >
-        {categories.map((category) => {
-          const isSelected = selectedCategories.includes(category);
-          return (
-            <Badge
-              key={category}
-              variant={isSelected ? 'default' : 'outline'}
-              className={cn(
-                'cursor-pointer transition-colors duration-150',
-                'snap-start',
-                'h-7 px-3 py-1',
-                'whitespace-nowrap flex-shrink-0',
-                'hover:shadow-sm',
-                'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
-                isSelected && 'shadow-sm'
-              )}
-              onClick={() => onToggleCategory(category)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  onToggleCategory(category);
-                }
-              }}
-              tabIndex={0}
-              role="checkbox"
-              aria-checked={isSelected}
-              aria-label={`Filter by ${category}`}
-            >
-              {category}
-            </Badge>
-          );
-        })}
+      {/* Horizontal scroll container with fade edges */}
+      <div className="relative">
+        <div className="pointer-events-none absolute left-0 top-0 bottom-2 w-8 bg-gradient-to-r from-background to-transparent z-10" />
+        <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-background to-transparent z-10" />
+        <div
+          className={cn(
+            'flex gap-2 overflow-x-auto pb-2 px-6',
+            'scrollbar-hide scroll-smooth',
+            'snap-x snap-mandatory md:snap-none'
+          )}
+          role="group"
+          aria-label="Category filters"
+        >
+          {categories.map((category) => {
+            const isSelected = selectedCategories.includes(category);
+            return (
+              <Badge
+                key={category}
+                variant={isSelected ? 'default' : 'outline'}
+                className={cn(
+                  'cursor-pointer transition-colors duration-150',
+                  'snap-start',
+                  'h-7 px-3 py-1',
+                  'whitespace-nowrap flex-shrink-0',
+                  'hover:shadow-sm',
+                  'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+                  isSelected && 'shadow-sm'
+                )}
+                onClick={() => onToggleCategory(category)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onToggleCategory(category);
+                  }
+                }}
+                tabIndex={0}
+                role="checkbox"
+                aria-checked={isSelected}
+                aria-label={`Filter by ${category}`}
+              >
+                {category}
+              </Badge>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
