@@ -9,6 +9,7 @@ import {
   addCustomFeed,
   previewFeed,
   deleteFeed,
+  updateFeedNotificationPreference,
 } from '@/lib/api/feeds';
 import type { Feed } from '@/types/feed';
 import { Button } from '@/components/ui/button';
@@ -343,18 +344,21 @@ export default function SubscriptionsPage() {
   }, []);
 
   const toggleNotification = async (feedId: string, currentState: boolean) => {
-    // This would call the API to update notification preferences
-    // For now, just update local state
-    setFeeds(
-      feeds.map((feed) =>
-        feed.id === feedId ? { ...feed, notification_enabled: !currentState } : feed
-      )
-    );
-    toast.success(
-      t('subscriptions.notification-toggled', {
-        status: !currentState ? t('subscriptions.enabled') : t('subscriptions.disabled'),
-      })
-    );
+    try {
+      await updateFeedNotificationPreference(feedId, !currentState);
+      setFeeds((prev) =>
+        prev.map((feed) =>
+          feed.id === feedId ? { ...feed, notification_enabled: !currentState } : feed
+        )
+      );
+      toast.success(
+        t('subscriptions.notification-toggled', {
+          status: !currentState ? t('subscriptions.enabled') : t('subscriptions.disabled'),
+        })
+      );
+    } catch {
+      toast.error(t('errors.server-error'));
+    }
   };
 
   const handleDeleteFeed = async (feedId: string, feedName: string) => {
@@ -674,9 +678,9 @@ export default function SubscriptionsPage() {
 
                             {/* Feed Health and Statistics - Stacked on mobile */}
                             <div className="mt-3 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 sm:gap-3">
-                              {feed.last_updated && (
+                              {feed.health_status && (
                                 <FeedHealthIndicator
-                                  lastUpdateTime={feed.last_updated}
+                                  lastUpdateTime={feed.last_updated ?? undefined}
                                   status={feed.health_status || 'unknown'}
                                   errorMessage={feed.error_message}
                                 />

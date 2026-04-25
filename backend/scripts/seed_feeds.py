@@ -64,8 +64,8 @@ def main():
             "is_active": True,
         },
         {
-            "name": "OpenAI Engineering",
-            "url": "https://openai.com/news/engineering/rss.xml",
+            "name": "Simon Willison's Weblog",
+            "url": "https://simonwillison.net/atom/everything/",
             "category": "AI & Machine Learning",
             "is_active": True,
         },
@@ -107,8 +107,8 @@ def main():
             "is_active": True,
         },
         {
-            "name": "Quastor",
-            "url": "https://blog.quastor.org/feed",
+            "name": "InfoQ",
+            "url": "https://feed.infoq.com/",
             "category": "Architecture & System Design",
             "is_active": True,
         },
@@ -125,8 +125,8 @@ def main():
             "is_active": True,
         },
         {
-            "name": "Uber Engineering",
-            "url": "https://www.uber.com/en-GB/blog/london/engineering/rss/",
+            "name": "ACM Queue",
+            "url": "https://queue.acm.org/rss/feeds/queuecontent.xml",
             "category": "Architecture & System Design",
             "is_active": True,
         },
@@ -151,7 +151,7 @@ def main():
         },
         {
             "name": "HashiCorp Blog",
-            "url": "https://www.hashicorp.com/blog.atom",
+            "url": "https://www.hashicorp.com/blog/feed.xml",
             "category": "Cloud Native, DevOps & SRE",
             "is_active": True,
         },
@@ -181,14 +181,14 @@ def main():
             "is_active": True,
         },
         {
-            "name": "BleepingComputer",
-            "url": "https://www.bleepingcomputer.com/feed",
+            "name": "Lobsters",
+            "url": "https://lobste.rs/rss",
             "category": "Cybersecurity & InfoSec",
             "is_active": True,
         },
         {
-            "name": "Dark Reading",
-            "url": "https://www.darkreading.com/rss/all.xml",
+            "name": "The Morning Paper",
+            "url": "https://blog.acolyer.org/feed/",
             "category": "Cybersecurity & InfoSec",
             "is_active": True,
         },
@@ -218,8 +218,8 @@ def main():
             "is_active": True,
         },
         {
-            "name": "GolangCode",
-            "url": "https://golangcode.com/index.xml",
+            "name": "Go Weekly",
+            "url": "https://golangweekly.com/rss/1jn0ck6",
             "category": "Core Programming Languages",
             "is_active": True,
         },
@@ -228,11 +228,23 @@ def main():
             "name": "Seattle Data Guy",
             "url": "https://www.theseattledataguy.com/feed/",
             "category": "Data Engineering & Analytics",
+            "is_active": False,
+        },
+        {
+            "name": "Data Engineering Weekly",
+            "url": "https://www.dataengineeringweekly.com/feed",
+            "category": "Data Engineering & Analytics",
             "is_active": True,
         },
         {
             "name": "Databricks Engineering",
-            "url": "https://databricks.com/blog/category/engineering/feed",
+            "url": "https://databricks.com/feed",
+            "category": "Data Engineering & Analytics",
+            "is_active": True,
+        },
+        {
+            "name": "dbt Blog",
+            "url": "https://www.getdbt.com/blog/rss.xml",
             "category": "Data Engineering & Analytics",
             "is_active": True,
         },
@@ -240,7 +252,7 @@ def main():
             "name": "Towards Data Science",
             "url": "https://towardsdatascience.com/feed",
             "category": "Data Engineering & Analytics",
-            "is_active": True,
+            "is_active": False,
         },
         # Web3 & Blockchain Engineering
         {
@@ -259,7 +271,7 @@ def main():
             "name": "Alchemy Blog",
             "url": "https://alchemy.com/blog/rss",
             "category": "Web3 & Blockchain Engineering",
-            "is_active": True,
+            "is_active": False,
         },
         # Frontend & Mobile Development
         {
@@ -290,7 +302,7 @@ def main():
         # Self-Hosted, FOSS & Privacy
         {
             "name": "selfh.st Weekly",
-            "url": "https://rss.slfh.st/weekly/",
+            "url": "https://selfh.st/feed/",
             "category": "Self-Hosted, FOSS & Privacy",
             "is_active": True,
         },
@@ -320,14 +332,14 @@ def main():
             "is_active": True,
         },
         {
-            "name": "Reddit r/ExperiencedDevs Top Monthly",
-            "url": "https://www.reddit.com/r/ExperiencedDevs/top/.rss?t=month",
+            "name": "Lobsters ML",
+            "url": "https://lobste.rs/t/ml.rss",
             "category": "Platform Aggregators",
             "is_active": True,
         },
         {
-            "name": "Reddit r/MachineLearning Top Weekly",
-            "url": "https://www.reddit.com/r/MachineLearning/top/.rss?t=week",
+            "name": "TLDR Tech",
+            "url": "https://tldr.tech/api/rss/tech",
             "category": "Platform Aggregators",
             "is_active": True,
         },

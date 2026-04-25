@@ -124,11 +124,11 @@ export async function previewFeed(url: string): Promise<{
 export async function updateFeedNotificationPreference(
   feedId: string,
   enabled: boolean
-): Promise<Feed> {
-  const response = await apiClient.patch<{ success: boolean; data: Feed }>(
-    `/api/feeds/${feedId}/notifications`,
-    { enabled }
-  );
+): Promise<{ feed_id: string; notification_enabled: boolean }> {
+  const response = await apiClient.patch<{
+    success: boolean;
+    data: { feed_id: string; notification_enabled: boolean };
+  }>(`/api/subscriptions/${feedId}/notification?enabled=${enabled}`, {});
   return response.data.data;
 }
 

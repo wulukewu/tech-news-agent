@@ -10,6 +10,7 @@ class RSSSource(BaseModel):
     url: HttpUrl
     category: str
     created_by: UUID | None = None
+    last_fetched_at: datetime | None = None
 
 
 class AIAnalysis(BaseModel):
@@ -104,6 +105,7 @@ class Subscription(BaseModel):
     url: HttpUrl
     category: str
     subscribed_at: datetime
+    notification_enabled: bool = True
 
 
 class ArticleResponse(BaseModel):

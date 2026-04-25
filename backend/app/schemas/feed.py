@@ -21,6 +21,15 @@ class FeedResponse(BaseModel):
     category: str = Field(..., description="Feed category")
     is_subscribed: bool = Field(..., description="Whether the user is subscribed to this feed")
     is_custom: bool = Field(default=False, description="Whether this is a user-created custom feed")
+    health_status: str = Field(
+        default="unknown", description="Feed health: healthy, error, unknown"
+    )
+    last_updated: str | None = Field(
+        default=None, description="ISO timestamp of last successful fetch"
+    )
+    notification_enabled: bool = Field(
+        default=True, description="Whether DM notifications are enabled for this feed"
+    )
 
     model_config = ConfigDict(
         json_schema_extra={

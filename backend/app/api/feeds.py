@@ -4,11 +4,13 @@ Feed and Subscription Management API Endpoints
 This module provides API endpoints for managing RSS feed subscriptions.
 """
 
+import asyncio
 import logging
 from typing import Any
 from uuid import UUID
 
 import feedparser
+import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
@@ -27,6 +29,15 @@ from app.services.supabase_service import SupabaseService
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+async def _check_feed_health(client: httpx.AsyncClient, url: str) -> str:
+    """Return 'healthy' or 'error' for a feed URL."""
+    try:
+        r = await client.head(url, timeout=5, follow_redirects=True)
+        return "healthy" if r.status_code < 400 else "error"
+    except Exception:
+        return "error"
 
 
 class AddCustomFeedRequest(BaseModel):
@@ -69,12 +80,14 @@ async def list_feeds(current_user: dict[str, Any] = Depends(get_current_user)):
         discord_id = current_user["discord_id"]
         subscriptions = await supabase.get_user_subscriptions(discord_id)
 
-        # Create a set of subscribed feed IDs for fast lookup
-        subscribed_feed_ids = {sub.feed_id for sub in subscriptions}
+        # Create a map of feed_id -> subscription info for fast lookup
+        subscription_map = {sub.feed_id: sub for sub in subscriptions}
+        subscribed_feed_ids = set(subscription_map.keys())
 
         # Build response with subscription status
         feed_responses = []
         for feed in feeds:
+            sub = subscription_map.get(feed.id)
             feed_response = FeedResponse(
                 id=feed.id,
                 name=feed.name,
@@ -82,8 +95,18 @@ async def list_feeds(current_user: dict[str, Any] = Depends(get_current_user)):
                 category=feed.category,
                 is_subscribed=feed.id in subscribed_feed_ids,
                 is_custom=feed.created_by is not None,
+                last_updated=feed.last_fetched_at.isoformat() if feed.last_fetched_at else None,
+                notification_enabled=sub.notification_enabled if sub else True,
             )
             feed_responses.append(feed_response)
+
+        # Run health checks in parallel
+        async with httpx.AsyncClient(headers={"User-Agent": "Mozilla/5.0"}, verify=False) as client:
+            health_results = await asyncio.gather(
+                *[_check_feed_health(client, str(f.url)) for f in feed_responses]
+            )
+        for feed_response, status in zip(feed_responses, health_results):
+            feed_response.health_status = status
 
         # Sort by category and name
         feed_responses.sort(key=lambda f: (f.category, f.name))
@@ -292,7 +315,41 @@ async def add_custom_feed(
         raise HTTPException(status_code=500, detail="Failed to add feed")
 
 
-@router.delete("/feeds/{feed_id}")
+@router.patch("/subscriptions/{feed_id}/notification")
+async def update_subscription_notification(
+    feed_id: UUID,
+    enabled: bool,
+    current_user: dict[str, Any] = Depends(get_current_user),
+):
+    """Toggle per-feed DM notification setting."""
+    try:
+        supabase = SupabaseService()
+        user_uuid = current_user["user_id"]
+        from uuid import UUID as _UUID
+
+        if not isinstance(user_uuid, _UUID):
+            user_uuid = _UUID(str(user_uuid))
+
+        result = (
+            supabase.client.table("user_subscriptions")
+            .update({"notification_enabled": enabled})
+            .eq("user_id", str(user_uuid))
+            .eq("feed_id", str(feed_id))
+            .execute()
+        )
+
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Subscription not found")
+
+        return success_response({"feed_id": str(feed_id), "notification_enabled": enabled})
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to update notification setting: {e!s}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Database operation failed")
+
+
 async def delete_feed(
     feed_id: UUID,
     current_user: dict[str, Any] = Depends(get_current_user),

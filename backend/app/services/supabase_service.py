@@ -832,7 +832,7 @@ class SupabaseService:
             try:
                 query = (
                     self.client.table("feeds")
-                    .select("id, name, url, category, created_by")
+                    .select("id, name, url, category, created_by, last_fetched_at")
                     .eq("is_active", True)
                 )
                 if user_id:
@@ -864,6 +864,7 @@ class SupabaseService:
                         url=feed_data["url"],
                         category=feed_data["category"],
                         created_by=feed_data.get("created_by"),
+                        last_fetched_at=feed_data.get("last_fetched_at"),
                     )
                     feeds.append(rss_source)
                 except Exception as e:
@@ -878,6 +879,20 @@ class SupabaseService:
         except Exception as e:
             logger.error(f"Failed to fetch active feeds: {e}", exc_info=True)
             self._handle_database_error(e, {"operation": "get_active_feeds"})
+
+    async def update_feeds_last_fetched(self, feed_ids: list[str]) -> None:
+        """Update last_fetched_at for a list of feeds to the current time."""
+        if not feed_ids:
+            return
+        try:
+            now = datetime.now(UTC).isoformat()
+            for feed_id in feed_ids:
+                self.client.table("feeds").update({"last_fetched_at": now}).eq(
+                    "id", feed_id
+                ).execute()
+            logger.info(f"Updated last_fetched_at for {len(feed_ids)} feeds")
+        except Exception as e:
+            logger.warning(f"Failed to update last_fetched_at: {e}")
 
     async def insert_articles(self, articles: list[dict]) -> "BatchResult":
         """批次插入或更新文章（使用 UPSERT 邏輯）
@@ -1901,7 +1916,9 @@ class SupabaseService:
             # 查詢訂閱
             response = (
                 self.client.table("user_subscriptions")
-                .select("feed_id, subscribed_at, feeds(id, name, url, category)")
+                .select(
+                    "feed_id, subscribed_at, notification_enabled, feeds(id, name, url, category)"
+                )
                 .eq("user_id", str(user_uuid))
                 .order("subscribed_at", desc=True)
                 .execute()
@@ -1936,6 +1953,7 @@ class SupabaseService:
                         subscribed_at=datetime.fromisoformat(
                             sub_data["subscribed_at"].replace("Z", "+00:00")
                         ),
+                        notification_enabled=sub_data.get("notification_enabled", True),
                     )
                     subscriptions.append(subscription)
                 except Exception as e:
@@ -2380,11 +2398,12 @@ class SupabaseService:
             # 計算時間範圍
             cutoff_date = datetime.now(UTC) - timedelta(days=days)
 
-            # 查詢使用者訂閱的 feeds
+            # 查詢使用者訂閱的 feeds（只取啟用通知的）
             subscriptions_response = (
                 self.client.table("user_subscriptions")
                 .select("feed_id")
                 .eq("user_id", str(user_uuid))
+                .eq("notification_enabled", True)
                 .execute()
             )
 

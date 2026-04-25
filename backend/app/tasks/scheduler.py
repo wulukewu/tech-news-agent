@@ -214,6 +214,11 @@ async def background_fetch_job():
 
         logger.info(f"Found {len(new_articles)} new articles after deduplication")
 
+        # Update last_fetched_at for feeds that returned articles
+        if new_articles:
+            fetched_feed_ids = list({str(a.feed_id) for a in new_articles})
+            await supabase.update_feeds_last_fetched(fetched_feed_ids)
+
         # Stage 2.5: Query and re-process unanalyzed articles (Requirement 13.1, 13.2, 13.3, 13.4, 13.5, 13.6)
         logger.info("Stage 2.5: Querying unanalyzed articles for re-processing")
         unanalyzed_articles = await supabase.get_unanalyzed_articles(limit=100)
