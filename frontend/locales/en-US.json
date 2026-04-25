@@ -470,7 +470,9 @@
     "enable-notification": "Enable notifications",
     "notification-toggled": "Notifications {status}",
     "enabled": "enabled",
-    "disabled": "disabled"
+    "disabled": "disabled",
+    "recommended-banner-title": "Quick start: subscribe to curated sources",
+    "recommended-banner-desc": "{count} recommended sources not yet subscribed"
   },
   "system": {
     "auth-required": "System monitoring is only accessible to authenticated users. Please log in to view system status.",
@@ -668,7 +670,9 @@
     "article-list-aria": "Article list",
     "recommended-aria": "Recommended articles",
     "subscribed-aria": "Subscribed articles",
-    "saved-aria": "Saved articles"
+    "saved-aria": "Saved articles",
+    "no-saved-articles": "No saved articles yet",
+    "save-articles-hint": "Click \"Read Later\" on any article to save it here"
   },
   "statistics": {
     "total-articles": "Total Articles",

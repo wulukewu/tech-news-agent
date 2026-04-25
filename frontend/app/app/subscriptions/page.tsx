@@ -467,16 +467,34 @@ export default function SubscriptionsPage() {
             averageTinkeringIndex={avgTinkeringIndex}
           />
           <HealthStatsGrid feeds={feeds} />
+
+          {/* Recommended feeds quick-subscribe banner */}
+          {!allRecommendedSubscribed && (
+            <Card className="border-primary/30 bg-primary/5">
+              <CardContent className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="flex-1">
+                  <p className="font-medium flex items-center gap-2">
+                    <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                    {t('subscriptions.recommended-banner-title')}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    {t('subscriptions.recommended-banner-desc', {
+                      count: totalRecommended - recommendedSubscribed,
+                    })}
+                  </p>
+                </div>
+                <Button
+                  onClick={handleSubscribeRecommended}
+                  disabled={toggling.size > 0}
+                  className="shrink-0"
+                >
+                  {t('subscriptions.subscribe-all-recommended')}
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
           <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="default"
-              onClick={handleSubscribeRecommended}
-              disabled={allRecommendedSubscribed || toggling.size > 0}
-              className="gap-2"
-            >
-              <Star className="w-4 h-4" />
-              {t('subscriptions.subscribe-all-recommended')}
-            </Button>
             <Button
               variant="outline"
               onClick={() => handleToggleAll(true)}
@@ -510,6 +528,7 @@ export default function SubscriptionsPage() {
               {t('subscriptions.retry-failed')}
             </Button>
             <div className="flex-1" />
+            {/* Advanced: manual add & OPML import */}
             <AddCustomFeedDialog
               onAddFeed={handleAddCustomFeed}
               onPreviewFeed={handlePreviewFeed}

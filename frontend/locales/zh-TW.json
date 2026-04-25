@@ -470,7 +470,9 @@
     "enable-notification": "啟用通知",
     "notification-toggled": "已{status}通知",
     "enabled": "啟用",
-    "disabled": "停用"
+    "disabled": "停用",
+    "recommended-banner-title": "快速開始：訂閱精選來源",
+    "recommended-banner-desc": "還有 {count} 個推薦來源尚未訂閱"
   },
   "system": {
     "auth-required": "系統監控功能僅限已登入的使用者存取。請先登入以查看系統狀態。",
@@ -668,7 +670,9 @@
     "article-list-aria": "文章列表",
     "recommended-aria": "推薦文章",
     "subscribed-aria": "訂閱文章",
-    "saved-aria": "已儲存文章"
+    "saved-aria": "已儲存文章",
+    "no-saved-articles": "尚無已儲存的文章",
+    "save-articles-hint": "在文章列表中點擊「稍後閱讀」即可儲存文章"
   },
   "statistics": {
     "total-articles": "總文章數",

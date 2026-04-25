@@ -1,30 +1,49 @@
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Rss } from 'lucide-react';
 
 interface EmptyStateProps {
   searchQuery: string;
   selectedCategoriesCount: number;
   onClearSearch: () => void;
+  hasNoSubscriptions?: boolean;
 }
 
 export function EmptyState({
   searchQuery,
   selectedCategoriesCount,
   onClearSearch,
+  hasNoSubscriptions,
 }: EmptyStateProps) {
+  if (hasNoSubscriptions) {
+    return (
+      <section className="flex flex-col items-center justify-center min-h-[50vh] text-center gap-4">
+        <div className="rounded-full bg-muted p-4">
+          <Rss className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <div>
+          <h2 className="text-xl font-semibold mb-1">No articles yet</h2>
+          <p className="text-muted-foreground">
+            Subscribe to some feeds to start seeing articles here.
+          </p>
+        </div>
+        <Button asChild>
+          <Link href="/app/subscriptions">Browse feeds</Link>
+        </Button>
+      </section>
+    );
+  }
+
   const getMessage = () => {
-    if (searchQuery) {
-      return `No articles match your search "${searchQuery}"`;
-    }
-    if (selectedCategoriesCount === 0) {
-      return 'Please select at least one category to view articles';
-    }
+    if (searchQuery) return `No articles match "${searchQuery}"`;
+    if (selectedCategoriesCount === 0) return 'Select at least one category to view articles';
     return 'No articles available for the selected categories';
   };
 
   return (
-    <section className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-      <h2 className="text-2xl font-bold mb-2">No articles found</h2>
-      <p className="text-muted-foreground mb-6">{getMessage()}</p>
+    <section className="flex flex-col items-center justify-center min-h-[40vh] text-center gap-4">
+      <h2 className="text-xl font-semibold">No articles found</h2>
+      <p className="text-muted-foreground">{getMessage()}</p>
       {searchQuery && (
         <Button variant="outline" onClick={onClearSearch}>
           Clear search

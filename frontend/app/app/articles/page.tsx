@@ -7,15 +7,16 @@ import { ArticleListSkeleton } from '@/components/LoadingSkeleton';
 import { useInfiniteScroll } from '@/lib/hooks/useInfiniteScroll';
 import { useScrollRestoration } from '@/lib/hooks/useScrollRestoration';
 import { fetchCategories } from '@/lib/api/articles';
+import { fetchReadingList } from '@/lib/api/readingList';
 import { useDashboardFilters } from './hooks/useDashboardFilters';
 import { useDashboardArticles } from './hooks/useDashboardArticles';
-import { DashboardHeader } from './components/DashboardHeader';
 import { EmptyState } from './components/EmptyState';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ViewModeSelector, type ViewMode } from './components/ViewModeSelector';
 import { SortSelector, type SortOption } from './components/SortSelector';
 import { CategoryFilter } from '@/components/CategoryFilter';
 import { useI18n } from '@/contexts/I18nContext';
+import type { Article } from '@/types/article';
 
 function DashboardContent() {
   const searchParams = useSearchParams();
@@ -23,6 +24,8 @@ function DashboardContent() {
   const { t } = useI18n();
   const [categories, setCategories] = useState<string[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [savedArticles, setSavedArticles] = useState<Article[]>([]);
+  const [loadingSaved, setLoadingSaved] = useState(false);
 
   // Get tab from URL, default to 'all'
   const currentTab = searchParams.get('tab') || 'all';
@@ -78,6 +81,29 @@ function DashboardContent() {
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', value);
     router.push(`/dashboard/articles?${params.toString()}`, { scroll: false });
+
+    // Load saved articles when switching to saved tab
+    if (value === 'saved' && savedArticles.length === 0) {
+      setLoadingSaved(true);
+      fetchReadingList(1, 50)
+        .then((data) => {
+          // Map reading list items to Article shape for display
+          const mapped: Article[] = data.items.map((item) => ({
+            id: item.articleId,
+            title: item.title,
+            url: item.url,
+            feedName: '',
+            category: item.category,
+            publishedAt: item.addedAt,
+            tinkeringIndex: 0,
+            aiSummary: null,
+            isInReadingList: true,
+          }));
+          setSavedArticles(mapped);
+        })
+        .catch(() => setSavedArticles([]))
+        .finally(() => setLoadingSaved(false));
+    }
   };
 
   const filteredArticles = useMemo(() => {
@@ -139,8 +165,6 @@ function DashboardContent() {
       <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
         <TabsList>
           <TabsTrigger value="all">{t('ui.all')}</TabsTrigger>
-          <TabsTrigger value="recommended">{t('ui.recommended')}</TabsTrigger>
-          <TabsTrigger value="subscribed">{t('ui.subscribed')}</TabsTrigger>
           <TabsTrigger value="saved">{t('ui.saved')}</TabsTrigger>
         </TabsList>
 
@@ -160,47 +184,52 @@ function DashboardContent() {
           </div>
         </div>
 
-        {/* Shared article list content */}
-        {(['all', 'recommended', 'subscribed', 'saved'] as const).map((tab) => {
-          const ariaLabels = {
-            all: t('articles-page.article-list-aria'),
-            recommended: t('articles-page.recommended-aria'),
-            subscribed: t('articles-page.subscribed-aria'),
-            saved: t('articles-page.saved-aria'),
-          };
-          return (
-            <TabsContent key={tab} value={tab} className="mt-6">
-              {filteredArticles.length === 0 ? (
-                <EmptyState
-                  searchQuery={searchQuery}
-                  selectedCategoriesCount={selectedCategories.length}
-                  onClearSearch={() => handleSearch('')}
-                />
-              ) : (
-                <>
-                  <section aria-label={ariaLabels[tab]}>
-                    <ArticleGrid articles={filteredArticles} />
-                  </section>
+        <TabsContent value="all" className="mt-6">
+          {filteredArticles.length === 0 ? (
+            <EmptyState
+              searchQuery={searchQuery}
+              selectedCategoriesCount={selectedCategories.length}
+              onClearSearch={() => handleSearch('')}
+              hasNoSubscriptions={articles.length === 0 && !loading}
+            />
+          ) : (
+            <>
+              <section aria-label={t('articles-page.article-list-aria')}>
+                <ArticleGrid articles={filteredArticles} />
+              </section>
 
-                  {hasNextPage && <div ref={sentinelRef} className="h-px" aria-hidden="true" />}
+              {hasNextPage && <div ref={sentinelRef} className="h-px" aria-hidden="true" />}
 
-                  {loadingMore && (
-                    <div className="flex justify-center py-8" role="status" aria-live="polite">
-                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                      <span className="sr-only">{t('articles-page.loading-more-sr')}</span>
-                    </div>
-                  )}
-
-                  {!hasNextPage && filteredArticles.length > 0 && (
-                    <div className="text-center py-8 text-muted-foreground" role="status">
-                      {t('articles-page.no-more-articles')}
-                    </div>
-                  )}
-                </>
+              {loadingMore && (
+                <div className="flex justify-center py-8" role="status" aria-live="polite">
+                  <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                  <span className="sr-only">{t('articles-page.loading-more-sr')}</span>
+                </div>
               )}
-            </TabsContent>
-          );
-        })}
+
+              {!hasNextPage && filteredArticles.length > 0 && (
+                <div className="text-center py-8 text-muted-foreground" role="status">
+                  {t('articles-page.no-more-articles')}
+                </div>
+              )}
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="saved" className="mt-6">
+          {loadingSaved ? (
+            <ArticleListSkeleton />
+          ) : savedArticles.length === 0 ? (
+            <section className="flex flex-col items-center justify-center min-h-[40vh] text-center gap-4">
+              <p className="text-xl font-semibold">{t('articles-page.no-saved-articles')}</p>
+              <p className="text-muted-foreground">{t('articles-page.save-articles-hint')}</p>
+            </section>
+          ) : (
+            <section aria-label={t('articles-page.saved-aria')}>
+              <ArticleGrid articles={savedArticles} />
+            </section>
+          )}
+        </TabsContent>
       </Tabs>
     </div>
   );
