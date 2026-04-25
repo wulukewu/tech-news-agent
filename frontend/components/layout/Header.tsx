@@ -72,10 +72,10 @@ export function Header({
         </Link>
       </div>
 
-      {/* Search bar */}
+      {/* Search bar - hidden on small screens to prevent overlap */}
       {showSearch && (
-        <div className="flex-1 max-w-md mx-4">
-          <form onSubmit={handleSearchSubmit} className="relative">
+        <div className="hidden md:flex flex-1 max-w-md mx-4">
+          <form onSubmit={handleSearchSubmit} className="relative w-full">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               type="search"
@@ -90,7 +90,7 @@ export function Header({
       )}
 
       {/* Right side actions */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
         {/* Theme toggle */}
         <ThemeToggle variant="button" />
 

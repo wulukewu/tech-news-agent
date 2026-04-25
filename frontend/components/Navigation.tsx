@@ -113,13 +113,13 @@ export function Navigation() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <nav className="container mx-auto px-4" aria-label="Main navigation">
         <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center gap-4 lg:gap-6">
+          <div className="flex items-center gap-4 lg:gap-6 min-w-0 flex-1">
             <Link href="/" className="hover:opacity-80 transition-opacity flex-shrink-0">
               <Logo size={28} showText={true} textClassName="hidden sm:inline text-xl" />
             </Link>
 
             {/* Desktop navigation - only show main items */}
-            <div className="hidden md:flex gap-1.5 lg:gap-2">
+            <div className="hidden md:flex gap-1.5 lg:gap-2 min-w-0 overflow-hidden">
               {translatedMainNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
@@ -137,9 +137,10 @@ export function Navigation() {
                         : 'text-foreground hover:bg-muted/50'
                     )}
                     aria-current={isActive ? 'page' : undefined}
+                    title={item.translatedLabel}
                   >
                     <Icon className="h-4 w-4" aria-hidden="true" />
-                    <span className="text-sm font-medium whitespace-nowrap">
+                    <span className="text-sm font-medium whitespace-nowrap hidden lg:inline">
                       {item.translatedLabel}
                     </span>
                   </Link>
@@ -148,7 +149,7 @@ export function Navigation() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <LanguageSwitcher variant="icon" />
             <ThemeToggle variant="dropdown" />
 
