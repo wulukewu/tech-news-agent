@@ -9,6 +9,7 @@ class RSSSource(BaseModel):
     name: str
     url: HttpUrl
     category: str
+    created_by: UUID | None = None
 
 
 class AIAnalysis(BaseModel):
@@ -80,9 +81,7 @@ class BatchResult(BaseModel):
     inserted_count: int = Field(description="成功插入的記錄數")
     updated_count: int = Field(description="成功更新的記錄數")
     failed_count: int = Field(description="失敗的記錄數")
-    failed_articles: list[dict] = Field(
-        default_factory=list, description="失敗的文章資訊（包含錯誤原因）"
-    )
+    failed_articles: list[dict] = Field(default_factory=list, description="失敗的文章資訊（包含錯誤原因）")
 
     @property
     def total_processed(self) -> int:
@@ -113,9 +112,7 @@ class ArticleResponse(BaseModel):
     id: UUID = Field(..., description="文章 UUID")
     title: str = Field(..., description="文章標題")
     url: HttpUrl = Field(..., description="文章 URL")
-    image_url: HttpUrl | None = Field(
-        None, description="文章縮圖 URL", serialization_alias="imageUrl"
-    )
+    image_url: HttpUrl | None = Field(None, description="文章縮圖 URL", serialization_alias="imageUrl")
     published_at: datetime | None = Field(
         None, description="發布時間", serialization_alias="publishedAt"
     )
@@ -142,9 +139,7 @@ class ArticleListResponse(BaseModel):
 
     articles: list[ArticleResponse] = Field(..., description="文章列表")
     page: int = Field(..., ge=1, description="當前頁碼")
-    page_size: int = Field(
-        ..., ge=1, le=100, description="每頁文章數", serialization_alias="pageSize"
-    )
+    page_size: int = Field(..., ge=1, le=100, description="每頁文章數", serialization_alias="pageSize")
     total_count: int = Field(..., ge=0, description="總文章數", serialization_alias="totalCount")
     has_next_page: bool = Field(..., description="是否有下一頁", serialization_alias="hasNextPage")
 

@@ -13,9 +13,6 @@ from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 class FeedResponse(BaseModel):
     """
     Feed response model with subscription status
-
-    Used by GET /api/feeds endpoint to return feed information
-    along with the user's subscription status.
     """
 
     id: UUID = Field(..., description="Feed UUID")
@@ -23,6 +20,7 @@ class FeedResponse(BaseModel):
     url: HttpUrl = Field(..., description="RSS/Atom feed URL")
     category: str = Field(..., description="Feed category")
     is_subscribed: bool = Field(..., description="Whether the user is subscribed to this feed")
+    is_custom: bool = Field(default=False, description="Whether this is a user-created custom feed")
 
     model_config = ConfigDict(
         json_schema_extra={

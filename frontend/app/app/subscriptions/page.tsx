@@ -3,14 +3,20 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { fetchFeeds, toggleSubscription, addCustomFeed, previewFeed } from '@/lib/api/feeds';
+import {
+  fetchFeeds,
+  toggleSubscription,
+  addCustomFeed,
+  previewFeed,
+  deleteFeed,
+} from '@/lib/api/feeds';
 import type { Feed } from '@/types/feed';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { ChevronDown, ChevronRight, Star, Bell, BellOff } from 'lucide-react';
+import { ChevronDown, ChevronRight, Star, Bell, BellOff, Trash2 } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { FeedHealthIndicator } from '@/features/subscriptions/components/FeedHealthIndicator';
 import { FeedStatistics } from '@/features/subscriptions/components/FeedStatistics';
@@ -121,10 +127,10 @@ export default function SubscriptionsPage() {
       setToggling((prev) => new Set(prev).add(feedId));
       const result = await toggleSubscription(feedId);
 
-      // Update local state
-      setFeeds(
-        feeds.map((feed) =>
-          feed.id === result.feed_id ? { ...feed, is_subscribed: result.is_subscribed } : feed
+      // Update local state — use feedId (string) directly to avoid UUID vs string mismatch
+      setFeeds((prev) =>
+        prev.map((feed) =>
+          feed.id === feedId ? { ...feed, is_subscribed: result.is_subscribed } : feed
         )
       );
     } catch (err) {
@@ -156,8 +162,8 @@ export default function SubscriptionsPage() {
       await Promise.all(feedsToToggle.map((feed) => toggleSubscription(feed.id)));
 
       // Update local state
-      setFeeds(
-        feeds.map((feed) =>
+      setFeeds((prev) =>
+        prev.map((feed) =>
           feed.category === category ? { ...feed, is_subscribed: subscribe } : feed
         )
       );
@@ -195,7 +201,7 @@ export default function SubscriptionsPage() {
       await Promise.all(feedsToToggle.map((feed) => toggleSubscription(feed.id)));
 
       // Update local state
-      setFeeds(feeds.map((feed) => ({ ...feed, is_subscribed: subscribe })));
+      setFeeds((prev) => prev.map((feed) => ({ ...feed, is_subscribed: subscribe })));
 
       toast.success(
         subscribe
@@ -349,6 +355,17 @@ export default function SubscriptionsPage() {
         status: !currentState ? t('subscriptions.enabled') : t('subscriptions.disabled'),
       })
     );
+  };
+
+  const handleDeleteFeed = async (feedId: string, feedName: string) => {
+    if (!confirm(t('subscriptions.confirm-delete', { name: feedName }))) return;
+    try {
+      await deleteFeed(feedId);
+      setFeeds((prev) => prev.filter((f) => f.id !== feedId));
+      toast.success(t('subscriptions.feed-deleted', { name: feedName }));
+    } catch {
+      toast.error(t('errors.server-error'));
+    }
   };
 
   if (authLoading || loading) {
@@ -630,6 +647,11 @@ export default function SubscriptionsPage() {
                                     {t('ui.recommended')}
                                   </Badge>
                                 )}
+                                {feed.is_custom && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    {t('subscriptions.custom-feed')}
+                                  </Badge>
+                                )}
                                 {feed.tags && feed.tags.length > 0 && (
                                   <>
                                     {feed.tags.map((tag) => (
@@ -729,9 +751,19 @@ export default function SubscriptionsPage() {
                             </div>
                           </div>
                         </div>
-                        {toggling.has(feed.id) && (
+                        {toggling.has(feed.id) ? (
                           <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent flex-shrink-0 mt-1 self-start sm:self-auto" />
-                        )}
+                        ) : feed.is_custom ? (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive flex-shrink-0"
+                            onClick={() => handleDeleteFeed(feed.id, feed.name)}
+                            aria-label={t('subscriptions.delete-feed')}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        ) : null}
                       </div>
                     ))}
                   </div>

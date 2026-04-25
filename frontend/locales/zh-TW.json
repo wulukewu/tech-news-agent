@@ -472,7 +472,11 @@
     "enabled": "啟用",
     "disabled": "停用",
     "recommended-banner-title": "快速開始：訂閱精選來源",
-    "recommended-banner-desc": "還有 {count} 個推薦來源尚未訂閱"
+    "recommended-banner-desc": "還有 {count} 個推薦來源尚未訂閱",
+    "confirm-delete": "確定要刪除「{name}」嗎？此操作無法復原。",
+    "feed-deleted": "已刪除「{name}」",
+    "delete-feed": "刪除來源",
+    "custom-feed": "自訂"
   },
   "system": {
     "auth-required": "系統監控功能僅限已登入的使用者存取。請先登入以查看系統狀態。",

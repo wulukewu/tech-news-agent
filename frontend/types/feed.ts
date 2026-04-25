@@ -38,6 +38,8 @@ export interface Feed {
   articles_this_week?: number;
   /** Average tinkering index of articles from this feed */
   average_tinkering_index?: number;
+  /** Whether this is a user-created custom feed (only visible to the creator) */
+  is_custom?: boolean;
   /** Custom tags for feed organization */
   tags?: string[];
   /** Notification preferences for this feed */

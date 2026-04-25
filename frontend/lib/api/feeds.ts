@@ -133,6 +133,13 @@ export async function updateFeedNotificationPreference(
 }
 
 /**
+ * Delete a feed entirely
+ */
+export async function deleteFeed(feedId: string): Promise<void> {
+  await apiClient.delete(`/api/feeds/${feedId}`);
+}
+
+/**
  * Update feed tags
  *
  * @param feedId - Feed ID

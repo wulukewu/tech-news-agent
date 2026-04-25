@@ -809,16 +809,17 @@ class SupabaseService:
             )
             self._handle_database_error(e, {"user_id": str(user_id), "operation": "get_user_by_id"})
 
-    async def get_active_feeds(self) -> list["RSSSource"]:
-        """取得所有啟用的 RSS 訂閱源
+    async def get_active_feeds(self, user_id: "UUID | None" = None) -> list["RSSSource"]:
+        """取得所有啟用的 RSS 訂閱源（系統 feed + 該使用者的自訂 feed）
+
+        Args:
+            user_id: 使用者 UUID，用於包含該使用者的自訂 feed
 
         Returns:
             啟用的訂閱源列表，按 category 和 name 排序
 
         Raises:
             SupabaseServiceError: 當資料庫查詢失敗時
-
-        Validates: Requirements 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 13.1, 13.2
         """
 
         from app.schemas.article import RSSSource
@@ -826,21 +827,34 @@ class SupabaseService:
         logger.info("Fetching active feeds")
 
         try:
-            # 查詢啟用的訂閱源，按 category 和 name 排序
-            response = (
-                self.client.table("feeds")
-                .select("id, name, url, category")
-                .eq("is_active", True)
-                .order("category")
-                .order("name")
-                .execute()
-            )
+            # 查詢系統 feed（created_by IS NULL）+ 使用者自訂 feed
+            # Fallback: if created_by column doesn't exist yet, select without it
+            try:
+                query = (
+                    self.client.table("feeds")
+                    .select("id, name, url, category, created_by")
+                    .eq("is_active", True)
+                )
+                if user_id:
+                    query = query.or_(f"created_by.is.null,created_by.eq.{user_id}")
+                else:
+                    query = query.is_("created_by", "null")
+                response = query.order("category").order("name").execute()
+            except Exception:
+                # Migration not yet applied — fall back to all feeds without created_by filter
+                response = (
+                    self.client.table("feeds")
+                    .select("id, name, url, category")
+                    .eq("is_active", True)
+                    .order("category")
+                    .order("name")
+                    .execute()
+                )
 
             if not response.data:
                 logger.info("No active feeds found")
                 return []
 
-            # 轉換為 RSSSource 物件
             feeds = []
             for feed_data in response.data:
                 try:
@@ -849,6 +863,7 @@ class SupabaseService:
                         name=feed_data["name"],
                         url=feed_data["url"],
                         category=feed_data["category"],
+                        created_by=feed_data.get("created_by"),
                     )
                     feeds.append(rss_source)
                 except Exception as e:
@@ -859,7 +874,6 @@ class SupabaseService:
             return feeds
 
         except SupabaseServiceError:
-            # 重新拋出已經包裝的錯誤
             raise
         except Exception as e:
             logger.error(f"Failed to fetch active feeds: {e}", exc_info=True)
@@ -1569,7 +1583,9 @@ class SupabaseService:
             logger.error(f"Failed to find feed by URL: {e}", exc_info=True)
             self._handle_database_error(e, {"url": url, "operation": "find_feed_by_url"})
 
-    async def create_feed(self, name: str, url: str, category: str) -> "UUID":
+    async def create_feed(
+        self, name: str, url: str, category: str, created_by: "UUID | None" = None
+    ) -> "UUID":
         """建立新的 feed
 
         Args:
@@ -1597,11 +1613,18 @@ class SupabaseService:
         )
 
         try:
-            insert_response = (
-                self.client.table("feeds")
-                .insert({"name": name, "url": url, "category": category, "is_active": True})
-                .execute()
-            )
+            insert_data: dict = {"name": name, "url": url, "category": category, "is_active": True}
+            if created_by is not None:
+                insert_data["created_by"] = str(created_by)
+            try:
+                insert_response = self.client.table("feeds").insert(insert_data).execute()
+            except Exception as e:
+                if "created_by" in str(e):
+                    # Migration not yet applied — insert without created_by
+                    insert_data.pop("created_by", None)
+                    insert_response = self.client.table("feeds").insert(insert_data).execute()
+                else:
+                    raise
 
             if not insert_response.data or len(insert_response.data) == 0:
                 raise SupabaseServiceError(
@@ -1629,6 +1652,29 @@ class SupabaseService:
             self._handle_database_error(
                 e, {"name": name, "url": url, "category": category, "operation": "create_feed"}
             )
+
+    async def delete_feed(self, feed_id: "UUID") -> None:
+        """刪除 feed（同時刪除所有相關訂閱）
+
+        Args:
+            feed_id: Feed UUID
+
+        Raises:
+            SupabaseServiceError: 當資料庫操作失敗時
+        """
+        logger.info(
+            "Database operation: delete_feed",
+            extra={"operation_type": "DELETE", "table": "feeds", "feed_id": str(feed_id)},
+        )
+        try:
+            self.client.table("feeds").delete().eq("id", str(feed_id)).execute()
+            logger.info(
+                "Database operation completed: delete_feed",
+                extra={"operation_type": "DELETE", "table": "feeds", "feed_id": str(feed_id)},
+            )
+        except Exception as e:
+            logger.error(f"Failed to delete feed: {e}", exc_info=True)
+            self._handle_database_error(e, {"feed_id": str(feed_id), "operation": "delete_feed"})
 
     async def subscribe_to_feed(self, discord_id: str, feed_id: "UUID") -> None:
         """訂閱 RSS 來源

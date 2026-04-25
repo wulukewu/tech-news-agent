@@ -472,7 +472,11 @@
     "enabled": "enabled",
     "disabled": "disabled",
     "recommended-banner-title": "Quick start: subscribe to curated sources",
-    "recommended-banner-desc": "{count} recommended sources not yet subscribed"
+    "recommended-banner-desc": "{count} recommended sources not yet subscribed",
+    "confirm-delete": "Delete \"{name}\"? This cannot be undone.",
+    "feed-deleted": "Deleted \"{name}\"",
+    "delete-feed": "Delete feed",
+    "custom-feed": "Custom"
   },
   "system": {
     "auth-required": "System monitoring is only accessible to authenticated users. Please log in to view system status.",
