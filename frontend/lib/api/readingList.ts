@@ -18,14 +18,14 @@ export async function fetchReadingList(
   const response = await apiClient.get<{
     success: boolean;
     data: Array<{
-      article_id: string;
+      articleId: string;
       title: string;
       url: string;
       category: string;
       status: ReadingListStatus;
       rating: number | null;
-      added_at: string;
-      updated_at: string;
+      addedAt: string;
+      updatedAt: string;
     }>;
     pagination: {
       total_count: number;
@@ -47,14 +47,14 @@ export async function fetchReadingList(
   // Transform backend response to frontend format
   return {
     items: responseData.data.map((item) => ({
-      articleId: item.article_id,
+      articleId: item.articleId,
       title: item.title,
       url: item.url,
       category: item.category,
       status: item.status,
       rating: item.rating,
-      addedAt: item.added_at,
-      updatedAt: item.updated_at,
+      addedAt: item.addedAt,
+      updatedAt: item.updatedAt,
     })),
     page: responseData.pagination.page,
     pageSize: responseData.pagination.page_size,

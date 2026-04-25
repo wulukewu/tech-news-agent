@@ -4,7 +4,9 @@
 提供個人化文章動態查詢功能，基於使用者訂閱源。
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+UTC = timezone.utc
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -161,12 +163,14 @@ async def get_my_articles(
             published_at = None
             if article.get("published_at"):
                 try:
-                    pub_at_str = article["published_at"]
-                    # 處理 Z 結尾的格式
-                    if pub_at_str.endswith("Z"):
-                        pub_at_str = pub_at_str[:-1] + "+00:00"
-                    # 解析為 datetime（會保留時區資訊）
-                    published_at = datetime.fromisoformat(pub_at_str)
+                    raw = article["published_at"]
+                    if isinstance(raw, datetime):
+                        published_at = raw if raw.tzinfo else raw.replace(tzinfo=UTC)
+                    else:
+                        pub_at_str = str(raw)
+                        if pub_at_str.endswith("Z"):
+                            pub_at_str = pub_at_str[:-1] + "+00:00"
+                        published_at = datetime.fromisoformat(pub_at_str)
                 except (ValueError, TypeError):
                     published_at = None
 

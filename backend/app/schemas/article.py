@@ -130,8 +130,13 @@ class ArticleResponse(BaseModel):
 
     @field_serializer("published_at")
     def serialize_published_at(self, value: datetime | None, _info) -> str | None:
-        """確保 published_at 序列化為 ISO 8601 格式"""
-        return value.isoformat() if value else None
+        """確保 published_at 序列化為 ISO 8601 格式（帶 Z 後綴）"""
+        if value is None:
+            return None
+        # Ensure UTC timezone marker so browsers parse correctly
+        if value.tzinfo is None:
+            return value.isoformat() + "Z"
+        return value.isoformat().replace("+00:00", "Z")
 
 
 class ArticleListResponse(BaseModel):

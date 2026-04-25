@@ -10,6 +10,7 @@ import {
   ArchiveRestore,
 } from 'lucide-react';
 import { formatDistanceToNow, format, isAfter, subDays } from 'date-fns';
+import { zhTW, enUS } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import type {
   ReadingListItem as ReadingListItemType,
@@ -37,7 +38,8 @@ export function ReadingListItem({
   onRemove,
 }: ReadingListItemProps) {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const dateFnsLocale = locale === 'zh-TW' ? zhTW : enUS;
 
   const handleStatusChange = async (status: ReadingListStatus) => {
     if (!item.articleId) {
@@ -85,8 +87,10 @@ export function ReadingListItem({
     if (!isNaN(addedDate.getTime())) {
       const sevenDaysAgo = subDays(new Date(), 7);
       dateDisplay = isAfter(addedDate, sevenDaysAgo)
-        ? formatDistanceToNow(addedDate, { addSuffix: true })
-        : format(addedDate, 'MMM d, yyyy');
+        ? formatDistanceToNow(addedDate, { addSuffix: true, locale: dateFnsLocale })
+        : format(addedDate, locale === 'zh-TW' ? 'yyyy年M月d日' : 'MMM d, yyyy', {
+            locale: dateFnsLocale,
+          });
     }
   } catch (error) {
     console.error('Error formatting date:', error);

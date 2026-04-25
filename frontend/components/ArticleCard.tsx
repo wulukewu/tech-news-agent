@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
+import { zhTW, enUS } from 'date-fns/locale';
 import { BookmarkPlus, BookmarkCheck, Star, Loader2, CheckCircle } from 'lucide-react';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
@@ -41,7 +42,8 @@ export function ArticleCard({
   const [isAdded, setIsAdded] = useState(article.isInReadingList);
   const addToReadingList = useAddToReadingList();
   const { theme } = useTheme();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const dateFnsLocale = locale === 'zh-TW' ? zhTW : enUS;
 
   const handleAddToReadingList = async () => {
     if (!article.id) {
@@ -90,7 +92,7 @@ export function ArticleCard({
           if (diffInMinutes < 60) {
             return t('article-card.minutes-ago', { count: diffInMinutes });
           }
-          return formatDistanceToNow(date, { addSuffix: true });
+          return formatDistanceToNow(date, { addSuffix: true, locale: dateFnsLocale });
         } catch (error) {
           console.error('Error formatting date:', error, 'publishedAt:', article.publishedAt);
           return t('article-card.recently-added');
