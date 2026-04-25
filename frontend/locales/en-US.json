@@ -836,6 +836,7 @@
     "error-load-failed": "Failed to load conversations. Please try again.",
     "tag-list-aria": "Tag list",
     "remove-tag-aria-label": "Remove tag {tag}",
+    "add-tag-placeholder": "Add tag...",
     "tag-manager-placeholder": "Add tag... ({current}/{max})",
     "tag-manager-input-aria": "Add tag",
     "tag-manager-confirm-aria": "Confirm add tag",

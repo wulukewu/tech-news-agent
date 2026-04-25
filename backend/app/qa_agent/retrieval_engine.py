@@ -232,7 +232,11 @@ class RetrievalEngine:
             logger.error(f"Unexpected error during semantic search: {exc}")
             raise RetrievalEngineError("Semantic search failed", original_error=exc) from exc
 
-        article_matches = [self._vector_match_to_article_match(vm) for vm in vector_matches]
+        article_matches = [
+            m
+            for m in (self._vector_match_to_article_match(vm) for vm in vector_matches)
+            if m is not None
+        ]
 
         # Sort by similarity score descending (Requirement 2.3)
         article_matches.sort(key=lambda m: m.similarity_score, reverse=True)
@@ -320,7 +324,8 @@ class RetrievalEngine:
                 metadata=vm.metadata,
             )
             match = self._vector_match_to_article_match(vm, keyword_score=keyword_score)
-            article_matches.append(match)
+            if match is not None:
+                article_matches.append(match)
 
         # 3. Sort by combined score descending and trim to limit
         article_matches.sort(key=lambda m: m.combined_score, reverse=True)
@@ -687,9 +692,10 @@ class RetrievalEngine:
                         and vm.metadata.get("category") == category
                     ):
                         match = self._vector_match_to_article_match(vm)
-                        related_matches.append(match)
-                        if len(related_matches) >= limit:
-                            break
+                        if match is not None:
+                            related_matches.append(match)
+                            if len(related_matches) >= limit:
+                                break
 
             logger.debug(f"Found {len(related_matches)} related topic results")
             return related_matches
@@ -734,15 +740,16 @@ class RetrievalEngine:
                 keyword_matches = sum(1 for kw in keywords if kw in searchable_text)
                 if keyword_matches > 0:
                     match = self._vector_match_to_article_match(vm)
-                    # Adjust score based on keyword matches
-                    keyword_score = keyword_matches / len(keywords)
-                    object.__setattr__(
-                        match, "combined_score", keyword_score * 0.5
-                    )  # Lower score for fallback
-                    keyword_results.append(match)
+                    if match is not None:
+                        # Adjust score based on keyword matches
+                        keyword_score = keyword_matches / len(keywords)
+                        object.__setattr__(
+                            match, "combined_score", keyword_score * 0.5
+                        )  # Lower score for fallback
+                        keyword_results.append(match)
 
-                    if len(keyword_results) >= limit:
-                        break
+                        if len(keyword_results) >= limit:
+                            break
 
             # Sort by keyword relevance
             keyword_results.sort(key=lambda m: m.combined_score, reverse=True)
@@ -821,8 +828,12 @@ class RetrievalEngine:
         Convert a VectorMatch to an ArticleMatch.
 
         Pulls article metadata from the VectorMatch.metadata dict.
+        Returns None if the metadata lacks a valid URL.
         """
         meta = vm.metadata or {}
+        url = meta.get("url") or meta.get("link")
+        if not url:
+            return None
         return ArticleMatch(
             article_id=vm.article_id,
             title=meta.get("title", ""),
@@ -830,7 +841,7 @@ class RetrievalEngine:
             similarity_score=float(vm.similarity_score),
             keyword_score=keyword_score,
             metadata=meta,
-            url=meta.get("url", "https://example.com"),
+            url=url,
             published_at=meta.get("published_at"),
             feed_name=meta.get("feed_name", ""),
             category=meta.get("category", ""),

@@ -61,9 +61,9 @@ class SimpleQAAgent:
             # 嘗試搜尋真實文章
             articles = await self._search_real_articles(query, user_id, is_chinese)
 
-            # 如果沒找到，使用範例文章
+            # 如果沒找到，回傳空列表
             if not articles:
-                articles = self._get_sample_articles(is_chinese)
+                articles = []
 
             # 生成洞察和建議
             insights, recommendations = self._generate_insights_and_recommendations(

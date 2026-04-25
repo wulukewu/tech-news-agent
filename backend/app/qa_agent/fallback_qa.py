@@ -151,12 +151,12 @@ class FallbackQAAgent:
             articles = await self._search_articles_by_keywords(parsed_query.keywords, user_id)
 
             if not articles:
-                # If no articles found, provide helpful response
-                articles = self._get_sample_articles(parsed_query.language)
+                # No articles found, return empty list with helpful message
+                articles = []
 
         except Exception as e:
-            logger.warning(f"Article search failed, using samples: {e}")
-            articles = self._get_sample_articles(parsed_query.language)
+            logger.warning(f"Article search failed: {e}")
+            articles = []
 
         # Generate insights based on language
         if parsed_query.language == QueryLanguage.CHINESE:

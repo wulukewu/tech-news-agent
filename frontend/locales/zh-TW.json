@@ -885,6 +885,7 @@
     "error-load-failed": "載入對話失敗，請稍後再試。",
     "tag-list-aria": "標籤列表",
     "remove-tag-aria-label": "移除標籤 {tag}",
+    "add-tag-placeholder": "新增標籤...",
     "tag-manager-placeholder": "新增標籤... ({current}/{max})",
     "tag-manager-input-aria": "新增標籤",
     "tag-manager-confirm-aria": "確認新增標籤",
