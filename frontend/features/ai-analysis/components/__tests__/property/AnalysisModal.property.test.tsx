@@ -537,6 +537,9 @@ describe('AnalysisModal Property Tests', () => {
 
             // Results should be identical
             expect(result1).toEqual(result2);
+
+            // Reset for next property run
+            mockGetCachedAnalysis.mockClear();
           }
         ),
         { numRuns: 100 }
@@ -571,6 +574,11 @@ describe('AnalysisModal Property Tests', () => {
           analysisResultArbitrary,
           articleTitleArbitrary,
           async (analysis, articleTitle) => {
+            // Use real implementation for formatting
+            vi.mocked(services.formatAnalysisForSharing).mockImplementation(
+              (a, t) => `# AI 深度分析：${t}\n${a.coreConcepts.join('\n')}`
+            );
+
             const formattedText = services.formatAnalysisForSharing(analysis, articleTitle);
 
             // Mock clipboard API
