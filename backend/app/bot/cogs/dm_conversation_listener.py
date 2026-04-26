@@ -12,7 +12,6 @@ Requirements: dm-conversation-memory §1, §4
 
 import logging
 import re
-import uuid
 
 import discord
 from discord.ext import commands
@@ -106,36 +105,24 @@ class DMConversationListener(commands.Cog):
         supabase: SupabaseService,
         show_hint: bool,
     ) -> None:
-        """Route to QA agent and reply with results."""
+        """Search articles directly and reply with results."""
         async with message.channel.typing():
             try:
-                from app.qa_agent.simple_qa import SimpleQAAgent
+                articles = await self._search_articles(supabase, content)
 
-                agent = SimpleQAAgent()
-                response = await agent.process_query(
-                    user_id=uuid.UUID(user_id),
-                    query=content,
-                )
-
-                lines = []
-                if response.articles:
-                    lines.append("📚 **相關文章**")
-                    for i, a in enumerate(response.articles[:3], 1):
-                        title = a.get("title", "")[:60]
+                if articles:
+                    lines = ["📚 **相關文章**"]
+                    for i, a in enumerate(articles, 1):
+                        title = (a.get("title") or "")[:60]
                         url = a.get("url", "")
-                        summary = (a.get("summary") or a.get("ai_summary") or "")[:100]
-                        lines.append(f"**{i}. {title}**")
+                        summary = (a.get("ai_summary") or "")[:120]
+                        lines.append(f"\n**{i}. {title}**")
                         if url:
                             lines.append(f"🔗 {url}")
                         if summary:
                             lines.append(f"_{summary}..._")
-                    lines.append("")
-
-                if response.insights:
-                    lines.append("💡 " + response.insights[0])
-
-                if not lines:
-                    lines.append("找不到相關文章，試試換個關鍵字，或先訂閱更多 RSS 來源。")
+                else:
+                    lines = ["找不到相關文章。試試換個關鍵字，或先用 `/add_feed` 訂閱更多 RSS 來源。"]
 
                 reply = "\n".join(lines)
                 if len(reply) > 1900:
@@ -146,14 +133,39 @@ class DMConversationListener(commands.Cog):
                 await message.reply(reply, mention_author=False)
 
             except Exception as exc:
-                logger.error("QA agent failed for %s: %s", discord_id, exc)
-                await message.reply(
-                    "抱歉，查詢時發生錯誤，請稍後再試。",
-                    mention_author=False,
-                )
+                logger.error("Article search failed for %s: %s", discord_id, exc)
+                await message.reply("抱歉，查詢時發生錯誤，請稍後再試。", mention_author=False)
 
-        # Store as preference signal regardless
         await self._store_dm(supabase, user_id, content)
+
+    async def _search_articles(self, supabase: SupabaseService, query: str) -> list[dict]:
+        """Extract keywords and search articles table."""
+        import re
+
+        # Extract meaningful keywords (English words + Chinese 2+ char chunks)
+        keywords = re.findall(r"[A-Za-z][A-Za-z0-9+#.-]*|[\u4e00-\u9fff]{2,}", query)
+        # Filter out common stop words and short noise
+        stop = {"最近", "有什麼", "有沒有", "文章", "介紹", "告訴", "幫我", "什麼", "怎麼", "如何"}
+        keywords = [k for k in keywords if k.lower() not in stop and len(k) > 1][:3]
+
+        if not keywords:
+            return []
+
+        # Build OR filter across title and ai_summary for each keyword
+        filters = ",".join(f"title.ilike.%{kw}%,ai_summary.ilike.%{kw}%" for kw in keywords)
+        try:
+            resp = (
+                supabase.client.table("articles")
+                .select("title, url, ai_summary")
+                .or_(filters)
+                .order("published_at", desc=True)
+                .limit(3)
+                .execute()
+            )
+            return resp.data or []
+        except Exception as exc:
+            logger.error("DB search failed: %s", exc)
+            return []
 
     async def _handle_preference(
         self,
