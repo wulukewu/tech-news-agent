@@ -91,12 +91,12 @@ class NotificationHistoryRecord:
             feed_source=data.get("feed_source"),
             error_message=data.get("error_message"),
             retry_count=data.get("retry_count", 0),
-            created_at=datetime.fromisoformat(data["created_at"])
-            if data.get("created_at")
-            else None,
-            updated_at=datetime.fromisoformat(data["updated_at"])
-            if data.get("updated_at")
-            else None,
+            created_at=(
+                datetime.fromisoformat(data["created_at"]) if data.get("created_at") else None
+            ),
+            updated_at=(
+                datetime.fromisoformat(data["updated_at"]) if data.get("updated_at") else None
+            ),
         )
 
 

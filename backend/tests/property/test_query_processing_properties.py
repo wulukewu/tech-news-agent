@@ -46,7 +46,15 @@ def ambiguous_queries(draw):
     elif pattern_type == "vague":
         return draw(
             st.sampled_from(
-                ["tell me about", "what about", "how about", "something about", "關於", "怎麼樣", "如何"]
+                [
+                    "tell me about",
+                    "what about",
+                    "how about",
+                    "something about",
+                    "關於",
+                    "怎麼樣",
+                    "如何",
+                ]
             )
         )
     elif pattern_type == "pronoun":
@@ -84,11 +92,29 @@ def complex_queries_with_time(draw):
         "past 2 weeks",
         "last year",
     ]
-    time_phrases_zh = ["最近3個月", "過去一週", "最近半年", "最近", "本週", "上個月", "最近兩週", "去年"]
+    time_phrases_zh = [
+        "最近3個月",
+        "過去一週",
+        "最近半年",
+        "最近",
+        "本週",
+        "上個月",
+        "最近兩週",
+        "去年",
+    ]
 
     topic = draw(
         st.sampled_from(
-            ["Python", "machine learning", "web development", "AI", "編程", "機器學習", "網頁開發", "人工智能"]
+            [
+                "Python",
+                "machine learning",
+                "web development",
+                "AI",
+                "編程",
+                "機器學習",
+                "網頁開發",
+                "人工智能",
+            ]
         )
     )
 

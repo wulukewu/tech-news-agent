@@ -184,9 +184,11 @@ def _conv_to_out(conv) -> ConversationSummaryOut:
         is_archived=conv.is_archived,
         is_favorite=conv.is_favorite,
         created_at=created_at.isoformat() if hasattr(created_at, "isoformat") else str(created_at),
-        last_message_at=conv.last_message_at.isoformat()
-        if hasattr(conv.last_message_at, "isoformat")
-        else str(conv.last_message_at),
+        last_message_at=(
+            conv.last_message_at.isoformat()
+            if hasattr(conv.last_message_at, "isoformat")
+            else str(conv.last_message_at)
+        ),
         message_count=conv.message_count,
         metadata=getattr(conv, "metadata", None) or {},
     )
@@ -200,9 +202,11 @@ def _msg_to_out(msg) -> MessageOut:
         content=msg.content,
         platform=msg.platform,
         metadata=msg.metadata or {},
-        created_at=msg.created_at.isoformat()
-        if hasattr(msg.created_at, "isoformat")
-        else str(msg.created_at),
+        created_at=(
+            msg.created_at.isoformat()
+            if hasattr(msg.created_at, "isoformat")
+            else str(msg.created_at)
+        ),
     )
 
 
@@ -618,17 +622,21 @@ async def export_conversation(
             "title": conv.title,
             "platform": conv.platform,
             "tags": conv.tags,
-            "created_at": conv.created_at.isoformat()
-            if hasattr(conv.created_at, "isoformat")
-            else str(conv.created_at),
+            "created_at": (
+                conv.created_at.isoformat()
+                if hasattr(conv.created_at, "isoformat")
+                else str(conv.created_at)
+            ),
             "messages": [
                 {
                     "role": m.role,
                     "content": m.content,
                     "platform": m.platform,
-                    "created_at": m.created_at.isoformat()
-                    if hasattr(m.created_at, "isoformat")
-                    else str(m.created_at),
+                    "created_at": (
+                        m.created_at.isoformat()
+                        if hasattr(m.created_at, "isoformat")
+                        else str(m.created_at)
+                    ),
                 }
                 for m in messages
             ],

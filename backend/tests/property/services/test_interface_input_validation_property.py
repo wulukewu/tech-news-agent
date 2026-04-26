@@ -368,9 +368,14 @@ def test_property_8_discord_commands_accept_valid_inputs(frequency, hour, minute
     frequency_choice.name = frequency
 
     # Mock the preference service and scheduler
-    with patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"), patch(
-        "app.bot.cogs.notification_settings.PreferenceService", return_value=mock_preference_service
-    ), patch("app.bot.cogs.notification_settings.get_dynamic_scheduler"):
+    with (
+        patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+        patch(
+            "app.bot.cogs.notification_settings.PreferenceService",
+            return_value=mock_preference_service,
+        ),
+        patch("app.bot.cogs.notification_settings.get_dynamic_scheduler"),
+    ):
         # Test frequency command
         async def test_frequency_command():
             await cog.set_notification_frequency(mock_interaction, frequency_choice)

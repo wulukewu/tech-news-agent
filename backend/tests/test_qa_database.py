@@ -80,9 +80,10 @@ class TestDatabaseManager:
     @pytest.mark.asyncio
     async def test_initialize_success(self, db_manager):
         """Test successful database manager initialization."""
-        with patch.object(db_manager, "_create_pool") as mock_create_pool, patch.object(
-            db_manager, "_verify_pgvector_extension"
-        ) as mock_verify:
+        with (
+            patch.object(db_manager, "_create_pool") as mock_create_pool,
+            patch.object(db_manager, "_verify_pgvector_extension") as mock_verify,
+        ):
             mock_pool = AsyncMock()
             mock_create_pool.return_value = mock_pool
             mock_verify.return_value = None
@@ -139,9 +140,10 @@ class TestDatabaseManager:
             [{"result": "success"}],
         ]
 
-        with patch.object(db_manager, "get_connection") as mock_get_conn, patch(
-            "asyncio.sleep"
-        ) as mock_sleep:
+        with (
+            patch.object(db_manager, "get_connection") as mock_get_conn,
+            patch("asyncio.sleep") as mock_sleep,
+        ):
             mock_get_conn.return_value.__aenter__.return_value = mock_connection
             mock_get_conn.return_value.__aexit__.return_value = None
 
@@ -223,9 +225,10 @@ class TestDatabaseManager:
     @pytest.mark.asyncio
     async def test_context_manager(self):
         """Test using DatabaseManager as async context manager."""
-        with patch.object(DatabaseManager, "initialize") as mock_init, patch.object(
-            DatabaseManager, "close"
-        ) as mock_close:
+        with (
+            patch.object(DatabaseManager, "initialize") as mock_init,
+            patch.object(DatabaseManager, "close") as mock_close,
+        ):
             async with DatabaseManager() as manager:
                 assert isinstance(manager, DatabaseManager)
 
@@ -356,9 +359,10 @@ class TestGlobalDatabaseManager:
     @pytest.mark.asyncio
     async def test_close_database_manager(self):
         """Test closing global database manager."""
-        with patch.object(DatabaseManager, "initialize") as mock_init, patch.object(
-            DatabaseManager, "close"
-        ) as mock_close:
+        with (
+            patch.object(DatabaseManager, "initialize") as mock_init,
+            patch.object(DatabaseManager, "close") as mock_close,
+        ):
             await get_database_manager()
             await close_database_manager()
 

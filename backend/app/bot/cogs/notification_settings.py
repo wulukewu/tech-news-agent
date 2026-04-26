@@ -4,7 +4,6 @@
 提供使用者管理 DM 通知偏好的指令，包括個人化通知頻率設定。
 """
 
-
 import discord
 from discord import app_commands
 from discord.ext import commands
@@ -240,7 +239,12 @@ class NotificationSettings(commands.Cog):
             )
 
             # Frequency
-            frequency_map = {"daily": "每日", "weekly": "每週", "monthly": "每月", "disabled": "停用"}
+            frequency_map = {
+                "daily": "每日",
+                "weekly": "每週",
+                "monthly": "每月",
+                "disabled": "停用",
+            }
             embed.add_field(
                 name="⏰ 通知頻率",
                 value=frequency_map.get(preferences.frequency, preferences.frequency),
@@ -340,7 +344,12 @@ class NotificationSettings(commands.Cog):
             )
 
             # Create response
-            frequency_map = {"daily": "每日", "weekly": "每週", "monthly": "每月", "disabled": "停用"}
+            frequency_map = {
+                "daily": "每日",
+                "weekly": "每週",
+                "monthly": "每月",
+                "disabled": "停用",
+            }
 
             embed = discord.Embed(
                 title="✅ 通知頻率已更新",
@@ -594,7 +603,12 @@ class NotificationSettings(commands.Cog):
             )
 
             if new_dm_enabled:
-                frequency_map = {"daily": "每日", "weekly": "每週", "monthly": "每月", "disabled": "停用"}
+                frequency_map = {
+                    "daily": "每日",
+                    "weekly": "每週",
+                    "monthly": "每月",
+                    "disabled": "停用",
+                }
                 embed.add_field(
                     name="📬 你將會收到",
                     value=f"• {frequency_map.get(updated_preferences.frequency, updated_preferences.frequency)} 通知\n• 時間：{updated_preferences.notification_time.strftime('%H:%M')}\n• 時區：{updated_preferences.timezone}",

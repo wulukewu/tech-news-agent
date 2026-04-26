@@ -294,8 +294,9 @@ class PreferenceService(BaseService):
 
     def validate_preferences(
         self,
-        preferences: UpdateUserNotificationPreferencesRequest
-        | CreateUserNotificationPreferencesRequest,
+        preferences: (
+            UpdateUserNotificationPreferencesRequest | CreateUserNotificationPreferencesRequest
+        ),
     ) -> ValidationResult:
         """
         Validate notification preference settings.

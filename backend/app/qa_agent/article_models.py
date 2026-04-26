@@ -448,9 +448,11 @@ class ArticleCollection(BaseModel):
         return cls(
             articles=articles,
             total_count=data.get("total_count", len(articles)),
-            created_at=datetime.fromisoformat(data["created_at"])
-            if isinstance(data.get("created_at"), str)
-            else datetime.utcnow(),
+            created_at=(
+                datetime.fromisoformat(data["created_at"])
+                if isinstance(data.get("created_at"), str)
+                else datetime.utcnow()
+            ),
             metadata=data.get("metadata", {}),
         )
 

@@ -549,9 +549,11 @@ def test_property_7_maintains_delivery_logs(user_id, discord_id, subject, notifi
     mock_bot.fetch_user = AsyncMock(return_value=mock_user)
 
     # Capture log messages
-    with patch.object(service.logger, "info") as mock_log_info, patch.object(
-        service.logger, "warning"
-    ) as mock_log_warning, patch.object(service.logger, "error") as mock_log_error:
+    with (
+        patch.object(service.logger, "info") as mock_log_info,
+        patch.object(service.logger, "warning") as mock_log_warning,
+        patch.object(service.logger, "error") as mock_log_error,
+    ):
         channels = [NotificationChannel("discord_dm", True)]
 
         async def run_test():

@@ -837,7 +837,18 @@ class ConversationManager:
 
         # Topic shift indicators
         shift_patterns = {
-            "zh": ["現在我想問", "另一個問題", "換個話題", "不同的問題", "新的問題", "讓我們談談", "我想了解", "關於", "轉到", "切換到"],
+            "zh": [
+                "現在我想問",
+                "另一個問題",
+                "換個話題",
+                "不同的問題",
+                "新的問題",
+                "讓我們談談",
+                "我想了解",
+                "關於",
+                "轉到",
+                "切換到",
+            ],
             "en": [
                 "now i want to ask",
                 "different question",
@@ -1053,9 +1064,9 @@ class ConversationManager:
                 "turn_count": len(context.turns) if context else 0,
                 "contextual_references": self._extract_contextual_references(query),
                 "query_type": self._classify_contextual_query_type(query),
-                "context_summary": context.get_conversation_summary()
-                if context
-                else "New conversation",
+                "context_summary": (
+                    context.get_conversation_summary() if context else "New conversation"
+                ),
             }
 
             logger.debug(f"Contextual analysis for query '{query}': {contextual_analysis}")

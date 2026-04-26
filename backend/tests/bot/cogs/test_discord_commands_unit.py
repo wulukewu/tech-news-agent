@@ -81,12 +81,10 @@ class TestDiscordCommandParsing:
         self, notification_cog, mock_interaction, sample_preferences
     ):
         """Test /notification-settings command parsing and execution."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch(
-            "app.bot.cogs.notification_settings.PreferenceService"
-        ) as mock_pref_service, patch(
-            "app.bot.cogs.notification_settings.TimezoneConverter"
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+            patch("app.bot.cogs.notification_settings.TimezoneConverter"),
         ):
             # Setup service mock
             mock_service_instance = AsyncMock()
@@ -115,12 +113,10 @@ class TestDiscordCommandParsing:
         self, notification_cog, mock_interaction, sample_preferences
     ):
         """Test /set-notification-frequency command parsing with valid choices."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch(
-            "app.bot.cogs.notification_settings.PreferenceService"
-        ) as mock_pref_service, patch(
-            "app.bot.cogs.notification_settings.get_dynamic_scheduler"
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+            patch("app.bot.cogs.notification_settings.get_dynamic_scheduler"),
         ):
             # Setup mocks
             mock_service_instance = AsyncMock()
@@ -149,12 +145,10 @@ class TestDiscordCommandParsing:
         self, notification_cog, mock_interaction, sample_preferences
     ):
         """Test /set-notification-time command parsing with hour/minute parameters."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch(
-            "app.bot.cogs.notification_settings.PreferenceService"
-        ) as mock_pref_service, patch(
-            "app.bot.cogs.notification_settings.get_dynamic_scheduler"
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+            patch("app.bot.cogs.notification_settings.get_dynamic_scheduler"),
         ):
             # Setup mocks
             mock_service_instance = AsyncMock()
@@ -184,14 +178,11 @@ class TestDiscordCommandParsing:
         self, notification_cog, mock_interaction, sample_preferences
     ):
         """Test /set-timezone command parsing with timezone choices."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch(
-            "app.bot.cogs.notification_settings.PreferenceService"
-        ) as mock_pref_service, patch(
-            "app.bot.cogs.notification_settings.get_dynamic_scheduler"
-        ), patch(
-            "app.bot.cogs.notification_settings.TimezoneConverter"
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+            patch("app.bot.cogs.notification_settings.get_dynamic_scheduler"),
+            patch("app.bot.cogs.notification_settings.TimezoneConverter"),
         ):
             # Setup mocks
             mock_service_instance = AsyncMock()
@@ -225,12 +216,10 @@ class TestDiscordCommandParsing:
         self, notification_cog, mock_interaction, sample_preferences
     ):
         """Test /toggle-notifications command parsing and state toggling."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch(
-            "app.bot.cogs.notification_settings.PreferenceService"
-        ) as mock_pref_service, patch(
-            "app.bot.cogs.notification_settings.get_dynamic_scheduler"
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+            patch("app.bot.cogs.notification_settings.get_dynamic_scheduler"),
         ):
             # Setup mocks
             mock_service_instance = AsyncMock()
@@ -263,12 +252,10 @@ class TestCommandValidation:
         self, notification_cog, mock_interaction, sample_preferences
     ):
         """Test frequency parameter validation."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch(
-            "app.bot.cogs.notification_settings.PreferenceService"
-        ) as mock_pref_service, patch(
-            "app.bot.cogs.notification_settings.get_dynamic_scheduler"
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+            patch("app.bot.cogs.notification_settings.get_dynamic_scheduler"),
         ):
             # Setup mocks
             mock_service_instance = AsyncMock()
@@ -295,12 +282,10 @@ class TestCommandValidation:
         self, notification_cog, mock_interaction, sample_preferences
     ):
         """Test time parameter boundary validation."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch(
-            "app.bot.cogs.notification_settings.PreferenceService"
-        ) as mock_pref_service, patch(
-            "app.bot.cogs.notification_settings.get_dynamic_scheduler"
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+            patch("app.bot.cogs.notification_settings.get_dynamic_scheduler"),
         ):
             # Setup mocks
             mock_service_instance = AsyncMock()
@@ -331,14 +316,11 @@ class TestCommandValidation:
         self, notification_cog, mock_interaction, sample_preferences
     ):
         """Test timezone parameter validation."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch(
-            "app.bot.cogs.notification_settings.PreferenceService"
-        ) as mock_pref_service, patch(
-            "app.bot.cogs.notification_settings.get_dynamic_scheduler"
-        ), patch(
-            "app.bot.cogs.notification_settings.TimezoneConverter"
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+            patch("app.bot.cogs.notification_settings.get_dynamic_scheduler"),
+            patch("app.bot.cogs.notification_settings.TimezoneConverter"),
         ):
             # Setup mocks
             mock_service_instance = AsyncMock()
@@ -377,9 +359,10 @@ class TestDatabaseIntegration:
         self, notification_cog, mock_interaction, sample_preferences
     ):
         """Test user creation and preference retrieval from database."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service:
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+        ):
             # Setup mocks
             mock_service_instance = AsyncMock()
             mock_service_instance.get_user_preferences.return_value = sample_preferences
@@ -404,13 +387,11 @@ class TestDatabaseIntegration:
         self, notification_cog, mock_interaction, sample_preferences
     ):
         """Test preference updates synchronize with database."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch(
-            "app.bot.cogs.notification_settings.PreferenceService"
-        ) as mock_pref_service, patch(
-            "app.bot.cogs.notification_settings.get_dynamic_scheduler"
-        ) as mock_scheduler:
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+            patch("app.bot.cogs.notification_settings.get_dynamic_scheduler") as mock_scheduler,
+        ):
             # Setup mocks
             mock_service_instance = AsyncMock()
             mock_service_instance.update_preferences.return_value = sample_preferences
@@ -443,13 +424,11 @@ class TestDatabaseIntegration:
         self, notification_cog, mock_interaction, sample_preferences
     ):
         """Test dynamic scheduler integration with preference updates."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch(
-            "app.bot.cogs.notification_settings.PreferenceService"
-        ) as mock_pref_service, patch(
-            "app.bot.cogs.notification_settings.get_dynamic_scheduler"
-        ) as mock_scheduler:
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+            patch("app.bot.cogs.notification_settings.get_dynamic_scheduler") as mock_scheduler,
+        ):
             # Setup mocks
             mock_service_instance = AsyncMock()
             mock_service_instance.update_preferences.return_value = sample_preferences
@@ -470,9 +449,10 @@ class TestDatabaseIntegration:
     @pytest.mark.asyncio
     async def test_database_error_handling(self, notification_cog, mock_interaction):
         """Test database error handling and user feedback."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service:
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+        ):
             # Setup mock to raise database error
             mock_service_instance = AsyncMock()
             mock_service_instance.get_user_preferences.side_effect = SupabaseServiceError(
@@ -496,12 +476,10 @@ class TestDatabaseIntegration:
         self, notification_cog, mock_interaction, sample_preferences
     ):
         """Test handling of concurrent preference updates."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch(
-            "app.bot.cogs.notification_settings.PreferenceService"
-        ) as mock_pref_service, patch(
-            "app.bot.cogs.notification_settings.get_dynamic_scheduler"
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+            patch("app.bot.cogs.notification_settings.get_dynamic_scheduler"),
         ):
             # Setup mocks
             mock_service_instance = AsyncMock()
@@ -529,12 +507,10 @@ class TestResponseFormatting:
         self, notification_cog, mock_interaction, sample_preferences
     ):
         """Test notification settings display formatting."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch(
-            "app.bot.cogs.notification_settings.PreferenceService"
-        ) as mock_pref_service, patch(
-            "app.bot.cogs.notification_settings.TimezoneConverter"
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+            patch("app.bot.cogs.notification_settings.TimezoneConverter"),
         ):
             # Setup mocks
             mock_service_instance = AsyncMock()
@@ -559,12 +535,10 @@ class TestResponseFormatting:
         self, notification_cog, mock_interaction, sample_preferences
     ):
         """Test success message formatting for updates."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch(
-            "app.bot.cogs.notification_settings.PreferenceService"
-        ) as mock_pref_service, patch(
-            "app.bot.cogs.notification_settings.get_dynamic_scheduler"
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+            patch("app.bot.cogs.notification_settings.get_dynamic_scheduler"),
         ):
             # Setup mocks
             mock_service_instance = AsyncMock()
@@ -591,9 +565,10 @@ class TestResponseFormatting:
     @pytest.mark.asyncio
     async def test_error_message_formatting(self, notification_cog, mock_interaction):
         """Test error message formatting."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service:
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+        ):
             # Setup mock to raise error
             mock_service_instance = AsyncMock()
             mock_service_instance.get_user_preferences.side_effect = Exception("Test error")
@@ -617,12 +592,10 @@ class TestResponseFormatting:
         self, notification_cog, mock_interaction, sample_preferences
     ):
         """Test toggle notification response formatting."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch(
-            "app.bot.cogs.notification_settings.PreferenceService"
-        ) as mock_pref_service, patch(
-            "app.bot.cogs.notification_settings.get_dynamic_scheduler"
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+            patch("app.bot.cogs.notification_settings.get_dynamic_scheduler"),
         ):
             # Setup mocks for enabled -> disabled toggle
             mock_service_instance = AsyncMock()
@@ -653,14 +626,11 @@ class TestCommandIntegration:
         self, notification_cog, mock_interaction, sample_preferences
     ):
         """Test complete preference configuration workflow."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch(
-            "app.bot.cogs.notification_settings.PreferenceService"
-        ) as mock_pref_service, patch(
-            "app.bot.cogs.notification_settings.get_dynamic_scheduler"
-        ), patch(
-            "app.bot.cogs.notification_settings.TimezoneConverter"
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+            patch("app.bot.cogs.notification_settings.get_dynamic_scheduler"),
+            patch("app.bot.cogs.notification_settings.TimezoneConverter"),
         ):
             # Setup mocks
             mock_service_instance = AsyncMock()
@@ -705,9 +675,10 @@ class TestCommandIntegration:
         self, notification_cog, mock_interaction, sample_preferences
     ):
         """Test user registration integration with commands."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ), patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service:
+        with (
+            patch("app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"),
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+        ):
             # Setup mocks
             mock_service_instance = AsyncMock()
             mock_service_instance.get_user_preferences.return_value = sample_preferences
@@ -732,11 +703,12 @@ class TestCommandIntegration:
         self, notification_cog, mock_interaction, sample_preferences
     ):
         """Test service layer integration and dependency injection."""
-        with patch(
-            "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
-        ) as mock_repo, patch(
-            "app.bot.cogs.notification_settings.PreferenceService"
-        ) as mock_pref_service:
+        with (
+            patch(
+                "app.bot.cogs.notification_settings.UserNotificationPreferencesRepository"
+            ) as mock_repo,
+            patch("app.bot.cogs.notification_settings.PreferenceService") as mock_pref_service,
+        ):
             # Setup mocks
             mock_service_instance = AsyncMock()
             mock_service_instance.get_user_preferences.return_value = sample_preferences

@@ -538,9 +538,9 @@ class RetrievalEngine:
                 **match.metadata,
                 "personalization_boost": boost,
                 "topic_boost": topic_boost,
-                "recency_days": (datetime.utcnow() - match.published_at).days
-                if match.published_at
-                else None,
+                "recency_days": (
+                    (datetime.utcnow() - match.published_at).days if match.published_at else None
+                ),
                 "category_count": category_counts[article_category],
                 "is_read": match.article_id in read_ids,
             }

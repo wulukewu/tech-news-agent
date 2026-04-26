@@ -333,12 +333,16 @@ class DynamicScheduler(BaseService):
                 self.logger.info(
                     "User is in quiet hours, queuing notification for later",
                     user_id=str(user_id),
-                    quiet_hours_start=quiet_hours_settings.start_time.strftime("%H:%M")
-                    if quiet_hours_settings
-                    else None,
-                    quiet_hours_end=quiet_hours_settings.end_time.strftime("%H:%M")
-                    if quiet_hours_settings
-                    else None,
+                    quiet_hours_start=(
+                        quiet_hours_settings.start_time.strftime("%H:%M")
+                        if quiet_hours_settings
+                        else None
+                    ),
+                    quiet_hours_end=(
+                        quiet_hours_settings.end_time.strftime("%H:%M")
+                        if quiet_hours_settings
+                        else None
+                    ),
                     timezone=quiet_hours_settings.timezone if quiet_hours_settings else None,
                 )
 

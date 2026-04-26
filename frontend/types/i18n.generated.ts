@@ -479,6 +479,8 @@ export type TranslationKey =
   | 'nav.chat'
   | 'nav.insights'
   | 'nav.language'
+  | 'nav.learning-content'
+  | 'nav.learning-path'
   | 'nav.logout'
   | 'nav.main-menu'
   | 'nav.more'

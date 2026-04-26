@@ -233,7 +233,11 @@ class SimpleQAAgent:
                 "這些文章涵蓋了當前技術領域的重要趨勢和實用知識",
                 "建議您仔細閱讀以獲得更深入的技術理解",
             ]
-            recommendations = ["嘗試使用更具體的技術關鍵字來獲得更精準的搜尋結果", "關注文章中的實際案例和最佳實踐", "定期查看最新的技術文章以跟上行業發展"]
+            recommendations = [
+                "嘗試使用更具體的技術關鍵字來獲得更精準的搜尋結果",
+                "關注文章中的實際案例和最佳實踐",
+                "定期查看最新的技術文章以跟上行業發展",
+            ]
         else:
             insights = [
                 f"Based on your query '{query}', I found relevant technical articles for you",

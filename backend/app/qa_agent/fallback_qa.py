@@ -165,7 +165,11 @@ class FallbackQAAgent:
                 "建議您閱讀這些文章來獲得更深入的了解",
                 "如果需要更具體的資訊，請嘗試更詳細的問題",
             ]
-            recommendations = ["嘗試使用更具體的技術關鍵字", "查看最新的文章獲得最新資訊", "關注相關的技術趨勢"]
+            recommendations = [
+                "嘗試使用更具體的技術關鍵字",
+                "查看最新的文章獲得最新資訊",
+                "關注相關的技術趨勢",
+            ]
         else:
             insights = [
                 f"Based on your query '{parsed_query.original_query}', I found {len(articles)} relevant articles",

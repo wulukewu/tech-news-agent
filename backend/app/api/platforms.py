@@ -153,9 +153,11 @@ async def link_platform(
                 platform=link.platform,
                 platform_user_id=link.platform_user_id,
                 platform_username=link.platform_username,
-                linked_at=link.linked_at.isoformat()
-                if hasattr(link.linked_at, "isoformat")
-                else str(link.linked_at),
+                linked_at=(
+                    link.linked_at.isoformat()
+                    if hasattr(link.linked_at, "isoformat")
+                    else str(link.linked_at)
+                ),
                 is_active=link.is_active,
             )
         )
@@ -192,9 +194,11 @@ async def get_platform_links(
                     platform=lnk.platform,
                     platform_user_id=lnk.platform_user_id,
                     platform_username=lnk.platform_username,
-                    linked_at=lnk.linked_at.isoformat()
-                    if hasattr(lnk.linked_at, "isoformat")
-                    else str(lnk.linked_at),
+                    linked_at=(
+                        lnk.linked_at.isoformat()
+                        if hasattr(lnk.linked_at, "isoformat")
+                        else str(lnk.linked_at)
+                    ),
                     is_active=lnk.is_active,
                 )
                 for lnk in links

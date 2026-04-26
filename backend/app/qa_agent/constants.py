@@ -186,7 +186,11 @@ class MessageTemplates:
 
     # Clarification requests
     CLARIFICATION_REQUESTS = {
-        "zh": ["您能更具體地描述您想了解什麼嗎？", "請提供更多細節，這樣我能更好地幫助您。", "您是想了解哪個特定方面的資訊？"],
+        "zh": [
+            "您能更具體地描述您想了解什麼嗎？",
+            "請提供更多細節，這樣我能更好地幫助您。",
+            "您是想了解哪個特定方面的資訊？",
+        ],
         "en": [
             "Could you be more specific about what you'd like to know?",
             "Please provide more details so I can better help you.",

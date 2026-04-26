@@ -57,14 +57,14 @@ class TestNotificationSystemIntegration:
     @pytest.fixture
     def integration_service(self, mock_supabase_service, mock_dynamic_scheduler, mock_bot_client):
         """Create integration service with mocked dependencies."""
-        with patch(
-            "app.services.notification_system_integration.UserNotificationPreferencesRepository"
-        ), patch("app.services.notification_system_integration.PreferenceService"), patch(
-            "app.services.notification_system_integration.LockManager"
-        ), patch(
-            "app.services.notification_system_integration.NotificationService"
-        ), patch(
-            "app.services.notification_system_integration.get_preference_event_system"
+        with (
+            patch(
+                "app.services.notification_system_integration.UserNotificationPreferencesRepository"
+            ),
+            patch("app.services.notification_system_integration.PreferenceService"),
+            patch("app.services.notification_system_integration.LockManager"),
+            patch("app.services.notification_system_integration.NotificationService"),
+            patch("app.services.notification_system_integration.get_preference_event_system"),
         ):
             service = NotificationSystemIntegration(
                 supabase_service=mock_supabase_service,
@@ -347,14 +347,15 @@ class TestGlobalIntegrationService:
     @pytest.mark.asyncio
     async def test_global_service_initialization(self):
         """Test global service initialization and retrieval."""
-        with patch("app.services.notification_system_integration.SupabaseService"), patch(
-            "app.services.notification_system_integration.UserNotificationPreferencesRepository"
-        ), patch("app.services.notification_system_integration.PreferenceService"), patch(
-            "app.services.notification_system_integration.LockManager"
-        ), patch(
-            "app.services.notification_system_integration.NotificationService"
-        ), patch(
-            "app.services.notification_system_integration.get_preference_event_system"
+        with (
+            patch("app.services.notification_system_integration.SupabaseService"),
+            patch(
+                "app.services.notification_system_integration.UserNotificationPreferencesRepository"
+            ),
+            patch("app.services.notification_system_integration.PreferenceService"),
+            patch("app.services.notification_system_integration.LockManager"),
+            patch("app.services.notification_system_integration.NotificationService"),
+            patch("app.services.notification_system_integration.get_preference_event_system"),
         ):
             # Test initialization
             mock_supabase = MagicMock()

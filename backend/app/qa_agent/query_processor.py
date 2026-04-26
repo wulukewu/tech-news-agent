@@ -69,7 +69,18 @@ class QueryProcessor:
         # Intent classification keywords (Chinese and English)
         self.intent_keywords = {
             QueryIntent.QUESTION: {
-                "zh": ["什麼", "為什麼", "如何", "怎麼", "哪裡", "誰", "何時", "是否", "能否", "可以"],
+                "zh": [
+                    "什麼",
+                    "為什麼",
+                    "如何",
+                    "怎麼",
+                    "哪裡",
+                    "誰",
+                    "何時",
+                    "是否",
+                    "能否",
+                    "可以",
+                ],
                 "en": ["what", "why", "how", "where", "who", "when", "is", "can", "could", "would"],
             },
             QueryIntent.COMPARISON: {
@@ -769,7 +780,17 @@ class QueryProcessor:
     def _is_comparative_query(self, query_lower: str) -> bool:
         """Check if query is asking for comparisons or alternatives."""
         comparative_patterns = {
-            "zh": ["有其他", "還有別的", "類似的", "相關的", "比較", "對比", "不同的", "替代的", "另外的選擇"],
+            "zh": [
+                "有其他",
+                "還有別的",
+                "類似的",
+                "相關的",
+                "比較",
+                "對比",
+                "不同的",
+                "替代的",
+                "另外的選擇",
+            ],
             "en": [
                 "are there other",
                 "other similar",
@@ -801,7 +822,17 @@ class QueryProcessor:
         """Check if query is requesting clarification or explanation."""
         # More specific clarification patterns that indicate contextual clarification
         clarification_patterns = {
-            "zh": ["解釋這個", "說明這個", "澄清", "詳細說明", "具體解釋", "什麼意思", "能否解釋", "怎麼理解", "為什麼這樣"],
+            "zh": [
+                "解釋這個",
+                "說明這個",
+                "澄清",
+                "詳細說明",
+                "具體解釋",
+                "什麼意思",
+                "能否解釋",
+                "怎麼理解",
+                "為什麼這樣",
+            ],
             "en": [
                 "explain this",
                 "clarify this",

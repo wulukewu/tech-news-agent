@@ -253,11 +253,9 @@ async def get_feedback_summary(
         return {
             "article_id": article_id,
             "quality_score": quality_score,
-            "quality_rating": "high"
-            if quality_score > 0.8
-            else "medium"
-            if quality_score > 0.6
-            else "low",
+            "quality_rating": (
+                "high" if quality_score > 0.8 else "medium" if quality_score > 0.6 else "low"
+            ),
         }
     except Exception as e:
         logger.error(f"Failed to get feedback summary for {article_id}: {e}")

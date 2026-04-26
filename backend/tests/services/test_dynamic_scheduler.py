@@ -171,11 +171,10 @@ class TestDynamicScheduler:
     ):
         """Test successful rescheduling of user notification."""
         # Mock the cancel and schedule methods
-        with patch.object(
-            dynamic_scheduler, "cancel_user_notification"
-        ) as mock_cancel, patch.object(
-            dynamic_scheduler, "schedule_user_notification"
-        ) as mock_schedule:
+        with (
+            patch.object(dynamic_scheduler, "cancel_user_notification") as mock_cancel,
+            patch.object(dynamic_scheduler, "schedule_user_notification") as mock_schedule,
+        ):
             # Call the method
             await dynamic_scheduler.reschedule_user_notification(sample_user_id, sample_preferences)
 
@@ -231,13 +230,14 @@ class TestDynamicScheduler:
         self, dynamic_scheduler, sample_user_id, sample_preferences
     ):
         """Test successful sending of user notification with lock mechanism."""
-        with patch("app.bot.client.bot") as mock_bot, patch(
-            "app.services.dm_notification_service.DMNotificationService"
-        ) as mock_dm_service_class, patch(
-            "app.services.lock_manager.LockManager"
-        ) as mock_lock_manager_class, patch.object(
-            dynamic_scheduler, "schedule_user_notification"
-        ) as mock_schedule:
+        with (
+            patch("app.bot.client.bot") as mock_bot,
+            patch(
+                "app.services.dm_notification_service.DMNotificationService"
+            ) as mock_dm_service_class,
+            patch("app.services.lock_manager.LockManager") as mock_lock_manager_class,
+            patch.object(dynamic_scheduler, "schedule_user_notification") as mock_schedule,
+        ):
             # Mock bot and DM service
             mock_bot.is_ready.return_value = True
             mock_dm_service = AsyncMock()
@@ -254,11 +254,12 @@ class TestDynamicScheduler:
             mock_lock_manager_class.return_value = mock_lock_manager
 
             # Mock repository and preferences
-            with patch(
-                "app.repositories.user_notification_preferences.UserNotificationPreferencesRepository"
-            ) as mock_repo_class, patch(
-                "app.services.supabase_service.SupabaseService"
-            ) as mock_supabase_class:
+            with (
+                patch(
+                    "app.repositories.user_notification_preferences.UserNotificationPreferencesRepository"
+                ) as mock_repo_class,
+                patch("app.services.supabase_service.SupabaseService") as mock_supabase_class,
+            ):
                 mock_repo = AsyncMock()
                 mock_repo.get_by_user_id.return_value = sample_preferences
                 mock_repo_class.return_value = mock_repo
@@ -288,13 +289,14 @@ class TestDynamicScheduler:
         self, dynamic_scheduler, sample_user_id, sample_preferences
     ):
         """Test notification skipped when lock already exists (duplicate prevention)."""
-        with patch("app.bot.client.bot") as mock_bot, patch(
-            "app.services.dm_notification_service.DMNotificationService"
-        ) as mock_dm_service_class, patch(
-            "app.services.lock_manager.LockManager"
-        ) as mock_lock_manager_class, patch(
-            "app.services.supabase_service.SupabaseService"
-        ) as mock_supabase_class:
+        with (
+            patch("app.bot.client.bot") as mock_bot,
+            patch(
+                "app.services.dm_notification_service.DMNotificationService"
+            ) as mock_dm_service_class,
+            patch("app.services.lock_manager.LockManager") as mock_lock_manager_class,
+            patch("app.services.supabase_service.SupabaseService") as mock_supabase_class,
+        ):
             # Mock lock manager to return None (lock already exists)
             mock_lock_manager = AsyncMock()
             mock_lock_manager.acquire_notification_lock.return_value = None
@@ -321,13 +323,14 @@ class TestDynamicScheduler:
         self, dynamic_scheduler, sample_user_id, sample_preferences
     ):
         """Test lock is released as failed when notification sending fails."""
-        with patch("app.bot.client.bot") as mock_bot, patch(
-            "app.services.dm_notification_service.DMNotificationService"
-        ) as mock_dm_service_class, patch(
-            "app.services.lock_manager.LockManager"
-        ) as mock_lock_manager_class, patch(
-            "app.services.supabase_service.SupabaseService"
-        ) as mock_supabase_class:
+        with (
+            patch("app.bot.client.bot") as mock_bot,
+            patch(
+                "app.services.dm_notification_service.DMNotificationService"
+            ) as mock_dm_service_class,
+            patch("app.services.lock_manager.LockManager") as mock_lock_manager_class,
+            patch("app.services.supabase_service.SupabaseService") as mock_supabase_class,
+        ):
             # Mock bot and DM service
             mock_bot.is_ready.return_value = True
             mock_dm_service = AsyncMock()
@@ -371,11 +374,11 @@ class TestDynamicScheduler:
         self, dynamic_scheduler, sample_user_id, sample_preferences
     ):
         """Test handling when bot is not ready."""
-        with patch("app.bot.client.bot") as mock_bot, patch(
-            "app.services.lock_manager.LockManager"
-        ) as mock_lock_manager_class, patch(
-            "app.services.supabase_service.SupabaseService"
-        ) as mock_supabase_class:
+        with (
+            patch("app.bot.client.bot") as mock_bot,
+            patch("app.services.lock_manager.LockManager") as mock_lock_manager_class,
+            patch("app.services.supabase_service.SupabaseService") as mock_supabase_class,
+        ):
             mock_bot.is_ready.return_value = False
 
             # Mock lock manager
@@ -448,11 +451,12 @@ class TestDynamicScheduler:
         mock_scheduler.remove_job = MagicMock()
 
         # Mock repository to return no preferences (expired jobs)
-        with patch(
-            "app.repositories.user_notification_preferences.UserNotificationPreferencesRepository"
-        ) as mock_repo_class, patch(
-            "app.services.supabase_service.SupabaseService"
-        ) as mock_supabase_class:
+        with (
+            patch(
+                "app.repositories.user_notification_preferences.UserNotificationPreferencesRepository"
+            ) as mock_repo_class,
+            patch("app.services.supabase_service.SupabaseService") as mock_supabase_class,
+        ):
             mock_repo = AsyncMock()
             mock_repo.get_by_user_id.return_value = None  # No preferences = expired
             mock_repo_class.return_value = mock_repo

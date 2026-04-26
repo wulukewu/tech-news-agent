@@ -198,9 +198,11 @@ class PerformanceOptimizedQAController:
                 "avg_response_time": f"{summary['duration_stats']['avg_ms']:.2f}ms",
             },
             "requirements_compliance": {
-                "search_under_500ms": summary["duration_stats"]["p95_ms"] < 500
-                if "semantic_search" in summary["operation_breakdown"]
-                else None,
+                "search_under_500ms": (
+                    summary["duration_stats"]["p95_ms"] < 500
+                    if "semantic_search" in summary["operation_breakdown"]
+                    else None
+                ),
                 "response_under_3s": summary["duration_stats"]["p95_ms"] < 3000,
                 "concurrent_users_supported": summary["concurrency"]["max_concurrent"],
                 "queue_available": summary["queue"]["max_queue_size"] > 0,

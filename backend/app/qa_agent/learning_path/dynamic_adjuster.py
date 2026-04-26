@@ -169,7 +169,11 @@ class DynamicAdjuster:
                     adjustment_type=AdjustmentType.SKIP_REDUNDANT,
                     target_stage=stage.stage_name,
                     reason=f"{stage.stage_name}階段完成過快，可能已掌握相關技能",
-                    recommended_actions=[f"跳過{stage.stage_name}階段的部分重複內容", "直接進入下一階段", "增加挑戰性內容"],
+                    recommended_actions=[
+                        f"跳過{stage.stage_name}階段的部分重複內容",
+                        "直接進入下一階段",
+                        "增加挑戰性內容",
+                    ],
                     priority=2,
                 )
             )
@@ -184,7 +188,11 @@ class DynamicAdjuster:
                     adjustment_type=AdjustmentType.ADD_FOUNDATION,
                     target_stage=stage.stage_name,
                     reason=f"{stage.stage_name}階段進度緩慢，可能缺乏前置知識",
-                    recommended_actions=[f"為{stage.stage_name}階段增加基礎內容", "複習前置技能", "調整學習方法"],
+                    recommended_actions=[
+                        f"為{stage.stage_name}階段增加基礎內容",
+                        "複習前置技能",
+                        "調整學習方法",
+                    ],
                     priority=4,
                 )
             )
@@ -196,7 +204,11 @@ class DynamicAdjuster:
                     adjustment_type=AdjustmentType.EXTEND_PRACTICE,
                     target_stage=stage.stage_name,
                     reason=f"{stage.stage_name}階段接近完成，建議增加實戰練習",
-                    recommended_actions=[f"為{stage.stage_name}階段增加實戰項目", "尋找相關案例研究", "準備進入下一階段"],
+                    recommended_actions=[
+                        f"為{stage.stage_name}階段增加實戰項目",
+                        "尋找相關案例研究",
+                        "準備進入下一階段",
+                    ],
                     priority=3,
                 )
             )

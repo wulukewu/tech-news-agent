@@ -253,7 +253,8 @@ async def get_learning_goal_details(
         raise
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"獲取學習目標詳情失敗: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"獲取學習目標詳情失敗: {str(e)}",
         )
 
 
@@ -333,9 +334,9 @@ async def get_article_recommendations(
                     "title": rec.article.title,
                     "url": rec.article.url,
                     "category": rec.article.category,
-                    "published_at": rec.article.published_at.isoformat()
-                    if rec.article.published_at
-                    else None,
+                    "published_at": (
+                        rec.article.published_at.isoformat() if rec.article.published_at else None
+                    ),
                     "relevance_score": rec.relevance_score,
                     "difficulty_match": rec.difficulty_match,
                     "reason": rec.reason,

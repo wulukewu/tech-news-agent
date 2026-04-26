@@ -329,9 +329,9 @@ class EnhancedRecommendationEngine:
                         },
                         "score": article.score,
                         "reasoning": article.reasoning,
-                        "classification": classification_result.data[0]
-                        if classification_result.data
-                        else None,
+                        "classification": (
+                            classification_result.data[0] if classification_result.data else None
+                        ),
                     }
 
                     final_recommendations.append(recommendation)

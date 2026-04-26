@@ -215,7 +215,19 @@ async def _search_articles_by_query(query: str) -> List[ArticleSummaryResponse]:
     import re
 
     keywords = re.findall(r"[A-Za-z][A-Za-z0-9+#.-]*|[\u4e00-\u9fff]{2,}", query)
-    stop = {"最近", "有什麼", "有沒有", "文章", "介紹", "告訴", "幫我", "什麼", "怎麼", "如何", "推薦"}
+    stop = {
+        "最近",
+        "有什麼",
+        "有沒有",
+        "文章",
+        "介紹",
+        "告訴",
+        "幫我",
+        "什麼",
+        "怎麼",
+        "如何",
+        "推薦",
+    }
     keywords = [k for k in keywords if k.lower() not in stop and len(k) > 1][:3]
 
     if not keywords:
@@ -352,9 +364,9 @@ async def _save_messages_to_db(
                         "articles": [
                             {
                                 **a.dict(),
-                                "published_at": a.published_at.isoformat()
-                                if a.published_at
-                                else None,
+                                "published_at": (
+                                    a.published_at.isoformat() if a.published_at else None
+                                ),
                             }
                             for a in qa_response.articles
                         ],
@@ -427,7 +439,10 @@ async def _process_query_with_intent(
             query=query,
             articles=[],
             insights=["已記錄 👍"],
-            recommendations=["試試問我問題，例如「最近有什麼 AI 文章？」", "或告訴我你的偏好，例如「我喜歡系統設計」"],
+            recommendations=[
+                "試試問我問題，例如「最近有什麼 AI 文章？」",
+                "或告訴我你的偏好，例如「我喜歡系統設計」",
+            ],
             conversation_id=conversation_id,
             response_time=0.0,
             intent="other",

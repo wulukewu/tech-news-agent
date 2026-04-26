@@ -67,12 +67,12 @@ class QuietHoursSettings:
             timezone=data.get("timezone", "UTC"),
             weekdays=data.get("weekdays", [1, 2, 3, 4, 5, 6, 7]),
             enabled=data.get("enabled", True),
-            created_at=datetime.fromisoformat(data["created_at"])
-            if data.get("created_at")
-            else None,
-            updated_at=datetime.fromisoformat(data["updated_at"])
-            if data.get("updated_at")
-            else None,
+            created_at=(
+                datetime.fromisoformat(data["created_at"]) if data.get("created_at") else None
+            ),
+            updated_at=(
+                datetime.fromisoformat(data["updated_at"]) if data.get("updated_at") else None
+            ),
         )
 
 

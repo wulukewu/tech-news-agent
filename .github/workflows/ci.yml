@@ -12,6 +12,9 @@ concurrency:
 env:
   PYTHON_VERSION: '3.11'
   NODE_VERSION: '20'
+  # Ensure consistent environment
+  FORCE_COLOR: '1'
+  CI: 'true'
 
 jobs:
   # ============================================
@@ -48,17 +51,30 @@ jobs:
         working-directory: backend
         run: |
           pip install --upgrade pip
-          pip install black ruff
-          pip install -r requirements.txt -r requirements-dev.txt
+          pip install black ruff mypy
+          if [ -f requirements-minimal.txt ]; then
+            pip install -r requirements-minimal.txt
+          elif [ -f requirements.txt ]; then
+            pip install -r requirements.txt || echo "Some dependencies failed, continuing..."
+          fi
+          if [ -f requirements-dev.txt ]; then
+            pip install -r requirements-dev.txt || echo "Some dev dependencies failed, continuing..."
+          fi
 
       - name: Code quality checks
         working-directory: backend
         run: |
           echo "🎨 Checking code formatting with Black..."
-          black --check app/ tests/
+          python -m black --check --diff app/ tests/ || {
+            echo "❌ Black formatting issues found. Run 'black app/ tests/' to fix."
+            exit 1
+          }
 
           echo "🔍 Running Ruff linting..."
-          ruff check app/ tests/
+          python -m ruff check app/ tests/ || {
+            echo "❌ Ruff linting issues found. Run 'ruff check --fix app/ tests/' to fix."
+            exit 1
+          }
 
       - name: Run tests (optional)
         working-directory: backend
@@ -87,22 +103,35 @@ jobs:
 
       - name: Install dependencies
         working-directory: frontend
-        run: npm ci
+        run: |
+          npm ci --prefer-offline --no-audit
+          # Ensure .next directory has correct permissions
+          mkdir -p .next/cache
+          chmod -R 755 .next || true
 
       - name: Code quality checks
         working-directory: frontend
         run: |
           echo "🎨 Checking code formatting with Prettier..."
-          npm run format:check || echo "⚠️ Format issues found (non-blocking)"
+          npm run format:check || {
+            echo "❌ Prettier formatting issues found. Run 'npm run format' to fix."
+            exit 1
+          }
 
-          echo "🔍 Running ESLint..."
-          npm run lint || echo "⚠️ Lint warnings found (non-blocking)"
+          echo "🔍 Running ESLint (warnings allowed)..."
+          npm run lint || {
+            echo "⚠️ ESLint warnings found, but continuing..."
+            echo "Run 'npm run lint:fix' to fix auto-fixable issues."
+          }
 
       - name: Build verification
         working-directory: frontend
         run: |
           echo "🏗️ Building application..."
-          npm run build
+          npm run build || {
+            echo "❌ Build failed. Check the build logs above."
+            exit 1
+          }
 
       - name: Run tests (optional)
         working-directory: frontend
