@@ -24,7 +24,9 @@ logger = logging.getLogger(__name__)
 
 # Keywords that indicate a question / article query
 _QUESTION_PATTERNS = re.compile(
-    r"[?？]|什麼|怎麼|如何|有沒有|推薦|介紹|解釋|告訴我|幫我找|最近.*文章|有什麼.*關於",
+    r"[?？]|什麼|怎麼|如何|有沒有|推薦|介紹|解釋|告訴我|幫我找"
+    r"|最近.*文章|有什麼.*關於|關於.*文章|哪些.*文章|找.*文章"
+    r"|最新|新聞|資訊|教學|文章|新的|有哪些|哪裡|為什麼|誰|何時",
     re.IGNORECASE,
 )
 

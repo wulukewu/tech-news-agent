@@ -140,7 +140,13 @@ def _detect_intent(text: str) -> str:
     """Detect user intent: 'question', 'preference', or 'other'."""
     import re
 
-    if re.search(r"[?？]|什麼|怎麼|如何|有沒有|推薦|介紹|解釋|告訴我|幫我找|最近.*文章|有什麼.*關於", text, re.IGNORECASE):
+    if re.search(
+        r"[?？]|什麼|怎麼|如何|有沒有|推薦|介紹|解釋|告訴我|幫我找"
+        r"|最近.*文章|有什麼.*關於|關於.*文章|哪些.*文章|找.*文章"
+        r"|最新|新聞|資訊|教學|文章|新的|有哪些|哪裡|為什麼|誰|何時",
+        text,
+        re.IGNORECASE,
+    ):
         return "question"
     if re.search(r"我喜歡|我不喜歡|我想看|我偏好|我對.*感興趣|不想看|希望多|希望少", text, re.IGNORECASE):
         return "preference"
