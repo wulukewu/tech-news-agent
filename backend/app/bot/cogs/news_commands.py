@@ -34,6 +34,74 @@ class NewsCommands(commands.Cog):
         self.supabase_service = supabase_service or SupabaseService()
         self.llm_service = llm_service or LLMService()
 
+    @app_commands.command(name="my_profile", description="查看你的偏好摘要與分類權重")
+    async def my_profile(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+
+        discord_id = str(interaction.user.id)
+        try:
+            user = await self.supabase_service.get_user_by_discord_id(discord_id)
+            if not user:
+                await interaction.followup.send("❌ 找不到你的帳號，請先使用其他指令註冊。", ephemeral=True)
+                return
+            user_id = user["id"]
+
+            resp = (
+                self.supabase_service.client.table("preference_model")
+                .select("preference_summary, category_weights, summary_updated_at")
+                .eq("user_id", user_id)
+                .single()
+                .execute()
+            )
+            data = resp.data or {}
+        except Exception as exc:
+            logger.error("my_profile: failed to fetch preference model: %s", exc)
+            await interaction.followup.send("❌ 無法取得偏好資料，請稍後再試。", ephemeral=True)
+            return
+
+        import json
+
+        summary = data.get("preference_summary")
+        weights_raw = data.get("category_weights") or {}
+        if isinstance(weights_raw, str):
+            weights_raw = json.loads(weights_raw)
+
+        embed = discord.Embed(title="📊 我的偏好檔案", color=discord.Color.blurple())
+
+        if summary:
+            embed.add_field(name="💬 偏好摘要", value=summary[:1000], inline=False)
+            updated = data.get("summary_updated_at", "")
+            if updated:
+                embed.set_footer(text=f"摘要更新於 {updated[:10]}")
+        else:
+            embed.add_field(
+                name="💬 偏好摘要",
+                value="還沒有足夠資料。在 DM 裡直接告訴我你喜歡什麼技術主題，我會記住！",
+                inline=False,
+            )
+
+        if weights_raw:
+            top5 = sorted(weights_raw.items(), key=lambda x: x[1], reverse=True)[:5]
+            bars = "\n".join(
+                f"`{cat:<20}` {'█' * int(w * 10)}{' ' * (10 - int(w * 10))} {w:.2f}"
+                for cat, w in top5
+            )
+            embed.add_field(name="⚖️ 分類權重 (Top 5)", value=bars, inline=False)
+        else:
+            embed.add_field(
+                name="⚖️ 分類權重",
+                value="尚無資料，對文章評分或點擊 👍/👎 後會開始累積。",
+                inline=False,
+            )
+
+        embed.add_field(
+            name="💡 如何改善推薦？",
+            value="直接在這個 DM 裡說出你的偏好，例如：\n「我喜歡 Rust 和系統設計，不喜歡入門教學」",
+            inline=False,
+        )
+
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
     @app_commands.command(name="recommend_now", description="立即觸發個人化文章推薦（發送 DM）")
     async def recommend_now(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True, thinking=True)

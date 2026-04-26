@@ -289,3 +289,72 @@ async def complete_onboarding(
             "initial_conversation": initial_conv,
         }
     )
+
+
+# ── Preference Summary ────────────────────────────────────────────────────────
+
+
+class UpdateSummaryRequest(BaseModel):
+    summary: str
+
+
+@router.get("/summary")
+async def get_preference_summary(current_user: dict[str, Any] = Depends(get_current_user)):
+    """Get user's preference summary and category weights."""
+    from app.services.supabase_service import SupabaseService
+
+    supabase = SupabaseService()
+    user_id = current_user["user_id"]
+    try:
+        resp = (
+            supabase.client.table("preference_model")
+            .select("preference_summary, category_weights, summary_updated_at")
+            .eq("user_id", user_id)
+            .single()
+            .execute()
+        )
+        data = resp.data or {}
+    except Exception:
+        data = {}
+
+    import json
+
+    weights = data.get("category_weights") or {}
+    if isinstance(weights, str):
+        weights = json.loads(weights)
+
+    return success_response(
+        {
+            "preference_summary": data.get("preference_summary"),
+            "category_weights": weights,
+            "summary_updated_at": data.get("summary_updated_at"),
+        }
+    )
+
+
+@router.patch("/summary")
+async def update_preference_summary_endpoint(
+    body: UpdateSummaryRequest,
+    current_user: dict[str, Any] = Depends(get_current_user),
+):
+    """Manually update user's preference summary."""
+    from datetime import UTC, datetime
+
+    from app.services.supabase_service import SupabaseService
+
+    supabase = SupabaseService()
+    user_id = current_user["user_id"]
+    try:
+        supabase.client.table("preference_model").upsert(
+            {
+                "user_id": user_id,
+                "preference_summary": body.summary.strip(),
+                "summary_updated_at": datetime.now(UTC).isoformat(),
+                "updated_at": datetime.now(UTC).isoformat(),
+            }
+        ).execute()
+    except Exception as exc:
+        logger.error("Failed to update preference summary: %s", exc)
+        raise HTTPException(status_code=500, detail="無法更新偏好摘要")
+
+    return success_response({"preference_summary": body.summary.strip()})

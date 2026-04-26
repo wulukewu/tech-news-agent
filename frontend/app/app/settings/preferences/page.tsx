@@ -9,6 +9,7 @@ import {
   Send,
   ChevronDown,
   ChevronUp,
+  Save,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/lib/toast';
@@ -19,6 +20,8 @@ import {
   getLearningSettings,
   updateLearningSettings,
   triggerLearning,
+  getPreferenceSummary,
+  updatePreferenceSummary,
   type LearningConversation,
   type PreferenceModel,
   type LearningSettings,
@@ -133,18 +136,24 @@ export default function PreferencesPage() {
   const [loading, setLoading] = useState(true);
   const [triggering, setTriggering] = useState(false);
   const [showWeights, setShowWeights] = useState(true);
+  const [summary, setSummary] = useState<string>('');
+  const [summaryUpdatedAt, setSummaryUpdatedAt] = useState<string | null>(null);
+  const [savingSummary, setSavingSummary] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [convData, prefsData, settingsData] = await Promise.all([
+      const [convData, prefsData, settingsData, summaryData] = await Promise.all([
         getPendingConversations(),
         getPreferences(),
         getLearningSettings(),
+        getPreferenceSummary(),
       ]);
       setConversations(convData.conversations);
       setPrefs(prefsData);
       setSettings(settingsData);
+      setSummary(summaryData.preference_summary ?? '');
+      setSummaryUpdatedAt(summaryData.summary_updated_at);
     } catch {
       toast.error(t('preferences.save-failed'));
     } finally {
@@ -280,6 +289,46 @@ export default function PreferencesPage() {
               {t('preferences.no-pending')}
             </div>
           )}
+
+          {/* Preference summary */}
+          <section aria-labelledby="summary-heading">
+            <h2 id="summary-heading" className="text-base font-semibold mb-3">
+              💬 偏好摘要
+            </h2>
+            <div className="rounded-xl border bg-card p-5 shadow-sm space-y-3">
+              <p className="text-xs text-muted-foreground">
+                直接在 Discord DM 裡告訴 bot
+                你的偏好，每天會自動更新這份摘要。你也可以直接在這裡編輯。
+                {summaryUpdatedAt && ` 上次更新：${summaryUpdatedAt.slice(0, 10)}`}
+              </p>
+              <textarea
+                value={summary}
+                onChange={(e) => setSummary(e.target.value)}
+                placeholder="例如：我喜歡 Rust 和系統設計，偏好進階內容，不喜歡入門教學和 LLM wrapper 文章。"
+                rows={4}
+                className="w-full rounded-lg border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <Button
+                size="sm"
+                onClick={async () => {
+                  setSavingSummary(true);
+                  try {
+                    await updatePreferenceSummary(summary);
+                    toast.success('偏好摘要已儲存');
+                  } catch {
+                    toast.error('儲存失敗，請稍後再試');
+                  } finally {
+                    setSavingSummary(false);
+                  }
+                }}
+                disabled={savingSummary}
+                className="cursor-pointer"
+              >
+                <Save className="h-3.5 w-3.5 mr-1.5" />
+                {savingSummary ? '儲存中...' : '儲存'}
+              </Button>
+            </div>
+          </section>
 
           {/* Category weights */}
           <section aria-labelledby="weights-heading">

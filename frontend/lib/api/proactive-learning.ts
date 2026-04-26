@@ -145,3 +145,22 @@ export const ONBOARDING_CATEGORIES = [
   'Startup',
   'Hardware',
 ] as const;
+
+// ── Preference Summary ────────────────────────────────────────────────────────
+
+export interface PreferenceSummaryData {
+  preference_summary: string | null;
+  category_weights: Record<string, number>;
+  summary_updated_at: string | null;
+}
+
+export async function getPreferenceSummary(): Promise<PreferenceSummaryData> {
+  const res = await apiClient.get<{ success: boolean; data: PreferenceSummaryData }>(
+    '/api/learning/summary'
+  );
+  return res.data.data;
+}
+
+export async function updatePreferenceSummary(summary: string): Promise<void> {
+  await apiClient.patch('/api/learning/summary', { summary });
+}

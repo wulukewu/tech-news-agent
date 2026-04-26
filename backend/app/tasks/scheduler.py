@@ -537,7 +537,29 @@ async def weekly_insights_job():
         logger.error("Weekly insights job failed: %s", exc, exc_info=True)
 
 
-async def proactive_learning_job():
+async def preference_summary_job():
+    """
+    Daily job: condense DM conversations into preference summaries.
+    Requirements: dm-conversation-memory §2
+    """
+    logger.info("Starting preference summary job...")
+    try:
+        from app.services.preference_summary_service import update_preference_summary
+
+        supabase = SupabaseService()
+        resp = supabase.client.table("dm_conversations").select("user_id").execute()
+        user_ids = list({r["user_id"] for r in (resp.data or [])})
+
+        updated = 0
+        for user_id in user_ids:
+            result = await update_preference_summary(user_id, supabase)
+            if result:
+                updated += 1
+
+        logger.info("Preference summary job complete: %d summaries updated", updated)
+    except Exception as exc:
+        logger.error("Preference summary job failed: %s", exc, exc_info=True)
+
     """
     Scheduled job: run behavior analysis for all active users daily at 10:00.
     Triggers learning conversations where warranted.
@@ -674,6 +696,16 @@ def setup_scheduler():
     logger.info(
         f"Weekly insights job registered: Runs every Monday at 09:00 in timezone '{scheduler_tz}'"
     )
+
+    # Register preference summary job (daily at 11:00)
+    _scheduler.add_job(
+        preference_summary_job,
+        trigger=CronTrigger(hour=11, minute=0, timezone=scheduler_tz),
+        id="preference_summary",
+        name="Preference Summary Update",
+        replace_existing=True,
+    )
+    logger.info("Preference summary job registered: Runs daily at 11:00")
 
     # Register proactive learning behavior analysis job (daily at 10:00)
     _scheduler.add_job(
