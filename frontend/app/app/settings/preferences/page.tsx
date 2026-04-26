@@ -293,7 +293,7 @@ export default function PreferencesPage() {
           {/* Preference summary */}
           <section aria-labelledby="summary-heading">
             <h2 id="summary-heading" className="text-base font-semibold mb-3">
-              💬 偏好摘要
+              偏好摘要
             </h2>
             <div className="rounded-xl border bg-card p-5 shadow-sm space-y-3">
               <p className="text-xs text-muted-foreground">
