@@ -1,5 +1,4 @@
 /**
-import { logger } from '@/lib/utils/logger';
  * Production-safe logger utility
  *
  * Replaces console.log with environment-aware logging
@@ -42,19 +41,19 @@ class Logger {
 
   debug(...args: any[]): void {
     if (this.shouldLog('debug')) {
-      logger.debug(...this.formatMessage('debug', ...args));
+      console.log(...this.formatMessage('debug', ...args));
     }
   }
 
   info(...args: any[]): void {
     if (this.shouldLog('info')) {
-      logger.info(...this.formatMessage('info', ...args));
+      console.info(...this.formatMessage('info', ...args));
     }
   }
 
   warn(...args: any[]): void {
     if (this.shouldLog('warn')) {
-      logger.warn(...this.formatMessage('warn', ...args));
+      console.warn(...this.formatMessage('warn', ...args));
     }
   }
 
