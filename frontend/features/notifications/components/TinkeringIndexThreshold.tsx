@@ -1,11 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -17,7 +16,6 @@ import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { ErrorMessage } from '@/components/ui/error-message';
 import { toast } from '@/lib/toast';
 import {
-  Star,
   Brain,
   TrendingUp,
   CheckCircle,
@@ -34,8 +32,6 @@ import {
   getTechnicalDepthLevels,
   getTechnicalDepthStats,
   TechnicalDepthSettings,
-  TechnicalDepthLevel,
-  TechnicalDepthStats,
 } from '@/lib/api/notifications';
 
 interface TinkeringIndexThresholdProps {
@@ -45,7 +41,6 @@ interface TinkeringIndexThresholdProps {
 }
 
 export function TinkeringIndexThreshold({
-  threshold: legacyThreshold,
   onThresholdChange: legacyOnChange,
   disabled: legacyDisabled = false,
 }: TinkeringIndexThresholdProps) {
@@ -53,7 +48,6 @@ export function TinkeringIndexThreshold({
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
 
-  // Fetch technical depth settings
   const {
     data: settings,
     isLoading,
@@ -64,48 +58,33 @@ export function TinkeringIndexThreshold({
     staleTime: 0,
   });
 
-  // Fetch available levels
   const { data: levels = [] } = useQuery({
     queryKey: ['techDepthLevels'],
     queryFn: getTechnicalDepthLevels,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch stats
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ['techDepthStats'],
     queryFn: getTechnicalDepthStats,
-    refetchInterval: 60000, // Refetch every minute
+    refetchInterval: 60000,
     staleTime: 30000,
   });
 
-  // Update mutation
   const updateMutation = useMutation({
     mutationFn: updateTechnicalDepthSettings,
-    onMutate: () => {
-      setIsSaving(true);
-    },
-    onSuccess: (updatedSettings) => {
-      queryClient.setQueryData(['techDepthSettings'], updatedSettings);
+    onMutate: () => setIsSaving(true),
+    onSuccess: (updated) => {
+      queryClient.setQueryData(['techDepthSettings'], updated);
       queryClient.invalidateQueries({ queryKey: ['techDepthStats'] });
-      toast.success('技術深度設定已更新');
-
-      // Call legacy callback if provided
-      if (legacyOnChange && updatedSettings.threshold_numeric) {
-        legacyOnChange(updatedSettings.threshold_numeric);
-      }
+      toast.success(t('settings.notifications.depth-updated'));
+      if (legacyOnChange && updated.threshold_numeric) legacyOnChange(updated.threshold_numeric);
     },
-    onError: (error: any) => {
-      toast.error('更新失敗，請稍後再試');
-    },
-    onSettled: () => {
-      setIsSaving(false);
-    },
+    onError: () => toast.error(t('settings.notifications.send-failed')),
+    onSettled: () => setIsSaving(false),
   });
 
-  const handleUpdate = (updates: Partial<TechnicalDepthSettings>) => {
-    updateMutation.mutate(updates);
-  };
+  const handleUpdate = (updates: Partial<TechnicalDepthSettings>) => updateMutation.mutate(updates);
 
   const getLevelIcon = (level: string) => {
     switch (level) {
@@ -143,9 +122,9 @@ export function TinkeringIndexThreshold({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Brain className="h-5 w-5" />
-            技術深度閾值
+            {t('settings.notifications.depth-title')}
           </CardTitle>
-          <CardDescription>設定接收通知的最低技術深度要求</CardDescription>
+          <CardDescription>{t('settings.notifications.depth-desc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
@@ -162,13 +141,13 @@ export function TinkeringIndexThreshold({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Brain className="h-5 w-5" />
-            技術深度閾值
+            {t('settings.notifications.depth-title')}
           </CardTitle>
-          <CardDescription>設定接收通知的最低技術深度要求</CardDescription>
+          <CardDescription>{t('settings.notifications.depth-desc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <ErrorMessage
-            message="無法載入技術深度設定"
+            message={t('settings.notifications.depth-load-error')}
             onRetry={() => queryClient.invalidateQueries({ queryKey: ['techDepthSettings'] })}
           />
         </CardContent>
@@ -176,12 +155,9 @@ export function TinkeringIndexThreshold({
     );
   }
 
-  if (!settings) {
-    return null;
-  }
+  if (!settings) return null;
 
-  const currentLevel = levels.find((level) => level.value === settings.threshold);
-  const LevelIcon = currentLevel ? getLevelIcon(currentLevel.value) : Brain;
+  const currentLevel = levels.find((l) => l.value === settings.threshold);
 
   return (
     <Card>
@@ -190,31 +166,32 @@ export function TinkeringIndexThreshold({
           <div className="flex items-center gap-2">
             <Brain className="h-5 w-5 text-purple-600" />
             <div>
-              <CardTitle>技術深度閾值</CardTitle>
-              <CardDescription>設定接收通知的最低技術深度要求</CardDescription>
+              <CardTitle>{t('settings.notifications.depth-title')}</CardTitle>
+              <CardDescription>{t('settings.notifications.depth-desc')}</CardDescription>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 text-sm">
             {settings.enabled ? (
-              <div className="flex items-center gap-2 text-green-600">
+              <span className="text-green-600 flex items-center gap-1.5">
                 <CheckCircle className="h-4 w-4" />
-                <span className="text-sm font-medium">已啟用</span>
-              </div>
+                {t('settings.notifications.status-active')}
+              </span>
             ) : (
-              <div className="flex items-center gap-2 text-gray-500">
+              <span className="text-muted-foreground flex items-center gap-1.5">
                 <AlertCircle className="h-4 w-4" />
-                <span className="text-sm font-medium">已停用</span>
-              </div>
+                {t('settings.notifications.status-inactive')}
+              </span>
             )}
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Enable/Disable Switch */}
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
-            <Label htmlFor="tech-depth-enabled">啟用技術深度篩選</Label>
-            <p className="text-sm text-muted-foreground">只接收符合技術深度要求的文章通知</p>
+            <Label htmlFor="tech-depth-enabled">{t('settings.notifications.depth-enable')}</Label>
+            <p className="text-sm text-muted-foreground">
+              {t('settings.notifications.depth-enable-desc')}
+            </p>
           </div>
           <Switch
             id="tech-depth-enabled"
@@ -226,103 +203,63 @@ export function TinkeringIndexThreshold({
 
         {settings.enabled && (
           <>
-            {/* Threshold Selection */}
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="tech-depth-threshold">最低技術深度</Label>
-                <Select
-                  value={settings.threshold}
-                  onValueChange={(threshold) => handleUpdate({ threshold })}
-                  disabled={isSaving || legacyDisabled}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {levels.map((level) => {
-                      const Icon = getLevelIcon(level.value);
-                      const colorClass = getLevelColor(level.value);
-                      return (
-                        <SelectItem key={level.value} value={level.value}>
-                          <div className="flex items-center gap-2">
-                            <Icon className={`h-4 w-4 ${colorClass}`} />
-                            <div>
-                              <div className="font-medium">{level.label}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {level.description}
-                              </div>
-                            </div>
-                          </div>
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Current Level Display */}
-              {currentLevel && (
-                <div className="p-4 bg-muted rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <LevelIcon className={`h-6 w-6 ${getLevelColor(currentLevel.value)}`} />
-                    <div>
-                      <p className="font-medium">{currentLevel.label}</p>
-                      <p className="text-sm text-muted-foreground">{currentLevel.description}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
+            <div className="space-y-2">
+              <Label htmlFor="tech-depth-threshold">
+                {t('settings.notifications.depth-min-label')}
+              </Label>
+              <Select
+                value={settings.threshold}
+                onValueChange={(threshold: 'basic' | 'intermediate' | 'advanced' | 'expert') =>
+                  handleUpdate({ threshold })
+                }
+                disabled={isSaving || legacyDisabled}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {levels.map((level) => {
+                    const Icon = getLevelIcon(level.value);
+                    return (
+                      <SelectItem key={level.value} value={level.value}>
+                        <div className="flex items-center gap-2">
+                          <Icon className={`h-4 w-4 ${getLevelColor(level.value)}`} />
+                          <span className="font-medium">{level.label}</span>
+                          <span className="text-xs text-muted-foreground">{level.description}</span>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
             </div>
 
-            {/* Statistics */}
-            {stats && (
-              <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg space-y-2">
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-blue-600" />
-                  <span className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                    篩選效果
-                  </span>
+            {currentLevel && (
+              <div className="p-4 bg-muted rounded-lg flex items-center gap-3">
+                {(() => {
+                  const Icon = getLevelIcon(currentLevel.value);
+                  return <Icon className={`h-6 w-6 ${getLevelColor(currentLevel.value)}`} />;
+                })()}
+                <div>
+                  <p className="font-medium">{currentLevel.label}</p>
+                  <p className="text-sm text-muted-foreground">{currentLevel.description}</p>
                 </div>
-                <p className="text-sm text-blue-700 dark:text-blue-300">{stats.message}</p>
               </div>
             )}
 
-            {/* Level Explanations */}
-            <div className="space-y-3">
-              <Label>技術深度說明</Label>
-              <div className="space-y-2">
-                {levels.map((level) => {
-                  const Icon = getLevelIcon(level.value);
-                  const colorClass = getLevelColor(level.value);
-                  const isSelected = level.value === settings.threshold;
-
-                  return (
-                    <div
-                      key={level.value}
-                      className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
-                        isSelected ? 'bg-primary/10 border border-primary/20' : 'hover:bg-muted/50'
-                      }`}
-                    >
-                      <Icon className={`h-4 w-4 ${colorClass}`} />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-sm">{level.label}</span>
-                          {isSelected && <CheckCircle className="h-3 w-3 text-primary" />}
-                        </div>
-                        <p className="text-xs text-muted-foreground">{level.description}</p>
-                      </div>
-                    </div>
-                  );
-                })}
+            {stats && (
+              <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                <p className="text-sm text-blue-700 dark:text-blue-300">{stats.message}</p>
               </div>
-            </div>
+            )}
           </>
         )}
 
         {!settings.enabled && (
-          <div className="p-4 bg-gray-50 dark:bg-gray-900 rounded-lg">
+          <div className="p-4 bg-muted rounded-lg">
             <p className="text-sm text-muted-foreground">
-              技術深度篩選已停用，您將接收所有文章的通知，不論其技術深度等級。
+              {t('settings.notifications.depth-disabled-hint')}
             </p>
           </div>
         )}

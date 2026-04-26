@@ -16,10 +16,9 @@ import { NotificationSettings } from '@/types/notification';
 import { QuietHoursSettings } from '@/features/notifications/components/QuietHoursSettings';
 import { TinkeringIndexThreshold } from '@/features/notifications/components/TinkeringIndexThreshold';
 import { FeedNotificationSettings } from '@/features/notifications/components/FeedNotificationSettings';
-import { NotificationHistoryPanel } from '@/features/notifications/components/NotificationHistoryPanel';
 import { NotificationPreview } from '@/features/notifications/components/NotificationPreview';
 import { PersonalizedNotificationSettings } from '@/features/notifications/components/PersonalizedNotificationSettings';
-import { Bell, Moon, Brain, Rss, History, CheckCircle, AlertCircle } from 'lucide-react';
+import { Bell, Moon, Brain, Rss, CheckCircle, AlertCircle } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 
 export default function NotificationSettingsPage() {
@@ -72,7 +71,6 @@ export default function NotificationSettingsPage() {
   if (error) {
     return (
       <div className="space-y-6">
-        <PageHeader status={status} />
         <ErrorMessage
           message={(error as Error).message || t('errors.server-error')}
           onRetry={() => queryClient.invalidateQueries({ queryKey: ['notificationSettings'] })}
@@ -85,10 +83,31 @@ export default function NotificationSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader status={status} />
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">{t('settings.notifications.title')}</h1>
+          <p className="text-muted-foreground mt-1">{t('settings.notifications.description')}</p>
+        </div>
+        <div className="flex-shrink-0 mt-1">
+          {status && typeof status === 'object' && 'scheduled' in status && status.scheduled ? (
+            <Badge
+              variant="outline"
+              className="text-green-600 border-green-300 dark:border-green-700 gap-1.5"
+            >
+              <CheckCircle className="h-3.5 w-3.5" />
+              {t('settings.notifications.status-active')}
+            </Badge>
+          ) : status !== undefined ? (
+            <Badge variant="outline" className="text-muted-foreground gap-1.5">
+              <AlertCircle className="h-3.5 w-3.5" />
+              {t('settings.notifications.status-inactive')}
+            </Badge>
+          ) : null}
+        </div>
+      </div>
 
       <Tabs defaultValue="schedule" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-5 h-auto">
+        <TabsList className="grid w-full grid-cols-4 h-auto">
           <TabsTrigger
             value="schedule"
             className="flex items-center gap-1.5 py-2 text-xs sm:text-sm"
@@ -118,86 +137,49 @@ export default function NotificationSettingsPage() {
             <span className="hidden sm:inline">{t('settings.notifications.tab-feeds')}</span>
             <span className="sm:hidden">來源</span>
           </TabsTrigger>
-          <TabsTrigger
-            value="history"
-            className="flex items-center gap-1.5 py-2 text-xs sm:text-sm"
-          >
-            <History className="h-3.5 w-3.5 flex-shrink-0" />
-            <span className="hidden sm:inline">{t('settings.notifications.tab-history')}</span>
-            <span className="sm:hidden">歷史</span>
-          </TabsTrigger>
         </TabsList>
 
-        {/* Schedule Tab */}
         <TabsContent value="schedule" className="space-y-4">
           <PersonalizedNotificationSettings />
           {settings && <NotificationPreview settings={settings} />}
         </TabsContent>
 
-        {/* Quiet Hours Tab */}
         <TabsContent value="quiet-hours">
           <QuietHoursSettings
-            quietHours={settings?.quietHours}
+            quietHours={
+              settings && typeof settings === 'object' && 'quietHours' in settings
+                ? settings.quietHours
+                : undefined
+            }
             onQuietHoursChange={(quietHours) => handleUpdate({ quietHours })}
             disabled={isSaving}
           />
         </TabsContent>
 
-        {/* Filters Tab */}
         <TabsContent value="filters">
           <TinkeringIndexThreshold
-            threshold={settings?.minTinkeringIndex}
+            threshold={
+              settings && typeof settings === 'object' && 'minTinkeringIndex' in settings
+                ? settings.minTinkeringIndex
+                : undefined
+            }
             onThresholdChange={(minTinkeringIndex) => handleUpdate({ minTinkeringIndex })}
             disabled={isSaving}
           />
         </TabsContent>
 
-        {/* Feeds Tab */}
         <TabsContent value="feeds">
           <FeedNotificationSettings
-            feedSettings={settings?.feedSettings}
+            feedSettings={
+              settings && typeof settings === 'object' && 'feedSettings' in settings
+                ? settings.feedSettings
+                : undefined
+            }
             onFeedSettingsChange={(feedSettings) => handleUpdate({ feedSettings })}
             disabled={isSaving}
           />
         </TabsContent>
-
-        {/* History Tab */}
-        <TabsContent value="history">
-          <NotificationHistoryPanel />
-        </TabsContent>
       </Tabs>
-    </div>
-  );
-}
-
-function PageHeader({ status }: { status: any }) {
-  const { t } = useI18n();
-
-  const isActive = status?.scheduled;
-  const isDisabled = !status?.scheduled && status !== undefined;
-
-  return (
-    <div className="flex items-start justify-between gap-4">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t('settings.notifications.title')}</h1>
-        <p className="text-muted-foreground mt-1">{t('settings.notifications.description')}</p>
-      </div>
-      <div className="flex-shrink-0 mt-1">
-        {isActive ? (
-          <Badge
-            variant="outline"
-            className="text-green-600 border-green-300 dark:border-green-700 gap-1.5"
-          >
-            <CheckCircle className="h-3.5 w-3.5" />
-            {t('settings.notifications.status-active')}
-          </Badge>
-        ) : isDisabled ? (
-          <Badge variant="outline" className="text-muted-foreground gap-1.5">
-            <AlertCircle className="h-3.5 w-3.5" />
-            {t('settings.notifications.status-inactive')}
-          </Badge>
-        ) : null}
-      </div>
     </div>
   );
 }

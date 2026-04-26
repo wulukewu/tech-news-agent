@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Bell, Palette, User, Brain } from 'lucide-react';
+import { Bell, Brain } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 
 interface SettingsLayoutProps {
@@ -15,43 +15,19 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
   const { t } = useI18n();
 
   const settingsNav = [
-    {
-      title: t('nav.notifications'),
-      href: '/app/settings/notifications',
-      icon: Bell,
-    },
-    {
-      title: t('nav.appearance'),
-      href: '/app/settings/appearance',
-      icon: Palette,
-    },
-    {
-      title: t('nav.account'),
-      href: '/app/settings/account',
-      icon: User,
-    },
-    {
-      title: t('nav.preferences'),
-      href: '/app/settings/preferences',
-      icon: Brain,
-    },
+    { title: t('nav.notifications'), href: '/app/settings/notifications', icon: Bell },
+    { title: t('nav.preferences'), href: '/app/settings/preferences', icon: Brain },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">{t('settings.title')}</h1>
-        <p className="text-muted-foreground">{t('settings.description')}</p>
-      </div>
-
-      {/* Tabs Navigation */}
       <div className="border-b">
         <nav className="flex space-x-8 overflow-x-auto" aria-label="Settings tabs">
           {settingsNav.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
-
+            const isActive =
+              pathname === item.href ||
+              (pathname === '/app/settings' && item.href === '/app/settings/notifications');
             return (
               <Link
                 key={item.href}
@@ -71,8 +47,6 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
           })}
         </nav>
       </div>
-
-      {/* Main Content */}
       <main>{children}</main>
     </div>
   );

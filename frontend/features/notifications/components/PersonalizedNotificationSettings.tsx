@@ -84,12 +84,8 @@ export function PersonalizedNotificationSettings({
     queryFn: getNotificationStatus,
     refetchInterval: 30000, // Refetch every 30 seconds
     retry: 3,
-    onError: (error) => {
-      console.error('Failed to fetch notification status:', error);
-    },
   });
 
-  // Update preferences mutation
   const updateMutation = useMutation({
     mutationFn: (updates: UpdateUserNotificationPreferencesRequest) =>
       updateNotificationPreferences(updates),
@@ -99,28 +95,25 @@ export function PersonalizedNotificationSettings({
     onSuccess: (updatedPreferences) => {
       queryClient.setQueryData(['notificationPreferences'], updatedPreferences);
       queryClient.invalidateQueries({ queryKey: ['notificationStatus'] });
-      // Also invalidate legacy notification settings to ensure consistency
       queryClient.invalidateQueries({ queryKey: ['notificationSettings'] });
-      toast.success('通知偏好設定已更新');
-      // Update preview with new settings
+      toast.success(t('settings.notifications.test-sent'));
       updatePreview(updatedPreferences);
     },
-    onError: (error: any) => {
-      toast.error('更新失敗，請稍後再試');
+    onError: () => {
+      toast.error(t('settings.notifications.send-failed'));
     },
     onSettled: () => {
       setIsSaving(false);
     },
   });
 
-  // Update preview when preferences change
   const updatePreview = async (prefs: UserNotificationPreferences) => {
     if (prefs.frequency === 'disabled') {
       setPreviewData({
         nextNotificationTime: null,
         localTime: null,
         utcTime: null,
-        message: '通知已停用',
+        message: t('settings.notifications.disabled'),
       });
       return;
     }
@@ -173,13 +166,13 @@ export function PersonalizedNotificationSettings({
   const getFrequencyLabel = (frequency: string) => {
     switch (frequency) {
       case 'daily':
-        return '每日';
+        return t('settings.notifications.frequency-daily');
       case 'weekly':
-        return '每週';
+        return t('settings.notifications.frequency-weekly');
       case 'monthly':
-        return '每月';
+        return t('settings.notifications.frequency-monthly');
       case 'disabled':
-        return '停用';
+        return t('settings.notifications.disabled');
       default:
         return frequency;
     }
@@ -188,13 +181,13 @@ export function PersonalizedNotificationSettings({
   const getFrequencyDescription = (frequency: string) => {
     switch (frequency) {
       case 'daily':
-        return '每天在指定時間發送通知';
+        return t('settings.notifications.frequency-daily-desc');
       case 'weekly':
-        return '每週在指定時間發送通知';
+        return t('settings.notifications.frequency-weekly-desc');
       case 'monthly':
-        return '每月在指定時間發送通知';
+        return t('settings.notifications.frequency-monthly-desc');
       case 'disabled':
-        return '不發送定期通知';
+        return t('settings.notifications.frequency-disabled-desc');
       default:
         return '';
     }
@@ -211,7 +204,7 @@ export function PersonalizedNotificationSettings({
   if (error) {
     return (
       <ErrorMessage
-        message="無法載入通知偏好設定"
+        message={t('settings.notifications.description')}
         onRetry={() => queryClient.invalidateQueries({ queryKey: ['notificationPreferences'] })}
       />
     );
@@ -230,35 +223,33 @@ export function PersonalizedNotificationSettings({
             <div className="flex items-center gap-3">
               <Clock className="h-5 w-5 text-muted-foreground" />
               <div>
-                <CardTitle>個人化通知設定</CardTitle>
-                <CardDescription>自訂您的通知頻率、時間和偏好</CardDescription>
+                <CardTitle>{t('settings.notifications.title')}</CardTitle>
+                <CardDescription>{t('settings.notifications.description')}</CardDescription>
               </div>
             </div>
             <div className="flex items-center gap-2 text-sm">
               {statusLoading ? (
                 <span className="text-muted-foreground flex items-center gap-1.5">
                   <LoadingSpinner size="sm" />
-                  檢查中...
                 </span>
               ) : statusError ? (
                 <span className="text-yellow-600 dark:text-yellow-400 flex items-center gap-1.5">
                   <AlertCircle className="h-4 w-4" />
-                  狀態未知
                 </span>
-              ) : status?.scheduled ? (
+              ) : status && 'scheduled' in status && status.scheduled ? (
                 <span className="text-green-600 dark:text-green-400 flex items-center gap-1.5">
                   <CheckCircle className="h-4 w-4" />
-                  已排程
+                  {t('settings.notifications.status-active')}
                 </span>
               ) : preferences.frequency === 'disabled' || !preferences.dmEnabled ? (
                 <span className="text-muted-foreground flex items-center gap-1.5">
                   <AlertCircle className="h-4 w-4" />
-                  已停用
+                  {t('settings.notifications.status-inactive')}
                 </span>
               ) : (
                 <span className="text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
                   <AlertCircle className="h-4 w-4" />
-                  未排程
+                  {t('settings.notifications.status-inactive')}
                 </span>
               )}
             </div>
@@ -269,8 +260,8 @@ export function PersonalizedNotificationSettings({
       {/* Notification Channels */}
       <Card>
         <CardHeader>
-          <CardTitle>通知管道</CardTitle>
-          <CardDescription>選擇您希望接收通知的方式</CardDescription>
+          <CardTitle>{t('settings.notifications.channels')}</CardTitle>
+          <CardDescription>{t('settings.notifications.channels-desc')}</CardDescription>
         </CardHeader>
         <CardContent className="divide-y">
           <div className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
@@ -278,9 +269,11 @@ export function PersonalizedNotificationSettings({
               <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <div>
                 <Label htmlFor="dm-enabled" className="font-medium cursor-pointer">
-                  Discord 私訊
+                  {t('settings.notifications.channel-discord')}
                 </Label>
-                <p className="text-xs text-muted-foreground mt-0.5">透過 Discord 私訊接收通知</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {t('settings.notifications.discord-dm-desc')}
+                </p>
               </div>
             </div>
             <Switch
@@ -297,13 +290,15 @@ export function PersonalizedNotificationSettings({
               <div>
                 <div className="flex items-center gap-2">
                   <Label htmlFor="email-enabled" className="font-medium">
-                    電子郵件
+                    {t('settings.notifications.channel-email')}
                   </Label>
                   <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
-                    即將推出
+                    {t('settings.notifications.coming-soon')}
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">透過電子郵件接收通知</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {t('settings.notifications.email-desc')}
+                </p>
               </div>
             </div>
             <Switch
@@ -322,22 +317,18 @@ export function PersonalizedNotificationSettings({
                 try {
                   const { sendTestNotification } = await import('@/lib/api/notifications');
                   await sendTestNotification();
-                  toast.success('✅ 測試通知已發送！請檢查您的Discord私訊。');
+                  toast.success(t('settings.notifications.test-sent'));
                 } catch (error: any) {
-                  if (error?.response?.status === 400) {
-                    toast.error('❌ 通知設定有誤，請檢查您的設定');
-                  } else {
-                    toast.error('❌ 發送失敗，請稍後再試');
-                  }
+                  toast.error(t('settings.notifications.send-failed'));
                 }
               }}
               disabled={isSaving || !preferences.dmEnabled}
             >
               <MessageSquare className="mr-2 h-4 w-4" />
-              發送測試通知
+              {t('settings.notifications.send-test')}
             </Button>
 
-            {!status?.scheduled &&
+            {!(status && 'scheduled' in status && status.scheduled) &&
               preferences.frequency !== 'disabled' &&
               preferences.dmEnabled && (
                 <Button
@@ -355,13 +346,13 @@ export function PersonalizedNotificationSettings({
                         toast.error(result.message);
                       }
                     } catch {
-                      toast.error('重新排程失敗，請稍後再試');
+                      toast.error(t('settings.notifications.send-failed'));
                     }
                   }}
                   disabled={isSaving}
                 >
                   <Clock className="mr-2 h-4 w-4" />
-                  重新排程
+                  {t('settings.notifications.reschedule')}
                 </Button>
               )}
           </div>
@@ -371,8 +362,8 @@ export function PersonalizedNotificationSettings({
       {/* Frequency Settings */}
       <Card>
         <CardHeader>
-          <CardTitle>通知頻率</CardTitle>
-          <CardDescription>選擇您希望接收通知的頻率</CardDescription>
+          <CardTitle>{t('settings.notifications.frequency-title')}</CardTitle>
+          <CardDescription>{t('settings.notifications.frequency-desc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <Select
@@ -384,18 +375,13 @@ export function PersonalizedNotificationSettings({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {['daily', 'weekly', 'monthly', 'disabled'].map((freq) => {
+              {(['daily', 'weekly', 'monthly', 'disabled'] as const).map((freq) => {
                 const Icon = getFrequencyIcon(freq);
                 return (
                   <SelectItem key={freq} value={freq}>
                     <div className="flex items-center gap-2">
                       <Icon className="h-4 w-4" />
-                      <div>
-                        <div className="font-medium">{getFrequencyLabel(freq)}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {getFrequencyDescription(freq)}
-                        </div>
-                      </div>
+                      <span>{getFrequencyLabel(freq)}</span>
                     </div>
                   </SelectItem>
                 );
@@ -409,14 +395,13 @@ export function PersonalizedNotificationSettings({
       {preferences.frequency !== 'disabled' && (
         <Card>
           <CardHeader>
-            <CardTitle>時間設定</CardTitle>
-            <CardDescription>設定您希望接收通知的時間和時區</CardDescription>
+            <CardTitle>{t('settings.notifications.time-title')}</CardTitle>
+            <CardDescription>{t('settings.notifications.time-desc')}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Weekly: Day of Week Selector */}
             {preferences.frequency === 'weekly' && (
               <div className="space-y-2">
-                <Label htmlFor="day-of-week">通知日期</Label>
+                <Label htmlFor="day-of-week">{t('settings.notifications.day-of-week')}</Label>
                 <Select
                   value={preferences.notificationDayOfWeek?.toString() || '5'}
                   onValueChange={(value) =>
@@ -428,23 +413,29 @@ export function PersonalizedNotificationSettings({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="0">星期日</SelectItem>
-                    <SelectItem value="1">星期一</SelectItem>
-                    <SelectItem value="2">星期二</SelectItem>
-                    <SelectItem value="3">星期三</SelectItem>
-                    <SelectItem value="4">星期四</SelectItem>
-                    <SelectItem value="5">星期五</SelectItem>
-                    <SelectItem value="6">星期六</SelectItem>
+                    {(
+                      [
+                        ['0', 'settings.notifications.weekday-0'],
+                        ['1', 'settings.notifications.weekday-1'],
+                        ['2', 'settings.notifications.weekday-2'],
+                        ['3', 'settings.notifications.weekday-3'],
+                        ['4', 'settings.notifications.weekday-4'],
+                        ['5', 'settings.notifications.weekday-5'],
+                        ['6', 'settings.notifications.weekday-6'],
+                      ] as const
+                    ).map(([val, key]) => (
+                      <SelectItem key={val} value={val}>
+                        {t(key)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">選擇每週的哪一天接收通知</p>
               </div>
             )}
 
-            {/* Monthly: Day of Month Selector */}
             {preferences.frequency === 'monthly' && (
               <div className="space-y-2">
-                <Label htmlFor="day-of-month">通知日期</Label>
+                <Label htmlFor="day-of-month">{t('settings.notifications.day-of-month')}</Label>
                 <Select
                   value={preferences.notificationDayOfMonth?.toString() || '1'}
                   onValueChange={(value) =>
@@ -458,41 +449,41 @@ export function PersonalizedNotificationSettings({
                   <SelectContent className="max-h-[300px]">
                     {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
                       <SelectItem key={day} value={day.toString()}>
-                        每月 {day} 號
+                        {t('settings.notifications.day-of-month-option', { day })}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  選擇每月的哪一天接收通知（如果該月沒有此日期，將在該月最後一天發送）
+                  {t('settings.notifications.day-of-month-hint')}
                 </p>
               </div>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="notification-time">通知時間</Label>
+                <Label htmlFor="notification-time">
+                  {t('settings.notifications.notification-time')}
+                </Label>
                 <Input
                   id="notification-time"
                   type="time"
                   value={localTime}
-                  onChange={(e) => {
-                    // Update local state immediately for smooth typing
-                    setLocalTime(e.target.value);
-                  }}
+                  onChange={(e) => setLocalTime(e.target.value)}
                   onBlur={(e) => {
-                    // Only save to DB when user finishes editing (loses focus)
                     if (e.target.value && e.target.value !== preferences.notificationTime) {
                       handleUpdate({ notificationTime: e.target.value });
                     }
                   }}
                   disabled={isSaving || !preferences.dmEnabled}
                 />
-                <p className="text-xs text-muted-foreground">輸入完成後點擊其他地方即可儲存</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('settings.notifications.time-hint')}
+                </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="timezone">時區</Label>
+                <Label htmlFor="timezone">{t('settings.notifications.timezone')}</Label>
                 <Select
                   value={preferences.timezone}
                   onValueChange={(value) => handleUpdate({ timezone: value })}
@@ -522,26 +513,30 @@ export function PersonalizedNotificationSettings({
       {/* Preview Card */}
       <Card>
         <CardHeader>
-          <CardTitle>下次通知預覽</CardTitle>
-          <CardDescription>根據您的設定，下次通知將在以下時間發送</CardDescription>
+          <CardTitle>{t('settings.notifications.preview-title')}</CardTitle>
+          <CardDescription>{t('settings.notifications.preview-desc')}</CardDescription>
         </CardHeader>
         <CardContent>
           {isPreviewLoading ? (
             <div className="flex items-center gap-2">
               <LoadingSpinner size="sm" />
-              <span className="text-sm text-muted-foreground">計算中...</span>
+              <span className="text-sm text-muted-foreground">
+                {t('settings.notifications.sending')}
+              </span>
             </div>
           ) : previewData ? (
             <div className="space-y-2">
               <p className="text-sm font-medium">{previewData.message}</p>
               {previewData.localTime && (
                 <p className="text-xs text-muted-foreground">
-                  UTC 時間: {new Date(previewData.utcTime!).toLocaleString()}
+                  UTC: {new Date(previewData.utcTime!).toLocaleString()}
                 </p>
               )}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">無法計算下次通知時間</p>
+            <p className="text-sm text-muted-foreground">
+              {t('settings.notifications.no-preview')}
+            </p>
           )}
         </CardContent>
       </Card>
@@ -550,15 +545,15 @@ export function PersonalizedNotificationSettings({
       {status && (
         <Card>
           <CardHeader>
-            <CardTitle>排程狀態</CardTitle>
-            <CardDescription>目前的通知排程狀態</CardDescription>
+            <CardTitle>{t('settings.notifications.status')}</CardTitle>
+            <CardDescription>{t('settings.notifications.status-desc')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <p className="text-sm">{status.message}</p>
               {status.nextRunTime && (
                 <p className="text-xs text-muted-foreground">
-                  下次執行: {new Date(status.nextRunTime).toLocaleString()}
+                  {new Date(status.nextRunTime).toLocaleString()}
                 </p>
               )}
             </div>

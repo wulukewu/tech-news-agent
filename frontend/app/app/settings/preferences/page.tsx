@@ -193,9 +193,8 @@ export default function PreferencesPage() {
   const hasWeights = Object.keys(weights).length > 0;
 
   return (
-    <main id="main-content" className="container mx-auto px-4 py-6 max-w-3xl">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{t('preferences.title')}</h1>
           <p className="text-sm text-muted-foreground mt-1">{t('preferences.description')}</p>
@@ -312,6 +311,6 @@ export default function PreferencesPage() {
           </section>
         </div>
       )}
-    </main>
+    </div>
   );
 }
