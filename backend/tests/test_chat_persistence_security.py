@@ -415,7 +415,7 @@ class TestDataIsolation:
             {"user_id": user_b, "platform": "discord", "platform_user_id": "discord_b"},
         ]
 
-        user_a_links = [l for l in links if l["user_id"] == user_a]
+        user_a_links = [link for link in links if link["user_id"] == user_a]
         assert len(user_a_links) == 1
         assert user_a_links[0]["platform_user_id"] == "discord_a"
 
@@ -462,12 +462,12 @@ class TestDataDeletion:
 
         # Delete user's data
         conversations = [c for c in conversations if c["user_id"] != user_id]
-        platform_links = [l for l in platform_links if l["user_id"] != user_id]
+        platform_links = [link for link in platform_links if link["user_id"] != user_id]
 
         # User's data is gone
         assert all(c["user_id"] != user_id for c in conversations)
-        assert all(l["user_id"] != user_id for l in platform_links)
+        assert all(link["user_id"] != user_id for link in platform_links)
 
         # Other user's data is preserved
         assert any(c["user_id"] == other_user_id for c in conversations)
-        assert any(l["user_id"] == other_user_id for l in platform_links)
+        assert any(link["user_id"] == other_user_id for link in platform_links)

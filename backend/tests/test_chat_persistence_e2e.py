@@ -349,7 +349,7 @@ class TestUserIdentity:
         ]
         # Attempting to add duplicate should be detected
         duplicate = {"user_id": user_id, "platform": "discord", "platform_user_id": "456"}
-        existing_platforms = {(l["user_id"], l["platform"]) for l in links}
+        existing_platforms = {(link["user_id"], link["platform"]) for link in links}
         is_duplicate = (duplicate["user_id"], duplicate["platform"]) in existing_platforms
         assert is_duplicate is True
 
@@ -372,7 +372,7 @@ class TestUserIdentity:
             {"user_id": user_id, "platform": "discord", "platform_user_id": "discord_123"},
             {"user_id": user_id, "platform": "web", "platform_user_id": "web_456"},
         ]
-        platforms = {l["platform"] for l in links}
+        platforms = {link["platform"] for link in links}
         assert "discord" in platforms
         assert "web" in platforms
 

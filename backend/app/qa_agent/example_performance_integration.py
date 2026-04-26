@@ -11,10 +11,9 @@ Requirements: 6.1, 6.2, 6.3, 6.5
 import asyncio
 import logging
 from typing import Optional
-from uuid import uuid4
 
-from .performance_monitor import PerformanceMonitor, get_performance_monitor
 from .models import UserProfile
+from .performance_monitor import get_performance_monitor
 
 # Configure logging
 logging.basicConfig(
@@ -82,7 +81,6 @@ class PerformanceOptimizedQAController:
                 "has_profile": user_profile is not None,
             },
             # Pass through arguments
-            user_id=user_id,
             query=query,
             conversation_id=conversation_id,
             user_profile=user_profile,
@@ -127,7 +125,6 @@ class PerformanceOptimizedQAController:
             user_id=user_id,
             metadata={"has_vector": len(query_vector) > 0},
             query_vector=query_vector,
-            user_id=user_id,
             limit=10,
         )
 
@@ -248,7 +245,7 @@ async def example_basic_integration():
 
     # Get performance report
     report = await controller.get_performance_report()
-    print(f"\nPerformance Report:")
+    print("\nPerformance Report:")
     print(f"  Total queries: {report['overall']['total_queries']}")
     print(f"  Success rate: {report['overall']['success_rate']}")
     print(f"  Avg response time: {report['overall']['avg_response_time']}")
@@ -282,7 +279,7 @@ async def example_concurrent_load():
 
     # Get performance report
     report = await controller.get_performance_report()
-    print(f"\nConcurrency Stats:")
+    print("\nConcurrency Stats:")
     print(f"  Peak concurrent: {report['concurrency']['peak']}")
     print(f"  Max supported: {report['requirements_compliance']['concurrent_users_supported']}")
     print(f"  Utilization: {report['concurrency']['utilization']}")
@@ -312,7 +309,7 @@ async def example_performance_validation():
     print(f"{'='*60}")
 
     # Requirement 6.1: Search < 500ms
-    print(f"\nRequirement 6.1: Search response time < 500ms")
+    print("\nRequirement 6.1: Search response time < 500ms")
     if "semantic_search" in report["operation_breakdown"]:
         search_stats = report["operation_breakdown"]["semantic_search"]
         search_compliant = search_stats["avg_duration_ms"] < 500
@@ -320,7 +317,7 @@ async def example_performance_validation():
         print(f"  Status: {'✅ PASS' if search_compliant else '❌ FAIL'}")
 
     # Requirement 6.2: Complete response < 3s
-    print(f"\nRequirement 6.2: Complete response generation < 3 seconds")
+    print("\nRequirement 6.2: Complete response generation < 3 seconds")
     if "process_query" in report["operation_breakdown"]:
         query_stats = report["operation_breakdown"]["process_query"]
         response_compliant = query_stats["avg_duration_ms"] < 3000
@@ -329,13 +326,13 @@ async def example_performance_validation():
         print(f"  Status: {'✅ PASS' if response_compliant else '❌ FAIL'}")
 
     # Requirement 6.3: Support 50+ concurrent users
-    print(f"\nRequirement 6.3: Support 50+ concurrent users")
+    print("\nRequirement 6.3: Support 50+ concurrent users")
     concurrent_compliant = report["requirements_compliance"]["concurrent_users_supported"] >= 50
     print(f"  Max concurrent: {report['requirements_compliance']['concurrent_users_supported']}")
     print(f"  Status: {'✅ PASS' if concurrent_compliant else '❌ FAIL'}")
 
     # Requirement 6.5: Query queuing
-    print(f"\nRequirement 6.5: Query queuing for high load")
+    print("\nRequirement 6.5: Query queuing for high load")
     queue_compliant = report["requirements_compliance"]["queue_available"]
     print(f"  Queue available: {queue_compliant}")
     print(f"  Status: {'✅ PASS' if queue_compliant else '❌ FAIL'}")
@@ -391,7 +388,7 @@ async def example_high_load_with_queuing():
         # Check queue status during processing
         await asyncio.sleep(0.5)
         queue_status = controller.performance_monitor.get_queue_status()
-        print(f"\nQueue Status (mid-processing):")
+        print("\nQueue Status (mid-processing):")
         print(f"  Queue size: {queue_status['queue_size']}")
         print(f"  Active queries: {queue_status['active_queries']}")
         print(f"  Utilization: {queue_status['queue_utilization']:.1%}")
@@ -405,7 +402,7 @@ async def example_high_load_with_queuing():
 
         # Final status
         final_status = controller.performance_monitor.get_queue_status()
-        print(f"\nFinal Queue Status:")
+        print("\nFinal Queue Status:")
         print(f"  Queue size: {final_status['queue_size']}")
         print(f"  Completed: {final_status['completed_queries']}")
 
