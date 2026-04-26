@@ -110,7 +110,7 @@ export default function LearningGoalDetailPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Target className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold mb-2">學習目標不存在</h3>
-            <Button onClick={() => (window.location.href = '/learning')}>返回學習路徑</Button>
+            <Button onClick={() => (window.location.href = '/app/learning')}>返回學習路徑</Button>
           </CardContent>
         </Card>
       </div>

@@ -44,7 +44,6 @@ const mainNavItems: NavItem[] = [
   { href: '/app/reading-list', labelKey: 'nav.reading-list', icon: BookMarked },
   { href: '/app/subscriptions', labelKey: 'nav.subscriptions', icon: Rss },
   { href: '/app/learning', labelKey: 'nav.learning-path', icon: Brain },
-  { href: '/learning-content', labelKey: 'nav.learning-content', icon: BookOpen },
   { href: '/app/chat', labelKey: 'nav.chat', icon: MessageSquare },
   { href: '/app/insights', labelKey: 'nav.insights', icon: Lightbulb },
 ];
@@ -122,7 +121,7 @@ export function Navigation() {
             </Link>
 
             {/* Desktop navigation - only show main items */}
-            <div className="hidden md:flex gap-1.5 lg:gap-2 min-w-0 overflow-hidden">
+            <div className="hidden md:flex gap-2 lg:gap-3 min-w-0 overflow-hidden">
               {translatedMainNavItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
@@ -131,7 +130,7 @@ export function Navigation() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      'flex items-center gap-1.5 px-2.5 lg:px-3 py-2 rounded-md transition-all duration-200 cursor-pointer relative',
+                      'flex items-center gap-2 px-3 lg:px-4 py-2.5 rounded-md transition-all duration-200 cursor-pointer relative',
                       'hover:bg-accent hover:text-accent-foreground hover:shadow-sm',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                       'min-h-[44px] min-w-[44px]', // Touch-friendly targets (Req 9.2)
@@ -142,8 +141,8 @@ export function Navigation() {
                     aria-current={isActive ? 'page' : undefined}
                     title={item.translatedLabel}
                   >
-                    <Icon className="h-4 w-4" aria-hidden="true" />
-                    <span className="text-sm font-medium whitespace-nowrap hidden lg:inline">
+                    <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+                    <span className="text-sm font-medium whitespace-nowrap hidden xl:inline">
                       {item.translatedLabel}
                     </span>
                   </Link>
