@@ -97,6 +97,9 @@ class QAQueryResponse(BaseModel):
     recommendations: List[str] = Field(default_factory=list)
     conversation_id: str = Field(..., description="Associated conversation ID")
     response_time: float = Field(..., description="Response generation time in seconds")
+    intent: str = Field(
+        default="question", description="Detected intent: question | preference | other"
+    )
 
 
 class ConversationTurnResponse(BaseModel):
@@ -131,6 +134,28 @@ class CreateConversationResponse(BaseModel):
 # ============================================================================
 # Supabase-backed conversation helpers
 # ============================================================================
+
+
+def _detect_intent(text: str) -> str:
+    """Detect user intent: 'question', 'preference', or 'other'."""
+    import re
+
+    if re.search(r"[?？]|什麼|怎麼|如何|有沒有|推薦|介紹|解釋|告訴我|幫我找|最近.*文章|有什麼.*關於", text, re.IGNORECASE):
+        return "question"
+    if re.search(r"我喜歡|我不喜歡|我想看|我偏好|我對.*感興趣|不想看|希望多|希望少", text, re.IGNORECASE):
+        return "preference"
+    return "other"
+
+
+async def _store_preference(user_id: str, content: str) -> None:
+    """Store a preference statement in dm_conversations for learning."""
+    try:
+        supabase = _get_supabase()
+        supabase.client.table("dm_conversations").insert(
+            {"user_id": user_id, "content": content}
+        ).execute()
+    except Exception as e:
+        logger.warning("Failed to store preference: %s", e)
 
 
 def _get_supabase() -> SupabaseService:
@@ -259,6 +284,76 @@ async def _save_messages_to_db(
 
     except Exception as e:
         logger.warning(f"Failed to save messages to conversation_messages: {e}")
+
+
+async def _process_query_with_intent(
+    user_id: str, query: str, conversation_id: str
+) -> "QAQueryResponse":
+    """
+    Detect intent, store preferences, and run article search if needed.
+    Returns a QAQueryResponse with the intent field set.
+    """
+    intent = _detect_intent(query)
+
+    if intent == "preference":
+        await _store_preference(user_id, query)
+        return QAQueryResponse(
+            query=query,
+            articles=[],
+            insights=[
+                "✅ 已記錄你的偏好！這會幫助我推薦更適合你的文章。",
+                "使用 /update_profile 指令（Discord）或前往「偏好設定」更新你的偏好摘要。",
+            ],
+            recommendations=[],
+            conversation_id=conversation_id,
+            response_time=0.0,
+            intent="preference",
+        )
+
+    if intent == "other":
+        await _store_preference(user_id, query)
+        return QAQueryResponse(
+            query=query,
+            articles=[],
+            insights=["已記錄 👍"],
+            recommendations=["試試問我問題，例如「最近有什麼 AI 文章？」", "或告訴我你的偏好，例如「我喜歡系統設計」"],
+            conversation_id=conversation_id,
+            response_time=0.0,
+            intent="other",
+        )
+
+    # intent == "question" — search articles
+    from app.qa_agent.simple_qa import get_simple_qa_agent
+
+    simple_agent = get_simple_qa_agent()
+    response = await simple_agent.process_query(
+        user_id=UUID(user_id),
+        query=query,
+        conversation_id=conversation_id,
+    )
+
+    return QAQueryResponse(
+        query=response.query,
+        articles=[
+            ArticleSummaryResponse(
+                article_id=article["article_id"],
+                title=article["title"],
+                summary=article["summary"],
+                url=article["url"],
+                relevance_score=article["relevance_score"],
+                reading_time=article["reading_time"],
+                key_insights=[],
+                published_at=None,
+                category=article.get("category", "Technology"),
+            )
+            for article in response.articles
+        ],
+        insights=response.insights,
+        recommendations=response.recommendations,
+        conversation_id=response.conversation_id,
+        response_time=response.response_time,
+        intent="question",
+    )
 
 
 def _qa_response_to_text(qa_response: "QAQueryResponse") -> str:
@@ -433,44 +528,9 @@ async def query(
     try:
         user_id = str(current_user["user_id"])
 
-        # Use simple QA agent for stable operation
-        logger.info(f"Using simple QA agent for user {user_id}")
-        from app.qa_agent.simple_qa import get_simple_qa_agent
+        conv_id = body.conversation_id or str(uuid4())
+        result = await _process_query_with_intent(user_id, body.query, conv_id)
 
-        simple_agent = get_simple_qa_agent()
-        response = await simple_agent.process_query(
-            user_id=UUID(user_id),
-            query=body.query,
-            conversation_id=body.conversation_id,
-        )
-
-        if response is None:
-            raise HTTPException(status_code=500, detail="Failed to process query")
-
-        # Convert SimpleQAResponse to QAQueryResponse format
-        result = QAQueryResponse(
-            query=response.query,
-            articles=[
-                ArticleSummaryResponse(
-                    article_id=article["article_id"],
-                    title=article["title"],
-                    summary=article["summary"],
-                    url=article["url"],
-                    relevance_score=article["relevance_score"],
-                    reading_time=article["reading_time"],
-                    key_insights=[],  # Simple response doesn't have key insights
-                    published_at=None,  # Simple response doesn't parse dates
-                    category=article.get("category", "Technology"),
-                )
-                for article in response.articles
-            ],
-            insights=response.insights,
-            recommendations=response.recommendations,
-            conversation_id=response.conversation_id,
-            response_time=response.response_time,
-        )
-
-        # Try to persist turn if a conversation_id was provided (but don't fail if it doesn't work)
         if body.conversation_id:
             try:
                 await _append_turn_to_db(body.conversation_id, user_id, body.query, result)
@@ -515,54 +575,20 @@ async def create_conversation(
         query_result: Optional[QAQueryResponse] = None
         if body.initial_query:
             try:
-                # Use simple QA agent for initial query
-                from app.qa_agent.simple_qa import get_simple_qa_agent
-
-                simple_agent = get_simple_qa_agent()
-                response = await simple_agent.process_query(
-                    user_id=UUID(user_id),
-                    query=body.initial_query,
-                    conversation_id=conversation_id,
+                query_result = await _process_query_with_intent(
+                    user_id, body.initial_query, conversation_id
                 )
-                if response is not None:
-                    # Convert SimpleQAResponse to QAQueryResponse format
-                    query_result = QAQueryResponse(
-                        query=response.query,
-                        articles=[
-                            ArticleSummaryResponse(
-                                article_id=article["article_id"],
-                                title=article["title"],
-                                summary=article["summary"],
-                                url=article["url"],
-                                relevance_score=article["relevance_score"],
-                                reading_time=article["reading_time"],
-                                key_insights=[],
-                                published_at=None,
-                                category=article.get("category", "Technology"),
-                            )
-                            for article in response.articles
-                        ],
-                        insights=response.insights,
-                        recommendations=response.recommendations,
-                        conversation_id=response.conversation_id,
-                        response_time=response.response_time,
+                try:
+                    await _append_turn_to_db(
+                        conversation_id, user_id, body.initial_query, query_result
                     )
-                    # Try to persist the initial turn (but don't fail if it doesn't work)
-                    try:
-                        await _append_turn_to_db(
-                            conversation_id, user_id, body.initial_query, query_result
-                        )
-                    except Exception as e:
-                        logger.warning(f"Failed to persist initial turn (fallback mode): {e}")
-                    # Save messages to conversation_messages table
-                    try:
-                        await _save_messages_to_db(
-                            conversation_id, body.initial_query, query_result
-                        )
-                    except Exception as e:
-                        logger.warning(f"Failed to save messages to DB: {e}")
+                except Exception as e:
+                    logger.warning(f"Failed to persist initial turn (fallback mode): {e}")
+                try:
+                    await _save_messages_to_db(conversation_id, body.initial_query, query_result)
+                except Exception as e:
+                    logger.warning(f"Failed to save messages to DB: {e}")
             except Exception as e:
-                # Don't fail conversation creation if the query fails
                 logger.warning(f"Initial query failed, conversation still created: {e}")
 
         return success_response(
@@ -605,42 +631,8 @@ async def continue_conversation(
         if row is None:
             raise HTTPException(status_code=404, detail="Conversation not found or access denied")
 
-        # Use simple QA agent for stable operation
-        logger.info(f"Using simple QA agent for conversation {conversation_id}")
-        from app.qa_agent.simple_qa import get_simple_qa_agent
-
-        simple_agent = get_simple_qa_agent()
-        response = await simple_agent.process_query(
-            user_id=UUID(user_id),
-            query=body.query,
-            conversation_id=conversation_id,
-        )
-
-        if response is None:
-            raise HTTPException(status_code=500, detail="Failed to process follow-up query")
-
-        # Convert SimpleQAResponse to QAQueryResponse format
-        result = QAQueryResponse(
-            query=response.query,
-            articles=[
-                ArticleSummaryResponse(
-                    article_id=article["article_id"],
-                    title=article["title"],
-                    summary=article["summary"],
-                    url=article["url"],
-                    relevance_score=article["relevance_score"],
-                    reading_time=article["reading_time"],
-                    key_insights=[],
-                    published_at=None,
-                    category=article.get("category", "Technology"),
-                )
-                for article in response.articles
-            ],
-            insights=response.insights,
-            recommendations=response.recommendations,
-            conversation_id=response.conversation_id,
-            response_time=response.response_time,
-        )
+        # Use intent-aware processing
+        result = await _process_query_with_intent(user_id, body.query, conversation_id)
 
         # Persist the turn
         try:

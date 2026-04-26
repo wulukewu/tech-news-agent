@@ -70,6 +70,7 @@ interface QAResponse {
   recommendations: string[];
   conversation_id: string;
   response_time: number;
+  intent?: 'question' | 'preference' | 'other';
 }
 
 interface QAMessage {
@@ -611,6 +612,83 @@ function ArticleCard({ article }: { article: ArticleSummary }) {
   );
 }
 
+// ─── Preference Ack Card ──────────────────────────────────────────────────────
+
+function PreferenceAckCard({
+  insights,
+  recommendations,
+}: {
+  insights: string[];
+  recommendations: string[];
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="flex-shrink-0 h-8 w-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+        <Bot className="h-4 w-4 text-green-600 dark:text-green-400" aria-hidden="true" />
+      </div>
+      <div className="flex-1 rounded-2xl rounded-tl-sm border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 px-4 py-3 space-y-2">
+        {insights.map((line, i) => (
+          <p key={i} className="text-sm text-green-800 dark:text-green-200">
+            {line}
+          </p>
+        ))}
+        {recommendations.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {recommendations.map((rec, i) => (
+              <span
+                key={i}
+                className="text-xs text-muted-foreground bg-background/60 rounded-full px-2 py-1 border"
+              >
+                {rec}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Other Ack Card ───────────────────────────────────────────────────────────
+
+function OtherAckCard({
+  insights,
+  recommendations,
+  onFollowUp,
+}: {
+  insights: string[];
+  recommendations: string[];
+  onFollowUp: (q: string) => void;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="flex-shrink-0 h-8 w-8 rounded-full bg-muted flex items-center justify-center">
+        <Bot className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+      </div>
+      <div className="flex-1 rounded-2xl rounded-tl-sm bg-muted px-4 py-3 space-y-2">
+        {insights.map((line, i) => (
+          <p key={i} className="text-sm">
+            {line}
+          </p>
+        ))}
+        {recommendations.length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-1">
+            {recommendations.map((rec, i) => (
+              <button
+                key={i}
+                onClick={() => onFollowUp(rec)}
+                className="text-xs px-3 py-1.5 rounded-full border bg-background hover:bg-primary hover:text-primary-foreground hover:border-primary transition-colors cursor-pointer"
+              >
+                {rec}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── QA Message Bubbles ───────────────────────────────────────────────────────
 
 function QAAssistantMessage({
@@ -635,6 +713,22 @@ function QAAssistantMessage({
     );
   }
   if (!response) return null;
+
+  // Intent-aware rendering
+  if (response.intent === 'preference') {
+    return (
+      <PreferenceAckCard insights={response.insights} recommendations={response.recommendations} />
+    );
+  }
+  if (response.intent === 'other') {
+    return (
+      <OtherAckCard
+        insights={response.insights}
+        recommendations={response.recommendations}
+        onFollowUp={onFollowUp}
+      />
+    );
+  }
   return (
     <div className="flex items-start gap-3">
       <div
@@ -873,6 +967,7 @@ function HistoryView({
               msg.metadata &&
               (msg.metadata.articles || msg.metadata.insights)
             ) {
+              const intent = (msg.metadata.intent as string) || 'question';
               const qaMsg: QAMessage = {
                 id: msg.id,
                 type: 'assistant',
@@ -885,6 +980,7 @@ function HistoryView({
                   recommendations: (msg.metadata.recommendations as string[]) ?? [],
                   conversation_id: msg.conversation_id,
                   response_time: (msg.metadata.response_time as number) ?? 0,
+                  intent: intent as 'question' | 'preference' | 'other',
                 },
               };
               return <QAAssistantMessage key={msg.id} message={qaMsg} onFollowUp={onFollowUp} />;
@@ -1307,6 +1403,7 @@ export function ChatShell({ initialId }: { initialId: string | null }) {
             insights: qaData.insights,
             recommendations: qaData.recommendations,
             response_time: qaData.response_time,
+            intent: qaData.intent ?? 'question',
           },
         };
 
