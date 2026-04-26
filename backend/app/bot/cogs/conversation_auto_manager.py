@@ -293,6 +293,12 @@ class ConversationAutoManager(commands.Cog):
 
 async def setup(bot: commands.Bot) -> None:
     """Load the ConversationAutoManager cog with injected service dependencies."""
+    from app.core.config import settings
+
+    if not getattr(settings, "enable_dm_listener", True):
+        logger.info("ConversationAutoManager disabled via ENABLE_DM_LISTENER=false")
+        return
+
     supabase_service = SupabaseService()
     client = supabase_service.client
 

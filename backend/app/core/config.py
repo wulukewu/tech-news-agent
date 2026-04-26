@@ -55,6 +55,9 @@ class Settings(BaseSettings):
     # DM conversation listener (set to false in local dev to avoid duplicates)
     enable_dm_listener: bool = True
 
+    # Scheduler (set to false in local dev to avoid duplicate RSS fetches and DMs)
+    enable_scheduler: bool = True
+
     # RSS Configuration
     rss_fetch_days: int = 7
 

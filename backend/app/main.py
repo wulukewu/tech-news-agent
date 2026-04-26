@@ -110,16 +110,21 @@ async def lifespan(app: FastAPI):
         # Don't fail startup - QA features will be disabled but other features work
 
     # 1. Start the Scheduler
-    try:
-        setup_scheduler()
-        scheduler = get_scheduler()
-        if scheduler is None:
-            raise RuntimeError("Scheduler initialization failed - scheduler is None after setup")
-        scheduler.start()
-        logger.info("Scheduler started successfully.")
-    except Exception as e:
-        logger.error(f"Failed to start scheduler: {e}", exc_info=True)
-        raise
+    if settings.enable_scheduler:
+        try:
+            setup_scheduler()
+            scheduler = get_scheduler()
+            if scheduler is None:
+                raise RuntimeError(
+                    "Scheduler initialization failed - scheduler is None after setup"
+                )
+            scheduler.start()
+            logger.info("Scheduler started successfully.")
+        except Exception as e:
+            logger.error(f"Failed to start scheduler: {e}", exc_info=True)
+            raise
+    else:
+        logger.info("Scheduler disabled via ENABLE_SCHEDULER=false")
 
     # 2. Initialize notification system integration
     try:
