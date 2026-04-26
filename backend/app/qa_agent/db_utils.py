@@ -26,15 +26,13 @@ class QADatabaseUtils:
         """
         async with get_db_connection() as conn:
             # Check if article_embeddings table exists
-            table_exists = await conn.fetchval(
-                """
+            table_exists = await conn.fetchval("""
                 SELECT EXISTS (
                     SELECT FROM information_schema.tables
                     WHERE table_schema = 'public'
                     AND table_name = 'article_embeddings'
                 )
-            """
-            )
+            """)
 
             if not table_exists:
                 logger.warning(
@@ -61,15 +59,13 @@ class QADatabaseUtils:
                 stats["articles_count"] = article_count
 
                 # Get embedding count if table exists
-                embedding_exists = await conn.fetchval(
-                    """
+                embedding_exists = await conn.fetchval("""
                     SELECT EXISTS (
                         SELECT FROM information_schema.tables
                         WHERE table_schema = 'public'
                         AND table_name = 'article_embeddings'
                     )
-                """
-                )
+                """)
 
                 if embedding_exists:
                     embedding_count = await conn.fetchval("SELECT COUNT(*) FROM article_embeddings")
@@ -79,15 +75,13 @@ class QADatabaseUtils:
                     stats["embeddings_table_exists"] = False
 
                 # Get conversation count if table exists
-                conversation_exists = await conn.fetchval(
-                    """
+                conversation_exists = await conn.fetchval("""
                     SELECT EXISTS (
                         SELECT FROM information_schema.tables
                         WHERE table_schema = 'public'
                         AND table_name = 'conversations'
                     )
-                """
-                )
+                """)
 
                 if conversation_exists:
                     conversation_count = await conn.fetchval("SELECT COUNT(*) FROM conversations")
@@ -158,15 +152,13 @@ class QADatabaseUtils:
         try:
             async with get_db_connection() as conn:
                 # Check if conversations table exists
-                table_exists = await conn.fetchval(
-                    """
+                table_exists = await conn.fetchval("""
                     SELECT EXISTS (
                         SELECT FROM information_schema.tables
                         WHERE table_schema = 'public'
                         AND table_name = 'conversations'
                     )
-                """
-                )
+                """)
 
                 if not table_exists:
                     logger.info("Conversations table does not exist, skipping cleanup")

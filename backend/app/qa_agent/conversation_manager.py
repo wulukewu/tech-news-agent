@@ -422,20 +422,16 @@ class ConversationManager:
                 )
 
                 # Active conversations (not expired)
-                stats["active_conversations"] = await conn.fetchval(
-                    """
+                stats["active_conversations"] = await conn.fetchval("""
                     SELECT COUNT(*) FROM conversations
                     WHERE expires_at IS NULL OR expires_at > NOW()
-                """
-                )
+                """)
 
                 # Expired conversations
-                stats["expired_conversations"] = await conn.fetchval(
-                    """
+                stats["expired_conversations"] = await conn.fetchval("""
                     SELECT COUNT(*) FROM conversations
                     WHERE expires_at IS NOT NULL AND expires_at <= NOW()
-                """
-                )
+                """)
 
                 # Conversations by age
                 stats["conversations_by_age"] = {}
@@ -447,12 +443,10 @@ class ConversationManager:
                 ]
 
                 for label, interval in age_ranges:
-                    count = await conn.fetchval(
-                        f"""
+                    count = await conn.fetchval(f"""
                         SELECT COUNT(*) FROM conversations
                         WHERE last_updated > NOW() - INTERVAL '{interval}'
-                    """
-                    )
+                    """)
                     stats["conversations_by_age"][label] = count
 
                 return stats
@@ -504,8 +498,7 @@ class ConversationManager:
 
     async def _ensure_conversations_table(self, conn: Connection) -> None:
         """Ensure the conversations table exists."""
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS conversations (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 user_id UUID NOT NULL,
@@ -514,20 +507,15 @@ class ConversationManager:
                 last_updated TIMESTAMP DEFAULT NOW(),
                 expires_at TIMESTAMP DEFAULT NOW() + INTERVAL '7 days'
             )
-        """
-        )
+        """)
 
         # Create indexes if they don't exist
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON conversations(user_id)
-        """
-        )
-        await conn.execute(
-            """
+        """)
+        await conn.execute("""
             CREATE INDEX IF NOT EXISTS idx_conversations_expires_at ON conversations(expires_at)
-        """
-        )
+        """)
 
     def _serialize_context(self, context: ConversationContext) -> Dict[str, Any]:
         """Serialize conversation context to JSON-compatible format."""
@@ -933,13 +921,11 @@ class ConversationManager:
                 }
 
                 # 1. Clean up explicitly expired conversations
-                expired_count = await conn.fetchval(
-                    """
+                expired_count = await conn.fetchval("""
                     DELETE FROM conversations
                     WHERE expires_at IS NOT NULL AND expires_at < NOW()
                     RETURNING COUNT(*)
-                """
-                )
+                """)
                 stats["expired_deleted"] = expired_count or 0
 
                 # 2. Clean up inactive conversations (no updates for X days)

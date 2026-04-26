@@ -104,8 +104,12 @@ class TestMultiTurnConversationLogic:
         )
 
         # Test Chinese topic shift patterns
-        assert self.conversation_manager._detect_topic_shift_patterns("現在我想問不同的問題", recent_queries)
-        assert self.conversation_manager._detect_topic_shift_patterns("換個話題，關於烹飪", recent_queries)
+        assert self.conversation_manager._detect_topic_shift_patterns(
+            "現在我想問不同的問題", recent_queries
+        )
+        assert self.conversation_manager._detect_topic_shift_patterns(
+            "換個話題，關於烹飪", recent_queries
+        )
 
         # Test non-shift patterns
         assert not self.conversation_manager._detect_topic_shift_patterns(

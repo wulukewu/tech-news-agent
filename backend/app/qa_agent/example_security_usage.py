@@ -88,14 +88,12 @@ async def example_2_access_control():
     # Simulate creating a conversation owned by user1
     async with get_db_connection() as conn:
         # Ensure users table exists
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id UUID PRIMARY KEY,
                 email VARCHAR(255) UNIQUE NOT NULL
             )
-        """
-        )
+        """)
 
         # Create users
         await conn.execute(
@@ -107,8 +105,7 @@ async def example_2_access_control():
         )
 
         # Ensure conversations table exists
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS conversations (
                 id UUID PRIMARY KEY,
                 user_id UUID NOT NULL,
@@ -117,8 +114,7 @@ async def example_2_access_control():
                 last_updated TIMESTAMPTZ DEFAULT NOW(),
                 deleted_at TIMESTAMPTZ
             )
-        """
-        )
+        """)
 
         # Create conversation owned by user1
         await conn.execute(
@@ -183,17 +179,14 @@ async def example_3_secure_deletion():
 
     async with get_db_connection() as conn:
         # Ensure tables exist
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id UUID PRIMARY KEY,
                 email VARCHAR(255) UNIQUE NOT NULL
             )
-        """
-        )
+        """)
 
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS conversations (
                 id UUID PRIMARY KEY,
                 user_id UUID NOT NULL,
@@ -203,11 +196,9 @@ async def example_3_secure_deletion():
                 last_updated TIMESTAMPTZ DEFAULT NOW(),
                 deleted_at TIMESTAMPTZ
             )
-        """
-        )
+        """)
 
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS query_logs (
                 id UUID PRIMARY KEY,
                 user_id UUID NOT NULL,
@@ -216,11 +207,9 @@ async def example_3_secure_deletion():
                 created_at TIMESTAMPTZ DEFAULT NOW(),
                 deleted_at TIMESTAMPTZ
             )
-        """
-        )
+        """)
 
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS user_profiles (
                 user_id UUID PRIMARY KEY,
                 reading_history JSONB DEFAULT '[]',
@@ -229,8 +218,7 @@ async def example_3_secure_deletion():
                 created_at TIMESTAMPTZ DEFAULT NOW(),
                 deleted_at TIMESTAMPTZ
             )
-        """
-        )
+        """)
 
         # Create user
         await conn.execute(
@@ -342,8 +330,7 @@ async def example_4_audit_logging():
 
     async with get_db_connection() as conn:
         # Ensure security_audit_log table exists
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS security_audit_log (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 user_id UUID NOT NULL,
@@ -354,8 +341,7 @@ async def example_4_audit_logging():
                 metadata JSONB DEFAULT '{}',
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
-        """
-        )
+        """)
 
     print(f"\nUser ID: {user_id}")
     print(f"Resource ID: {resource_id}")

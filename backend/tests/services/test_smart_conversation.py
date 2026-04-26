@@ -179,7 +179,9 @@ async def test_generate_title_chinese_conversation(
     # Mock Chinese messages
     messages = [
         create_mock_message("user", "如何在 Python 中實作非同步程式設計？"),
-        create_mock_message("assistant", "在 Python 中，你可以使用 asyncio 模組來實作非同步程式設計..."),
+        create_mock_message(
+            "assistant", "在 Python 中，你可以使用 asyncio 模組來實作非同步程式設計..."
+        ),
         create_mock_message("user", "async/await 的用法是什麼？"),
     ]
     mock_message_repo.get_messages.return_value = messages

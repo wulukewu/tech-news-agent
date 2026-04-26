@@ -259,7 +259,8 @@ class ConversationCommands(commands.Cog):
 
             if conversation is None:
                 await interaction.followup.send(
-                    f"❌ 找不到對話 `{conversation_id}`。\n" "💡 請使用 `/conversations` 查看你的對話列表。",
+                    f"❌ 找不到對話 `{conversation_id}`。\n"
+                    "💡 請使用 `/conversations` 查看你的對話列表。",
                     ephemeral=True,
                 )
                 return
@@ -370,7 +371,8 @@ class ConversationCommands(commands.Cog):
 
             if not results:
                 await interaction.followup.send(
-                    f"🔍 找不到包含「{query}」的對話。\n" "💡 試試不同的關鍵字，或使用 `/conversations` 瀏覽所有對話。",
+                    f"🔍 找不到包含「{query}」的對話。\n"
+                    "💡 試試不同的關鍵字，或使用 `/conversations` 瀏覽所有對話。",
                     ephemeral=True,
                 )
                 return

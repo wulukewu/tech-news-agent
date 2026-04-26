@@ -19,8 +19,7 @@ async def setup_database():
     """Set up test database with required tables."""
     async with get_db_connection() as conn:
         # Ensure security_audit_log table exists
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS security_audit_log (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 user_id UUID NOT NULL,
@@ -31,23 +30,19 @@ async def setup_database():
                 metadata JSONB DEFAULT '{}',
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
-        """
-        )
+        """)
 
         # Ensure users table exists (simplified for testing)
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS users (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 email VARCHAR(255) UNIQUE NOT NULL,
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
-        """
-        )
+        """)
 
         # Ensure conversations table exists
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS conversations (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 user_id UUID NOT NULL,
@@ -59,12 +54,10 @@ async def setup_database():
                 updated_at TIMESTAMPTZ DEFAULT NOW(),
                 deleted_at TIMESTAMPTZ
             )
-        """
-        )
+        """)
 
         # Ensure query_logs table exists
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS query_logs (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 user_id UUID NOT NULL,
@@ -75,12 +68,10 @@ async def setup_database():
                 updated_at TIMESTAMPTZ DEFAULT NOW(),
                 deleted_at TIMESTAMPTZ
             )
-        """
-        )
+        """)
 
         # Ensure user_profiles table exists
-        await conn.execute(
-            """
+        await conn.execute("""
             CREATE TABLE IF NOT EXISTS user_profiles (
                 user_id UUID PRIMARY KEY,
                 reading_history JSONB DEFAULT '[]',
@@ -91,8 +82,7 @@ async def setup_database():
                 updated_at TIMESTAMPTZ DEFAULT NOW(),
                 deleted_at TIMESTAMPTZ
             )
-        """
-        )
+        """)
 
     yield
 

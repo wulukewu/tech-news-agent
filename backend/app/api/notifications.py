@@ -417,7 +417,9 @@ async def get_notification_status(current_user: dict[str, Any] = Depends(get_cur
                 }
             )
         else:
-            return success_response({"scheduled": False, "message": "無排程通知（可能已停用或尚未設定）"})
+            return success_response(
+                {"scheduled": False, "message": "無排程通知（可能已停用或尚未設定）"}
+            )
 
     except Exception as e:
         logger.error(f"Error getting notification status: {e}", exc_info=True)

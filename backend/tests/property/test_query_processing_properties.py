@@ -193,7 +193,9 @@ def complex_queries_all_filters(draw):
     depth = draw(st.sampled_from(["advanced", "beginner", "detailed", "高級", "入門", "詳細"]))
 
     topic = draw(
-        st.sampled_from(["machine learning", "Python", "web development", "機器學習", "Python", "網頁開發"])
+        st.sampled_from(
+            ["machine learning", "Python", "web development", "機器學習", "Python", "網頁開發"]
+        )
     )
 
     templates = [
@@ -467,7 +469,9 @@ async def test_property_3_technical_depth_extraction(processor, query):
     # Only check if the query is primarily in one language
     query_lower = query.lower()
 
-    has_chinese_depth = any(word in query for word in ["高級", "入門", "基礎", "深入", "詳細", "簡單"])
+    has_chinese_depth = any(
+        word in query for word in ["高級", "入門", "基礎", "深入", "詳細", "簡單"]
+    )
     has_english_depth = any(
         word in query_lower
         for word in ["advanced", "beginner", "basic", "deep", "detailed", "simple"]
@@ -499,7 +503,9 @@ async def test_property_3_technical_depth_extraction(processor, query):
     query_lower = query.lower()
 
     # High depth indicators
-    if any(word in query_lower for word in ["advanced", "deep", "detailed", "高級", "深入", "詳細"]):
+    if any(
+        word in query_lower for word in ["advanced", "deep", "detailed", "高級", "深入", "詳細"]
+    ):
         assert depth >= 4, f"Query '{query}' with advanced terms should have depth >= 4"
 
     # Low depth indicators

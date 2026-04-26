@@ -1016,7 +1016,9 @@ class QueryProcessor:
         if context and context.current_topic:
             topic = context.current_topic
             if language == QueryLanguage.CHINESE:
-                suggestions.extend([f"關於{topic}的更多細節", f"{topic}的實際應用", f"{topic}與{query}的關係"])
+                suggestions.extend(
+                    [f"關於{topic}的更多細節", f"{topic}的實際應用", f"{topic}與{query}的關係"]
+                )
             else:
                 suggestions.extend(
                     [

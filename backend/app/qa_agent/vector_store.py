@@ -220,9 +220,7 @@ class VectorStore:
                 query += """
                     ORDER BY similarity_score DESC
                     LIMIT $%d
-                """ % (
-                    len(params) + 1
-                )
+                """ % (len(params) + 1)
                 params.append(limit)
 
                 # Execute search
@@ -469,13 +467,11 @@ class VectorStore:
                     )
                 else:
                     # Count all embeddings
-                    count = await conn.fetchval(
-                        """
+                    count = await conn.fetchval("""
                         SELECT COUNT(*)
                         FROM article_embeddings
                         WHERE deleted_at IS NULL
-                        """
-                    )
+                        """)
 
                 return count or 0
 
@@ -511,15 +507,13 @@ class VectorStore:
                     return health_status
 
                 # Check table exists
-                table_exists = await conn.fetchval(
-                    """
+                table_exists = await conn.fetchval("""
                     SELECT EXISTS (
                         SELECT FROM information_schema.tables
                         WHERE table_schema = 'public'
                         AND table_name = 'article_embeddings'
                     )
-                    """
-                )
+                    """)
                 health_status["embeddings_table_exists"] = table_exists
 
                 if not table_exists:
