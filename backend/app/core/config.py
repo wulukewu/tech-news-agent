@@ -58,6 +58,9 @@ class Settings(BaseSettings):
     # Scheduler (set to false in local dev to avoid duplicate RSS fetches and DMs)
     enable_scheduler: bool = True
 
+    # Voyage AI (for semantic search embeddings)
+    voyage_api_key: str | None = None
+
     # RSS Configuration
     rss_fetch_days: int = 7
 

@@ -159,7 +159,46 @@ async def _store_preference(user_id: str, content: str) -> None:
 
 
 async def _search_articles_by_query(query: str) -> List[ArticleSummaryResponse]:
-    """Shared article search used by both web chat and DM handler."""
+    """Shared article search used by both web chat and DM handler.
+
+    Uses semantic (vector) search when Voyage API key is configured,
+    falls back to keyword ilike search otherwise.
+    """
+    from app.services.supabase_service import SupabaseService as _SS
+    from app.services.voyage_embedding import embed_text
+
+    supabase = _SS()
+
+    # Try semantic search first
+    query_embedding = await embed_text(query)
+    if query_embedding:
+        try:
+            resp = supabase.client.rpc(
+                "match_articles",
+                {
+                    "query_embedding": query_embedding,
+                    "match_count": 5,
+                },
+            ).execute()
+            if resp.data:
+                return [
+                    ArticleSummaryResponse(
+                        article_id=str(row["id"]),
+                        title=row.get("title") or "",
+                        summary=(row.get("ai_summary") or "")[:300],
+                        url=row.get("url") or "",
+                        relevance_score=round(float(row.get("similarity", 0.9)), 3),
+                        reading_time=max(2, len(row.get("ai_summary") or "") // 200),
+                        key_insights=[],
+                        published_at=row.get("published_at"),
+                        category=row.get("category") or "",
+                    )
+                    for row in resp.data
+                ]
+        except Exception as e:
+            logger.warning("Vector search failed, falling back to keyword: %s", e)
+
+    # Fallback: keyword ilike search
     import re
 
     keywords = re.findall(r"[A-Za-z][A-Za-z0-9+#.-]*|[\u4e00-\u9fff]{2,}", query)
@@ -171,9 +210,6 @@ async def _search_articles_by_query(query: str) -> List[ArticleSummaryResponse]:
 
     filters = ",".join(f"title.ilike.%{kw}%,ai_summary.ilike.%{kw}%" for kw in keywords)
     try:
-        from app.services.supabase_service import SupabaseService as _SS
-
-        supabase = _SS()
         resp = (
             supabase.client.table("articles")
             .select(
@@ -186,7 +222,6 @@ async def _search_articles_by_query(query: str) -> List[ArticleSummaryResponse]:
         )
         results = []
         for row in resp.data or []:
-            # Use article's own category, fall back to feed's category
             category = row.get("category") or (row.get("feeds") or {}).get("category") or ""
             results.append(
                 ArticleSummaryResponse(

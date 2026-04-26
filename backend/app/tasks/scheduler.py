@@ -345,36 +345,49 @@ async def background_fetch_job():
                 # Stage 4: Insert articles into database with retry logic
                 logger.info(f"Stage 4 (Batch {batch_idx + 1}): Inserting articles into database")
 
-                # Convert ArticleSchema to dict format for insert_articles
                 # Filter out articles without tinkering_index (LLM analysis failed)
-                articles_to_insert = []
-                skipped_count = 0
-                for article in analyzed_articles:
-                    # Skip articles without tinkering_index (LLM analysis failed)
-                    if article.tinkering_index is None:
-                        skipped_count += 1
-                        logger.warning(
-                            f"Skipping article without tinkering_index (LLM analysis failed): {article.url}"
-                        )
-                        continue
-
-                    article_dict = {
-                        "title": article.title,
-                        "url": str(article.url),
-                        "feed_id": str(article.feed_id),
-                        "published_at": (
-                            article.published_at.isoformat() if article.published_at else None
-                        ),
-                        "tinkering_index": article.tinkering_index,
-                        "ai_summary": article.ai_summary,
-                        "embedding": article.embedding,
-                        "category": article.category,
-                    }
-                    articles_to_insert.append(article_dict)
-
+                valid_articles = [a for a in analyzed_articles if a.tinkering_index is not None]
+                skipped_count = len(analyzed_articles) - len(valid_articles)
                 if skipped_count > 0:
-                    logger.info(
-                        f"Skipped {skipped_count} articles without tinkering_index in batch {batch_idx + 1}"
+                    logger.info(f"Skipped {skipped_count} articles without tinkering_index")
+
+                # Generate embeddings in batch for articles that don't have one
+                articles_needing_embedding = [a for a in valid_articles if not a.embedding]
+                if articles_needing_embedding:
+                    try:
+                        from app.services.voyage_embedding import embed_texts
+
+                        texts = [
+                            f"{a.title} {a.ai_summary or ''}" for a in articles_needing_embedding
+                        ]
+                        embeddings = await embed_texts(texts)
+                        for article, emb in zip(articles_needing_embedding, embeddings):
+                            if emb:
+                                article.embedding = emb
+                        logger.info(
+                            "Generated embeddings for %d/%d articles",
+                            sum(1 for e in embeddings if e),
+                            len(articles_needing_embedding),
+                        )
+                    except Exception as emb_exc:
+                        logger.warning("Embedding generation failed, skipping: %s", emb_exc)
+
+                # Convert to dicts for insert
+                articles_to_insert = []
+                for article in valid_articles:
+                    articles_to_insert.append(
+                        {
+                            "title": article.title,
+                            "url": str(article.url),
+                            "feed_id": str(article.feed_id),
+                            "published_at": (
+                                article.published_at.isoformat() if article.published_at else None
+                            ),
+                            "tinkering_index": article.tinkering_index,
+                            "ai_summary": article.ai_summary,
+                            "embedding": article.embedding,
+                            "category": article.category,
+                        }
                     )
 
                 # Skip database insertion if no valid articles
