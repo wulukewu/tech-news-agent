@@ -1,0 +1,72 @@
+name: Security Scan
+
+on:
+  schedule:
+    # Run every Sunday at midnight
+    - cron: '0 0 * * 0'
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  frontend-audit:
+    name: Frontend Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run npm audit
+        working-directory: frontend
+        run: |
+          echo "🔍 Running npm audit..."
+          npm audit --audit-level=moderate || {
+            echo "⚠️ Security vulnerabilities found"
+            npm audit --audit-level=moderate --json > audit-report.json
+            exit 1
+          }
+
+      - name: Upload audit report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-audit-report
+          path: frontend/audit-report.json
+
+  backend-audit:
+    name: Backend Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Run pip audit
+        working-directory: backend
+        run: |
+          echo "🔍 Running pip audit..."
+          pip-audit -r requirements.txt -r requirements-dev.txt || {
+            echo "⚠️ Security vulnerabilities found"
+            exit 1
+          }
+
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate

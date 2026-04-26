@@ -1,0 +1,88 @@
+name: Performance Check
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  bundle-size:
+    name: Bundle Size Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'frontend/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build application
+        working-directory: frontend
+        run: npm run build
+
+      - name: Analyze bundle size
+        working-directory: frontend
+        run: |
+          echo "📦 Analyzing bundle size..."
+
+          # Get build output
+          BUILD_OUTPUT=$(cat .next/build-manifest.json 2>/dev/null || echo "{}")
+
+          # Check if .next directory exists
+          if [ ! -d ".next" ]; then
+            echo "❌ Build directory not found"
+            exit 1
+          fi
+
+          # Calculate total size
+          TOTAL_SIZE=$(du -sh .next | cut -f1)
+          echo "Total build size: $TOTAL_SIZE"
+
+          # Check for large chunks
+          echo ""
+          echo "Largest chunks:"
+          find .next/static/chunks -name "*.js" -type f -exec du -h {} + | sort -rh | head -10
+
+          # Warning if build is too large
+          SIZE_BYTES=$(du -sb .next | cut -f1)
+          MAX_SIZE=$((100 * 1024 * 1024))  # 100MB
+
+          if [ $SIZE_BYTES -gt $MAX_SIZE ]; then
+            echo "⚠️ Build size exceeds 100MB"
+            exit 1
+          fi
+
+          echo "✅ Bundle size check passed"
+
+      - name: Comment PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+
+            // Read build stats
+            const buildDir = path.join(process.cwd(), 'frontend', '.next');
+            const stats = fs.statSync(buildDir);
+            const sizeMB = (stats.size / (1024 * 1024)).toFixed(2);
+
+            const comment = `## 📦 Bundle Size Report
+
+            **Total Build Size**: ${sizeMB} MB
+
+            ✅ Build size is within acceptable limits (<100MB)
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.name,
+              body: comment
+            });

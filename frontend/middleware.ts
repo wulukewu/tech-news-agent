@@ -19,6 +19,8 @@ export function middleware(request: NextRequest) {
     const newPath = pathname.replace('/dashboard', '/app');
     return NextResponse.redirect(new URL(newPath, request.url));
   }
+
+  return NextResponse.next();
 }
 
 export const config = {
