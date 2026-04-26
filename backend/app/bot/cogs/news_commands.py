@@ -34,6 +34,75 @@ class NewsCommands(commands.Cog):
         self.supabase_service = supabase_service or SupabaseService()
         self.llm_service = llm_service or LLMService()
 
+    @app_commands.command(name="update_profile", description="立刻根據你的 DM 對話更新偏好摘要")
+    async def update_profile(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True, thinking=True)
+
+        discord_id = str(interaction.user.id)
+        try:
+            user = await self.supabase_service.get_user_by_discord_id(discord_id)
+            if not user:
+                await interaction.followup.send("❌ 找不到你的帳號。", ephemeral=True)
+                return
+            user_id = user["id"]
+        except Exception:
+            await interaction.followup.send("❌ 無法取得用戶資料。", ephemeral=True)
+            return
+
+        from app.services.preference_summary_service import update_preference_summary
+
+        summary = await update_preference_summary(user_id, self.supabase_service)
+        if summary:
+            await interaction.followup.send(f"✅ 偏好摘要已更新！\n\n> {summary[:500]}", ephemeral=True)
+        else:
+            await interaction.followup.send("⚠️ 沒有足夠的 DM 對話來生成摘要。先在 DM 裡多說幾句你的偏好吧！", ephemeral=True)
+
+    @app_commands.command(name="update_profile", description="立刻根據你的 DM 對話更新偏好摘要")
+    async def update_profile(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True, thinking=True)
+
+        discord_id = str(interaction.user.id)
+        try:
+            user = await self.supabase_service.get_user_by_discord_id(discord_id)
+            if not user:
+                await interaction.followup.send("❌ 找不到你的帳號。", ephemeral=True)
+                return
+            user_id = user["id"]
+        except Exception:
+            await interaction.followup.send("❌ 無法取得用戶資料。", ephemeral=True)
+            return
+
+        from app.services.preference_summary_service import update_preference_summary
+
+        summary = await update_preference_summary(user_id, self.supabase_service)
+        if summary:
+            await interaction.followup.send(f"✅ 偏好摘要已更新！\n\n> {summary[:500]}", ephemeral=True)
+        else:
+            await interaction.followup.send("⚠️ 沒有足夠的 DM 對話來生成摘要。先在 DM 裡多說幾句你的偏好吧！", ephemeral=True)
+
+    @app_commands.command(name="update_profile", description="立刻根據你的 DM 對話更新偏好摘要")
+    async def update_profile(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True, thinking=True)
+
+        discord_id = str(interaction.user.id)
+        try:
+            user = await self.supabase_service.get_user_by_discord_id(discord_id)
+            if not user:
+                await interaction.followup.send("❌ 找不到你的帳號。", ephemeral=True)
+                return
+            user_id = user["id"]
+        except Exception:
+            await interaction.followup.send("❌ 無法取得用戶資料。", ephemeral=True)
+            return
+
+        from app.services.preference_summary_service import update_preference_summary
+
+        summary = await update_preference_summary(user_id, self.supabase_service)
+        if summary:
+            await interaction.followup.send(f"✅ 偏好摘要已更新！\n\n> {summary[:500]}", ephemeral=True)
+        else:
+            await interaction.followup.send("⚠️ 沒有足夠的 DM 對話來生成摘要。先在 DM 裡多說幾句你的偏好吧！", ephemeral=True)
+
     @app_commands.command(name="my_profile", description="查看你的偏好摘要與分類權重")
     async def my_profile(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
