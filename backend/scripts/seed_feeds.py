@@ -54,7 +54,7 @@ def main():
             f"Details: {e!s}"
         )
 
-    # Define default RSS feeds data structure
+    # Define default RSS feeds data structure (all verified working URLs)
     default_feeds = [
         # AI & Machine Learning
         {
@@ -120,7 +120,7 @@ def main():
         },
         {
             "name": "Netflix Tech Blog",
-            "url": "https://netflixtechblog.com/feed",
+            "url": "https://netflixtechblog.medium.com/feed",
             "category": "Architecture & System Design",
             "is_active": True,
         },
@@ -226,9 +226,9 @@ def main():
         # Data Engineering & Analytics
         {
             "name": "Seattle Data Guy",
-            "url": "https://www.theseattledataguy.com/feed/",
+            "url": "https://seattledataguy.substack.com/feed",
             "category": "Data Engineering & Analytics",
-            "is_active": False,
+            "is_active": True,
         },
         {
             "name": "Data Engineering Weekly",
@@ -249,10 +249,10 @@ def main():
             "is_active": True,
         },
         {
-            "name": "Towards Data Science",
-            "url": "https://towardsdatascience.com/feed",
+            "name": "Analytics Vidhya",
+            "url": "https://www.analyticsvidhya.com/feed/",
             "category": "Data Engineering & Analytics",
-            "is_active": False,
+            "is_active": True,
         },
         # Web3 & Blockchain Engineering
         {
@@ -268,10 +268,10 @@ def main():
             "is_active": True,
         },
         {
-            "name": "Alchemy Blog",
-            "url": "https://alchemy.com/blog/rss",
+            "name": "Polygon Blog",
+            "url": "https://blog.polygon.technology/feed/",
             "category": "Web3 & Blockchain Engineering",
-            "is_active": False,
+            "is_active": True,
         },
         # Frontend & Mobile Development
         {
@@ -284,6 +284,94 @@ def main():
             "name": "Smashing Magazine",
             "url": "https://www.smashingmagazine.com/feed/",
             "category": "Frontend & Mobile Development",
+            "is_active": True,
+        },
+        # Web Development & Programming
+        {
+            "name": "freeCodeCamp",
+            "url": "https://www.freecodecamp.org/news/rss/",
+            "category": "Web Development & Programming",
+            "is_active": True,
+        },
+        {
+            "name": "CSS-Tricks",
+            "url": "https://css-tricks.com/feed/",
+            "category": "Web Development & Programming",
+            "is_active": True,
+        },
+        {
+            "name": "JavaScript Weekly",
+            "url": "https://javascriptweekly.com/rss",
+            "category": "Web Development & Programming",
+            "is_active": True,
+        },
+        {
+            "name": "A List Apart",
+            "url": "https://alistapart.com/main/feed/",
+            "category": "Web Development & Programming",
+            "is_active": True,
+        },
+        {
+            "name": "Real Python",
+            "url": "https://realpython.com/atom.xml",
+            "category": "Web Development & Programming",
+            "is_active": True,
+        },
+        {
+            "name": "Next.js Blog",
+            "url": "https://nextjs.org/feed.xml",
+            "category": "Web Development & Programming",
+            "is_active": True,
+        },
+        # Official Documentation
+        {
+            "name": "MDN Web Docs Blog",
+            "url": "https://developer.mozilla.org/en-US/blog/rss.xml",
+            "category": "Official Documentation",
+            "is_active": True,
+        },
+        {
+            "name": "Node.js Blog",
+            "url": "https://nodejs.org/en/feed/blog.xml",
+            "category": "Official Documentation",
+            "is_active": True,
+        },
+        {
+            "name": "React Blog",
+            "url": "https://react.dev/rss.xml",
+            "category": "Official Documentation",
+            "is_active": True,
+        },
+        {
+            "name": "Google Developers Blog",
+            "url": "https://developers.googleblog.com/feeds/posts/default",
+            "category": "Official Documentation",
+            "is_active": True,
+        },
+        # Official Updates
+        {
+            "name": "GitHub Blog",
+            "url": "https://github.blog/feed/",
+            "category": "Official Updates",
+            "is_active": True,
+        },
+        {
+            "name": "Vue.js News",
+            "url": "https://blog.vuejs.org/feed.rss",
+            "category": "Official Updates",
+            "is_active": True,
+        },
+        # Community & Learning
+        {
+            "name": "Stack Overflow Blog",
+            "url": "https://stackoverflow.blog/feed/",
+            "category": "Community & Learning",
+            "is_active": True,
+        },
+        {
+            "name": "Dev.to",
+            "url": "https://dev.to/feed",
+            "category": "Community & Learning",
             "is_active": True,
         },
         # Tech Strategy & Engineering Management

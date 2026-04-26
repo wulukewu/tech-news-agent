@@ -338,6 +338,14 @@ export default function SubscriptionsPage() {
       if (prevIds !== filteredIds) {
         return filtered;
       }
+      // Check if subscription status changed for any feed
+      const hasSubscriptionChange = prev.some((prevFeed, index) => {
+        const currentFeed = filtered[index];
+        return currentFeed && prevFeed.is_subscribed !== currentFeed.is_subscribed;
+      });
+      if (hasSubscriptionChange) {
+        return filtered;
+      }
       // No change, return previous state to prevent re-render
       return prev;
     });
