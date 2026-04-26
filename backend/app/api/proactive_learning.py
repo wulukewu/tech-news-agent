@@ -22,7 +22,7 @@ from app.schemas.responses import success_response
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(prefix="/learning")
 
 
 # ── Request schemas ──────────────────────────────────────────────────────────
