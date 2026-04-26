@@ -119,12 +119,14 @@ async def proactive_recommendation_job(new_article_ids: list[str]) -> None:
 
 async def _build_recommendations(
     supabase: SupabaseService,
-    adjuster: WeightAdjuster,
+    adjuster: WeightAdjuster | None,
     user_id: str,
     discord_id: str,
     new_articles: list[dict],
 ) -> list[dict]:
     """Score articles and build recommendation payload for one user."""
+    if adjuster is None:
+        adjuster = WeightAdjuster()
 
     # Fetch user's rating history for reason generation
     try:

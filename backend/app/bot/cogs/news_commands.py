@@ -34,6 +34,58 @@ class NewsCommands(commands.Cog):
         self.supabase_service = supabase_service or SupabaseService()
         self.llm_service = llm_service or LLMService()
 
+    @app_commands.command(name="recommend_now", description="立即觸發個人化文章推薦（發送 DM）")
+    async def recommend_now(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True, thinking=True)
+
+        discord_id = str(interaction.user.id)
+        try:
+            user_uuid = await ensure_user_registered(interaction)
+        except Exception:
+            await interaction.followup.send("❌ 無法取得用戶資料，請稍後再試。", ephemeral=True)
+            return
+
+        # Fetch recent articles (last 7 days)
+        try:
+            resp = (
+                self.supabase_service.client.table("articles")
+                .select("id, title, url, category, tinkering_index, ai_summary")
+                .order("created_at", desc=True)
+                .limit(50)
+                .execute()
+            )
+            articles = resp.data or []
+        except Exception as exc:
+            logger.error("recommend_now: failed to fetch articles: %s", exc)
+            await interaction.followup.send("❌ 無法取得文章，請稍後再試。", ephemeral=True)
+            return
+
+        if not articles:
+            await interaction.followup.send("目前沒有文章可以推薦。", ephemeral=True)
+            return
+
+        from app.bot.cogs.proactive_dm import send_proactive_dm
+        from app.tasks.proactive_recommendation import _build_recommendations
+
+        try:
+            items = await _build_recommendations(
+                self.supabase_service, None, str(user_uuid), discord_id, articles
+            )
+        except Exception as exc:
+            logger.error("recommend_now: build recommendations failed: %s", exc)
+            await interaction.followup.send("❌ 推薦生成失敗，請稍後再試。", ephemeral=True)
+            return
+
+        if not items:
+            await interaction.followup.send("目前沒有足夠資料生成個人化推薦。", ephemeral=True)
+            return
+
+        success = await send_proactive_dm(self.bot, discord_id, items)
+        if success:
+            await interaction.followup.send("✅ 已發送個人化推薦到你的 DM！", ephemeral=True)
+        else:
+            await interaction.followup.send("❌ 無法發送 DM，請確認你的 DM 設定是否開啟。", ephemeral=True)
+
     @app_commands.command(name="news_now", description="查看你訂閱的最新技術文章")
     async def news_now(self, interaction: discord.Interaction):
         logger.info(
@@ -58,8 +110,7 @@ class NewsCommands(commands.Cog):
                     exc_info=True,
                 )
                 await interaction.followup.send(
-                    "❌ 無法註冊使用者，請稍後再試。\n"
-                    "💡 建議：請確認你的網路連線正常，或稍後再試。",
+                    "❌ 無法註冊使用者，請稍後再試。\n" "💡 建議：請確認你的網路連線正常，或稍後再試。",
                     ephemeral=True,
                 )
                 return
@@ -71,9 +122,7 @@ class NewsCommands(commands.Cog):
 
             if not subscriptions:
                 logger.info("User has no subscriptions", user_id=str(interaction.user.id))
-                await interaction.followup.send(
-                    "📭 你還沒有訂閱任何 RSS 來源！\n" "使用 `/add_feed` 來訂閱感興趣的來源。"
-                )
+                await interaction.followup.send("📭 你還沒有訂閱任何 RSS 來源！\n" "使用 `/add_feed` 來訂閱感興趣的來源。")
                 return
 
             # 3. Query articles from subscribed feeds via service layer
@@ -88,9 +137,7 @@ class NewsCommands(commands.Cog):
                     user_id=str(interaction.user.id),
                     subscription_count=len(subscriptions),
                 )
-                await interaction.followup.send(
-                    "📭 最近 7 天沒有新文章。\n" "背景排程器會定期抓取文章，請稍後再試。"
-                )
+                await interaction.followup.send("📭 最近 7 天沒有新文章。\n" "背景排程器會定期抓取文章，請稍後再試。")
                 return
 
             # 4. Enrich articles with feed names from subscriptions
@@ -190,8 +237,7 @@ class NewsCommands(commands.Cog):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 無法取得文章資料，請稍後再試。\n"
-                "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
+                "❌ 無法取得文章資料，請稍後再試。\n" "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
                 ephemeral=True,
             )
         except Exception as e:
@@ -205,8 +251,7 @@ class NewsCommands(commands.Cog):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 發生未預期的錯誤，請稍後再試。\n"
-                "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
+                "❌ 發生未預期的錯誤，請稍後再試。\n" "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
                 ephemeral=True,
             )
 
