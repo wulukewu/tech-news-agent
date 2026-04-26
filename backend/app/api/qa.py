@@ -357,10 +357,9 @@ async def _process_query_with_intent(
 
     if intent == "preference":
         await _store_preference(user_id, query)
-        # Auto-update summary in background if condition met
-        from app.services.auto_preference_summary import schedule_preference_summary_update
+        from app.services.auto_preference_summary import maybe_update_preference_summary
 
-        schedule_preference_summary_update(user_id)
+        await maybe_update_preference_summary(user_id)
         return QAQueryResponse(
             query=query,
             articles=[],

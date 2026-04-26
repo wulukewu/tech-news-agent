@@ -16,8 +16,8 @@ from app.services.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
 
-_MIN_NEW_MESSAGES = 3
-_MIN_HOURS = 24
+_MIN_NEW_MESSAGES = 1
+_MIN_HOURS = 1
 
 
 async def maybe_update_preference_summary(user_id: str) -> None:
@@ -47,15 +47,10 @@ async def maybe_update_preference_summary(user_id: str) -> None:
 
     # Count new messages since last update
     try:
-        query = (
-            supabase.client.table("dm_conversations")
-            .select("id", count="exact")
-            .eq("user_id", user_id)
-        )
+        q = supabase.client.table("dm_conversations").select("id").eq("user_id", user_id)
         if last_update:
-            query = query.gte("created_at", last_update.isoformat())
-        count_resp = query.execute()
-        new_count = count_resp.count or 0
+            q = q.gte("created_at", last_update.isoformat())
+        new_count = len((q.execute().data) or [])
     except Exception:
         new_count = 0
 
