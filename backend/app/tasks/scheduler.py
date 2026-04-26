@@ -448,7 +448,24 @@ async def background_fetch_job():
             failed_articles=[],
         )
 
-        # Stage 5: Log final statistics (Requirement 12.7)
+        # Stage 5: Trigger proactive recommendation DMs for newly inserted articles
+        if total_inserted > 0:
+            try:
+                from app.tasks.proactive_recommendation import proactive_recommendation_job
+
+                # Fetch IDs of articles inserted since job started
+                new_ids_resp = (
+                    supabase.client.table("articles")
+                    .select("id")
+                    .gte("created_at", job_start_time.isoformat())
+                    .execute()
+                )
+                new_article_ids = [r["id"] for r in (new_ids_resp.data or [])]
+                await proactive_recommendation_job(new_article_ids)
+            except Exception as exc:
+                logger.error("Proactive recommendation job failed: %s", exc, exc_info=True)
+
+        # Stage 6: Log final statistics (Requirement 12.7)
         job_end_time = datetime.now(UTC)
         job_duration = (job_end_time - job_start_time).total_seconds()
 

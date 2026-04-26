@@ -18,6 +18,7 @@ import { TinkeringIndexThreshold } from '@/features/notifications/components/Tin
 import { FeedNotificationSettings } from '@/features/notifications/components/FeedNotificationSettings';
 import { NotificationPreview } from '@/features/notifications/components/NotificationPreview';
 import { PersonalizedNotificationSettings } from '@/features/notifications/components/PersonalizedNotificationSettings';
+import { ProactiveFrequencySettings } from '@/features/notifications/components/ProactiveFrequencySettings';
 import { Bell, Moon, Brain, Rss, CheckCircle, AlertCircle } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 
@@ -141,6 +142,7 @@ export default function NotificationSettingsPage() {
 
         <TabsContent value="schedule" className="space-y-4">
           <PersonalizedNotificationSettings />
+          <ProactiveFrequencySettings />
           {settings && <NotificationPreview settings={settings} />}
         </TabsContent>
 
