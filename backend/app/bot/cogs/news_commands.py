@@ -45,16 +45,23 @@ class NewsCommands(commands.Cog):
             await interaction.followup.send("❌ 無法取得用戶資料，請稍後再試。", ephemeral=True)
             return
 
-        # Fetch recent articles (last 7 days)
+        # Fetch recent articles from user's subscribed feeds
         try:
-            resp = (
-                self.supabase_service.client.table("articles")
-                .select("id, title, url, category, tinkering_index, ai_summary")
-                .order("created_at", desc=True)
-                .limit(50)
-                .execute()
+            article_objects = await self.supabase_service.get_user_articles(
+                discord_id=discord_id, days=7, limit=50
             )
-            articles = resp.data or []
+            # Convert ArticleSchema objects to dicts for scoring
+            articles = [
+                {
+                    "id": str(a.id) if hasattr(a, "id") and a.id else None,
+                    "title": a.title,
+                    "url": str(a.url),
+                    "category": getattr(a, "category", "") or "",
+                    "tinkering_index": a.tinkering_index,
+                    "ai_summary": a.ai_summary,
+                }
+                for a in (article_objects or [])
+            ]
         except Exception as exc:
             logger.error("recommend_now: failed to fetch articles: %s", exc)
             await interaction.followup.send("❌ 無法取得文章，請稍後再試。", ephemeral=True)
