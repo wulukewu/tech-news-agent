@@ -16,6 +16,8 @@ import re
 import discord
 from discord.ext import commands
 
+from app.repositories.conversation import ConversationRepository
+from app.repositories.message import MessageRepository
 from app.services.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
@@ -54,6 +56,9 @@ def _should_show_hint(discord_id: str) -> bool:
 class DMConversationListener(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        supabase = SupabaseService()
+        self._conv_repo = ConversationRepository(supabase.client)
+        self._msg_repo = MessageRepository(supabase.client)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -95,6 +100,7 @@ class DMConversationListener(commands.Cog):
             if show_hint:
                 reply += _USAGE_HINT
             await message.reply(reply, mention_author=False)
+            await self._save_assistant_message(user_id, reply)
 
     async def _handle_question(
         self,
@@ -106,6 +112,7 @@ class DMConversationListener(commands.Cog):
         show_hint: bool,
     ) -> None:
         """Search articles directly and reply with results."""
+        reply = ""
         async with message.channel.typing():
             try:
                 articles = await self._search_articles(supabase, content)
@@ -134,9 +141,12 @@ class DMConversationListener(commands.Cog):
 
             except Exception as exc:
                 logger.error("Article search failed for %s: %s", discord_id, exc)
-                await message.reply("抱歉，查詢時發生錯誤，請稍後再試。", mention_author=False)
+                reply = "抱歉，查詢時發生錯誤，請稍後再試。"
+                await message.reply(reply, mention_author=False)
 
         await self._store_dm(supabase, user_id, content)
+        if reply:
+            await self._save_assistant_message(user_id, reply)
 
     async def _search_articles(self, supabase: SupabaseService, query: str) -> list[dict]:
         """Extract keywords and search articles table."""
@@ -182,6 +192,7 @@ class DMConversationListener(commands.Cog):
         if show_hint:
             reply += _USAGE_HINT
         await message.reply(reply, mention_author=False)
+        await self._save_assistant_message(user_id, reply)
 
     async def _store_dm(self, supabase: SupabaseService, user_id: str, content: str) -> None:
         try:
@@ -190,6 +201,36 @@ class DMConversationListener(commands.Cog):
             ).execute()
         except Exception as exc:
             logger.error("Failed to store DM conversation: %s", exc)
+
+    async def _get_active_conversation_id(self, user_id: str) -> str | None:
+        """Find the most recent discord conversation for this user."""
+        try:
+            from app.repositories.conversation import ConversationFilters
+
+            convs = await self._conv_repo.list_conversations(
+                user_id=user_id,
+                filters=ConversationFilters(limit=1, offset=0),
+            )
+            if convs:
+                return str(convs[0].id)
+        except Exception as exc:
+            logger.warning("Could not fetch active conversation: %s", exc)
+        return None
+
+    async def _save_assistant_message(self, user_id: str, content: str) -> None:
+        """Save bot reply as assistant message so it appears in web chat."""
+        conv_id = await self._get_active_conversation_id(user_id)
+        if not conv_id:
+            return
+        try:
+            await self._msg_repo.add_message(
+                conversation_id=conv_id,
+                role="assistant",
+                content=content,
+                platform="discord",
+            )
+        except Exception as exc:
+            logger.warning("Failed to save assistant message: %s", exc)
 
 
 async def setup(bot: commands.Bot) -> None:
