@@ -304,7 +304,7 @@ async def get_preference_summary(current_user: dict[str, Any] = Depends(get_curr
     from app.services.supabase_service import SupabaseService
 
     supabase = SupabaseService()
-    user_id = current_user["user_id"]
+    user_id = str(current_user["user_id"])  # Convert UUID to string
     try:
         resp = (
             supabase.client.table("preference_model")
@@ -343,7 +343,7 @@ async def update_preference_summary_endpoint(
     from app.services.supabase_service import SupabaseService
 
     supabase = SupabaseService()
-    user_id = current_user["user_id"]
+    user_id = str(current_user["user_id"])  # Convert UUID to string
     try:
         supabase.client.table("preference_model").upsert(
             {
