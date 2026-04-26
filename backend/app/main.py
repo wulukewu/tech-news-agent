@@ -355,6 +355,11 @@ from app.api import learning_content
 
 app.include_router(learning_content.router, tags=["learning-content"])
 
+# Import and register simplified learning content router
+from app.api import learning_content_simple
+
+app.include_router(learning_content_simple.router, tags=["learning-content-simple"])
+
 # Import and register debug router (for development)
 from app.api import debug
 

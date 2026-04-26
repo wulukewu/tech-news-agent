@@ -43,6 +43,7 @@ const mainNavItems: NavItem[] = [
   { href: '/app/reading-list', labelKey: 'nav.reading-list', icon: BookMarked },
   { href: '/app/subscriptions', labelKey: 'nav.subscriptions', icon: Rss },
   { href: '/learning', labelKey: 'nav.learning-path', icon: Brain },
+  { href: '/learning-content', labelKey: 'nav.learning-content', icon: BookMarked },
   { href: '/app/chat', labelKey: 'nav.chat', icon: MessageSquare },
   { href: '/app/insights', labelKey: 'nav.insights', icon: Lightbulb },
 ];
