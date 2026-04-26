@@ -14,9 +14,12 @@ from app.services.supabase_service import SupabaseService
 logger = logging.getLogger(__name__)
 
 SUMMARY_PROMPT = """你是一個技術內容推薦系統的偏好分析師。
-根據以下用戶在 Discord 說的話，用繁體中文寫一段 150 字以內的偏好摘要。
-摘要應該描述：用戶喜歡什麼技術主題、偏好什麼深度/風格、不喜歡什麼。
-只輸出摘要本身，不要加任何前綴或解釋。
+根據以下用戶在 Discord 說的話，用繁體中文寫一段 100 字以內的偏好摘要。
+規則：
+- 直接描述偏好，不要用「用戶」開頭，改用「喜歡」、「偏好」等直接陳述
+- 合併重複的內容，每個偏好只說一次
+- 格式：先說喜歡什麼，再說不喜歡什麼
+- 只輸出摘要本身，不要加任何前綴或解釋
 
 用戶說的話：
 {messages}"""
@@ -70,7 +73,8 @@ async def update_preference_summary(user_id: str, supabase: SupabaseService) -> 
                 "preference_summary": summary,
                 "summary_updated_at": datetime.now(UTC).isoformat(),
                 "updated_at": datetime.now(UTC).isoformat(),
-            }
+            },
+            on_conflict="user_id",
         ).execute()
     except Exception as exc:
         logger.error("Failed to save preference summary for %s: %s", user_id, exc)
