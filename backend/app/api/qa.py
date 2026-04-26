@@ -298,6 +298,7 @@ async def _save_messages_to_db(
                         "insights": qa_response.insights,
                         "recommendations": qa_response.recommendations,
                         "response_time": qa_response.response_time,
+                        "intent": qa_response.intent,
                     },
                     "created_at": now,
                 }
