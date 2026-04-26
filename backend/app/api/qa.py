@@ -176,7 +176,7 @@ async def _search_articles_by_query(query: str) -> List[ArticleSummaryResponse]:
         supabase = _SS()
         resp = (
             supabase.client.table("articles")
-            .select("id, title, url, ai_summary, category, tinkering_index, published_at")
+            .select("id, title, url, ai_summary, tinkering_index, published_at")
             .or_(filters)
             .order("published_at", desc=True)
             .limit(5)
@@ -194,7 +194,7 @@ async def _search_articles_by_query(query: str) -> List[ArticleSummaryResponse]:
                     reading_time=max(2, len(row.get("ai_summary") or "") // 200),
                     key_insights=[],
                     published_at=row.get("published_at"),
-                    category=row.get("category") or "",
+                    category="",
                 )
             )
         return results
