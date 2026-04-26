@@ -560,6 +560,8 @@ async def preference_summary_job():
     except Exception as exc:
         logger.error("Preference summary job failed: %s", exc, exc_info=True)
 
+
+async def proactive_learning_job():
     """
     Scheduled job: run behavior analysis for all active users daily at 10:00.
     Triggers learning conversations where warranted.
