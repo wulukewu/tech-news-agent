@@ -350,6 +350,11 @@ app.include_router(
     notification_system.router, prefix="/api/notification-system", tags=["notification-system"]
 )
 
+# Import and register learning content enhancement router
+from app.api import learning_content
+
+app.include_router(learning_content.router, tags=["learning-content"])
+
 # Import and register debug router (for development)
 from app.api import debug
 
