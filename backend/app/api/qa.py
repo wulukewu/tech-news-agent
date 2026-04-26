@@ -184,6 +184,7 @@ async def _search_articles_by_query(query: str) -> List[ArticleSummaryResponse]:
                 {
                     "query_embedding": query_embedding,
                     "match_count": 5,
+                    "match_threshold": 0.5,
                 },
             ).execute()
             if resp.data:

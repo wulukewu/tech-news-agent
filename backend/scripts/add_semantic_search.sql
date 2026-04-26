@@ -18,7 +18,8 @@ WHERE a.feed_id = f.id AND a.category IS NULL;
 -- Create the match_articles function for semantic search
 CREATE OR REPLACE FUNCTION match_articles(
   query_embedding VECTOR(1024),
-  match_count INT DEFAULT 5
+  match_count INT DEFAULT 5,
+  match_threshold FLOAT DEFAULT 0.5
 )
 RETURNS TABLE (
   id UUID,
@@ -41,6 +42,7 @@ AS $$
     1 - (a.embedding <=> query_embedding) AS similarity
   FROM articles a
   WHERE a.embedding IS NOT NULL
+    AND 1 - (a.embedding <=> query_embedding) > match_threshold
   ORDER BY a.embedding <=> query_embedding
   LIMIT match_count;
 $$;
