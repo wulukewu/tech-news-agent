@@ -188,6 +188,12 @@ async def _search_articles_by_query(query: str) -> List[ArticleSummaryResponse]:
                 },
             ).execute()
             if resp.data:
+                logger.info(
+                    "Vector search returned %d results, top similarity: %.3f",
+                    len(resp.data),
+                    resp.data[0].get("similarity", 0),
+                )
+            if resp.data:
                 return [
                     ArticleSummaryResponse(
                         article_id=str(row["id"]),
