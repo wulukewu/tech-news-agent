@@ -52,6 +52,9 @@ class Settings(BaseSettings):
     # Timezone Configuration
     timezone: str = "Asia/Taipei"
 
+    # DM conversation listener (set to false in local dev to avoid duplicates)
+    enable_dm_listener: bool = True
+
     # RSS Configuration
     rss_fetch_days: int = 7
 

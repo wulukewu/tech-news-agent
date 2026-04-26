@@ -54,4 +54,10 @@ class DMConversationListener(commands.Cog):
 
 
 async def setup(bot: commands.Bot) -> None:
-    await bot.add_cog(DMConversationListener(bot))
+    from app.core.config import settings
+
+    # Only enable DM listener in production to avoid duplicates
+    if getattr(settings, "enable_dm_listener", True):
+        await bot.add_cog(DMConversationListener(bot))
+    else:
+        logger.info("DM conversation listener disabled via ENABLE_DM_LISTENER=false")
