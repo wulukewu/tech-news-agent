@@ -49,13 +49,20 @@ npm run format:check || {
 }
 
 echo ""
-echo "✅ 2. ESLint check..."
+echo "✅ 2. TypeScript type checking..."
+npm run type-check || {
+  echo "❌ Type errors found"
+  exit 1
+}
+
+echo ""
+echo "✅ 3. ESLint check..."
 npm run lint || {
   echo "⚠️ ESLint warnings found (non-blocking)"
 }
 
 echo ""
-echo "✅ 3. TypeScript build check..."
+echo "✅ 4. TypeScript build check..."
 npm run build || {
   echo "❌ Build failed"
   exit 1
@@ -73,6 +80,6 @@ cd ..
 echo "🎉 All CI checks passed!"
 echo ""
 echo "✅ Backend: Black ✓ Ruff ✓"
-echo "✅ Frontend: Prettier ✓ ESLint ✓ Build ✓"
+echo "✅ Frontend: Prettier ✓ TypeScript ✓ ESLint ✓ Build ✓"
 echo ""
 echo "Ready to push! 🚀"

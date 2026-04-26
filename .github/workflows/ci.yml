@@ -118,6 +118,12 @@ jobs:
             exit 1
           }
 
+          echo "🔍 Running TypeScript type checking..."
+          npm run type-check || {
+            echo "❌ TypeScript type errors found. Fix the errors above."
+            exit 1
+          }
+
           echo "🔍 Running ESLint (warnings allowed)..."
           npm run lint || {
             echo "⚠️ ESLint warnings found, but continuing..."
@@ -182,6 +188,7 @@ jobs:
           ### What's Checked (Blocking):
           - 🎨 Code formatting (Black, Prettier)
           - 🔍 Linting (Ruff, ESLint)
+          - 🔍 Type checking (TypeScript)
           - 🏗️ Build verification (Frontend)
 
           ### What's Checked (Non-blocking):
