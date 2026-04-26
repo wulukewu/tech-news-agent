@@ -7,6 +7,7 @@
  */
 
 'use client';
+import { logger } from '@/lib/utils/logger';
 
 import { useEffect } from 'react';
 import { initializePerformanceMonitoring } from '@/lib/utils/performance-monitoring';
@@ -41,13 +42,13 @@ export function PerformanceInitializer() {
 
         // Log initialization in development
         if (process.env.NODE_ENV === 'development') {
-          console.log('🚀 Performance optimizations initialized');
+          logger.debug('🚀 Performance optimizations initialized');
         }
 
         // Report initialization to analytics
         if (performanceMonitor) {
           // This would integrate with your analytics service
-          console.log('📊 Performance monitoring active');
+          logger.debug('📊 Performance monitoring active');
         }
       } catch (error) {
         console.error('Failed to initialize performance features:', error);
@@ -97,7 +98,7 @@ export function ServiceWorkerRegistration() {
               newWorker.addEventListener('statechange', () => {
                 if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                   // New service worker is available
-                  console.log('New service worker available');
+                  logger.debug('New service worker available');
 
                   // Optionally show update notification to user
                   if (window.confirm('A new version is available. Reload to update?')) {
@@ -110,7 +111,7 @@ export function ServiceWorkerRegistration() {
 
           // Log successful registration
           if (process.env.NODE_ENV === 'development') {
-            console.log('✅ Service Worker registered successfully');
+            logger.debug('✅ Service Worker registered successfully');
           }
         } catch (error) {
           console.error('Service Worker registration failed:', error);
@@ -250,12 +251,12 @@ export function PerformanceBudgetMonitor() {
         }
 
         if (violations.length > 0 && process.env.NODE_ENV === 'development') {
-          console.warn('⚠️ Performance budget violations:', violations);
+          logger.warn('⚠️ Performance budget violations:', violations);
         }
 
         // Log budget status in development
         if (process.env.NODE_ENV === 'development') {
-          console.log('📊 Performance Budget Status:', {
+          logger.debug('📊 Performance Budget Status:', {
             javascript: `${(totalJSSize / 1024).toFixed(0)}KB / ${budgets.js / 1024}KB`,
             css: `${(totalCSSSize / 1024).toFixed(0)}KB / ${budgets.css / 1024}KB`,
             images: `${(totalImageSize / 1024).toFixed(0)}KB / ${budgets.images / 1024}KB`,

@@ -1,22 +1,23 @@
 // Placeholder toast functions to replace Sonner during SSR fix
+import { logger } from '@/lib/utils/logger';
 export const toast = {
   success: async (message: string, options?: { description?: string; duration?: number }) => {
-    console.log('Toast (success):', message, options);
+    logger.debug('Toast (success):', message, options);
     return '';
   },
 
   error: async (message: string) => {
-    console.log('Toast (error):', message);
+    logger.debug('Toast (error):', message);
     return '';
   },
 
   info: async (message: string, options?: { description?: string; duration?: number }) => {
-    console.log('Toast (info):', message, options);
+    logger.debug('Toast (info):', message, options);
     return '';
   },
 
   loading: async (message: string, options?: { description?: string }) => {
-    console.log('Toast (loading):', message, options);
+    logger.debug('Toast (loading):', message, options);
     return '';
   },
 
@@ -28,11 +29,11 @@ export const toast = {
       error: string;
     }
   ) => {
-    console.log('Toast (promise):', messages);
+    logger.debug('Toast (promise):', messages);
     return promise;
   },
 
   dismiss: async (toastId?: string | number) => {
-    console.log('Toast (dismiss):', toastId);
+    logger.debug('Toast (dismiss):', toastId);
   },
 };

@@ -1,4 +1,5 @@
 /**
+import { logger } from '@/lib/utils/logger';
  * Frontend Logger with Batching
  * Task 9.1: Create frontend logger with batching
  *

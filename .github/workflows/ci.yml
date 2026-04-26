@@ -76,12 +76,15 @@ jobs:
             exit 1
           }
 
-      - name: Run tests (optional)
+      - name: Run tests with coverage
         working-directory: backend
-        continue-on-error: true
         run: |
-          echo "🧪 Running backend tests..."
-          python3 -m pytest tests/ -v --tb=short || echo "⚠️ Some backend tests failed (non-blocking)"
+          echo "🧪 Running backend tests with coverage..."
+          python -m pytest tests/ -v --tb=short --cov=app --cov-report=term --cov-report=html --cov-fail-under=50 || {
+            echo "⚠️ Tests failed or coverage below 50%"
+            echo "Run 'pytest tests/ --cov=app --cov-report=html' locally to see coverage report"
+            exit 1
+          }
 
   # ============================================
   # Frontend Quality & Tests
@@ -139,12 +142,15 @@ jobs:
             exit 1
           }
 
-      - name: Run tests (optional)
+      - name: Run tests with coverage
         working-directory: frontend
-        continue-on-error: true
         run: |
-          echo "🧪 Running frontend tests..."
-          npm run test -- --run || echo "⚠️ Some frontend tests failed (non-blocking)"
+          echo "🧪 Running frontend tests with coverage..."
+          npm run test:coverage -- --run || {
+            echo "⚠️ Tests failed or coverage below threshold"
+            echo "Run 'npm run test:coverage' locally to see coverage report"
+            exit 1
+          }
 
   # ============================================
   # Quality Gate

@@ -11,6 +11,7 @@
  * Requirements:
  * - 7.10: Mobile device haptic feedback support
  */
+import { logger } from '@/lib/utils/logger';
 
 export type HapticPattern =
   | 'light'
@@ -72,7 +73,7 @@ class HapticFeedbackManager {
         this.config.enabled = JSON.parse(stored) && this.isSupported();
       }
     } catch (error) {
-      console.warn('Failed to load haptic feedback preferences:', error);
+      logger.warn('Failed to load haptic feedback preferences:', error);
     }
   }
 
@@ -83,7 +84,7 @@ class HapticFeedbackManager {
     try {
       localStorage.setItem('haptic-feedback-enabled', JSON.stringify(this.config.enabled));
     } catch (error) {
-      console.warn('Failed to save haptic feedback preferences:', error);
+      logger.warn('Failed to save haptic feedback preferences:', error);
     }
   }
 
@@ -119,7 +120,7 @@ class HapticFeedbackManager {
       navigator.vibrate(pattern);
       this.lastVibration = now;
     } catch (error) {
-      console.warn('Haptic feedback failed:', error);
+      logger.warn('Haptic feedback failed:', error);
     }
   }
 
@@ -216,7 +217,7 @@ class HapticFeedbackManager {
       try {
         navigator.vibrate(0);
       } catch (error) {
-        console.warn('Failed to stop haptic feedback:', error);
+        logger.warn('Failed to stop haptic feedback:', error);
       }
     }
   }

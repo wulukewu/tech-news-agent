@@ -5,6 +5,7 @@
  * This module provides comprehensive performance monitoring including
  * Core Web Vitals tracking, error reporting, and slow connection handling.
  */
+import { logger } from '@/lib/utils/logger';
 
 /**
  * Core Web Vitals metrics
@@ -252,7 +253,7 @@ export class PerformanceMonitor {
       observer.observe({ entryTypes: [entryType] });
       this.observers.push(observer);
     } catch (error) {
-      console.warn(`Failed to observe ${entryType}:`, error);
+      logger.warn(`Failed to observe ${entryType}:`, error);
     }
   }
 
@@ -280,7 +281,7 @@ export class PerformanceMonitor {
 
     // Log poor performance in development
     if (process.env.NODE_ENV === 'development' && status === 'poor') {
-      console.warn(`⚠️ Poor ${metric}: ${value} (threshold: ${threshold.good})`);
+      logger.warn(`⚠️ Poor ${metric}: ${value} (threshold: ${threshold.good})`);
     }
   }
 
@@ -301,7 +302,7 @@ export class PerformanceMonitor {
   private reportMetric(name: string, data: any) {
     // In production, this would send to your analytics service
     if (process.env.NODE_ENV === 'development') {
-      console.log(`📊 Performance metric: ${name}`, data);
+      logger.debug(`📊 Performance metric: ${name}`, data);
     }
 
     // Send to analytics service (implement based on your needs)
@@ -478,10 +479,10 @@ export function initializePerformanceMonitoring() {
     setInterval(() => {
       const report = monitor.generateReport();
       console.group('📊 Performance Report');
-      console.log('Score:', report.score);
-      console.log('Core Web Vitals:', report.vitals);
-      console.log('Connection:', report.connection);
-      console.log('Recommendations:', report.recommendations);
+      logger.debug('Score:', report.score);
+      logger.debug('Core Web Vitals:', report.vitals);
+      logger.debug('Connection:', report.connection);
+      logger.debug('Recommendations:', report.recommendations);
       console.groupEnd();
     }, 30000); // Every 30 seconds
   }

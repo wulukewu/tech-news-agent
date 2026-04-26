@@ -4,6 +4,7 @@
  * This file demonstrates how to use the EmptyState component
  * with its three variants: no-subscriptions, no-articles, no-reading-list
  */
+import { logger } from '@/lib/utils/logger';
 
 import { EmptyState } from './EmptyState';
 import { useRouter } from 'next/navigation';
@@ -60,7 +61,7 @@ export function NoArticlesExample() {
         label: '手動觸發抓取',
         onClick: () => {
           // Trigger scheduler manually
-          console.log('Triggering scheduler...');
+          logger.debug('Triggering scheduler...');
         },
       }}
       schedulerStatus={schedulerStatus}
@@ -90,7 +91,7 @@ export function NoArticlesSimpleExample() {
         label: '手動觸發抓取',
         onClick: () => {
           // Trigger scheduler manually
-          console.log('Triggering scheduler...');
+          logger.debug('Triggering scheduler...');
         },
       }}
     />
@@ -135,7 +136,7 @@ export function CustomIconExample() {
       icon={<div className="text-4xl">🎨</div>}
       primaryAction={{
         label: '開始使用',
-        onClick: () => console.log('Custom action'),
+        onClick: () => logger.debug('Custom action'),
       }}
     />
   );

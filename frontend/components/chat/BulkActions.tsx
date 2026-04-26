@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/lib/utils/logger';
 
 import { useState } from 'react';
 import { Star, Archive, Trash2, X, Loader2, CheckSquare } from 'lucide-react';

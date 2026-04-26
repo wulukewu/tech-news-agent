@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/lib/utils/logger';
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
@@ -299,7 +300,7 @@ export default function SubscriptionsPage() {
         try {
           localStorage.setItem('subscriptions-collapsed-categories', JSON.stringify([...next]));
         } catch (error) {
-          console.warn('Failed to save collapsed categories to localStorage:', error);
+          logger.warn('Failed to save collapsed categories to localStorage:', error);
         }
       }
 

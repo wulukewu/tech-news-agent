@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/lib/utils/logger';
 
 import * as React from 'react';
 import { cn } from '@/lib/utils';
@@ -94,7 +95,7 @@ export function useVirtualizedListPerformance(itemCount: number) {
       const timeDiff = now - lastRenderTime.current;
       if (timeDiff > 16.67) {
         // More than one frame
-        console.warn(`VirtualizedList render took ${timeDiff.toFixed(2)}ms for ${itemCount} items`);
+        logger.warn(`VirtualizedList render took ${timeDiff.toFixed(2)}ms for ${itemCount} items`);
       }
     }
 

@@ -5,6 +5,7 @@
  * This module provides comprehensive error tracking, reporting,
  * and recovery mechanisms for better user experience.
  */
+import { logger } from '@/lib/utils/logger';
 
 /**
  * Error severity levels
@@ -445,7 +446,7 @@ export class ErrorTracker {
         });
       }
     } catch (error) {
-      console.warn('Failed to send error report:', error);
+      logger.warn('Failed to send error report:', error);
     }
   }
 

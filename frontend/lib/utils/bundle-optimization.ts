@@ -5,6 +5,7 @@
  * This module provides utilities for optimizing bundle size through
  * intelligent tree shaking, dead code elimination, and dynamic imports.
  */
+import { logger } from '@/lib/utils/logger';
 
 /**
  * Feature flags for conditional code inclusion
@@ -33,7 +34,7 @@ export async function conditionalImport<T>(
     const loadedModule = await importFn();
     return loadedModule.default;
   } catch (error) {
-    console.warn('Failed to load conditional module:', error);
+    logger.warn('Failed to load conditional module:', error);
     return null;
   }
 }
@@ -47,17 +48,17 @@ export const TreeShakableUtils = {
     ? {
         track: (event: string, properties?: Record<string, any>) => {
           // Analytics implementation
-          console.log('Analytics:', event, properties);
+          logger.debug('Analytics:', event, properties);
         },
 
         identify: (userId: string, traits?: Record<string, any>) => {
           // User identification
-          console.log('Identify:', userId, traits);
+          logger.debug('Identify:', userId, traits);
         },
 
         page: (name: string, properties?: Record<string, any>) => {
           // Page tracking
-          console.log('Page:', name, properties);
+          logger.debug('Page:', name, properties);
         },
       }
     : undefined,
@@ -172,7 +173,7 @@ export class DynamicComponentLoader {
 
       return component;
     } catch (error) {
-      console.warn(`Failed to load component ${name}:`, error);
+      logger.warn(`Failed to load component ${name}:`, error);
       return null;
     }
   }
@@ -191,7 +192,7 @@ export class DynamicComponentLoader {
       .filter(({ condition = true }) => condition)
       .map(({ name, importFn }) =>
         this.loadComponent(name, importFn).catch((error) =>
-          console.warn(`Failed to preload ${name}:`, error)
+          logger.warn(`Failed to preload ${name}:`, error)
         )
       );
 
@@ -231,7 +232,7 @@ export class BundleAnalyzer {
 
     // Report slow chunks in development
     if (process.env.NODE_ENV === 'development' && loadTime > 1000) {
-      console.warn(`Slow chunk loading: ${chunkName} took ${loadTime}ms`);
+      logger.warn(`Slow chunk loading: ${chunkName} took ${loadTime}ms`);
     }
   }
 
@@ -285,15 +286,15 @@ export class BundleAnalyzer {
       console.group('📦 Bundle Optimization Report');
 
       if (report.slowChunks.length > 0) {
-        console.warn('Slow loading chunks:', report.slowChunks);
+        logger.warn('Slow loading chunks:', report.slowChunks);
       }
 
       if (report.largeComponents.length > 0) {
-        console.warn('Large components:', report.largeComponents);
+        logger.warn('Large components:', report.largeComponents);
       }
 
-      console.log(`Average chunk load time: ${report.averageChunkLoadTime.toFixed(0)}ms`);
-      console.log(`Total component size: ${(report.totalComponentSize / 1024).toFixed(1)}KB`);
+      logger.debug(`Average chunk load time: ${report.averageChunkLoadTime.toFixed(0)}ms`);
+      logger.debug(`Total component size: ${(report.totalComponentSize / 1024).toFixed(1)}KB`);
 
       console.groupEnd();
     }

@@ -1,3 +1,4 @@
+import { logger } from '@/lib/utils/logger';
 /**
  * API Validation Utilities - Task 11.3
  * Requirements: 10.2, 10.3, 11.1
@@ -11,6 +12,7 @@
 
 import { apiClient, ApiError } from './client';
 import { performanceMonitor } from './performance';
+import { apiLogger } from '../utils/logger';
 
 /**
  * Validation result for a single API call
@@ -123,7 +125,7 @@ export async function validateApiCall(
 
     // Log discrepancies
     if (result.discrepancies.length > 0) {
-      console.warn(`[API Validation] Discrepancies found for ${method} ${endpoint}:`, {
+      logger.warn(`[API Validation] Discrepancies found for ${method} ${endpoint}:`, {
         discrepancies: result.discrepancies,
         response,
       });
@@ -152,7 +154,7 @@ export async function validateApiCall(
 
     // Log error discrepancies
     if (result.discrepancies.length > 0) {
-      console.warn(`[API Validation] Error discrepancies for ${method} ${endpoint}:`, {
+      logger.warn(`[API Validation] Error discrepancies for ${method} ${endpoint}:`, {
         discrepancies: result.discrepancies,
         error,
       });
@@ -176,7 +178,7 @@ export async function runParallelValidation(
     requestData?: any;
   }>
 ): Promise<ValidationReport> {
-  console.log(`[API Validation] Running ${tests.length} parallel validation tests...`);
+  logger.debug(`[API Validation] Running ${tests.length} parallel validation tests...`);
 
   // Clear performance metrics before testing
   performanceMonitor.clearMetrics();
@@ -219,7 +221,7 @@ export async function runParallelValidation(
   };
 
   // Log report summary
-  console.log('[API Validation] Validation Report:', {
+  logger.debug('[API Validation] Validation Report:', {
     totalTests: report.totalTests,
     passedTests: report.passedTests,
     failedTests: report.failedTests,
@@ -230,15 +232,15 @@ export async function runParallelValidation(
 
   // Log discrepancies if any
   if (report.discrepancies.length > 0) {
-    console.warn('[API Validation] Discrepancies found:');
+    logger.warn('[API Validation] Discrepancies found:');
     report.discrepancies.forEach((d) => {
-      console.warn(`  - ${d.endpoint}: ${d.description} (${d.type})`);
+      logger.warn(`  - ${d.endpoint}: ${d.description} (${d.type})`);
     });
   }
 
   // Get performance stats
   const perfStats = performanceMonitor.getStats();
-  console.log('[API Validation] Performance Statistics:', {
+  logger.debug('[API Validation] Performance Statistics:', {
     totalRequests: perfStats.totalRequests,
     successRate: `${((perfStats.successfulRequests / perfStats.totalRequests) * 100).toFixed(1)}%`,
     averageResponseTime: `${perfStats.averageResponseTime.toFixed(2)}ms`,
@@ -300,7 +302,7 @@ export async function compareImplementations<T>(
         result.equivalent = true;
       } else {
         result.discrepancies.push('Response data differs between implementations');
-        console.warn(`[API Validation] Implementation discrepancy for ${endpoint}:`, {
+        logger.warn(`[API Validation] Implementation discrepancy for ${endpoint}:`, {
           old: oldResult.value,
           new: newResult.value,
         });
@@ -316,7 +318,7 @@ export async function compareImplementations<T>(
         result.equivalent = true;
       } else {
         result.discrepancies.push('Error messages differ between implementations');
-        console.warn(`[API Validation] Error discrepancy for ${endpoint}:`, {
+        logger.warn(`[API Validation] Error discrepancy for ${endpoint}:`, {
           oldError: result.oldError,
           newError: result.newError,
         });
@@ -332,7 +334,7 @@ export async function compareImplementations<T>(
         result.oldError = (oldResult as PromiseRejectedResult).reason?.message || 'Unknown error';
         result.newResult = (newResult as PromiseFulfilledResult<T>).value;
       }
-      console.warn(`[API Validation] Inconsistent behavior for ${endpoint}:`, {
+      logger.warn(`[API Validation] Inconsistent behavior for ${endpoint}:`, {
         oldStatus: oldResult.status,
         newStatus: newResult.status,
       });
@@ -359,7 +361,7 @@ export async function monitorErrorRates(durationMs: number = 60000): Promise<{
   errorRate: number;
   errorsByCode: Record<string, number>;
 }> {
-  console.log(`[API Validation] Monitoring error rates for ${durationMs}ms...`);
+  logger.debug(`[API Validation] Monitoring error rates for ${durationMs}ms...`);
 
   performanceMonitor.clearMetrics();
   performanceMonitor.setEnabled(true);
@@ -390,7 +392,7 @@ export async function monitorErrorRates(durationMs: number = 60000): Promise<{
     errorsByCode,
   };
 
-  console.log('[API Validation] Error rate monitoring complete:', {
+  logger.debug('[API Validation] Error rate monitoring complete:', {
     duration: `${duration}ms`,
     totalRequests: result.totalRequests,
     errorRate: `${(result.errorRate * 100).toFixed(1)}%`,

@@ -5,6 +5,7 @@
  * This module provides utilities for intelligent code splitting at both
  * route and component levels to optimize bundle size and loading performance.
  */
+import { logger } from '@/lib/utils/logger';
 
 import { lazy, ComponentType, LazyExoticComponent } from 'react';
 import { QueryClient } from '@tanstack/react-query';
@@ -60,7 +61,7 @@ export function createLazyComponent<T extends ComponentType<any>>(
 
         // Log slow loading components in development
         if (process.env.NODE_ENV === 'development' && loadTime > 1000) {
-          console.warn(`Slow component loading: ${loadTime.toFixed(0)}ms`);
+          logger.warn(`Slow component loading: ${loadTime.toFixed(0)}ms`);
         }
 
         return module;
@@ -74,7 +75,7 @@ export function createLazyComponent<T extends ComponentType<any>>(
     // Prefetch on mouse enter or focus
     const prefetchComponent = () => {
       importFn().catch((error) => {
-        console.warn('Failed to prefetch component:', error);
+        logger.warn('Failed to prefetch component:', error);
       });
     };
 
@@ -153,7 +154,7 @@ export class BundleAnalyzer {
     // Report to analytics in production
     if (process.env.NODE_ENV === 'production') {
       // This would integrate with your analytics service
-      console.log(`Component ${componentName} loaded in ${loadTime}ms`);
+      logger.debug(`Component ${componentName} loaded in ${loadTime}ms`);
     }
   }
 
@@ -273,7 +274,7 @@ export function createFeatureModule<T extends Record<string, ComponentType<any>>
 
   // Track module usage
   if (process.env.NODE_ENV === 'development') {
-    console.log(
+    logger.debug(
       `Created lazy module: ${moduleName} with ${Object.keys(components).length} components`
     );
   }
@@ -327,7 +328,7 @@ export function initializeCodeSplitting() {
     list.getEntries().forEach((entry) => {
       if (entry.entryType === 'navigation') {
         const navEntry = entry as PerformanceNavigationTiming;
-        console.log('Page load performance:', {
+        logger.debug('Page load performance:', {
           domContentLoaded: navEntry.domContentLoadedEventEnd - navEntry.domContentLoadedEventStart,
           loadComplete: navEntry.loadEventEnd - navEntry.loadEventStart,
         });

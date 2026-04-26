@@ -5,6 +5,7 @@
  * This module provides performance monitoring hooks for API calls.
  * Tracks response times, error rates, and other metrics.
  */
+import { logger } from '@/lib/utils/logger';
 
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ApiError } from './errors';
@@ -173,7 +174,7 @@ class PerformanceMonitor {
 
     // Log slow requests in development
     if (process.env.NODE_ENV === 'development' && metric.duration > 1000) {
-      console.warn(
+      logger.warn(
         `⚠️ Slow API request: ${metric.method} ${metric.url} took ${metric.duration.toFixed(0)}ms`
       );
     }
@@ -257,15 +258,15 @@ class PerformanceMonitor {
 
     const stats = this.getStats();
     console.group('📊 API Performance Statistics');
-    console.log(`Total Requests: ${stats.totalRequests}`);
-    console.log(
+    logger.debug(`Total Requests: ${stats.totalRequests}`);
+    logger.debug(
       `Success Rate: ${((stats.successfulRequests / stats.totalRequests) * 100).toFixed(1)}%`
     );
-    console.log(`Error Rate: ${(stats.errorRate * 100).toFixed(1)}%`);
-    console.log(`Average Response Time: ${stats.averageResponseTime.toFixed(0)}ms`);
-    console.log(`Min Response Time: ${stats.minResponseTime.toFixed(0)}ms`);
-    console.log(`Max Response Time: ${stats.maxResponseTime.toFixed(0)}ms`);
-    console.log(`Slow Requests (>1s): ${stats.slowRequestsCount}`);
+    logger.debug(`Error Rate: ${(stats.errorRate * 100).toFixed(1)}%`);
+    logger.debug(`Average Response Time: ${stats.averageResponseTime.toFixed(0)}ms`);
+    logger.debug(`Min Response Time: ${stats.minResponseTime.toFixed(0)}ms`);
+    logger.debug(`Max Response Time: ${stats.maxResponseTime.toFixed(0)}ms`);
+    logger.debug(`Slow Requests (>1s): ${stats.slowRequestsCount}`);
 
     if (Object.keys(stats.byEndpoint).length > 0) {
       console.group('By Endpoint:');
@@ -273,7 +274,7 @@ class PerformanceMonitor {
         .sort((a, b) => b[1].averageTime - a[1].averageTime)
         .slice(0, 10) // Top 10 slowest
         .forEach(([endpoint, data]) => {
-          console.log(
+          logger.debug(
             `${endpoint}: ${data.count} calls, ${data.averageTime.toFixed(0)}ms avg, ${
               data.errorCount
             } errors`

@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/lib/utils/logger';
 
 import { useState, useEffect, useCallback } from 'react';
 import { Search, X } from 'lucide-react';
@@ -42,7 +43,7 @@ interface SearchBarProps {
  * @example
  * ```tsx
  * <SearchBar
- *   onSearch={(query) => console.log('Search:', query)}
+ *   onSearch={(query) => logger.debug('Search:', query)}
  *   placeholder="Search articles..."
  *   isLoading={isSearching}
  * />

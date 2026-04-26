@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/lib/utils/logger';
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { RefreshCw } from 'lucide-react';

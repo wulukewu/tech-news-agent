@@ -1,4 +1,5 @@
 /**
+import { logger } from '@/lib/utils/logger';
  * Authentication API functions
  *
  * This module provides functions for authentication-related API calls:
@@ -50,7 +51,7 @@ export function removeToken(): void {
  * ```typescript
  * try {
  *   const user = await checkAuthStatus();
- *   console.log('Authenticated as:', user.username);
+ *   logger.debug('Authenticated as:', user.username);
  * } catch (error) {
  *   console.error('Not authenticated');
  * }
@@ -74,7 +75,7 @@ export async function checkAuthStatus(): Promise<User> {
  * ```typescript
  * try {
  *   await logout();
- *   console.log('Logged out successfully');
+ *   logger.debug('Logged out successfully');
  * } catch (error) {
  *   console.error('Logout failed:', error);
  * }
@@ -101,7 +102,7 @@ export async function logout(): Promise<void> {
  * ```typescript
  * try {
  *   await refreshToken();
- *   console.log('Token refreshed successfully');
+ *   logger.debug('Token refreshed successfully');
  * } catch (error) {
  *   console.error('Token refresh failed:', error);
  * }

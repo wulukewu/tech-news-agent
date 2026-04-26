@@ -7,6 +7,7 @@
  */
 
 'use client';
+import { logger } from '@/lib/utils/logger';
 
 import dynamic from 'next/dynamic';
 import { ComponentType, lazy, Suspense } from 'react';
@@ -110,7 +111,7 @@ export function createLazyComponent<T extends ComponentType<any>>(
 export function preloadComponent(importFn: () => Promise<any>) {
   // Trigger the import but don't wait for it
   importFn().catch((err) => {
-    console.warn('Failed to preload component:', err);
+    logger.warn('Failed to preload component:', err);
   });
 }
 
@@ -133,6 +134,6 @@ export function prefetchRoute(href: string) {
 export function logBundleSize(componentName: string, startTime: number) {
   if (process.env.NODE_ENV === 'development') {
     const loadTime = performance.now() - startTime;
-    console.log(`[Code Splitting] ${componentName} loaded in ${loadTime.toFixed(2)}ms`);
+    logger.debug(`[Code Splitting] ${componentName} loaded in ${loadTime.toFixed(2)}ms`);
   }
 }

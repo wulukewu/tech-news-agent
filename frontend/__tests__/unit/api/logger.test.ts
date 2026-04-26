@@ -1,3 +1,4 @@
+import { logger } from '@/lib/utils/logger';
 /**
  * Unit tests for API logger
  * Requirements: 1.2, 4.3

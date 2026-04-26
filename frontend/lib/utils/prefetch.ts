@@ -5,6 +5,7 @@
  * This module provides intelligent prefetching for likely next actions
  * to improve perceived performance and user experience.
  */
+import { logger } from '@/lib/utils/logger';
 
 import { QueryClient } from '@tanstack/react-query';
 import { cacheStrategies } from '../cache/strategies';
@@ -171,7 +172,7 @@ export class IntelligentPrefetcher {
     try {
       localStorage.setItem('user-behavior', JSON.stringify(this.userBehavior));
     } catch (error) {
-      console.warn('Failed to save user behavior:', error);
+      logger.warn('Failed to save user behavior:', error);
     }
   }
 
@@ -360,10 +361,10 @@ export class IntelligentPrefetcher {
         this.prefetchHistory.set(action.key, now);
 
         if (process.env.NODE_ENV === 'development') {
-          console.log(`✅ Prefetched: ${action.key}`);
+          logger.debug(`✅ Prefetched: ${action.key}`);
         }
       } catch (error) {
-        console.warn(`❌ Prefetch failed: ${action.key}`, error);
+        logger.warn(`❌ Prefetch failed: ${action.key}`, error);
       }
     });
 
@@ -428,10 +429,10 @@ export class IntelligentPrefetcher {
       });
 
       if (process.env.NODE_ENV === 'development') {
-        console.log(`✅ Manual prefetch: ${key}`);
+        logger.debug(`✅ Manual prefetch: ${key}`);
       }
     } catch (error) {
-      console.warn(`❌ Manual prefetch failed: ${key}`, error);
+      logger.warn(`❌ Manual prefetch failed: ${key}`, error);
     }
   }
 

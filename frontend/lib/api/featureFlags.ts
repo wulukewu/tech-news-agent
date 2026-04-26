@@ -5,6 +5,7 @@
  * This module provides feature flags for A/B testing and gradual rollout of new API implementations.
  * Feature flags allow switching between old and new implementations without code changes.
  */
+import { logger } from '@/lib/utils/logger';
 
 /**
  * API feature flags configuration
@@ -104,7 +105,7 @@ export function logFeatureFlags(): void {
   if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
     console.group('🚩 API Feature Flags');
     Object.entries(API_FEATURE_FLAGS).forEach(([key, value]) => {
-      console.log(`${key}: ${value ? '✅ Enabled' : '❌ Disabled'}`);
+      logger.debug(`${key}: ${value ? '✅ Enabled' : '❌ Disabled'}`);
     });
     console.groupEnd();
   }

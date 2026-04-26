@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/lib/utils/logger';
 
 /**
  * React Query Provider with Intelligent Caching
@@ -102,7 +103,7 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
         const queries = queryClient.getQueryCache().getAll();
         const activeQueries = queries.filter((q) => q.getObserversCount() > 0);
 
-        console.log('Query Cache Stats:', {
+        logger.debug('Query Cache Stats:', {
           totalQueries: queries.length,
           activeQueries: activeQueries.length,
           memoryUsage: queries.reduce(

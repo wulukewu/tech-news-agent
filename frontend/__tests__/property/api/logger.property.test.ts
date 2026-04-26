@@ -1,3 +1,4 @@
+import { logger } from '@/lib/utils/logger';
 /**
  * Property-Based Tests for Frontend Logger
  * Task 9.2: Write property test for frontend log batching

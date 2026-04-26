@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { logger } from '@/lib/utils/logger';
 import type { ReadingListResponse, ReadingListStatus } from '@/types/readingList';
 
 /**

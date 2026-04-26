@@ -1,4 +1,5 @@
 import { type ClassValue, clsx } from 'clsx';
+import { logger } from '@/lib/utils/logger';
 import { twMerge } from 'tailwind-merge';
 import React from 'react';
 import { CATEGORY_COLORS, CATEGORY_ALIASES } from '../constants';

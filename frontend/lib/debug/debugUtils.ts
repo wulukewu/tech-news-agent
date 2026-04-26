@@ -1,3 +1,4 @@
+import { logger } from '@/lib/utils/logger';
 /**
  * Debug Utilities for Development
  * Requirements: 13.1, 13.4, 13.5
@@ -23,7 +24,7 @@ class PerformanceMonitor {
     if (!DEBUG_CONFIG.enabled || !DEBUG_CONFIG.showPerformanceMetrics) return;
 
     this.marks.set(name, performance.now());
-    console.log(`🏁 Performance Mark: ${name} at ${this.marks.get(name)?.toFixed(2)}ms`);
+    logger.debug(`🏁 Performance Mark: ${name} at ${this.marks.get(name)?.toFixed(2)}ms`);
   }
 
   measure(name: string, startMark: string, endMark?: string): number {
@@ -33,18 +34,18 @@ class PerformanceMonitor {
     const endTime = endMark ? this.marks.get(endMark) : performance.now();
 
     if (!startTime) {
-      console.warn(`⚠️ Start mark "${startMark}" not found`);
+      logger.warn(`⚠️ Start mark "${startMark}" not found`);
       return 0;
     }
 
     const duration = (endTime || performance.now()) - startTime;
     this.measures.set(name, duration);
 
-    console.log(`📊 Performance Measure: ${name} = ${duration.toFixed(2)}ms`);
+    logger.debug(`📊 Performance Measure: ${name} = ${duration.toFixed(2)}ms`);
 
     // Warn about slow operations
     if (duration > 1000) {
-      console.warn(`🐌 Slow operation detected: ${name} took ${duration.toFixed(2)}ms`);
+      logger.warn(`🐌 Slow operation detected: ${name} took ${duration.toFixed(2)}ms`);
     }
 
     return duration;
@@ -83,7 +84,7 @@ export class DebugLogger {
     console.group(`${emoji} [${timestamp}] ${this.context}: ${message}`);
 
     if (data) {
-      console.log('Data:', data);
+      logger.debug('Data:', data);
     }
 
     // Add stack trace for errors
@@ -425,8 +426,8 @@ export function createDebugPanel(): void {
 export function initializeDebugUtils(): void {
   if (!DEBUG_CONFIG.enabled) return;
 
-  console.log('🐛 Debug utilities initialized');
-  console.log('Debug config:', DEBUG_CONFIG);
+  logger.debug('🐛 Debug utilities initialized');
+  logger.debug('Debug config:', DEBUG_CONFIG);
 
   // Create debug panel
   if (typeof window !== 'undefined') {

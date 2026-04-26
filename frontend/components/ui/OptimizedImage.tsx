@@ -11,6 +11,7 @@
  */
 
 'use client';
+import { logger } from '@/lib/utils/logger';
 
 import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
@@ -140,11 +141,11 @@ export function OptimizedImage({
     // Performance monitoring
     if (loadStartTime) {
       const loadTime = performance.now() - loadStartTime;
-      console.log(`Image loaded in ${loadTime.toFixed(0)}ms: ${src}`);
+      logger.debug(`Image loaded in ${loadTime.toFixed(0)}ms: ${src}`);
 
       // Report slow loading images
       if (loadTime > 2000) {
-        console.warn(`Slow image loading detected: ${src} took ${loadTime.toFixed(0)}ms`);
+        logger.warn(`Slow image loading detected: ${src} took ${loadTime.toFixed(0)}ms`);
       }
     }
 
@@ -154,7 +155,7 @@ export function OptimizedImage({
   // Handle image load error
   const handleError = () => {
     setImageError(true);
-    console.warn(`Failed to load image: ${src}`);
+    logger.warn(`Failed to load image: ${src}`);
     onError?.();
   };
 

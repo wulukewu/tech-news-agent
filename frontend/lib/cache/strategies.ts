@@ -5,6 +5,7 @@
  * This module provides intelligent caching strategies for different types of data
  * to optimize performance and user experience.
  */
+import { logger } from '@/lib/utils/logger';
 
 import { QueryClient } from '@tanstack/react-query';
 
@@ -169,7 +170,7 @@ export class PrefetchStrategy {
   prefetchArticleDetails(articleId: string) {
     // Article details prefetching would need a getArticleById function
     // Skipping for now as it doesn't exist in the API
-    console.log('Article details prefetch not implemented yet');
+    logger.debug('Article details prefetch not implemented yet');
   }
 
   /**
@@ -178,7 +179,7 @@ export class PrefetchStrategy {
   prefetchPopularAnalyses(popularArticleIds: string[]) {
     // AI analysis prefetching would need a getAnalysis function
     // Skipping for now as it doesn't exist in the API
-    console.log('AI analysis prefetch not implemented yet');
+    logger.debug('AI analysis prefetch not implemented yet');
   }
 
   /**
@@ -313,7 +314,7 @@ export class MemoryManager {
         const usedRatio = memInfo.usedJSHeapSize / memInfo.jsHeapSizeLimit;
 
         if (usedRatio > 0.8) {
-          console.warn('High memory usage detected, cleaning up cache');
+          logger.warn('High memory usage detected, cleaning up cache');
           this.aggressiveCleanup();
         }
       };
@@ -343,7 +344,7 @@ export class MemoryManager {
     });
 
     if (toRemove.length > 0) {
-      console.log(`Cleaned up ${toRemove.length} old queries from cache`);
+      logger.debug(`Cleaned up ${toRemove.length} old queries from cache`);
     }
   }
 
