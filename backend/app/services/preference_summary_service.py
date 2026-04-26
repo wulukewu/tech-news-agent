@@ -14,20 +14,24 @@ from app.services.supabase_service import SupabaseService
 logger = logging.getLogger(__name__)
 
 SUMMARY_PROMPT = """你是一個技術內容推薦系統的偏好分析師。
-根據以下用戶在 Discord 說的話，用繁體中文寫一段 100 字以內的偏好摘要。
+根據「現有摘要」和「新訊息」，合併更新成一段 100 字以內的偏好摘要。
 規則：
-- 直接描述偏好，不要用「用戶」開頭，改用「喜歡」、「偏好」等直接陳述
+- 保留現有摘要中的所有偏好，加入新訊息中的新偏好
+- 直接描述偏好，不要用「用戶」開頭
 - 合併重複的內容，每個偏好只說一次
 - 格式：先說喜歡什麼，再說不喜歡什麼
 - 只輸出摘要本身，不要加任何前綴或解釋
 
-用戶說的話：
+現有摘要：
+{existing_summary}
+
+新訊息：
 {messages}"""
 
 
 async def update_preference_summary(user_id: str, supabase: SupabaseService) -> str | None:
     """
-    Fetch recent DM conversations for a user, condense into a summary, and save.
+    Fetch recent DM conversations and merge with existing summary.
     Returns the new summary, or None if no conversations found.
     """
     try:
@@ -47,6 +51,19 @@ async def update_preference_summary(user_id: str, supabase: SupabaseService) -> 
     if not rows:
         return None
 
+    # Fetch existing summary to merge with
+    existing_summary = ""
+    try:
+        pref_resp = (
+            supabase.client.table("preference_model")
+            .select("preference_summary")
+            .eq("user_id", user_id)
+            .execute()
+        )
+        existing_summary = (pref_resp.data or [{}])[0].get("preference_summary") or ""
+    except Exception:
+        pass
+
     messages = "\n".join(f"- {r['content']}" for r in reversed(rows))
 
     try:
@@ -57,7 +74,15 @@ async def update_preference_summary(user_id: str, supabase: SupabaseService) -> 
         client = AsyncGroq(api_key=settings.groq_api_key)
         response = await client.chat.completions.create(
             model="llama-3.1-8b-instant",
-            messages=[{"role": "user", "content": SUMMARY_PROMPT.format(messages=messages)}],
+            messages=[
+                {
+                    "role": "user",
+                    "content": SUMMARY_PROMPT.format(
+                        existing_summary=existing_summary or "（尚無摘要）",
+                        messages=messages,
+                    ),
+                }
+            ],
             max_tokens=300,
             temperature=0.3,
         )
