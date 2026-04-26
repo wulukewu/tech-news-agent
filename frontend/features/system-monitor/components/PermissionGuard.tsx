@@ -73,7 +73,7 @@ export function PermissionGuard({ children }: PermissionGuardProps) {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-muted-foreground">{t('system-monitor.auth-required')}</p>
+              <p className="text-muted-foreground">{t('errors.unauthorized')}</p>
               <Button
                 onClick={() => {
                   window.location.href = '/';
