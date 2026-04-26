@@ -149,33 +149,18 @@ class DMConversationListener(commands.Cog):
             await self._save_assistant_message(user_id, reply)
 
     async def _search_articles(self, supabase: SupabaseService, query: str) -> list[dict]:
-        """Extract keywords and search articles table."""
-        import re
+        """Delegate to shared search helper in qa.py."""
+        from app.api.qa import _search_articles_by_query
 
-        # Extract meaningful keywords (English words + Chinese 2+ char chunks)
-        keywords = re.findall(r"[A-Za-z][A-Za-z0-9+#.-]*|[\u4e00-\u9fff]{2,}", query)
-        # Filter out common stop words and short noise
-        stop = {"最近", "有什麼", "有沒有", "文章", "介紹", "告訴", "幫我", "什麼", "怎麼", "如何"}
-        keywords = [k for k in keywords if k.lower() not in stop and len(k) > 1][:3]
-
-        if not keywords:
-            return []
-
-        # Build OR filter across title and ai_summary for each keyword
-        filters = ",".join(f"title.ilike.%{kw}%,ai_summary.ilike.%{kw}%" for kw in keywords)
-        try:
-            resp = (
-                supabase.client.table("articles")
-                .select("title, url, ai_summary")
-                .or_(filters)
-                .order("published_at", desc=True)
-                .limit(3)
-                .execute()
-            )
-            return resp.data or []
-        except Exception as exc:
-            logger.error("DB search failed: %s", exc)
-            return []
+        results = await _search_articles_by_query(query)
+        return [
+            {
+                "title": a.title,
+                "url": a.url,
+                "ai_summary": a.summary,
+            }
+            for a in results
+        ]
 
     async def _handle_preference(
         self,

@@ -158,6 +158,51 @@ async def _store_preference(user_id: str, content: str) -> None:
         logger.warning("Failed to store preference: %s", e)
 
 
+async def _search_articles_by_query(query: str) -> List[ArticleSummaryResponse]:
+    """Shared article search used by both web chat and DM handler."""
+    import re
+
+    keywords = re.findall(r"[A-Za-z][A-Za-z0-9+#.-]*|[\u4e00-\u9fff]{2,}", query)
+    stop = {"最近", "有什麼", "有沒有", "文章", "介紹", "告訴", "幫我", "什麼", "怎麼", "如何", "推薦"}
+    keywords = [k for k in keywords if k.lower() not in stop and len(k) > 1][:3]
+
+    if not keywords:
+        return []
+
+    filters = ",".join(f"title.ilike.%{kw}%,ai_summary.ilike.%{kw}%" for kw in keywords)
+    try:
+        from app.services.supabase_service import SupabaseService as _SS
+
+        supabase = _SS()
+        resp = (
+            supabase.client.table("articles")
+            .select("id, title, url, ai_summary, category, tinkering_index, published_at")
+            .or_(filters)
+            .order("published_at", desc=True)
+            .limit(5)
+            .execute()
+        )
+        results = []
+        for row in resp.data or []:
+            results.append(
+                ArticleSummaryResponse(
+                    article_id=str(row["id"]),
+                    title=row.get("title") or "",
+                    summary=(row.get("ai_summary") or "")[:300],
+                    url=row.get("url") or "",
+                    relevance_score=0.9,
+                    reading_time=max(2, len(row.get("ai_summary") or "") // 200),
+                    key_insights=[],
+                    published_at=row.get("published_at"),
+                    category=row.get("category") or "",
+                )
+            )
+        return results
+    except Exception as e:
+        logger.warning("Article search failed: %s", e)
+        return []
+
+
 def _get_supabase() -> SupabaseService:
     """Return a SupabaseService instance (validates=False to avoid blocking)."""
     return SupabaseService(validate_connection=False)
@@ -323,46 +368,13 @@ async def _process_query_with_intent(
         )
 
     # intent == "question" — search articles directly (same as DM)
-    import re
     import time
 
     start = time.time()
-    keywords = re.findall(r"[A-Za-z][A-Za-z0-9+#.-]*|[\u4e00-\u9fff]{2,}", query)
-    stop = {"最近", "有什麼", "有沒有", "文章", "介紹", "告訴", "幫我", "什麼", "怎麼", "如何", "推薦"}
-    keywords = [k for k in keywords if k.lower() not in stop and len(k) > 1][:3]
+    articles = await _search_articles_by_query(query)
 
-    articles: List[ArticleSummaryResponse] = []
-    if keywords:
-        try:
-            supabase = _get_supabase()
-            filters = ",".join(f"title.ilike.%{kw}%,ai_summary.ilike.%{kw}%" for kw in keywords)
-            resp = (
-                supabase.client.table("articles")
-                .select("id, title, url, ai_summary, category, tinkering_index, published_at")
-                .or_(filters)
-                .order("published_at", desc=True)
-                .limit(5)
-                .execute()
-            )
-            for row in resp.data or []:
-                articles.append(
-                    ArticleSummaryResponse(
-                        article_id=str(row["id"]),
-                        title=row.get("title") or "",
-                        summary=(row.get("ai_summary") or "")[:300],
-                        url=row.get("url") or "",
-                        relevance_score=0.9,
-                        reading_time=max(2, len(row.get("ai_summary") or "") // 200),
-                        key_insights=[],
-                        published_at=row.get("published_at"),
-                        category=row.get("category") or "",
-                    )
-                )
-        except Exception as e:
-            logger.warning("Article search failed: %s", e)
-
-    insights = []
-    recommendations = []
+    insights: List[str] = []
+    recommendations: List[str] = []
     if not articles:
         insights = ["找不到相關文章。試試換個關鍵字，或先訂閱更多 RSS 來源。"]
         recommendations = ["使用 /add_feed 訂閱更多 RSS 來源", "試試不同的關鍵字"]
