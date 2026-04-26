@@ -50,7 +50,7 @@ class DMConversationListener(commands.Cog):
             logger.error("Failed to store DM conversation for %s: %s", discord_id, exc)
             return
 
-        await message.reply("已記錄，這會幫助我更了解你的偏好 👍", mention_author=False)
+        await message.reply("✅ 已記錄你的偏好！使用 `/update_profile` 更新摘要，下次推薦會更精準 🎯", mention_author=False)
 
 
 async def setup(bot: commands.Bot) -> None:

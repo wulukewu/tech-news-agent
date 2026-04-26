@@ -128,7 +128,10 @@ async def _build_recommendations(
     if adjuster is None:
         adjuster = WeightAdjuster()
 
-    # Fetch user's rating history for reason generation
+    # Fetch user's rating history and preference summary in parallel
+    rating_history = []
+    preference_summary = None
+
     try:
         resp = (
             supabase.client.table("reading_list")
@@ -142,14 +145,30 @@ async def _build_recommendations(
         rating_history = resp.data or []
     except Exception as exc:
         logger.warning("Could not fetch rating history for %s: %s", discord_id, exc)
-        rating_history = []
+
+    try:
+        resp = (
+            supabase.client.table("preference_model")
+            .select("preference_summary, category_weights")
+            .eq("user_id", user_id)
+            .single()
+            .execute()
+        )
+        if resp.data:
+            preference_summary = resp.data.get("preference_summary")
+    except Exception as exc:
+        logger.warning("Could not fetch preference summary for %s: %s", discord_id, exc)
 
     has_enough_history = len(rating_history) >= MIN_RATINGS_FOR_PERSONALIZATION
+    has_summary = bool(preference_summary)
 
     if has_enough_history:
         scored = await adjuster.score_articles(user_id, new_articles)
+    elif has_summary:
+        # Use preference_summary to boost articles matching keywords
+        scored = _score_by_summary(new_articles, preference_summary)
     else:
-        # Fall back to tinkering_index (Requirement 1.3)
+        # Fall back to tinkering_index
         scored = sorted(
             new_articles,
             key=lambda a: a.get("tinkering_index") or 0,
@@ -162,9 +181,24 @@ async def _build_recommendations(
 
     result = []
     for article in top_articles:
-        reason = generate_reason(article, rating_history)
-        if not has_enough_history:
+        if has_enough_history or has_summary:
+            reason = generate_reason(article, rating_history, preference_summary)
+        else:
             reason = "這篇技術深度較高，符合本平台的精選標準（還在學習你的偏好）"
         result.append({"article": article, "reason": reason, "user_id": user_id})
 
     return result
+
+
+def _score_by_summary(articles: list[dict], summary: str) -> list[dict]:
+    """Boost articles whose category/title keywords appear in the preference summary."""
+    summary_lower = summary.lower()
+    scored = []
+    for article in articles:
+        base = (article.get("tinkering_index") or 5) / 10.0
+        text = ((article.get("category") or "") + " " + (article.get("title") or "")).lower()
+        keywords = [w for w in text.split() if len(w) > 3]
+        boost = sum(0.1 for kw in keywords if kw in summary_lower)
+        scored.append({**article, "preference_score": round(min(1.0, base + boost), 3)})
+    scored.sort(key=lambda a: a["preference_score"], reverse=True)
+    return scored

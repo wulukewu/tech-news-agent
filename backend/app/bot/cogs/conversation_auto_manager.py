@@ -156,7 +156,13 @@ class ConversationAutoManager(commands.Cog):
 
             # Notify the user when a brand-new conversation was created
             if is_new:
-                notification = f"✅ 新對話已建立！ID: {conv_id[:8]}... " f"使用 /continue {conv_id} 繼續此對話"
+                notification = (
+                    f"✅ 新對話已建立！ID: {conv_id[:8]}... "
+                    f"使用 /continue {conv_id} 繼續此對話\n\n"
+                    "💡 **小提示**：直接告訴我你的技術偏好，例如：\n"
+                    "「我喜歡 Rust、系統設計和 AI 論文，不喜歡入門教學」\n"
+                    "我會記住並用來個人化你的文章推薦！使用 `/update_profile` 立即更新偏好摘要。"
+                )
                 try:
                     await message.channel.send(notification)
                 except discord.HTTPException as exc:
