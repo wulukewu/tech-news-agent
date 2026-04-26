@@ -294,7 +294,15 @@ async def _save_messages_to_db(
                     "content": assistant_content,
                     "platform": "web",
                     "metadata": {
-                        "articles": [a.dict() for a in qa_response.articles],
+                        "articles": [
+                            {
+                                **a.dict(),
+                                "published_at": a.published_at.isoformat()
+                                if a.published_at
+                                else None,
+                            }
+                            for a in qa_response.articles
+                        ],
                         "insights": qa_response.insights,
                         "recommendations": qa_response.recommendations,
                         "response_time": qa_response.response_time,
