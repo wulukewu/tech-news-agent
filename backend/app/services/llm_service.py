@@ -171,12 +171,13 @@ class LLMService:
         logger.debug(f"Generating summary for article: {article.title}")
 
         system_prompt = (
-            "你是一位資深技術分析師，請以繁體中文針對以下文章提供簡潔的技術摘要。\n"
-            "摘要必須包含：\n"
-            "1. 核心技術概念：說明文章涉及的核心技術原理。\n"
-            "2. 應用場景：描述此技術可應用的實際場景。\n"
-            "3. 建議下一步：提供具體可行的下一步行動建議。\n\n"
-            "請直接輸出摘要內容，不要加上多餘的前言或結語。摘要應簡潔明瞭，不超過 300 字。"
+            "你是一位資深技術分析師，請以繁體中文為以下技術文章寫一段自然、易讀的摘要。\n\n"
+            "摘要風格：\n"
+            "- 用自然的語言描述，避免制式化的條列格式\n"
+            "- 重點說明技術的核心價值和實際應用\n"
+            "- 如果有值得關注的技術細節或趨勢，簡潔提及\n"
+            "- 語調專業但不生硬，像是跟同事分享技術見解\n\n"
+            "請直接輸出摘要內容，不超過 200 字。"
         )
 
         user_prompt = f"文章標題：{article.title}\n" f"文章分類：{article.category}"
@@ -479,9 +480,7 @@ class LLMService:
         categories_text = "、".join(sorted(set(categories)))
 
         user_prompt = (
-            f"以下是使用者近期評分 4 星以上的高評分文章：\n\n"
-            f"文章標題：\n{titles_text}\n\n"
-            f"涵蓋分類：{categories_text}"
+            f"以下是使用者近期評分 4 星以上的高評分文章：\n\n" f"文章標題：\n{titles_text}\n\n" f"涵蓋分類：{categories_text}"
         )
 
         system_prompt = (

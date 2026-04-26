@@ -63,7 +63,7 @@ class StructuredFormatter(logging.Formatter):
             log_data["exception"] = self.formatException(record.exc_info)
 
         # Add extra fields (custom fields passed to logger)
-        if hasattr(record, "extra_fields"):
+        if hasattr(record, "extra_fields") and record.extra_fields:
             log_data["extra"] = record.extra_fields
 
         # Add source location for ERROR and CRITICAL levels
@@ -152,8 +152,11 @@ class StructuredLogger:
     def _log(self, level: int, message: str, **extra_fields):
         """Internal method to log with extra fields."""
         # Create a log record with extra fields
-        extra = {"extra_fields": extra_fields} if extra_fields else {}
-        self.logger.log(level, message, extra=extra)
+        if extra_fields:
+            extra = {"extra_fields": extra_fields}
+            self.logger.log(level, message, extra=extra)
+        else:
+            self.logger.log(level, message)
 
     def debug(self, message: str, **extra_fields):
         """Log debug message."""
@@ -177,9 +180,8 @@ class StructuredLogger:
             **extra_fields: Additional fields to include in log
         """
         if exc_info:
-            self.logger.error(
-                message, exc_info=True, extra={"extra_fields": extra_fields} if extra_fields else {}
-            )
+            extra = {"extra_fields": extra_fields} if extra_fields else {}
+            self.logger.error(message, exc_info=True, extra=extra)
         else:
             self._log(logging.ERROR, message, **extra_fields)
 
@@ -193,9 +195,8 @@ class StructuredLogger:
             **extra_fields: Additional fields to include in log
         """
         if exc_info:
-            self.logger.critical(
-                message, exc_info=True, extra={"extra_fields": extra_fields} if extra_fields else {}
-            )
+            extra = {"extra_fields": extra_fields} if extra_fields else {}
+            self.logger.critical(message, exc_info=True, extra=extra)
         else:
             self._log(logging.CRITICAL, message, **extra_fields)
 
