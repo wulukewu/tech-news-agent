@@ -66,8 +66,24 @@ class TechNewsBot(commands.Bot):
         logger.info(f"Logged in as {self.user} (ID: {self.user.id})")
         # Sync the command tree to Discord (makes slash commands visible)
         try:
-            synced = await self.tree.sync()
-            logger.info(f"Successfully synced {len(synced)} slash command(s).")
+            from app.core.config import get_settings
+
+            settings = get_settings()
+            if settings.dev_guild_id:
+                # Clear global commands so prod bot handles them exclusively
+                await self.tree.clear_commands(guild=None)
+                await self.tree.sync()
+                # Guild-specific sync: commands only visible in this guild,
+                # preventing dev bot from competing with prod on global interactions
+                guild = discord.Object(id=settings.dev_guild_id)
+                self.tree.copy_global_to(guild=guild)
+                synced = await self.tree.sync(guild=guild)
+                logger.info(
+                    f"Synced {len(synced)} command(s) to dev guild {settings.dev_guild_id}."
+                )
+            else:
+                synced = await self.tree.sync()
+                logger.info(f"Successfully synced {len(synced)} slash command(s).")
         except Exception as e:
             logger.error(f"Failed to sync slash commands: {e}")
         logger.info("Discord Bot is fully ready and listening.")

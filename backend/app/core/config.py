@@ -58,6 +58,10 @@ class Settings(BaseSettings):
     # Scheduler (set to false in local dev to avoid duplicate RSS fetches and DMs)
     enable_scheduler: bool = True
 
+    # Dev guild ID: if set, slash commands are synced only to this guild (dev isolation)
+    # Prevents dev bot from competing with prod bot on global interactions
+    dev_guild_id: int | None = None
+
     # Voyage AI (for semantic search embeddings)
     voyage_api_key: str | None = None
 
