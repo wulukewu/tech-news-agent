@@ -270,8 +270,12 @@ async def _save_messages_to_db(
     Also updates the conversation title (from query) and message_count.
     """
     try:
+        from datetime import timedelta
+
         supabase = _get_supabase()
-        now = datetime.utcnow().isoformat()
+        now = datetime.utcnow()
+        user_ts = now.isoformat()
+        assistant_ts = (now + timedelta(milliseconds=1)).isoformat()
 
         messages_to_insert = [
             {
@@ -280,12 +284,11 @@ async def _save_messages_to_db(
                 "content": user_query,
                 "platform": "web",
                 "metadata": {},
-                "created_at": now,
+                "created_at": user_ts,
             }
         ]
 
         if qa_response is not None:
-            # Build a readable assistant reply from the structured response
             assistant_content = _qa_response_to_text(qa_response)
             messages_to_insert.append(
                 {
@@ -308,13 +311,13 @@ async def _save_messages_to_db(
                         "response_time": qa_response.response_time,
                         "intent": qa_response.intent,
                     },
-                    "created_at": now,
+                    "created_at": assistant_ts,
                 }
             )
 
         supabase.client.table("conversation_messages").insert(messages_to_insert).execute()
 
-        # Update conversation: set title from first query if not set, bump message_count
+        # Update conversation title and message_count
         existing = (
             supabase.client.table("conversations")
             .select("title, message_count")
@@ -326,11 +329,10 @@ async def _save_messages_to_db(
             current_count = existing.data[0].get("message_count") or 0
             updates: Dict[str, Any] = {
                 "message_count": current_count + len(messages_to_insert),
-                "last_message_at": now,
-                "last_updated": now,
+                "last_message_at": assistant_ts,
+                "last_updated": assistant_ts,
             }
             if not current_title:
-                # Use the query as the title (truncated)
                 updates["title"] = user_query[:100]
             supabase.client.table("conversations").update(updates).eq(
                 "id", conversation_id
