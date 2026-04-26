@@ -522,24 +522,21 @@ describe('AnalysisModal Property Tests', () => {
           articleIdArbitrary,
           analysisResultArbitrary,
           async (articleId, mockAnalysis) => {
-            const mockGetCachedAnalysis = vi.fn().mockResolvedValue(mockAnalysis);
-            vi.mocked(services.getCachedAnalysis).mockImplementation(mockGetCachedAnalysis);
+            vi.mocked(services.getCachedAnalysis).mockClear();
+            vi.mocked(services.getCachedAnalysis).mockResolvedValue(mockAnalysis);
 
             // First call - should fetch from cache
             const result1 = await services.getCachedAnalysis(articleId);
-            expect(mockGetCachedAnalysis).toHaveBeenCalledWith(articleId);
+            expect(services.getCachedAnalysis).toHaveBeenCalledWith(articleId);
             expect(result1).toEqual(mockAnalysis);
 
             // Second call - should also use cache
             const result2 = await services.getCachedAnalysis(articleId);
-            expect(mockGetCachedAnalysis).toHaveBeenCalledTimes(2);
+            expect(services.getCachedAnalysis).toHaveBeenCalledTimes(2);
             expect(result2).toEqual(mockAnalysis);
 
             // Results should be identical
             expect(result1).toEqual(result2);
-
-            // Reset for next property run
-            mockGetCachedAnalysis.mockClear();
           }
         ),
         { numRuns: 100 }
@@ -583,10 +580,10 @@ describe('AnalysisModal Property Tests', () => {
 
             // Mock clipboard API
             const mockWriteText = vi.fn().mockResolvedValue(undefined);
-            Object.assign(navigator, {
-              clipboard: {
-                writeText: mockWriteText,
-              },
+            Object.defineProperty(navigator, 'clipboard', {
+              value: { writeText: mockWriteText },
+              writable: true,
+              configurable: true,
             });
 
             vi.mocked(services.copyAnalysisToClipboard).mockImplementation(async (text) => {

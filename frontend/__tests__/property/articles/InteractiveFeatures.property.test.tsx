@@ -380,11 +380,9 @@ describe('Interactive Features Properties (Task 4.7)', () => {
           // All interactive elements should be reachable and activatable via keyboard
           const interactiveElements = screen.queryAllByRole('button');
           interactiveElements.forEach((element) => {
-            // Should be focusable
+            // Should be focusable (native <button> has implicit role, no explicit attribute needed)
             expect(element.tabIndex).toBeGreaterThanOrEqual(0);
-
-            // Should have keyboard event handlers (implicit through role="button")
-            expect(element).toHaveAttribute('role', 'button');
+            expect(element.tagName).toBe('BUTTON');
           });
 
           cleanup();
