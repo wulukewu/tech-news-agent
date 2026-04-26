@@ -176,7 +176,9 @@ async def _search_articles_by_query(query: str) -> List[ArticleSummaryResponse]:
         supabase = _SS()
         resp = (
             supabase.client.table("articles")
-            .select("id, title, url, ai_summary, tinkering_index, published_at")
+            .select(
+                "id, title, url, ai_summary, tinkering_index, published_at, category, feeds(category)"
+            )
             .or_(filters)
             .order("published_at", desc=True)
             .limit(5)
@@ -184,6 +186,8 @@ async def _search_articles_by_query(query: str) -> List[ArticleSummaryResponse]:
         )
         results = []
         for row in resp.data or []:
+            # Use article's own category, fall back to feed's category
+            category = row.get("category") or (row.get("feeds") or {}).get("category") or ""
             results.append(
                 ArticleSummaryResponse(
                     article_id=str(row["id"]),
@@ -194,7 +198,7 @@ async def _search_articles_by_query(query: str) -> List[ArticleSummaryResponse]:
                     reading_time=max(2, len(row.get("ai_summary") or "") // 200),
                     key_insights=[],
                     published_at=row.get("published_at"),
-                    category="",
+                    category=category,
                 )
             )
         return results
@@ -353,12 +357,16 @@ async def _process_query_with_intent(
 
     if intent == "preference":
         await _store_preference(user_id, query)
+        # Auto-update summary in background if condition met
+        from app.services.auto_preference_summary import schedule_preference_summary_update
+
+        schedule_preference_summary_update(user_id)
         return QAQueryResponse(
             query=query,
             articles=[],
             insights=[
-                "✅ 已記錄你的偏好！這會幫助我推薦更適合你的文章。",
-                "使用 /update_profile 指令（Discord）或前往「偏好設定」更新你的偏好摘要。",
+                "✅ 已記錄你的偏好！偏好摘要將自動更新。",
+                "累積更多偏好後推薦會越來越精準。",
             ],
             recommendations=[],
             conversation_id=conversation_id,

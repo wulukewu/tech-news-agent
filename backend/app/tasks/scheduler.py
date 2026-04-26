@@ -368,6 +368,7 @@ async def background_fetch_job():
                         "tinkering_index": article.tinkering_index,
                         "ai_summary": article.ai_summary,
                         "embedding": article.embedding,
+                        "category": article.category,
                     }
                     articles_to_insert.append(article_dict)
 

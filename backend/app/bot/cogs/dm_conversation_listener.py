@@ -173,7 +173,11 @@ class DMConversationListener(commands.Cog):
     ) -> None:
         """Store preference and prompt user to update profile."""
         await self._store_dm(supabase, user_id, content)
-        reply = "✅ 已記錄你的偏好！使用 `/update_profile` 更新摘要，下次推薦會更精準 🎯"
+        # Auto-update summary in background if condition met
+        from app.services.auto_preference_summary import schedule_preference_summary_update
+
+        schedule_preference_summary_update(user_id)
+        reply = "✅ 已記錄你的偏好！偏好摘要將自動更新 🎯"
         if show_hint:
             reply += _USAGE_HINT
         await message.reply(reply, mention_author=False)
