@@ -338,6 +338,11 @@ from app.api import notifications
 
 app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
 
+# Import and register learning path router
+from app.api import learning_path
+
+app.include_router(learning_path.router, tags=["learning-path"])
+
 # Import and register notification system router
 from app.api import notification_system
 
