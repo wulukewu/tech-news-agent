@@ -16,8 +16,8 @@ from app.services.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
 
-_MIN_NEW_MESSAGES = 1
-_MIN_HOURS = 1
+_MIN_NEW_MESSAGES = 3
+_MIN_HOURS = 6
 
 
 async def maybe_update_preference_summary(user_id: str) -> None:
