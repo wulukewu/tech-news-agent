@@ -56,7 +56,7 @@ class OnboardingRequest(BaseModel):
 # ── Endpoints ────────────────────────────────────────────────────────────────
 
 
-@router.get("/learning/conversations/pending")
+@router.get("/conversations/pending")
 async def get_pending_conversations(
     current_user: dict[str, Any] = Depends(get_current_user),
 ):
@@ -67,7 +67,7 @@ async def get_pending_conversations(
     return success_response({"conversations": conversations, "count": len(conversations)})
 
 
-@router.post("/learning/conversations/{conversation_id}/respond")
+@router.post("/conversations/{conversation_id}/respond")
 async def respond_to_conversation(
     conversation_id: str,
     body: RespondRequest,
@@ -133,7 +133,7 @@ async def respond_to_conversation(
     )
 
 
-@router.get("/learning/preferences")
+@router.get("/preferences")
 async def get_preferences(
     current_user: dict[str, Any] = Depends(get_current_user),
 ):
@@ -144,7 +144,7 @@ async def get_preferences(
     return success_response(prefs)
 
 
-@router.put("/learning/preferences")
+@router.put("/preferences")
 async def update_preferences(
     body: PreferencesUpdateRequest,
     current_user: dict[str, Any] = Depends(get_current_user),
@@ -159,7 +159,7 @@ async def update_preferences(
     return success_response(updated)
 
 
-@router.get("/learning/settings")
+@router.get("/settings")
 async def get_settings(
     current_user: dict[str, Any] = Depends(get_current_user),
 ):
@@ -176,7 +176,7 @@ async def get_settings(
     )
 
 
-@router.put("/learning/settings")
+@router.put("/settings")
 async def update_settings(
     body: SettingsUpdateRequest,
     current_user: dict[str, Any] = Depends(get_current_user),
@@ -197,7 +197,7 @@ async def update_settings(
     return success_response({"updated": update})
 
 
-@router.post("/learning/events")
+@router.post("/events")
 async def record_behavior_event(
     body: BehaviorEventRequest,
     current_user: dict[str, Any] = Depends(get_current_user),
@@ -216,7 +216,7 @@ async def record_behavior_event(
     return success_response({"recorded": True})
 
 
-@router.post("/learning/trigger")
+@router.post("/trigger")
 async def manual_trigger(
     current_user: dict[str, Any] = Depends(get_current_user),
 ):
@@ -233,7 +233,7 @@ async def manual_trigger(
     return success_response({"triggered": True, "conversation": conv})
 
 
-@router.post("/learning/onboarding")
+@router.post("/onboarding")
 async def complete_onboarding(
     body: OnboardingRequest,
     current_user: dict[str, Any] = Depends(get_current_user),
@@ -310,10 +310,9 @@ async def get_preference_summary(current_user: dict[str, Any] = Depends(get_curr
             supabase.client.table("preference_model")
             .select("preference_summary, category_weights, summary_updated_at")
             .eq("user_id", user_id)
-            .single()
             .execute()
         )
-        data = resp.data or {}
+        data = resp.data[0] if resp.data else {}
     except Exception:
         data = {}
 
@@ -345,14 +344,30 @@ async def update_preference_summary_endpoint(
     supabase = SupabaseService()
     user_id = str(current_user["user_id"])  # Convert UUID to string
     try:
-        supabase.client.table("preference_model").upsert(
-            {
-                "user_id": user_id,
-                "preference_summary": body.summary.strip(),
-                "summary_updated_at": datetime.now(UTC).isoformat(),
-                "updated_at": datetime.now(UTC).isoformat(),
-            }
-        ).execute()
+        # First check if record exists
+        existing = (
+            supabase.client.table("preference_model").select("id").eq("user_id", user_id).execute()
+        )
+
+        if existing.data:
+            # Update existing record
+            supabase.client.table("preference_model").update(
+                {
+                    "preference_summary": body.summary.strip(),
+                    "summary_updated_at": datetime.now(UTC).isoformat(),
+                    "updated_at": datetime.now(UTC).isoformat(),
+                }
+            ).eq("user_id", user_id).execute()
+        else:
+            # Insert new record
+            supabase.client.table("preference_model").insert(
+                {
+                    "user_id": user_id,
+                    "preference_summary": body.summary.strip(),
+                    "summary_updated_at": datetime.now(UTC).isoformat(),
+                    "updated_at": datetime.now(UTC).isoformat(),
+                }
+            ).execute()
     except Exception as exc:
         logger.error("Failed to update preference summary: %s", exc)
         raise HTTPException(status_code=500, detail="無法更新偏好摘要")
