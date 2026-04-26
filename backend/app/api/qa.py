@@ -15,7 +15,7 @@ import json
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -322,36 +322,58 @@ async def _process_query_with_intent(
             intent="other",
         )
 
-    # intent == "question" — search articles
-    from app.qa_agent.simple_qa import get_simple_qa_agent
+    # intent == "question" — search articles directly (same as DM)
+    import re
+    import time
 
-    simple_agent = get_simple_qa_agent()
-    response = await simple_agent.process_query(
-        user_id=UUID(user_id),
-        query=query,
-        conversation_id=conversation_id,
-    )
+    start = time.time()
+    keywords = re.findall(r"[A-Za-z][A-Za-z0-9+#.-]*|[\u4e00-\u9fff]{2,}", query)
+    stop = {"最近", "有什麼", "有沒有", "文章", "介紹", "告訴", "幫我", "什麼", "怎麼", "如何", "推薦"}
+    keywords = [k for k in keywords if k.lower() not in stop and len(k) > 1][:3]
+
+    articles: List[ArticleSummaryResponse] = []
+    if keywords:
+        try:
+            supabase = _get_supabase()
+            filters = ",".join(f"title.ilike.%{kw}%,ai_summary.ilike.%{kw}%" for kw in keywords)
+            resp = (
+                supabase.client.table("articles")
+                .select("id, title, url, ai_summary, category, tinkering_index, published_at")
+                .or_(filters)
+                .order("published_at", desc=True)
+                .limit(5)
+                .execute()
+            )
+            for row in resp.data or []:
+                articles.append(
+                    ArticleSummaryResponse(
+                        article_id=str(row["id"]),
+                        title=row.get("title") or "",
+                        summary=(row.get("ai_summary") or "")[:300],
+                        url=row.get("url") or "",
+                        relevance_score=0.9,
+                        reading_time=max(2, len(row.get("ai_summary") or "") // 200),
+                        key_insights=[],
+                        published_at=row.get("published_at"),
+                        category=row.get("category") or "",
+                    )
+                )
+        except Exception as e:
+            logger.warning("Article search failed: %s", e)
+
+    insights = []
+    recommendations = []
+    if not articles:
+        insights = ["找不到相關文章。試試換個關鍵字，或先訂閱更多 RSS 來源。"]
+        recommendations = ["使用 /add_feed 訂閱更多 RSS 來源", "試試不同的關鍵字"]
 
     return QAQueryResponse(
-        query=response.query,
-        articles=[
-            ArticleSummaryResponse(
-                article_id=article["article_id"],
-                title=article["title"],
-                summary=article["summary"],
-                url=article["url"],
-                relevance_score=article["relevance_score"],
-                reading_time=article["reading_time"],
-                key_insights=[],
-                published_at=None,
-                category=article.get("category", "Technology"),
-            )
-            for article in response.articles
-        ],
-        insights=response.insights,
-        recommendations=response.recommendations,
-        conversation_id=response.conversation_id,
-        response_time=response.response_time,
+        query=query,
+        articles=articles,
+        insights=insights,
+        recommendations=recommendations,
+        conversation_id=conversation_id,
+        response_time=round(time.time() - start, 2),
         intent="question",
     )
 
