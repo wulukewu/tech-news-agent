@@ -81,13 +81,11 @@ class RSSService:
 
     async def _process_single_feed(
         self, source: RSSSource, client: httpx.AsyncClient, feed_id_map: dict = None
-    ) -> list[ArticleSchema]:
+    ) -> tuple[list[ArticleSchema], str | None]:
         """Fetch and parse one specific RSS source.
 
-        Args:
-            source: RSS source to fetch
-            client: HTTP client for requests
-            feed_id_map: Optional mapping of feed URLs to feed IDs from database
+        Returns:
+            Tuple of (articles, feed_id_if_successful)
         """
         articles = []
         filtered_count = 0
@@ -97,11 +95,9 @@ class RSSService:
 
             cutoff_date = datetime.now(UTC) - timedelta(days=self.days_to_fetch)
 
-            # Get feed_id from the provided map or generate a temporary one
             if feed_id_map and str(source.url) in feed_id_map:
                 feed_id = feed_id_map[str(source.url)]
             else:
-                # Fallback: generate temporary UUID (should not happen in production)
                 from uuid import uuid4
 
                 feed_id = uuid4()
@@ -110,66 +106,61 @@ class RSSService:
             for entry in feed.entries:
                 published_date = self._parse_date(entry)
 
-                # Filter old articles (Requirement 11.4)
                 if published_date < cutoff_date:
                     filtered_count += 1
                     continue
 
-                # Extract URL securely
                 url = entry.get("link", str(source.url))
 
-                # If parsed successfully, create our Schema with updated fields
                 articles.append(
                     ArticleSchema(
                         title=entry.get("title", "No Title"),
                         url=url,
-                        feed_id=feed_id,  # Should be from database
+                        feed_id=feed_id,
                         feed_name=source.name,
                         category=source.category,
                         published_at=published_date,
                     )
                 )
 
-            # Log statistics (Requirement 11.7)
             logger.info(
                 f"Fetched {len(articles)} fresh articles from '{source.name}' "
                 f"(filtered {filtered_count} articles older than {self.days_to_fetch} days)"
             )
-            return articles
+            return articles, str(feed_id)  # success: return feed_id
 
         except Exception as e:
             logger.error(f"Failed to process feed '{source.name}' at {source.url}: {e}")
-            # We don't raise here so one broken feed doesn't crash the whole batch
-            return []
+            return [], None  # failure: return None
 
     async def fetch_all_feeds(
         self, sources: list[RSSSource], feed_id_map: dict = None
-    ) -> list[ArticleSchema]:
+    ) -> tuple[list[ArticleSchema], list[str]]:
         """Concurrently fetch all RSS sources and aggregate results.
 
-        Args:
-            sources: List of RSS sources to fetch
-            feed_id_map: Optional mapping of feed URLs to feed IDs from database
+        Returns:
+            Tuple of (all_articles, successfully_fetched_feed_ids)
         """
         logger.info(f"Starting concurrent fetch for {len(sources)} RSS feeds.")
 
         all_articles = []
+        successful_feed_ids = []
 
-        # We use a single client for connection pooling benefits
         async with httpx.AsyncClient() as client:
             tasks = [self._process_single_feed(source, client, feed_id_map) for source in sources]
-
-            # Execute all tasks concurrently
             results = await asyncio.gather(*tasks, return_exceptions=True)
 
             for result in results:
                 if isinstance(result, Exception):
                     logger.error(f"Unexpected error in feed processing task: {result}")
-                elif isinstance(result, list):
-                    all_articles.extend(result)
+                elif isinstance(result, tuple):
+                    articles, feed_id = result
+                    all_articles.extend(articles)
+                    if feed_id:
+                        successful_feed_ids.append(feed_id)
 
         logger.info(f"Total fresh articles aggregated: {len(all_articles)}")
-        return all_articles
+        return all_articles, successful_feed_ids
 
     async def fetch_new_articles(
         self, sources: list[RSSSource], supabase_service: "SupabaseService"
@@ -219,37 +210,39 @@ class RSSService:
             # Continue without feed_id_map - will use temporary UUIDs
 
         # Step 1: Fetch all articles from RSS feeds with feed_id_map
-        all_articles = await self.fetch_all_feeds(sources, feed_id_map)
+        all_articles, successful_feed_ids = await self.fetch_all_feeds(sources, feed_id_map)
         total_fetched = len(all_articles)
-        logger.info(f"Fetched {total_fetched} articles from RSS feeds")
+        logger.info(
+            f"Fetched {total_fetched} articles from RSS feeds ({len(successful_feed_ids)} feeds successful)"
+        )
 
-        if not all_articles:
+        if not all_articles and not successful_feed_ids:
             logger.info("No articles fetched, returning empty list")
-            return []
+            return [], []
 
-        # Step 2: Check each article against database for deduplication
+        # Step 2: Batch check all URLs against database (single query instead of N queries)
         new_articles = []
         existing_count = 0
 
-        for article in all_articles:
+        if all_articles:
             try:
-                # Check if article URL already exists in database
-                exists = await supabase_service.check_article_exists(str(article.url))
+                all_urls = [str(a.url) for a in all_articles]
+                response = (
+                    supabase_service.client.table("articles")
+                    .select("url")
+                    .in_("url", all_urls)
+                    .execute()
+                )
+                existing_urls = {row["url"] for row in (response.data or [])}
+            except Exception as e:
+                logger.error(f"Batch URL check failed, falling back to individual checks: {e}")
+                existing_urls = set()
 
-                if exists:
+            for article in all_articles:
+                if str(article.url) in existing_urls:
                     existing_count += 1
-                    logger.debug(f"Article already exists, skipping: {article.url}")
                 else:
                     new_articles.append(article)
-                    logger.debug(f"New article found: {article.url}")
-
-            except Exception as e:
-                # Log error but continue processing other articles (Requirement 2.7)
-                logger.error(
-                    f"Failed to check existence for article {article.url}: {e}", exc_info=True
-                )
-                # On error, assume article is new to avoid losing data
-                new_articles.append(article)
 
         # Step 3: Log statistics
         new_count = len(new_articles)
@@ -260,4 +253,4 @@ class RSSService:
             f"New articles: {new_count}"
         )
 
-        return new_articles
+        return new_articles, successful_feed_ids

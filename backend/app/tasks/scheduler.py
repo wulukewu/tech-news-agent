@@ -210,14 +210,13 @@ async def background_fetch_job():
         # Stage 2: Fetch new articles with deduplication
         logger.info("Stage 2: Fetching new articles from RSS feeds with deduplication")
         rss = RSSService(days_to_fetch=settings.rss_fetch_days)
-        new_articles = await rss.fetch_new_articles(feeds, supabase)
+        new_articles, successful_feed_ids = await rss.fetch_new_articles(feeds, supabase)
 
         logger.info(f"Found {len(new_articles)} new articles after deduplication")
 
-        # Update last_fetched_at for feeds that returned articles
-        if new_articles:
-            fetched_feed_ids = list({str(a.feed_id) for a in new_articles})
-            await supabase.update_feeds_last_fetched(fetched_feed_ids)
+        # Update last_fetched_at for all feeds that were successfully fetched
+        if successful_feed_ids:
+            await supabase.update_feeds_last_fetched(successful_feed_ids)
 
         # Stage 2.5: Query and re-process unanalyzed articles (Requirement 13.1, 13.2, 13.3, 13.4, 13.5, 13.6)
         logger.info("Stage 2.5: Querying unanalyzed articles for re-processing")
