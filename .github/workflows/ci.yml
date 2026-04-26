@@ -28,13 +28,18 @@ jobs:
       # Dummy env vars for tests (all external calls are mocked)
       SUPABASE_URL: https://dummy.supabase.co
       SUPABASE_KEY: dummy_supabase_key
-      DISCORD_TOKEN: dummy_discord_token
+      DISCORD_TOKEN: dummy_discord_token_that_is_long_enough_to_pass_validation_check
       DISCORD_CHANNEL_ID: '123456789012345678'
+      DISCORD_CLIENT_ID: dummy_discord_client_id
+      DISCORD_CLIENT_SECRET: dummy_discord_client_secret
+      DISCORD_REDIRECT_URI: http://localhost:8000/api/auth/discord/callback
       GROQ_API_KEY: dummy_groq_api_key
       TIMEZONE: Asia/Taipei
-      JWT_SECRET_KEY: dummy_jwt_secret_key_for_testing_only_32_chars
+      JWT_SECRET: dummy_jwt_secret_key_for_testing_only_32chars
       JWT_ALGORITHM: HS256
-      JWT_ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      JWT_EXPIRATION_DAYS: '7'
+      CORS_ORIGINS: http://localhost:3000
+      FRONTEND_URL: http://localhost:3000
 
     steps:
       - name: Checkout code
