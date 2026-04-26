@@ -1,10 +1,19 @@
 -- Semantic search function for articles using pgvector cosine similarity
 -- Run this in Supabase SQL Editor
 
--- First resize the embedding column to 1024 dimensions (Voyage AI voyage-3 model)
+-- Add category column if it doesn't exist
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS category TEXT;
+
+-- Resize the embedding column to 1024 dimensions (Voyage AI voyage-3 model)
 ALTER TABLE articles ALTER COLUMN embedding TYPE VECTOR(1024);
 DROP INDEX IF EXISTS idx_articles_embedding;
 CREATE INDEX idx_articles_embedding ON articles USING hnsw (embedding vector_cosine_ops);
+
+-- Backfill category from feeds table for existing articles
+UPDATE articles a
+SET category = f.category
+FROM feeds f
+WHERE a.feed_id = f.id AND a.category IS NULL;
 
 -- Create the match_articles function for semantic search
 CREATE OR REPLACE FUNCTION match_articles(
