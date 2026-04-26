@@ -363,7 +363,9 @@ app.include_router(weekly_insights_api.router, prefix="/api", tags=["weekly-insi
 # Import and register Proactive Learning router
 from app.api import proactive_learning as proactive_learning_api
 
-app.include_router(proactive_learning_api.router, prefix="/api", tags=["proactive-learning"])
+app.include_router(
+    proactive_learning_api.router, prefix="/api/learning", tags=["proactive-learning"]
+)
 
 # Import and register Platforms router (user platform linking + sync)
 from app.api import platforms as platforms_api
