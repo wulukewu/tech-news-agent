@@ -15,6 +15,7 @@ class TestConfigurationValidation:
 
     def setup_valid_env(self, monkeypatch):
         """Helper to set up valid environment variables"""
+        monkeypatch.setenv("APP_ENV", "dev")  # Ensure strict validation
         monkeypatch.setenv("SUPABASE_URL", "https://test.supabase.co")
         monkeypatch.setenv("SUPABASE_KEY", "a" * 30)  # Valid length
         monkeypatch.setenv("DISCORD_TOKEN", "a" * 60)  # Valid length

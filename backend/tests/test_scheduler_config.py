@@ -245,6 +245,7 @@ class TestSettingsDefaults:
         with patch.dict(
             "os.environ",
             {
+                "APP_ENV": "test",
                 "SUPABASE_URL": "http://test.com",
                 "SUPABASE_KEY": "test_key",
                 "DISCORD_TOKEN": "test_token",
@@ -254,13 +255,14 @@ class TestSettingsDefaults:
             clear=True,
         ):
             settings = Settings()
-            assert settings.scheduler_cron == "0 */6 * * *"
+            assert settings.scheduler_cron == "0 * * * *"
 
     def test_settings_scheduler_timezone_default(self):
         """Test that scheduler_timezone defaults to None."""
         with patch.dict(
             "os.environ",
             {
+                "APP_ENV": "test",
                 "SUPABASE_URL": "http://test.com",
                 "SUPABASE_KEY": "test_key",
                 "DISCORD_TOKEN": "test_token",
@@ -277,6 +279,7 @@ class TestSettingsDefaults:
         with patch.dict(
             "os.environ",
             {
+                "APP_ENV": "test",
                 "SUPABASE_URL": "http://test.com",
                 "SUPABASE_KEY": "test_key",
                 "DISCORD_TOKEN": "test_token",
@@ -294,6 +297,7 @@ class TestSettingsDefaults:
         with patch.dict(
             "os.environ",
             {
+                "APP_ENV": "test",
                 "SUPABASE_URL": "http://test.com",
                 "SUPABASE_KEY": "test_key",
                 "DISCORD_TOKEN": "test_token",

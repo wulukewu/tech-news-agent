@@ -12,9 +12,10 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4
 
 import pytest
-from backend.app.qa_agent.models import ArticleMatch, UserProfile
-from backend.app.qa_agent.retrieval_engine import RetrievalEngine, RetrievalEngineError
-from backend.app.qa_agent.vector_store import VectorMatch, VectorStoreError
+
+from app.qa_agent.models import ArticleMatch, UserProfile
+from app.qa_agent.retrieval_engine import RetrievalEngine, RetrievalEngineError
+from app.qa_agent.vector_store import VectorMatch, VectorStoreError
 
 # ---------------------------------------------------------------------------
 # Helpers / Factories

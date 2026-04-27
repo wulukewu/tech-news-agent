@@ -21,8 +21,9 @@ from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
 import pytest
-from backend.app.qa_agent.embedding_service import EmbeddingError
-from backend.app.qa_agent.models import (
+
+from app.qa_agent.embedding_service import EmbeddingError
+from app.qa_agent.models import (
     ArticleMatch,
     ArticleSummary,
     ConversationContext,
@@ -33,11 +34,11 @@ from backend.app.qa_agent.models import (
     StructuredResponse,
     UserProfile,
 )
-from backend.app.qa_agent.qa_agent_controller import QAAgentController
-from backend.app.qa_agent.query_processor import QueryValidationResult
-from backend.app.qa_agent.response_generator import ResponseGeneratorError
-from backend.app.qa_agent.retrieval_engine import RetrievalEngineError
-from backend.app.qa_agent.vector_store import VectorStoreError
+from app.qa_agent.qa_agent_controller import QAAgentController
+from app.qa_agent.query_processor import QueryValidationResult
+from app.qa_agent.response_generator import ResponseGeneratorError
+from app.qa_agent.retrieval_engine import RetrievalEngineError
+from app.qa_agent.vector_store import VectorStoreError
 
 # ---------------------------------------------------------------------------
 # Shared mock helpers

@@ -11,12 +11,13 @@ from datetime import datetime
 from uuid import uuid4
 
 import pytest
-from backend.app.qa_agent.models import (
+
+from app.qa_agent.models import (
     ConversationContext,
     QueryIntent,
     QueryLanguage,
 )
-from backend.app.qa_agent.query_processor import QueryProcessor
+from app.qa_agent.query_processor import QueryProcessor
 
 
 @pytest.fixture
@@ -173,7 +174,7 @@ class TestKeywordExtraction:
         query = " ".join([f"keyword{i}" for i in range(50)])
         keywords = await processor.extract_keywords(query, QueryLanguage.ENGLISH)
 
-        from backend.app.qa_agent.constants import PerformanceLimits
+        from app.qa_agent.constants import PerformanceLimits
 
         assert len(keywords) <= PerformanceLimits.MAX_KEYWORDS_PER_QUERY
 
@@ -317,7 +318,7 @@ class TestQueryValidation:
     @pytest.mark.asyncio
     async def test_validate_too_long_query(self, processor):
         """Test validation of excessively long query."""
-        from backend.app.qa_agent.constants import PerformanceLimits
+        from app.qa_agent.constants import PerformanceLimits
 
         query = "a" * (PerformanceLimits.MAX_QUERY_LENGTH + 100)
         result = await processor.validate_query(query)
@@ -681,7 +682,7 @@ class TestContextualSuggestions:
         """Test contextual suggestions with user profile."""
         from uuid import uuid4
 
-        from backend.app.qa_agent.models import UserProfile
+        from app.qa_agent.models import UserProfile
 
         # Create a user profile with preferred topics
         profile = UserProfile(

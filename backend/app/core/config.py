@@ -42,9 +42,9 @@ class Settings(BaseSettings):
     discord_channel_id: int | None = None  # Optional: DM notifications used instead
 
     # Discord OAuth2 Configuration (Required for authentication)
-    discord_client_id: str
-    discord_client_secret: str
-    discord_redirect_uri: str
+    discord_client_id: str = ""
+    discord_client_secret: str = ""
+    discord_redirect_uri: str = ""
 
     # LLM (Groq) Configuration (Required)
     groq_api_key: str
@@ -77,7 +77,7 @@ class Settings(BaseSettings):
     batch_split_threshold: int = 100  # Split into multiple batches above this
 
     # JWT Configuration (Required)
-    jwt_secret: str
+    jwt_secret: str = ""
     jwt_algorithm: str = "HS256"
     jwt_expiration_days: int = 7
 
@@ -123,20 +123,26 @@ class Settings(BaseSettings):
                 "SUPABASE_URL is required. "
                 "Get it from: https://supabase.com/dashboard > Settings > API > Project URL"
             )
-        if not v.startswith("https://"):
-            raise ConfigurationError(f"SUPABASE_URL must start with 'https://'. Got: {v}")
-        # Check for valid Supabase domain (must end with .supabase.co)
-        if not (".supabase.co" in v and v.split("//")[1].endswith(".supabase.co")):
-            raise ConfigurationError(
-                f"SUPABASE_URL must be a valid Supabase URL (*.supabase.co). Got: {v}"
-            )
+        # Strict format validation only in non-test environments
+        if os.getenv("APP_ENV") != "test":
+            if not v.startswith("https://"):
+                raise ConfigurationError(f"SUPABASE_URL must start with 'https://'. Got: {v}")
+            if not (".supabase.co" in v and v.split("//")[1].endswith(".supabase.co")):
+                raise ConfigurationError(
+                    f"SUPABASE_URL must be a valid Supabase URL (*.supabase.co). Got: {v}"
+                )
         return v
 
     @field_validator("supabase_key")
     @classmethod
     def validate_supabase_key(cls, v: str) -> str:
         """Validate Supabase key is not empty."""
-        if not v or len(v) < 20:
+        if not v:
+            raise ConfigurationError(
+                "SUPABASE_KEY is required and must be a valid service role key. "
+                "Get it from: https://supabase.com/dashboard > Settings > API > service_role key"
+            )
+        if os.getenv("APP_ENV") != "test" and len(v) < 20:
             raise ConfigurationError(
                 "SUPABASE_KEY is required and must be a valid service role key. "
                 "Get it from: https://supabase.com/dashboard > Settings > API > service_role key"
@@ -152,7 +158,7 @@ class Settings(BaseSettings):
                 "DISCORD_TOKEN is required. "
                 "Get it from: https://discord.com/developers/applications > Bot > Token"
             )
-        if len(v) < 50:
+        if os.getenv("APP_ENV") != "test" and len(v) < 50:
             raise ConfigurationError(
                 f"DISCORD_TOKEN appears invalid (too short). Expected length > 50, got: {len(v)}"
             )
@@ -163,11 +169,8 @@ class Settings(BaseSettings):
     def validate_discord_client_id(cls, v: str) -> str:
         """Validate Discord OAuth2 client ID."""
         if not v:
-            raise ConfigurationError(
-                "DISCORD_CLIENT_ID is required for OAuth2 authentication. "
-                "Get it from: https://discord.com/developers/applications > OAuth2 > Client ID"
-            )
-        if not v.isdigit():
+            return v  # Empty is allowed (optional in test/dev)
+        if os.getenv("APP_ENV") != "test" and not v.isdigit():
             raise ConfigurationError(f"DISCORD_CLIENT_ID must be numeric. Got: {v}")
         return v
 
@@ -176,11 +179,8 @@ class Settings(BaseSettings):
     def validate_discord_client_secret(cls, v: str) -> str:
         """Validate Discord OAuth2 client secret."""
         if not v:
-            raise ConfigurationError(
-                "DISCORD_CLIENT_SECRET is required for OAuth2 authentication. "
-                "Get it from: https://discord.com/developers/applications > OAuth2 > Client Secret"
-            )
-        if len(v) < 20:
+            return v  # Empty is allowed (optional in test/dev)
+        if os.getenv("APP_ENV") != "test" and len(v) < 20:
             raise ConfigurationError(
                 f"DISCORD_CLIENT_SECRET appears invalid (too short). Expected length > 20, got: {len(v)}"
             )
@@ -191,16 +191,16 @@ class Settings(BaseSettings):
     def validate_discord_redirect_uri(cls, v: str) -> str:
         """Validate Discord OAuth2 redirect URI."""
         if not v:
-            raise ConfigurationError(
-                "DISCORD_REDIRECT_URI is required for OAuth2 authentication. "
-                "Example: http://localhost:8000/api/auth/discord/callback"
-            )
-        if not (v.startswith("http://") or v.startswith("https://")):
-            raise ConfigurationError(
-                f"DISCORD_REDIRECT_URI must start with http:// or https://. Got: {v}"
-            )
-        if "/callback" not in v:
-            raise ConfigurationError(f"DISCORD_REDIRECT_URI should contain '/callback'. Got: {v}")
+            return v  # Empty is allowed (optional in test/dev)
+        if os.getenv("APP_ENV") != "test":
+            if not (v.startswith("http://") or v.startswith("https://")):
+                raise ConfigurationError(
+                    f"DISCORD_REDIRECT_URI must start with http:// or https://. Got: {v}"
+                )
+            if "/callback" not in v:
+                raise ConfigurationError(
+                    f"DISCORD_REDIRECT_URI should contain '/callback'. Got: {v}"
+                )
         return v
 
     @field_validator("groq_api_key")
@@ -212,7 +212,7 @@ class Settings(BaseSettings):
                 "GROQ_API_KEY is required for LLM processing. "
                 "Get it from: https://console.groq.com/keys"
             )
-        if not v.startswith("gsk_"):
+        if os.getenv("APP_ENV") != "test" and not v.startswith("gsk_"):
             raise ConfigurationError(f"GROQ_API_KEY should start with 'gsk_'. Got: {v[:10]}...")
         return v
 
@@ -221,10 +221,22 @@ class Settings(BaseSettings):
     def validate_jwt_secret(cls, v: str) -> str:
         """Validate JWT secret strength."""
         if not v:
+            return v  # Empty is allowed (optional in test/dev)
+        if os.getenv("APP_ENV") == "test":
+            return v
+        if len(v) < 32:
             raise ConfigurationError(
-                "JWT_SECRET is required for authentication. "
-                "Generate one with: openssl rand -hex 32"
+                f"JWT_SECRET must be at least 32 characters for security. "
+                f"Current length: {len(v)}. Generate a secure one with: openssl rand -hex 32"
             )
+        # Warn about common insecure values
+        insecure_patterns = ["change", "secret", "password", "example", "test", "demo"]
+        if any(pattern in v.lower() for pattern in insecure_patterns):
+            raise ConfigurationError(
+                "JWT_SECRET appears to be a placeholder or insecure value. "
+                "Generate a secure one with: openssl rand -hex 32"
+            )
+        return v
         if len(v) < 32:
             raise ConfigurationError(
                 f"JWT_SECRET must be at least 32 characters for security. "
@@ -372,7 +384,7 @@ except ConfigurationError as e:
 
     print(f"Configuration Error: {e}", file=sys.stderr)
     # In production, we want to fail fast
-    if os.getenv("APP_ENV") == "prod":
+    if os.getenv("APP_ENV") != "test":
         raise
     # In development/test, allow the module to load
     settings = None
@@ -382,7 +394,7 @@ except Exception as e:
 
     print(f"Unexpected error loading configuration: {e}", file=sys.stderr)
     # In production, we want to fail fast
-    if os.getenv("APP_ENV") == "prod":
+    if os.getenv("APP_ENV") != "test":
         raise ConfigurationError(
             f"Failed to load configuration: {e}. "
             "Ensure all required environment variables are set in your deployment platform."

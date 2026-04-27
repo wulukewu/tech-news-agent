@@ -7,6 +7,7 @@ from app.core.config import Settings
 
 def setup_minimal_valid_env(monkeypatch):
     """Helper to set up minimal valid environment for testing"""
+    monkeypatch.setenv("APP_ENV", "dev")  # Ensure strict validation
     monkeypatch.setenv("SUPABASE_URL", "https://test.supabase.co")
     monkeypatch.setenv("SUPABASE_KEY", "a" * 30)  # Valid length
     monkeypatch.setenv("DISCORD_TOKEN", "a" * 60)  # Valid length
