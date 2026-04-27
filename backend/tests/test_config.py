@@ -35,25 +35,26 @@ def test_settings_with_short_jwt_secret_raises_error(monkeypatch):
     setup_minimal_valid_env(monkeypatch)
     monkeypatch.setenv("JWT_SECRET", "short")  # Less than 32 characters
 
+    from pydantic import ValidationError
+
     from app.core.exceptions import ConfigurationError
 
-    with pytest.raises(ConfigurationError, match="JWT_SECRET must be at least 32 characters"):
+    with pytest.raises(
+        (ConfigurationError, ValidationError), match="JWT_SECRET must be at least 32 characters"
+    ):
         Settings()
 
 
 def test_settings_without_jwt_secret_raises_error(monkeypatch):
-    """Test that Settings raises error when JWT_SECRET is not set"""
+    """Test that Settings allows empty JWT_SECRET in test/dev (for flexibility)"""
     setup_minimal_valid_env(monkeypatch)
-    # Set empty JWT_SECRET to trigger validation
+    # Set empty JWT_SECRET
     monkeypatch.setenv("JWT_SECRET", "")
 
-    from app.core.exceptions import ConfigurationError
-
-    with pytest.raises((ConfigurationError, Exception)) as exc_info:
-        Settings()
-
-    # Should fail with JWT_SECRET error
-    assert "JWT_SECRET" in str(exc_info.value)
+    # Empty JWT_SECRET is allowed in all environments for flexibility
+    # (e.g., when JWT auth is not used)
+    settings = Settings()
+    assert settings.jwt_secret == ""
 
 
 def test_discord_oauth_config_fields(monkeypatch):

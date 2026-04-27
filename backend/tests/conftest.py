@@ -24,15 +24,19 @@ Shared fixtures are organized in fixtures/ directory:
 # This ensures settings can be loaded when app modules are imported
 import os
 
-os.environ.setdefault("APP_ENV", "test")
+# Only set defaults if not already set (allows tests to override)
+if "APP_ENV" not in os.environ:
+    os.environ["APP_ENV"] = "test"
 os.environ.setdefault("SUPABASE_URL", "https://dummy.supabase.co")
 os.environ.setdefault("SUPABASE_KEY", "dummy-key")
 os.environ.setdefault("GROQ_API_KEY", "dummy-key")
-os.environ.setdefault("JWT_SECRET", "dummy-secret-for-testing")
+os.environ.setdefault("JWT_SECRET", "dummy-secret-for-testing-at-least-32-chars-long")
 os.environ.setdefault("DISCORD_CLIENT_ID", "dummy-client-id")
 os.environ.setdefault("DISCORD_CLIENT_SECRET", "dummy-client-secret")
 os.environ.setdefault("DISCORD_REDIRECT_URI", "http://localhost:3000/auth/callback")
-os.environ.setdefault("DISCORD_TOKEN", "dummy-discord-token")
+os.environ.setdefault(
+    "DISCORD_TOKEN", "dummy-discord-token-at-least-50-characters-long-for-validation"
+)
 
 import sys
 
