@@ -105,9 +105,7 @@ async def example_chinese_chunking():
     chunker = TextChunker(chunk_size=50, chunk_overlap=10)
 
     # Create a long Chinese article
-    long_article = "".join(
-        [f"這是關於人工智慧的第{i}個段落，包含一些技術細節和應用案例。" for i in range(30)]
-    )
+    long_article = "".join([f"這是關於人工智慧的第{i}個段落，包含一些技術細節和應用案例。" for i in range(30)])
 
     chunks = chunker.chunk_text(long_article, language="zh")
 

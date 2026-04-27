@@ -80,9 +80,7 @@ class TestFilterSelectMissingCategory:
         interaction = make_interaction()
         await select.callback(interaction)
 
-        interaction.response.send_message.assert_called_once_with(
-            "⚠️ 此分類目前沒有文章。", ephemeral=True
-        )
+        interaction.response.send_message.assert_called_once_with("⚠️ 此分類目前沒有文章。", ephemeral=True)
 
 
 class TestFilterSelectOptionLimit:

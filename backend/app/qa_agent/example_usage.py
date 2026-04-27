@@ -78,13 +78,15 @@ async def example_vector_operations():
     async with get_db_connection() as conn:
         try:
             # Create a temporary table for demonstration
-            await conn.execute("""
+            await conn.execute(
+                """
                 CREATE TEMP TABLE temp_embeddings (
                     id SERIAL PRIMARY KEY,
                     content TEXT,
                     embedding vector(3)
                 )
-            """)
+            """
+            )
 
             # Insert some sample embeddings
             sample_data = [

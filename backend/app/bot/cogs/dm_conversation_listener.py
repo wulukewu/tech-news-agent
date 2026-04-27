@@ -131,9 +131,7 @@ class DMConversationListener(commands.Cog):
                         if summary:
                             lines.append(f"_{summary}..._")
                 else:
-                    lines = [
-                        "找不到相關文章。試試換個關鍵字，或先用 `/add_feed` 訂閱更多 RSS 來源。"
-                    ]
+                    lines = ["找不到相關文章。試試換個關鍵字，或先用 `/add_feed` 訂閱更多 RSS 來源。"]
 
                 reply = "\n".join(lines)
                 if len(reply) > 1900:

@@ -106,9 +106,9 @@ class GoalParser:
             skill_exists = await self.skill_tree.get_skill(parsed_data["target_skill"])
             if not skill_exists and parsed_data["is_valid"]:
                 parsed_data["is_valid"] = False
-                parsed_data["clarification_needed"] = (
-                    f"技能 '{parsed_data['target_skill']}' 不在我們的技能樹中。請選擇其他技能或提供更具體的描述。"
-                )
+                parsed_data[
+                    "clarification_needed"
+                ] = f"技能 '{parsed_data['target_skill']}' 不在我們的技能樹中。請選擇其他技能或提供更具體的描述。"
 
             return ParsedGoal(**parsed_data)
 

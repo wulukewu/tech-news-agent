@@ -988,9 +988,7 @@ class SupabaseService:
                     error_info = {
                         "article": {
                             "url": article.get("url", "unknown"),
-                            "title": article.get("title", "unknown")[
-                                :100
-                            ],  # 截斷標題以避免日誌過長
+                            "title": article.get("title", "unknown")[:100],  # 截斷標題以避免日誌過長
                         },
                         "error": str(e),
                         "error_type": type(e).__name__,

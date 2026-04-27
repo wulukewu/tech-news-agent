@@ -100,8 +100,6 @@ def require_user_registration(func):
             return await func(self, interaction, user_uuid, *args, **kwargs)
         except Exception as e:
             logger.error(f"User registration failed: {e}")
-            await interaction.response.send_message(
-                "❌ 無法註冊使用者，請稍後再試。", ephemeral=True
-            )
+            await interaction.response.send_message("❌ 無法註冊使用者，請稍後再試。", ephemeral=True)
 
     return wrapper

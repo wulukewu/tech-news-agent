@@ -102,8 +102,7 @@ class QACommands(commands.Cog):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 無法處理你的問題，請稍後再試。\n"
-                "💡 提示：嘗試更具體的問題，例如「最近有什麼關於 AI 的文章？」",
+                "❌ 無法處理你的問題，請稍後再試。\n" "💡 提示：嘗試更具體的問題，例如「最近有什麼關於 AI 的文章？」",
                 ephemeral=True,
             )
 

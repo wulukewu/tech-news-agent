@@ -224,9 +224,7 @@ class TestQuietHoursCommands:
             embed = call_args[1]["embed"]
 
             # Check for overnight range field
-            overnight_field = next(
-                (field for field in embed.fields if "跨夜設定" in field.name), None
-            )
+            overnight_field = next((field for field in embed.fields if "跨夜設定" in field.name), None)
             assert overnight_field is not None
 
     @pytest.mark.asyncio

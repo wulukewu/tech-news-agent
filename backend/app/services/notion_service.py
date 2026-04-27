@@ -127,9 +127,7 @@ class NotionService:
         remaining_space = max_length - len(base_message)
 
         # Reserve space for truncation message if needed
-        truncation_suffix = (
-            f"\n\n...（共 {len(article_pages)} 篇，查看 Notion 資料庫以瀏覽完整列表）"
-        )
+        truncation_suffix = f"\n\n...（共 {len(article_pages)} 篇，查看 Notion 資料庫以瀏覽完整列表）"
         truncation_reserve = len(truncation_suffix)
 
         # Build article entries

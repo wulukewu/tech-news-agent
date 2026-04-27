@@ -53,13 +53,9 @@ class NewsCommands(commands.Cog):
 
         summary = await update_preference_summary(user_id, self.supabase_service)
         if summary:
-            await interaction.followup.send(
-                f"✅ 偏好摘要已更新！\n\n> {summary[:500]}", ephemeral=True
-            )
+            await interaction.followup.send(f"✅ 偏好摘要已更新！\n\n> {summary[:500]}", ephemeral=True)
         else:
-            await interaction.followup.send(
-                "⚠️ 沒有足夠的 DM 對話來生成摘要。先在 DM 裡多說幾句你的偏好吧！", ephemeral=True
-            )
+            await interaction.followup.send("⚠️ 沒有足夠的 DM 對話來生成摘要。先在 DM 裡多說幾句你的偏好吧！", ephemeral=True)
 
     @app_commands.command(name="my_profile", description="查看你的偏好摘要與分類權重")
     async def my_profile(self, interaction: discord.Interaction):
@@ -69,9 +65,7 @@ class NewsCommands(commands.Cog):
         try:
             user = await self.supabase_service.get_user_by_discord_id(discord_id)
             if not user:
-                await interaction.followup.send(
-                    "❌ 找不到你的帳號，請先使用其他指令註冊。", ephemeral=True
-                )
+                await interaction.followup.send("❌ 找不到你的帳號，請先使用其他指令註冊。", ephemeral=True)
                 return
             user_id = user["id"]
 
@@ -188,9 +182,7 @@ class NewsCommands(commands.Cog):
         if success:
             await interaction.followup.send("✅ 已發送個人化推薦到你的 DM！", ephemeral=True)
         else:
-            await interaction.followup.send(
-                "❌ 無法發送 DM，請確認你的 DM 設定是否開啟。", ephemeral=True
-            )
+            await interaction.followup.send("❌ 無法發送 DM，請確認你的 DM 設定是否開啟。", ephemeral=True)
 
     @app_commands.command(name="news_now", description="查看你訂閱的最新技術文章")
     async def news_now(self, interaction: discord.Interaction):
@@ -216,8 +208,7 @@ class NewsCommands(commands.Cog):
                     exc_info=True,
                 )
                 await interaction.followup.send(
-                    "❌ 無法註冊使用者，請稍後再試。\n"
-                    "💡 建議：請確認你的網路連線正常，或稍後再試。",
+                    "❌ 無法註冊使用者，請稍後再試。\n" "💡 建議：請確認你的網路連線正常，或稍後再試。",
                     ephemeral=True,
                 )
                 return
@@ -229,9 +220,7 @@ class NewsCommands(commands.Cog):
 
             if not subscriptions:
                 logger.info("User has no subscriptions", user_id=str(interaction.user.id))
-                await interaction.followup.send(
-                    "📭 你還沒有訂閱任何 RSS 來源！\n" "使用 `/add_feed` 來訂閱感興趣的來源。"
-                )
+                await interaction.followup.send("📭 你還沒有訂閱任何 RSS 來源！\n" "使用 `/add_feed` 來訂閱感興趣的來源。")
                 return
 
             # 3. Query articles from subscribed feeds via service layer
@@ -246,9 +235,7 @@ class NewsCommands(commands.Cog):
                     user_id=str(interaction.user.id),
                     subscription_count=len(subscriptions),
                 )
-                await interaction.followup.send(
-                    "📭 最近 7 天沒有新文章。\n" "背景排程器會定期抓取文章，請稍後再試。"
-                )
+                await interaction.followup.send("📭 最近 7 天沒有新文章。\n" "背景排程器會定期抓取文章，請稍後再試。")
                 return
 
             # 4. Enrich articles with feed names from subscriptions
@@ -348,8 +335,7 @@ class NewsCommands(commands.Cog):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 無法取得文章資料，請稍後再試。\n"
-                "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
+                "❌ 無法取得文章資料，請稍後再試。\n" "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
                 ephemeral=True,
             )
         except Exception as e:
@@ -363,8 +349,7 @@ class NewsCommands(commands.Cog):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 發生未預期的錯誤，請稍後再試。\n"
-                "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
+                "❌ 發生未預期的錯誤，請稍後再試。\n" "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
                 ephemeral=True,
             )
 

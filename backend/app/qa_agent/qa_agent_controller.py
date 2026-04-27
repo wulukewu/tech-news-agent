@@ -548,7 +548,9 @@ class QAAgentController:
                 "status": (
                     "healthy"
                     if overall_health >= 0.8
-                    else "degraded" if overall_health >= 0.5 else "unhealthy"
+                    else "degraded"
+                    if overall_health >= 0.5
+                    else "unhealthy"
                 ),
                 "components": self._component_health.copy(),
                 "circuit_breakers": circuit_breaker_states,
