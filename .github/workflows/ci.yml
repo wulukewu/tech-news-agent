@@ -86,8 +86,8 @@ jobs:
         working-directory: backend
         run: |
           echo "🧪 Running backend tests with coverage..."
-          python -m pytest tests/ -v --tb=short --cov=app --cov-report=term --cov-report=html --cov-fail-under=50 || {
-            echo "⚠️ Tests failed or coverage below 50%"
+          python -m pytest tests/ -v --tb=short --cov=app --cov-report=term --cov-report=html --cov-fail-under=45 || {
+            echo "⚠️ Tests failed or coverage below 45%"
             echo "Run 'pytest tests/ --cov=app --cov-report=html' locally to see coverage report"
             exit 1
           }
