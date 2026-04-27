@@ -25,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      APP_ENV: test
       # Dummy env vars for tests (all external calls are mocked)
       SUPABASE_URL: https://dummy.supabase.co
       SUPABASE_KEY: dummy_supabase_key_that_is_long_enough
