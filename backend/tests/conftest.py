@@ -20,7 +20,20 @@ Shared fixtures are organized in fixtures/ directory:
 - fixtures/bot.py: Discord bot fixtures
 """
 
+# CRITICAL: Set environment variables BEFORE any imports
+# This ensures settings can be loaded when app modules are imported
 import os
+
+os.environ.setdefault("APP_ENV", "test")
+os.environ.setdefault("SUPABASE_URL", "https://dummy.supabase.co")
+os.environ.setdefault("SUPABASE_KEY", "dummy-key")
+os.environ.setdefault("GROQ_API_KEY", "dummy-key")
+os.environ.setdefault("JWT_SECRET", "dummy-secret-for-testing")
+os.environ.setdefault("DISCORD_CLIENT_ID", "dummy-client-id")
+os.environ.setdefault("DISCORD_CLIENT_SECRET", "dummy-client-secret")
+os.environ.setdefault("DISCORD_REDIRECT_URI", "http://localhost:3000/auth/callback")
+os.environ.setdefault("DISCORD_TOKEN", "dummy-discord-token")
+
 import sys
 
 import pytest
@@ -28,11 +41,17 @@ from dotenv import load_dotenv
 from hypothesis import Verbosity, settings
 from supabase import Client, create_client
 
+# Load environment variables from .env if it exists (after setting defaults)
+load_dotenv()
+
+
+def pytest_configure(config):
+    """Configure pytest before test collection."""
+    pass
+
+
 # Add project root to path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
-
-# Load environment variables
-load_dotenv()
 
 # Import shared fixtures to make them available to all tests
 pytest_plugins = [
