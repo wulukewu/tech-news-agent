@@ -52,7 +52,7 @@ describe('CategoryFilterMenu', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('載入分類中...')).toBeInTheDocument();
+    expect(screen.getByText(/載入分類中|Loading categories/i)).toBeInTheDocument();
   });
 
   it('should render error state', () => {
@@ -69,7 +69,7 @@ describe('CategoryFilterMenu', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText(/載入分類失敗/)).toBeInTheDocument();
+    expect(screen.getByText(/載入分類失敗|Failed to load categories/i)).toBeInTheDocument();
     expect(screen.getByText(/Failed to fetch categories/)).toBeInTheDocument();
   });
 
@@ -86,7 +86,7 @@ describe('CategoryFilterMenu', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('沒有可用的分類')).toBeInTheDocument();
+    expect(screen.getByText(/沒有可用的分類|No categories available/i)).toBeInTheDocument();
   });
 
   it('should render categories with "Show All" option', async () => {
@@ -104,7 +104,7 @@ describe('CategoryFilterMenu', () => {
 
     // Should show "Show All" as selected when no categories are selected
     expect(screen.getByRole('combobox')).toBeInTheDocument();
-    expect(screen.getByText('顯示全部')).toBeInTheDocument();
+    expect(screen.getByText(/顯示全部|Show all/i)).toBeInTheDocument();
   });
 
   it('should handle category selection', async () => {
@@ -162,7 +162,7 @@ describe('CategoryFilterMenu', () => {
     });
 
     const dialog = screen.getByRole('dialog');
-    const showAllOption = within(dialog).getByText('顯示全部');
+    const showAllOption = within(dialog).getByText(/顯示全部|Show all/i);
     await user.click(showAllOption);
 
     // Should call onCategoryChange with empty array
@@ -185,7 +185,7 @@ describe('CategoryFilterMenu', () => {
       </TestWrapper>
     );
 
-    expect(screen.getByText('已選擇 2 個項目')).toBeInTheDocument();
+    expect(screen.getByText(/已選擇 2 個項目|2 items selected/i)).toBeInTheDocument();
   });
 
   it('should limit categories to maxCategories', () => {

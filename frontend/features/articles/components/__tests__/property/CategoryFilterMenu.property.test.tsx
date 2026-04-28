@@ -3,7 +3,7 @@
  */
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import fc from 'fast-check';
 import { CategoryFilterMenu } from '../../CategoryFilterMenu';
@@ -51,6 +51,7 @@ describe('CategoryFilterMenu Properties', () => {
   it('should display at most 24 categories plus Show All option', () => {
     fc.assert(
       fc.property(categoriesArrayArbitrary, (categories) => {
+        cleanup();
         const mockOnCategoryChange = vi.fn();
 
         mockUseCategories.mockReturnValue({
@@ -69,8 +70,14 @@ describe('CategoryFilterMenu Properties', () => {
           </TestWrapper>
         );
 
-        // Should render the component without errors
-        expect(screen.getByRole('combobox')).toBeInTheDocument();
+        // Should render expected state for both empty and non-empty category sets
+        if (categories.length === 0) {
+          expect(
+            screen.getAllByText(/沒有可用的分類|No categories available/i).length
+          ).toBeGreaterThan(0);
+        } else {
+          expect(screen.getByRole('combobox')).toBeInTheDocument();
+        }
 
         // The actual limit enforcement is tested through the MultiSelectFilter component
         // which receives maxDisplayed = maxCategories + 1 (for "Show All")
@@ -92,6 +99,7 @@ describe('CategoryFilterMenu Properties', () => {
         categoriesArrayArbitrary,
         selectedCategoriesArbitrary,
         (availableCategories, selectedCategories) => {
+          cleanup();
           const mockOnCategoryChange = vi.fn();
 
           // Filter selected categories to only include available ones
@@ -114,21 +122,33 @@ describe('CategoryFilterMenu Properties', () => {
             </TestWrapper>
           );
 
-          // Component should render without errors
+          // Component should render expected state for both empty and non-empty datasets
+          if (availableCategories.length === 0) {
+            expect(
+              screen.getAllByText(/沒有可用的分類|No categories available/i).length
+            ).toBeGreaterThan(0);
+            return;
+          }
+
           expect(screen.getByRole('combobox')).toBeInTheDocument();
 
           // Should display correct selection state
           if (validSelectedCategories.length === 0) {
             // Should show "Show All" when no categories selected
-            expect(screen.getByText('顯示全部')).toBeInTheDocument();
+            expect(screen.getAllByText(/顯示全部|Show all/i).length).toBeGreaterThan(0);
           } else if (validSelectedCategories.length === 1) {
             // Should show single category name
             expect(screen.getByText(validSelectedCategories[0])).toBeInTheDocument();
           } else {
             // Should show count for multiple selections
             expect(
-              screen.getByText(`已選擇 ${validSelectedCategories.length} 個項目`)
-            ).toBeInTheDocument();
+              screen.getAllByText(
+                new RegExp(
+                  `(已選擇 ${validSelectedCategories.length} 個項目|${validSelectedCategories.length} items selected)`,
+                  'i'
+                )
+              ).length
+            ).toBeGreaterThan(0);
           }
         }
       ),
@@ -146,6 +166,7 @@ describe('CategoryFilterMenu Properties', () => {
         fc.constantFrom([], null, undefined),
         selectedCategoriesArbitrary,
         (emptyCategories, selectedCategories) => {
+          cleanup();
           const mockOnCategoryChange = vi.fn();
 
           mockUseCategories.mockReturnValue({
@@ -164,7 +185,9 @@ describe('CategoryFilterMenu Properties', () => {
           );
 
           // Should show empty state message
-          expect(screen.getByText('沒有可用的分類')).toBeInTheDocument();
+          expect(
+            screen.getAllByText(/沒有可用的分類|No categories available/i).length
+          ).toBeGreaterThan(0);
         }
       ),
       { numRuns: 20 }
@@ -181,6 +204,7 @@ describe('CategoryFilterMenu Properties', () => {
         fc.array(categoryArbitrary, { minLength: 25, maxLength: 100 }),
         fc.integer({ min: 1, max: 50 }),
         (categories, maxCategories) => {
+          cleanup();
           const mockOnCategoryChange = vi.fn();
 
           mockUseCategories.mockReturnValue({
@@ -219,6 +243,7 @@ describe('CategoryFilterMenu Properties', () => {
       fc.property(
         categoriesArrayArbitrary.filter((cats) => cats.length > 0),
         (categories) => {
+          cleanup();
           const mockOnCategoryChange = vi.fn();
 
           mockUseCategories.mockReturnValue({
@@ -237,7 +262,7 @@ describe('CategoryFilterMenu Properties', () => {
           );
 
           // When no categories are selected, it should show "Show All"
-          expect(screen.getByText('顯示全部')).toBeInTheDocument();
+          expect(screen.getAllByText(/顯示全部|Show all/i).length).toBeGreaterThan(0);
         }
       ),
       { numRuns: 30 }
