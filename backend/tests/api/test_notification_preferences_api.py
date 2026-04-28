@@ -14,12 +14,20 @@ from uuid import uuid4
 import pytest
 from fastapi.testclient import TestClient
 
+from app.api.auth import get_current_user
 from app.main import app
 from app.repositories.user_notification_preferences import UserNotificationPreferences
 
 
 class TestNotificationPreferencesAPI:
     """Test cases for notification preferences API endpoints."""
+
+    @pytest.fixture(autouse=True)
+    def setup_auth(self, mock_user):
+        """Override auth dependency for all tests."""
+        app.dependency_overrides[get_current_user] = lambda: mock_user
+        yield
+        app.dependency_overrides.pop(get_current_user, None)
 
     @pytest.fixture
     def client(self):
@@ -44,7 +52,6 @@ class TestNotificationPreferencesAPI:
             email_enabled=False,
         )
 
-    @patch("app.api.notifications.get_current_user")
     @patch("app.api.notifications.SupabaseService")
     @patch("app.api.notifications.UserNotificationPreferencesRepository")
     @patch("app.api.notifications.PreferenceService")
@@ -53,15 +60,12 @@ class TestNotificationPreferencesAPI:
         mock_preference_service_class,
         mock_repo_class,
         mock_supabase_class,
-        mock_get_current_user,
         client,
         mock_user,
         sample_preferences,
     ):
         """Test successful retrieval of notification preferences."""
         # Setup mocks
-        mock_get_current_user.return_value = mock_user
-
         mock_supabase = MagicMock()
         mock_supabase.get_or_create_user.return_value = str(sample_preferences.user_id)
         mock_supabase_class.return_value = mock_supabase
@@ -84,7 +88,6 @@ class TestNotificationPreferencesAPI:
         assert data["data"]["timezone"] == "Asia/Taipei"
         assert data["data"]["dmEnabled"] is True
 
-    @patch("app.api.notifications.get_current_user")
     @patch("app.api.notifications.SupabaseService")
     @patch("app.api.notifications.UserNotificationPreferencesRepository")
     @patch("app.api.notifications.PreferenceService")
@@ -95,14 +98,12 @@ class TestNotificationPreferencesAPI:
         mock_preference_service_class,
         mock_repo_class,
         mock_supabase_class,
-        mock_get_current_user,
         client,
         mock_user,
         sample_preferences,
     ):
         """Test successful update of notification preferences."""
         # Setup mocks
-        mock_get_current_user.return_value = mock_user
 
         mock_supabase = MagicMock()
         mock_supabase.get_or_create_user.return_value = str(sample_preferences.user_id)
@@ -150,14 +151,10 @@ class TestNotificationPreferencesAPI:
         # Verify scheduler was called
         mock_scheduler.reschedule_user_notification.assert_called_once()
 
-    @patch("app.api.notifications.get_current_user")
     @patch("app.api.notifications.TimezoneConverter")
-    def test_preview_notification_time_success(
-        self, mock_timezone_converter, mock_get_current_user, client, mock_user
-    ):
+    def test_preview_notification_time_success(self, mock_timezone_converter, client, mock_user):
         """Test successful notification time preview."""
         # Setup mocks
-        mock_get_current_user.return_value = mock_user
 
         from datetime import datetime
 
@@ -179,11 +176,9 @@ class TestNotificationPreferencesAPI:
         assert data["data"]["local_time"] is not None
         assert "下次通知時間" in data["data"]["message"]
 
-    @patch("app.api.notifications.get_current_user")
-    def test_preview_notification_time_disabled(self, mock_get_current_user, client, mock_user):
+    def test_preview_notification_time_disabled(self, client, mock_user):
         """Test notification time preview for disabled notifications."""
         # Setup mocks
-        mock_get_current_user.return_value = mock_user
 
         # Make request with disabled frequency
         params = {"frequency": "disabled", "notification_time": "18:00", "timezone": "Asia/Taipei"}
@@ -234,20 +229,17 @@ class TestNotificationPreferencesAPI:
         assert "label" in first_timezone
         assert "offset" in first_timezone
 
-    @patch("app.api.notifications.get_current_user")
     @patch("app.api.notifications.SupabaseService")
     @patch("app.api.notifications.get_dynamic_scheduler")
     def test_get_notification_status_scheduled(
         self,
         mock_get_dynamic_scheduler,
         mock_supabase_class,
-        mock_get_current_user,
         client,
         mock_user,
     ):
         """Test getting notification status when notification is scheduled."""
         # Setup mocks
-        mock_get_current_user.return_value = mock_user
 
         mock_supabase = MagicMock()
         mock_supabase.get_or_create_user.return_value = str(uuid4())
@@ -273,20 +265,17 @@ class TestNotificationPreferencesAPI:
         assert data["data"]["job_id"] == "user_notification_123"
         assert data["data"]["next_run_time"] == "2024-01-05T18:00:00"
 
-    @patch("app.api.notifications.get_current_user")
     @patch("app.api.notifications.SupabaseService")
     @patch("app.api.notifications.get_dynamic_scheduler")
     def test_get_notification_status_not_scheduled(
         self,
         mock_get_dynamic_scheduler,
         mock_supabase_class,
-        mock_get_current_user,
         client,
         mock_user,
     ):
         """Test getting notification status when no notification is scheduled."""
         # Setup mocks
-        mock_get_current_user.return_value = mock_user
 
         mock_supabase = MagicMock()
         mock_supabase.get_or_create_user.return_value = str(uuid4())
@@ -306,14 +295,12 @@ class TestNotificationPreferencesAPI:
         assert data["data"]["scheduled"] is False
         assert "無排程通知" in data["data"]["message"]
 
-    @patch("app.api.notifications.get_current_user")
     @patch("app.api.notifications.get_dynamic_scheduler")
     def test_get_notification_status_scheduler_disabled(
-        self, mock_get_dynamic_scheduler, mock_get_current_user, client, mock_user
+        self, mock_get_dynamic_scheduler, client, mock_user
     ):
         """Test getting notification status when dynamic scheduler is disabled."""
         # Setup mocks
-        mock_get_current_user.return_value = mock_user
         mock_get_dynamic_scheduler.return_value = None
 
         # Make request
@@ -326,20 +313,17 @@ class TestNotificationPreferencesAPI:
         assert data["data"]["scheduled"] is False
         assert "動態排程器未啟用" in data["data"]["message"]
 
-    @patch("app.api.notifications.get_current_user")
     @patch("app.api.notifications.SupabaseService")
     @patch("app.api.notifications.PreferenceService")
     def test_update_preferences_validation_error(
         self,
         mock_preference_service_class,
         mock_supabase_class,
-        mock_get_current_user,
         client,
         mock_user,
     ):
         """Test update preferences with validation error."""
         # Setup mocks
-        mock_get_current_user.return_value = mock_user
 
         mock_supabase = MagicMock()
         mock_supabase.get_or_create_user.return_value = str(uuid4())
