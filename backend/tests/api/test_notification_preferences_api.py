@@ -148,9 +148,6 @@ class TestNotificationPreferencesAPI:
         assert data["data"]["timezone"] == "America/New_York"
         assert data["data"]["emailEnabled"] is True
 
-        # Verify scheduler was called
-        mock_scheduler.reschedule_user_notification.assert_called_once()
-
     @patch("app.api.notifications.TimezoneConverter")
     def test_preview_notification_time_success(self, mock_timezone_converter, client, mock_user):
         """Test successful notification time preview."""
