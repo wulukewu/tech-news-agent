@@ -412,7 +412,7 @@ class NotificationMonitoringService(BaseService):
             # - Implement alert deduplication and rate limiting
 
         except Exception as e:
-            self.logger.error("Failed to trigger alert", error=str(e), message=message)
+            self.logger.error("Failed to trigger alert", error=str(e), alert_message=message)
 
     async def get_current_metrics(self) -> Dict:
         """

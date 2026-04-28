@@ -249,33 +249,31 @@ async def discord_callback(
         error_description: 錯誤描述
 
     Returns:
-        Response: JSON 回應包含 access_token，並設置 HttpOnly Cookie
-
-    Raises:
-        HTTPException: 400 當使用者拒絕授權或 code 缺失時
-        HTTPException: 401 當 token 交換失敗時
-        HTTPException: 500 當 Discord API 失敗或環境變數缺失時
+        RedirectResponse: 成功時重定向到前端 callback 頁面（帶 token），
+                          失敗時重定向到前端 callback 頁面（帶 error）
     """
-    # 1. 錯誤處理：檢查使用者是否拒絕授權
-    if error:
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "error": error,
-                "description": error_description or "User denied authorization",
-            },
+    frontend_url = settings.frontend_url
+
+    def redirect_error(msg: str) -> RedirectResponse:
+        return RedirectResponse(
+            url=f"{frontend_url}/auth/callback?error={quote(msg, safe='')}",
+            status_code=302,
         )
+
+    # 1. 使用者拒絕授權或 Discord 回傳錯誤
+    if error:
+        return redirect_error(error_description or error)
 
     # 2. 驗證 authorization code 存在
     if not code:
-        raise HTTPException(status_code=400, detail="Authorization code missing")
+        return redirect_error("Authorization code missing")
 
     # 3. 驗證必要的環境變數
     if not settings.discord_client_id or not settings.discord_client_secret:
-        raise HTTPException(status_code=500, detail="Discord OAuth2 configuration is incomplete")
+        return redirect_error("Discord OAuth2 configuration is incomplete")
 
     if not settings.discord_redirect_uri:
-        raise HTTPException(status_code=500, detail="DISCORD_REDIRECT_URI is not configured")
+        return redirect_error("DISCORD_REDIRECT_URI is not configured")
 
     # 4. 使用 httpx.AsyncClient 交換 authorization code 取得 Access Token
     token_url = "https://discord.com/api/oauth2/token"
@@ -289,7 +287,6 @@ async def discord_callback(
 
     try:
         async with httpx.AsyncClient() as client:
-            # 交換 token
             token_response = await client.post(
                 token_url,
                 data=token_data,
@@ -297,15 +294,14 @@ async def discord_callback(
                 timeout=30.0,
             )
 
-            # 檢查 token 交換是否成功
             if token_response.status_code != 200:
-                raise HTTPException(status_code=401, detail="Failed to authenticate with Discord")
+                return redirect_error("Failed to authenticate with Discord")
 
             token_json = token_response.json()
             access_token = token_json.get("access_token")
 
             if not access_token:
-                raise HTTPException(status_code=401, detail="Failed to authenticate with Discord")
+                return redirect_error("Failed to authenticate with Discord")
 
             # 5. 使用 Access Token 呼叫 Discord /users/@me API
             user_response = await client.get(
@@ -314,59 +310,43 @@ async def discord_callback(
                 timeout=30.0,
             )
 
-            # 檢查使用者資訊取得是否成功
             if user_response.status_code != 200:
-                raise HTTPException(status_code=500, detail="Failed to retrieve user information")
+                return redirect_error("Failed to retrieve user information")
 
             user_data = user_response.json()
             discord_id = user_data.get("id")
-            username = user_data.get("username")
             avatar_hash = user_data.get("avatar")
 
-            # 構建 Discord avatar URL
             avatar_url = None
             if avatar_hash:
                 avatar_url = f"https://cdn.discordapp.com/avatars/{discord_id}/{avatar_hash}.png"
 
             if not discord_id:
-                raise HTTPException(status_code=500, detail="Failed to retrieve user information")
+                return redirect_error("Failed to retrieve user information")
 
     except httpx.RequestError:
-        # 網路錯誤
-        raise HTTPException(status_code=500, detail="Failed to communicate with Discord API")
-    except HTTPException:
-        # 重新拋出 HTTPException
-        raise
+        return redirect_error("Failed to communicate with Discord API")
     except Exception:
-        # 其他未預期的錯誤
-        raise HTTPException(
-            status_code=500, detail="An unexpected error occurred during authentication"
-        )
+        return redirect_error("An unexpected error occurred during authentication")
 
     # 6. 呼叫 supabase_service.get_or_create_user(discord_id) 註冊使用者
     try:
         supabase_service = SupabaseService(validate_connection=False)
         user_uuid = await supabase_service.get_or_create_user(discord_id)
     except Exception:
-        raise HTTPException(status_code=500, detail="Failed to register user")
+        return redirect_error("Failed to register user")
 
     # 7. 生成 JWT Token
     try:
         jwt_token = create_access_token(user_id=user_uuid, discord_id=discord_id)
     except Exception:
-        raise HTTPException(status_code=500, detail="Failed to generate authentication token")
+        return redirect_error("Failed to generate authentication token")
 
-    # 8. 重定向到前端並設定 Cookie
-    # 前端 URL 從配置讀取
-    frontend_url = settings.frontend_url
-
-    # 重定向到前端的 callback 頁面，並將 token 作為 URL 參數傳遞
-    # 前端會接收 token 並設置為 Cookie
-    response = RedirectResponse(
-        url=f"{frontend_url}/auth/callback?token={quote(jwt_token, safe='')}", status_code=302
+    # 8. 重定向到前端並帶上 token
+    return RedirectResponse(
+        url=f"{frontend_url}/auth/callback?token={quote(jwt_token, safe='')}",
+        status_code=302,
     )
-
-    return response
 
 
 # ============================================================================
