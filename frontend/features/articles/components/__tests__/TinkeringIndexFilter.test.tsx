@@ -3,8 +3,8 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { TinkeringIndexFilter } from '../TinkeringIndexFilter';
 
 describe('TinkeringIndexFilter', () => {
-  const mockOnMinChange = jest.fn();
-  const mockOnMaxChange = jest.fn();
+  const mockOnMinChange = vi.fn();
+  const mockOnMaxChange = vi.fn();
 
   beforeEach(() => {
     mockOnMinChange.mockClear();

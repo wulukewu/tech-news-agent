@@ -27,7 +27,7 @@ import { useAuth } from '@/lib/hooks/useAuth';
 import type { Feed } from '@/types/feed';
 
 // Mock the useAuth hook for testing
-jest.mock('@/lib/hooks/useAuth');
+vi.mock('@/lib/hooks/useAuth');
 
 describe('Preservation Property Tests - Runtime Behavior', () => {
   /**
@@ -69,7 +69,7 @@ describe('Preservation Property Tests - Runtime Behavior', () => {
       ];
 
       for (const feed of testFeeds) {
-        const onToggle = jest.fn();
+        const onToggle = vi.fn();
         const { unmount } = render(<FeedCard feed={feed} onToggle={onToggle} />);
 
         // Verify feed name is displayed
@@ -100,9 +100,7 @@ describe('Preservation Property Tests - Runtime Behavior', () => {
 
       // Test unsubscribed feed
       const unsubscribedFeed: Feed = { ...baseFeed, is_subscribed: false };
-      const { unmount: unmount1 } = render(
-        <FeedCard feed={unsubscribedFeed} onToggle={jest.fn()} />
-      );
+      const { unmount: unmount1 } = render(<FeedCard feed={unsubscribedFeed} onToggle={vi.fn()} />);
 
       expect(screen.getByText('Tech Blog')).toBeInTheDocument();
       expect(screen.getByText('Technology')).toBeInTheDocument();
@@ -112,7 +110,7 @@ describe('Preservation Property Tests - Runtime Behavior', () => {
 
       // Test subscribed feed
       const subscribedFeed: Feed = { ...baseFeed, is_subscribed: true };
-      const { unmount: unmount2 } = render(<FeedCard feed={subscribedFeed} onToggle={jest.fn()} />);
+      const { unmount: unmount2 } = render(<FeedCard feed={subscribedFeed} onToggle={vi.fn()} />);
 
       expect(screen.getByText('Tech Blog')).toBeInTheDocument();
       expect(screen.getByText('Technology')).toBeInTheDocument();
@@ -150,7 +148,7 @@ describe('Preservation Property Tests - Runtime Behavior', () => {
       ];
 
       for (const feed of testFeeds) {
-        const onToggle = jest.fn().mockResolvedValue(undefined);
+        const onToggle = vi.fn().mockResolvedValue(undefined);
         const { unmount } = render(<FeedCard feed={feed} onToggle={onToggle} />);
 
         const switchElement = screen.getByRole('switch');
@@ -228,9 +226,9 @@ describe('Preservation Property Tests - Runtime Behavior', () => {
           avatar: 'https://example.com/avatar.jpg',
         },
         loading: false,
-        login: jest.fn(),
-        logout: jest.fn(),
-        checkAuth: jest.fn(),
+        login: vi.fn(),
+        logout: vi.fn(),
+        checkAuth: vi.fn(),
       };
 
       (useAuth as jest.Mock).mockReturnValue(mockAuthContext);
@@ -272,9 +270,9 @@ describe('Preservation Property Tests - Runtime Behavior', () => {
           (authState) => {
             const mockAuthContext = {
               ...authState,
-              login: jest.fn(),
-              logout: jest.fn(),
-              checkAuth: jest.fn(),
+              login: vi.fn(),
+              logout: vi.fn(),
+              checkAuth: vi.fn(),
             };
 
             (useAuth as jest.Mock).mockReturnValue(mockAuthContext);
@@ -321,7 +319,7 @@ describe('Preservation Property Tests - Runtime Behavior', () => {
         // Note: The component accesses isSubscribed (camelCase) but type defines is_subscribed
       };
 
-      const onToggle = jest.fn();
+      const onToggle = vi.fn();
       const { unmount } = render(<FeedCard feed={testFeed} onToggle={onToggle} />);
 
       // Verify basic rendering works

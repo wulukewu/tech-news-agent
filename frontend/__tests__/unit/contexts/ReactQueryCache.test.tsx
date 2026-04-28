@@ -21,15 +21,15 @@ import * as authApi from '@/lib/api/auth';
 import * as articlesApi from '@/lib/api/articles';
 import * as readingListApi from '@/lib/api/readingList';
 
-jest.mock('@/lib/api/auth');
-jest.mock('@/lib/api/articles');
-jest.mock('@/lib/api/readingList');
+vi.mock('@/lib/api/auth');
+vi.mock('@/lib/api/articles');
+vi.mock('@/lib/api/readingList');
 
 // Mock next/navigation
-jest.mock('next/navigation', () => ({
+vi.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: jest.fn(),
-    replace: jest.fn(),
+    push: vi.fn(),
+    replace: vi.fn(),
   }),
 }));
 
@@ -41,7 +41,7 @@ describe('React Query Cache Behavior', () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     queryClient = new QueryClient({
       defaultOptions: {
         queries: {
@@ -333,7 +333,7 @@ describe('React Query Cache Behavior', () => {
     });
 
     it('should invalidate all article queries when using hierarchical keys', async () => {
-      const invalidateSpy = jest.spyOn(queryClient, 'invalidateQueries');
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
       // Manually invalidate all article queries
       await queryClient.invalidateQueries({ queryKey: articleKeys.all });

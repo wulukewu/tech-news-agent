@@ -12,13 +12,13 @@ import * as fc from 'fast-check';
 import FrontendLogger, { LogLevel, LogEntry } from '@/lib/logger';
 
 // Mock fetch globally
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 describe('Property-Based Tests: Frontend Logger', () => {
   let logger: FrontendLogger;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     FrontendLogger.resetInstance();
     logger = FrontendLogger.getInstance({
       enabled: true,

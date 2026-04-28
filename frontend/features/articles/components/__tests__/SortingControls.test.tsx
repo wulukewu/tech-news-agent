@@ -3,8 +3,8 @@ import { render, screen } from '@testing-library/react';
 import { SortingControls } from '../SortingControls';
 
 describe('SortingControls', () => {
-  const mockOnSortByChange = jest.fn();
-  const mockOnSortOrderChange = jest.fn();
+  const mockOnSortByChange = vi.fn();
+  const mockOnSortOrderChange = vi.fn();
 
   beforeEach(() => {
     mockOnSortByChange.mockClear();

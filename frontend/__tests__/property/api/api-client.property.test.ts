@@ -12,33 +12,33 @@ import * as fc from 'fast-check';
 import { InternalAxiosRequestConfig } from 'axios';
 
 // Mock axios BEFORE importing ApiClient
-jest.mock('axios', () => {
+vi.mock('axios', () => {
   const mockInterceptors = {
     request: {
-      use: jest.fn((onFulfilled, onRejected) => Math.floor(Math.random() * 10000)),
-      eject: jest.fn(),
+      use: vi.fn((onFulfilled, onRejected) => Math.floor(Math.random() * 10000)),
+      eject: vi.fn(),
     },
     response: {
-      use: jest.fn((onFulfilled, onRejected) => Math.floor(Math.random() * 10000)),
-      eject: jest.fn(),
+      use: vi.fn((onFulfilled, onRejected) => Math.floor(Math.random() * 10000)),
+      eject: vi.fn(),
     },
   };
 
   const mockAxiosInstance = {
     interceptors: mockInterceptors,
-    get: jest.fn().mockResolvedValue({ data: {} }),
-    post: jest.fn().mockResolvedValue({ data: {} }),
-    put: jest.fn().mockResolvedValue({ data: {} }),
-    patch: jest.fn().mockResolvedValue({ data: {} }),
-    delete: jest.fn().mockResolvedValue({ data: {} }),
+    get: vi.fn().mockResolvedValue({ data: {} }),
+    post: vi.fn().mockResolvedValue({ data: {} }),
+    put: vi.fn().mockResolvedValue({ data: {} }),
+    patch: vi.fn().mockResolvedValue({ data: {} }),
+    delete: vi.fn().mockResolvedValue({ data: {} }),
   };
 
   return {
     __esModule: true,
     default: {
-      create: jest.fn(() => mockAxiosInstance),
+      create: vi.fn(() => mockAxiosInstance),
     },
-    create: jest.fn(() => mockAxiosInstance),
+    create: vi.fn(() => mockAxiosInstance),
   };
 });
 
@@ -55,7 +55,7 @@ describe('Property-Based Tests: API Client', () => {
 
   beforeEach(() => {
     // Clear all mock call history before each test
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Property 1: API Client Singleton', () => {
@@ -140,7 +140,7 @@ describe('Property-Based Tests: API Client', () => {
      */
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it('should register all interceptors in order', () => {
@@ -150,7 +150,7 @@ describe('Property-Based Tests: API Client', () => {
           fc.integer({ min: 1, max: 20 }),
           (numInterceptors) => {
             // Clear mocks at the start of each property test run
-            jest.clearAllMocks();
+            vi.clearAllMocks();
 
             // Create a fresh client instance for this test
             const client = ApiClient.getInstance();
@@ -196,7 +196,7 @@ describe('Property-Based Tests: API Client', () => {
           }),
           ({ numInterceptors, indicesToRemove }) => {
             // Clear mocks at the start of each property test run
-            jest.clearAllMocks();
+            vi.clearAllMocks();
 
             const client = ApiClient.getInstance();
             const axiosInstance = client.getAxiosInstance();
@@ -211,7 +211,7 @@ describe('Property-Based Tests: API Client', () => {
             }
 
             // Clear mocks again to only count eject calls
-            jest.clearAllMocks();
+            vi.clearAllMocks();
 
             // Remove some interceptors
             const validIndices = indicesToRemove.filter((idx) => idx < numInterceptors);
@@ -251,7 +251,7 @@ describe('Property-Based Tests: API Client', () => {
           ),
           (interceptorConfigs) => {
             // Clear mocks at the start of each property test run
-            jest.clearAllMocks();
+            vi.clearAllMocks();
 
             const client = ApiClient.getInstance();
             const axiosInstance = client.getAxiosInstance();
@@ -300,7 +300,7 @@ describe('Property-Based Tests: API Client', () => {
       fc.assert(
         fc.property(fc.integer({ min: 1, max: 10 }), (numInterceptors) => {
           // Clear mocks at the start of each property test run
-          jest.clearAllMocks();
+          vi.clearAllMocks();
 
           // Get multiple references to the singleton
           const client1 = ApiClient.getInstance();
@@ -346,14 +346,14 @@ describe('Property-Based Tests: API Client', () => {
      */
 
     beforeEach(() => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it('should register all response interceptors in order', () => {
       fc.assert(
         fc.property(fc.integer({ min: 1, max: 20 }), (numInterceptors) => {
           // Clear mocks at the start of each property test run
-          jest.clearAllMocks();
+          vi.clearAllMocks();
 
           const client = ApiClient.getInstance();
           const axiosInstance = client.getAxiosInstance();
@@ -384,7 +384,7 @@ describe('Property-Based Tests: API Client', () => {
           }),
           ({ numInterceptors, indicesToRemove }) => {
             // Clear mocks at the start of each property test run
-            jest.clearAllMocks();
+            vi.clearAllMocks();
 
             const client = ApiClient.getInstance();
             const axiosInstance = client.getAxiosInstance();
@@ -399,7 +399,7 @@ describe('Property-Based Tests: API Client', () => {
             }
 
             // Clear mocks again to only count eject calls
-            jest.clearAllMocks();
+            vi.clearAllMocks();
 
             // Remove some interceptors
             const validIndices = indicesToRemove.filter((idx) => idx < numInterceptors);

@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { DragDropList, type DragDropItem } from '../drag-drop-list';
 
 // Mock navigator.vibrate for haptic feedback tests
-const mockVibrate = jest.fn();
+const mockVibrate = vi.fn();
 Object.defineProperty(navigator, 'vibrate', {
   value: mockVibrate,
   writable: true,
@@ -20,11 +20,11 @@ const mockItems: DragDropItem[] = [
 describe('DragDropList', () => {
   const defaultProps = {
     items: mockItems,
-    onReorder: jest.fn(),
+    onReorder: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockVibrate.mockClear();
   });
 
@@ -90,7 +90,7 @@ describe('DragDropList', () => {
     });
 
     it('calls onReorder when items are reordered via drag and drop', async () => {
-      const onReorder = jest.fn();
+      const onReorder = vi.fn();
       render(<DragDropList {...defaultProps} onReorder={onReorder} enabled={true} />);
 
       const items = screen.getAllByRole('listitem');
@@ -101,7 +101,7 @@ describe('DragDropList', () => {
       fireEvent.dragStart(firstItem, {
         dataTransfer: {
           effectAllowed: 'move',
-          setData: jest.fn(),
+          setData: vi.fn(),
         },
       });
 
@@ -129,7 +129,7 @@ describe('DragDropList', () => {
       fireEvent.dragStart(firstItem, {
         dataTransfer: {
           effectAllowed: 'move',
-          setData: jest.fn(),
+          setData: vi.fn(),
         },
       });
 
@@ -147,7 +147,7 @@ describe('DragDropList', () => {
       fireEvent.dragStart(firstItem, {
         dataTransfer: {
           effectAllowed: 'move',
-          setData: jest.fn(),
+          setData: vi.fn(),
         },
       });
 
@@ -179,7 +179,7 @@ describe('DragDropList', () => {
     });
 
     it('moves items with keyboard shortcuts', () => {
-      const onReorder = jest.fn();
+      const onReorder = vi.fn();
       render(<DragDropList {...defaultProps} onReorder={onReorder} enabled={true} />);
 
       const items = screen.getAllByRole('listitem');
@@ -193,7 +193,7 @@ describe('DragDropList', () => {
     });
 
     it('moves items up with Shift+Enter', () => {
-      const onReorder = jest.fn();
+      const onReorder = vi.fn();
       render(<DragDropList {...defaultProps} onReorder={onReorder} enabled={true} />);
 
       const items = screen.getAllByRole('listitem');
@@ -207,7 +207,7 @@ describe('DragDropList', () => {
     });
 
     it('does not move items when disabled', () => {
-      const onReorder = jest.fn();
+      const onReorder = vi.fn();
       render(<DragDropList {...defaultProps} onReorder={onReorder} enabled={false} />);
 
       const items = screen.getAllByRole('listitem');
@@ -219,7 +219,7 @@ describe('DragDropList', () => {
     });
 
     it('does not move disabled items', () => {
-      const onReorder = jest.fn();
+      const onReorder = vi.fn();
       render(<DragDropList {...defaultProps} onReorder={onReorder} enabled={true} />);
 
       const items = screen.getAllByRole('listitem');
@@ -287,7 +287,7 @@ describe('DragDropList', () => {
       fireEvent.dragStart(firstItem, {
         dataTransfer: {
           effectAllowed: 'move',
-          setData: jest.fn(),
+          setData: vi.fn(),
         },
       });
 
@@ -324,7 +324,7 @@ describe('DragDropList', () => {
       fireEvent.dragStart(firstItem, {
         dataTransfer: {
           effectAllowed: 'move',
-          setData: jest.fn(),
+          setData: vi.fn(),
         },
       });
 
@@ -372,7 +372,7 @@ describe('DragDropList', () => {
 
   describe('Error Handling', () => {
     it('handles invalid drag data gracefully', () => {
-      const onReorder = jest.fn();
+      const onReorder = vi.fn();
       render(<DragDropList {...defaultProps} onReorder={onReorder} enabled={true} />);
 
       const items = screen.getAllByRole('listitem');
@@ -389,7 +389,7 @@ describe('DragDropList', () => {
     });
 
     it('handles drag to same item gracefully', () => {
-      const onReorder = jest.fn();
+      const onReorder = vi.fn();
       render(<DragDropList {...defaultProps} onReorder={onReorder} enabled={true} />);
 
       const items = screen.getAllByRole('listitem');
@@ -399,7 +399,7 @@ describe('DragDropList', () => {
       fireEvent.dragStart(firstItem, {
         dataTransfer: {
           effectAllowed: 'move',
-          setData: jest.fn(),
+          setData: vi.fn(),
         },
       });
 

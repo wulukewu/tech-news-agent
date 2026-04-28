@@ -4,23 +4,23 @@ import { OnboardingModal } from '@/components/OnboardingModal';
 import { toast } from '@/lib/toast';
 
 // Mock sonner toast
-jest.mock('sonner', () => ({
+vi.mock('sonner', () => ({
   toast: {
-    error: jest.fn(),
-    success: jest.fn(),
+    error: vi.fn(),
+    success: vi.fn(),
   },
 }));
 
 // Mock fetch globally
-const mockFetch = jest.fn();
+const mockFetch = vi.fn();
 global.fetch = mockFetch as any;
 
 describe('OnboardingModal', () => {
-  const mockOnClose = jest.fn();
-  const mockOnComplete = jest.fn();
+  const mockOnClose = vi.fn();
+  const mockOnComplete = vi.fn();
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockFetch.mockClear();
   });
 

@@ -14,38 +14,38 @@ import * as fc from 'fast-check';
 import { compareImplementations } from '@/lib/api/validation';
 
 // Mock axios BEFORE importing ApiClient
-jest.mock('axios', () => {
+vi.mock('axios', () => {
   const mockAxiosInstance = {
     interceptors: {
       request: {
-        use: jest.fn((onFulfilled, onRejected) => Math.floor(Math.random() * 10000)),
-        eject: jest.fn(),
+        use: vi.fn((onFulfilled, onRejected) => Math.floor(Math.random() * 10000)),
+        eject: vi.fn(),
       },
       response: {
-        use: jest.fn((onFulfilled, onRejected) => Math.floor(Math.random() * 10000)),
-        eject: jest.fn(),
+        use: vi.fn((onFulfilled, onRejected) => Math.floor(Math.random() * 10000)),
+        eject: vi.fn(),
       },
     },
-    get: jest.fn(),
-    post: jest.fn(),
-    put: jest.fn(),
-    patch: jest.fn(),
-    delete: jest.fn(),
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
   };
 
   return {
     __esModule: true,
     default: {
-      create: jest.fn(() => mockAxiosInstance),
+      create: vi.fn(() => mockAxiosInstance),
     },
-    create: jest.fn(() => mockAxiosInstance),
+    create: vi.fn(() => mockAxiosInstance),
   };
 });
 
 import { apiClient } from '@/lib/api/client';
 
 // Mock fetch for testing
-global.fetch = jest.fn();
+global.fetch = vi.fn();
 
 describe('Property 12: Migration Backward Compatibility', () => {
   let mockAxiosInstance: any;
@@ -57,7 +57,7 @@ describe('Property 12: Migration Backward Compatibility', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   /**

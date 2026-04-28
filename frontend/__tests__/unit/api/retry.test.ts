@@ -147,7 +147,7 @@ describe('createRetryConfig', () => {
   });
 
   it('should allow custom onRetry callback', () => {
-    const onRetry = jest.fn();
+    const onRetry = vi.fn();
     const config = createRetryConfig({ onRetry });
 
     expect(config.onRetry).toBe(onRetry);

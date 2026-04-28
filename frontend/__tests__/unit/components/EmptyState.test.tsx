@@ -64,7 +64,7 @@ describe('EmptyState Component', () => {
 
   describe('Action Buttons', () => {
     it('should render primary action button', () => {
-      const handleClick = jest.fn();
+      const handleClick = vi.fn();
 
       render(
         <EmptyState
@@ -85,8 +85,8 @@ describe('EmptyState Component', () => {
     });
 
     it('should render both primary and secondary actions', () => {
-      const handlePrimary = jest.fn();
-      const handleSecondary = jest.fn();
+      const handlePrimary = vi.fn();
+      const handleSecondary = vi.fn();
 
       render(
         <EmptyState

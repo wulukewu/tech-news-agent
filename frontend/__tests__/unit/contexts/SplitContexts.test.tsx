@@ -19,13 +19,13 @@ import { UserProvider, useUser } from '@/contexts/UserContext';
 import { ThemeProvider, useTheme } from '@/contexts/ThemeContext';
 import * as authApi from '@/lib/api/auth';
 
-jest.mock('@/lib/api/auth');
+vi.mock('@/lib/api/auth');
 
 // Mock next/navigation
-jest.mock('next/navigation', () => ({
+vi.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: jest.fn(),
-    replace: jest.fn(),
+    push: vi.fn(),
+    replace: vi.fn(),
   }),
 }));
 
@@ -33,7 +33,7 @@ const mockedAuthApi = authApi as jest.Mocked<typeof authApi>;
 
 describe('Split Contexts - Context Isolation', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     localStorage.clear();
     mockedAuthApi.checkAuthStatus.mockRejectedValue(new Error('Not authenticated'));
   });

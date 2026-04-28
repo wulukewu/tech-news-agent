@@ -31,12 +31,12 @@ import {
 } from '@/lib/api/readingList';
 
 // Mock the API client
-jest.mock('@/lib/api/client', () => ({
+vi.mock('@/lib/api/client', () => ({
   apiClient: {
-    post: jest.fn(),
-    patch: jest.fn(),
-    delete: jest.fn(),
-    get: jest.fn(),
+    post: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
+    get: vi.fn(),
   },
 }));
 
@@ -44,7 +44,7 @@ import { apiClient } from '@/lib/api/client';
 
 describe('Bug Condition Exploration - Frontend Undefined article_id', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   /**
@@ -263,7 +263,7 @@ describe('Bug Condition Exploration - Frontend Undefined article_id', () => {
         ),
         async (invalidArticleId, apiMethod) => {
           // Reset mocks
-          jest.clearAllMocks();
+          vi.clearAllMocks();
 
           const mockPost = apiClient.post as jest.Mock;
           const mockPatch = apiClient.patch as jest.Mock;
@@ -335,7 +335,7 @@ describe('Bug Condition Exploration - Frontend Undefined article_id', () => {
         ),
         async (validArticleId, apiMethod) => {
           // Reset mocks
-          jest.clearAllMocks();
+          vi.clearAllMocks();
 
           const mockPost = apiClient.post as jest.Mock;
           const mockPatch = apiClient.patch as jest.Mock;

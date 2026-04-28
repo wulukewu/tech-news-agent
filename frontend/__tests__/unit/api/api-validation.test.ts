@@ -20,23 +20,23 @@ import { performanceMonitor } from '@/lib/api/performance';
 import { apiClient, ApiError } from '@/lib/api/client';
 
 // Mock the API client
-jest.mock('@/lib/api/client', () => {
+vi.mock('@/lib/api/client', () => {
   const actualModule = jest.requireActual('@/lib/api/client');
   return {
     ...actualModule,
     apiClient: {
-      get: jest.fn(),
-      post: jest.fn(),
-      put: jest.fn(),
-      patch: jest.fn(),
-      delete: jest.fn(),
+      get: vi.fn(),
+      post: vi.fn(),
+      put: vi.fn(),
+      patch: vi.fn(),
+      delete: vi.fn(),
     },
   };
 });
 
 describe('API Validation Tests - Task 11.3', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     performanceMonitor.clearMetrics();
     performanceMonitor.setEnabled(true);
   });
@@ -247,8 +247,8 @@ describe('API Validation Tests - Task 11.3', () => {
   describe('compareImplementations', () => {
     it('should detect equivalent implementations', async () => {
       const mockData = { data: [{ id: '1' }] };
-      const oldImpl = jest.fn().mockResolvedValue(mockData);
-      const newImpl = jest.fn().mockResolvedValue(mockData);
+      const oldImpl = vi.fn().mockResolvedValue(mockData);
+      const newImpl = vi.fn().mockResolvedValue(mockData);
 
       const result = await compareImplementations('/api/test', oldImpl, newImpl);
 
@@ -259,8 +259,8 @@ describe('API Validation Tests - Task 11.3', () => {
     it('should detect different responses', async () => {
       const oldData = { data: [{ id: '1' }] };
       const newData = { data: [{ id: '2' }] };
-      const oldImpl = jest.fn().mockResolvedValue(oldData);
-      const newImpl = jest.fn().mockResolvedValue(newData);
+      const oldImpl = vi.fn().mockResolvedValue(oldData);
+      const newImpl = vi.fn().mockResolvedValue(newData);
 
       const result = await compareImplementations('/api/test', oldImpl, newImpl);
 
@@ -269,8 +269,8 @@ describe('API Validation Tests - Task 11.3', () => {
     });
 
     it('should detect inconsistent behavior (one succeeds, one fails)', async () => {
-      const oldImpl = jest.fn().mockResolvedValue({ data: [] });
-      const newImpl = jest.fn().mockRejectedValue(new Error('Failed'));
+      const oldImpl = vi.fn().mockResolvedValue({ data: [] });
+      const newImpl = vi.fn().mockRejectedValue(new Error('Failed'));
 
       const result = await compareImplementations('/api/test', oldImpl, newImpl);
 
@@ -280,8 +280,8 @@ describe('API Validation Tests - Task 11.3', () => {
 
     it('should handle both implementations failing with same error', async () => {
       const error = new Error('Same error');
-      const oldImpl = jest.fn().mockRejectedValue(error);
-      const newImpl = jest.fn().mockRejectedValue(error);
+      const oldImpl = vi.fn().mockRejectedValue(error);
+      const newImpl = vi.fn().mockRejectedValue(error);
 
       const result = await compareImplementations('/api/test', oldImpl, newImpl);
 

@@ -35,7 +35,7 @@ describe('SchedulerStatusIndicator Component', () => {
 
     it('should hide manual trigger button when running', () => {
       const runningStatus = { ...mockStatus, isRunning: true };
-      const handleTrigger = jest.fn();
+      const handleTrigger = vi.fn();
 
       render(
         <SchedulerStatusIndicator
@@ -108,7 +108,7 @@ describe('SchedulerStatusIndicator Component', () => {
 
   describe('Property 12: Manual Fetch Feedback', () => {
     it('should display manual trigger button when callback provided', () => {
-      const handleTrigger = jest.fn();
+      const handleTrigger = vi.fn();
 
       render(
         <SchedulerStatusIndicator
@@ -122,7 +122,7 @@ describe('SchedulerStatusIndicator Component', () => {
     });
 
     it('should call onManualTrigger when button clicked', () => {
-      const handleTrigger = jest.fn();
+      const handleTrigger = vi.fn();
 
       render(
         <SchedulerStatusIndicator
@@ -139,7 +139,7 @@ describe('SchedulerStatusIndicator Component', () => {
     });
 
     it('should not display button when canManualTrigger is false', () => {
-      const handleTrigger = jest.fn();
+      const handleTrigger = vi.fn();
 
       render(
         <SchedulerStatusIndicator
@@ -159,7 +159,7 @@ describe('SchedulerStatusIndicator Component', () => {
     });
 
     it('should provide visual feedback on hover', () => {
-      const handleTrigger = jest.fn();
+      const handleTrigger = vi.fn();
       const { container } = render(
         <SchedulerStatusIndicator
           status={mockStatus}

@@ -13,7 +13,7 @@ describe('FeedCard', () => {
   };
 
   it('should display feed information', () => {
-    render(<FeedCard feed={mockFeed} onToggle={jest.fn()} />);
+    render(<FeedCard feed={mockFeed} onToggle={vi.fn()} />);
 
     expect(screen.getByText('Tech Blog')).toBeInTheDocument();
     expect(screen.getByText('Technology')).toBeInTheDocument();
@@ -21,7 +21,7 @@ describe('FeedCard', () => {
   });
 
   it('should call onToggle when switch is clicked', async () => {
-    const onToggle = jest.fn().mockResolvedValue(undefined);
+    const onToggle = vi.fn().mockResolvedValue(undefined);
     render(<FeedCard feed={mockFeed} onToggle={onToggle} />);
 
     const toggle = screen.getByRole('switch');
@@ -37,14 +37,14 @@ describe('FeedCard', () => {
 
   it('should apply different styles for subscribed feeds', () => {
     const subscribedFeed = { ...mockFeed, is_subscribed: true };
-    const { container } = render(<FeedCard feed={subscribedFeed} onToggle={jest.fn()} />);
+    const { container } = render(<FeedCard feed={subscribedFeed} onToggle={vi.fn()} />);
 
     const card = container.querySelector('[class*="border-primary"]');
     expect(card).toBeInTheDocument();
   });
 
   it('should disable toggle while toggling', async () => {
-    const onToggle = jest.fn().mockResolvedValue(undefined);
+    const onToggle = vi.fn().mockResolvedValue(undefined);
     render(<FeedCard feed={mockFeed} onToggle={onToggle} />);
 
     const toggle = screen.getByRole('switch');
@@ -60,7 +60,7 @@ describe('FeedCard', () => {
   });
 
   it('should display feed URL as a link', () => {
-    render(<FeedCard feed={mockFeed} onToggle={jest.fn()} />);
+    render(<FeedCard feed={mockFeed} onToggle={vi.fn()} />);
 
     const link = screen.getByRole('link', { name: /example\.com\/feed/i });
     expect(link).toHaveAttribute('href', 'https://example.com/feed');

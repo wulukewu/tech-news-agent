@@ -16,11 +16,11 @@ describe('MultiSelectFilter', () => {
   const defaultProps = {
     options: mockOptions,
     selected: [],
-    onSelectionChange: jest.fn(),
+    onSelectionChange: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Basic Functionality', () => {
@@ -90,7 +90,7 @@ describe('MultiSelectFilter', () => {
   describe('Selection Functionality', () => {
     it('calls onSelectionChange when option is selected', async () => {
       const user = userEvent.setup();
-      const onSelectionChange = jest.fn();
+      const onSelectionChange = vi.fn();
       render(<MultiSelectFilter {...defaultProps} onSelectionChange={onSelectionChange} />);
 
       await user.click(screen.getByRole('combobox'));
@@ -101,7 +101,7 @@ describe('MultiSelectFilter', () => {
 
     it('calls onSelectionChange when option is deselected', async () => {
       const user = userEvent.setup();
-      const onSelectionChange = jest.fn();
+      const onSelectionChange = vi.fn();
       render(
         <MultiSelectFilter
           {...defaultProps}
@@ -118,7 +118,7 @@ describe('MultiSelectFilter', () => {
 
     it('supports multiple selections', async () => {
       const user = userEvent.setup();
-      const onSelectionChange = jest.fn();
+      const onSelectionChange = vi.fn();
       render(<MultiSelectFilter {...defaultProps} onSelectionChange={onSelectionChange} />);
 
       await user.click(screen.getByRole('combobox'));
@@ -155,7 +155,7 @@ describe('MultiSelectFilter', () => {
 
     it('selects all visible options when "Select All" is clicked', async () => {
       const user = userEvent.setup();
-      const onSelectionChange = jest.fn();
+      const onSelectionChange = vi.fn();
       render(
         <MultiSelectFilter
           {...defaultProps}
@@ -174,7 +174,7 @@ describe('MultiSelectFilter', () => {
 
     it('deselects all visible options when "Deselect All" is clicked', async () => {
       const user = userEvent.setup();
-      const onSelectionChange = jest.fn();
+      const onSelectionChange = vi.fn();
       render(
         <MultiSelectFilter
           {...defaultProps}
@@ -207,7 +207,7 @@ describe('MultiSelectFilter', () => {
 
     it('selects option with Enter key', async () => {
       const user = userEvent.setup();
-      const onSelectionChange = jest.fn();
+      const onSelectionChange = vi.fn();
       render(
         <MultiSelectFilter
           {...defaultProps}
@@ -324,7 +324,7 @@ describe('MultiSelectFilter', () => {
 
     it('clears all selections when clear button is clicked', async () => {
       const user = userEvent.setup();
-      const onSelectionChange = jest.fn();
+      const onSelectionChange = vi.fn();
       render(
         <MultiSelectFilter
           {...defaultProps}

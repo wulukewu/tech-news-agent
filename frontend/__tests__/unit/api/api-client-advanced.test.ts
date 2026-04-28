@@ -10,31 +10,31 @@ import { AxiosError } from 'axios';
 import { ApiError, ErrorCode } from '@/lib/api/errors';
 
 // Mock axios before imports
-jest.mock('axios', () => {
+vi.mock('axios', () => {
   const mockAxiosInstance = {
     interceptors: {
       request: {
-        use: jest.fn((onFulfilled, onRejected) => Math.floor(Math.random() * 10000)),
-        eject: jest.fn(),
+        use: vi.fn((onFulfilled, onRejected) => Math.floor(Math.random() * 10000)),
+        eject: vi.fn(),
       },
       response: {
-        use: jest.fn((onFulfilled, onRejected) => Math.floor(Math.random() * 10000)),
-        eject: jest.fn(),
+        use: vi.fn((onFulfilled, onRejected) => Math.floor(Math.random() * 10000)),
+        eject: vi.fn(),
       },
     },
-    get: jest.fn(),
-    post: jest.fn(),
-    put: jest.fn(),
-    patch: jest.fn(),
-    delete: jest.fn(),
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
   };
 
   return {
     __esModule: true,
     default: {
-      create: jest.fn(() => mockAxiosInstance),
+      create: vi.fn(() => mockAxiosInstance),
     },
-    create: jest.fn(() => mockAxiosInstance),
+    create: vi.fn(() => mockAxiosInstance),
   };
 });
 
@@ -50,7 +50,7 @@ describe('ApiClient - Advanced Tests', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Reset singleton for clean tests
     ApiClient.resetInstance();
     client = ApiClient.getInstance();
@@ -342,16 +342,16 @@ describe('ApiClient - Advanced Tests', () => {
   describe('Interceptor Execution Order (Requirement 1.3)', () => {
     it('should execute multiple request interceptors in order', () => {
       // Clear mocks to only count new interceptors
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
       const interceptor1 = {
-        onFulfilled: jest.fn((config) => config),
+        onFulfilled: vi.fn((config) => config),
       };
       const interceptor2 = {
-        onFulfilled: jest.fn((config) => config),
+        onFulfilled: vi.fn((config) => config),
       };
       const interceptor3 = {
-        onFulfilled: jest.fn((config) => config),
+        onFulfilled: vi.fn((config) => config),
       };
 
       client.addRequestInterceptor(interceptor1);
@@ -364,13 +364,13 @@ describe('ApiClient - Advanced Tests', () => {
 
     it('should execute multiple response interceptors in order', () => {
       // Clear mocks to only count new interceptors
-      jest.clearAllMocks();
+      vi.clearAllMocks();
 
       const interceptor1 = {
-        onFulfilled: jest.fn((response) => response),
+        onFulfilled: vi.fn((response) => response),
       };
       const interceptor2 = {
-        onFulfilled: jest.fn((response) => response),
+        onFulfilled: vi.fn((response) => response),
       };
 
       client.addResponseInterceptor(interceptor1);
@@ -382,7 +382,7 @@ describe('ApiClient - Advanced Tests', () => {
 
     it('should handle interceptor with only onFulfilled', () => {
       const interceptor = {
-        onFulfilled: jest.fn((config) => config),
+        onFulfilled: vi.fn((config) => config),
       };
 
       const id = client.addRequestInterceptor(interceptor);
@@ -396,7 +396,7 @@ describe('ApiClient - Advanced Tests', () => {
 
     it('should handle interceptor with only onRejected', () => {
       const interceptor = {
-        onRejected: jest.fn((error) => Promise.reject(error)),
+        onRejected: vi.fn((error) => Promise.reject(error)),
       };
 
       const id = client.addRequestInterceptor(interceptor);

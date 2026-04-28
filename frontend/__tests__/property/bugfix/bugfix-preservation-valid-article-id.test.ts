@@ -30,12 +30,12 @@ import {
 import type { ReadingListStatus } from '@/types/readingList';
 
 // Mock the API client
-jest.mock('@/lib/api/client', () => ({
+vi.mock('@/lib/api/client', () => ({
   apiClient: {
-    post: jest.fn(),
-    patch: jest.fn(),
-    delete: jest.fn(),
-    get: jest.fn(),
+    post: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
+    get: vi.fn(),
   },
 }));
 
@@ -43,7 +43,7 @@ import { apiClient } from '@/lib/api/client';
 
 describe('Preservation Property Tests - Valid article_id Operations', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   /**
@@ -243,7 +243,7 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
     for (const operation of operations) {
       await fc.assert(
         fc.asyncProperty(fc.uuid(), async (validArticleId) => {
-          jest.clearAllMocks();
+          vi.clearAllMocks();
           try {
             const result = await operation.test(validArticleId);
             return result;
@@ -279,7 +279,7 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
     for (const status of statuses) {
       await fc.assert(
         fc.asyncProperty(fc.uuid(), async (validArticleId) => {
-          jest.clearAllMocks();
+          vi.clearAllMocks();
 
           const mockPatch = apiClient.patch as jest.Mock;
           mockPatch.mockResolvedValue({
@@ -332,7 +332,7 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
         fc.uuid(),
         fc.integer({ min: 1, max: 5 }),
         async (validArticleId, rating) => {
-          jest.clearAllMocks();
+          vi.clearAllMocks();
 
           const mockPatch = apiClient.patch as jest.Mock;
           mockPatch.mockResolvedValue({
@@ -382,7 +382,7 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
 
     await fc.assert(
       fc.asyncProperty(fc.uuid(), async (validArticleId) => {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
 
         const mockPost = apiClient.post as jest.Mock;
         const mockPatch = apiClient.patch as jest.Mock;
@@ -398,7 +398,7 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
         if (mockPost.mock.calls[0][0] !== '/api/reading-list') return false;
         if (mockPost.mock.calls[0][1].article_id !== validArticleId) return false;
 
-        jest.clearAllMocks();
+        vi.clearAllMocks();
 
         // Test updateReadingListStatus
         await updateReadingListStatus(validArticleId, 'Read');
@@ -407,7 +407,7 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
           return false;
         if (mockPatch.mock.calls[0][1].status !== 'Read') return false;
 
-        jest.clearAllMocks();
+        vi.clearAllMocks();
 
         // Test updateReadingListRating
         await updateReadingListRating(validArticleId, 3);
@@ -416,7 +416,7 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
           return false;
         if (mockPatch.mock.calls[0][1].rating !== 3) return false;
 
-        jest.clearAllMocks();
+        vi.clearAllMocks();
 
         // Test removeFromReadingList
         await removeFromReadingList(validArticleId);

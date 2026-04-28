@@ -25,9 +25,9 @@ import * as readingListApi from '@/lib/api/readingList';
 import * as feedsApi from '@/lib/api/feeds';
 
 // Mock API modules
-jest.mock('@/lib/api/articles');
-jest.mock('@/lib/api/readingList');
-jest.mock('@/lib/api/feeds');
+vi.mock('@/lib/api/articles');
+vi.mock('@/lib/api/readingList');
+vi.mock('@/lib/api/feeds');
 
 const mockedArticlesApi = articlesApi as jest.Mocked<typeof articlesApi>;
 const mockedReadingListApi = readingListApi as jest.Mocked<typeof readingListApi>;
@@ -53,7 +53,7 @@ function createWrapper() {
 
 describe('React Query Hooks', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('useArticles', () => {
@@ -360,7 +360,7 @@ describe('React Query Hooks', () => {
         <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
       );
 
-      const invalidateSpy = jest.spyOn(queryClient, 'invalidateQueries');
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
       mockedReadingListApi.addToReadingList.mockResolvedValue({
         message: 'Added',
@@ -396,7 +396,7 @@ describe('React Query Hooks', () => {
         <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
       );
 
-      const invalidateSpy = jest.spyOn(queryClient, 'invalidateQueries');
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
       mockedFeedsApi.toggleSubscription.mockResolvedValue({
         feed_id: '123',

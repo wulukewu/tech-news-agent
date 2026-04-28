@@ -22,19 +22,19 @@ import { ThemeProvider, useTheme, Theme } from '@/contexts/ThemeContext';
 import * as authApi from '@/lib/api/auth';
 import fc from 'fast-check';
 
-jest.mock('@/lib/api/auth');
+vi.mock('@/lib/api/auth');
 
 // Mock next/navigation
-jest.mock('next/navigation', () => ({
+vi.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: jest.fn(),
-    replace: jest.fn(),
+    push: vi.fn(),
+    replace: vi.fn(),
   }),
 }));
 
 describe('Property Test: Context Isolation', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     // Default mock to prevent unhandled promises
     (authApi.checkAuthStatus as jest.Mock).mockRejectedValue(new Error('Not authenticated'));
   });

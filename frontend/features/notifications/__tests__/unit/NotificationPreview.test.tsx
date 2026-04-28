@@ -3,11 +3,11 @@ import { NotificationPreview } from '../../components/NotificationPreview';
 import { NotificationSettings } from '@/types/notification';
 
 // Mock date-fns
-jest.mock('date-fns', () => ({
-  formatDistanceToNow: jest.fn(() => '30 分鐘前'),
+vi.mock('date-fns', () => ({
+  formatDistanceToNow: vi.fn(() => '30 分鐘前'),
 }));
 
-jest.mock('date-fns/locale', () => ({
+vi.mock('date-fns/locale', () => ({
   zhTW: {},
 }));
 

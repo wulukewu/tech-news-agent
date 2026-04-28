@@ -6,31 +6,31 @@
  */
 
 // Mock axios before any imports
-jest.mock('axios', () => {
+vi.mock('axios', () => {
   const mockAxiosInstance = {
     interceptors: {
       request: {
-        use: jest.fn().mockReturnValue(0),
-        eject: jest.fn(),
+        use: vi.fn().mockReturnValue(0),
+        eject: vi.fn(),
       },
       response: {
-        use: jest.fn().mockReturnValue(0),
-        eject: jest.fn(),
+        use: vi.fn().mockReturnValue(0),
+        eject: vi.fn(),
       },
     },
-    get: jest.fn(),
-    post: jest.fn(),
-    put: jest.fn(),
-    patch: jest.fn(),
-    delete: jest.fn(),
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
   };
 
   return {
     __esModule: true,
     default: {
-      create: jest.fn(() => mockAxiosInstance),
+      create: vi.fn(() => mockAxiosInstance),
     },
-    create: jest.fn(() => mockAxiosInstance),
+    create: vi.fn(() => mockAxiosInstance),
   };
 });
 
@@ -48,11 +48,11 @@ describe('ApiClient', () => {
   });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Singleton Pattern (Requirement 1.1)', () => {
@@ -80,8 +80,8 @@ describe('ApiClient', () => {
     it('should allow adding custom request interceptors', () => {
       const client = ApiClient.getInstance();
       const requestInterceptor = {
-        onFulfilled: jest.fn((config) => config),
-        onRejected: jest.fn((error) => Promise.reject(error)),
+        onFulfilled: vi.fn((config) => config),
+        onRejected: vi.fn((error) => Promise.reject(error)),
       };
 
       const interceptorId = client.addRequestInterceptor(requestInterceptor);
@@ -96,8 +96,8 @@ describe('ApiClient', () => {
     it('should allow adding custom response interceptors', () => {
       const client = ApiClient.getInstance();
       const responseInterceptor = {
-        onFulfilled: jest.fn((response) => response),
-        onRejected: jest.fn((error) => Promise.reject(error)),
+        onFulfilled: vi.fn((response) => response),
+        onRejected: vi.fn((error) => Promise.reject(error)),
       };
 
       const interceptorId = client.addResponseInterceptor(responseInterceptor);
@@ -112,7 +112,7 @@ describe('ApiClient', () => {
     it('should allow removing request interceptors', () => {
       const client = ApiClient.getInstance();
       const requestInterceptor = {
-        onFulfilled: jest.fn((config) => config),
+        onFulfilled: vi.fn((config) => config),
       };
 
       const interceptorId = client.addRequestInterceptor(requestInterceptor);
@@ -124,7 +124,7 @@ describe('ApiClient', () => {
     it('should allow removing response interceptors', () => {
       const client = ApiClient.getInstance();
       const responseInterceptor = {
-        onFulfilled: jest.fn((response) => response),
+        onFulfilled: vi.fn((response) => response),
       };
 
       const interceptorId = client.addResponseInterceptor(responseInterceptor);
