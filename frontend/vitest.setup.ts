@@ -2,19 +2,19 @@ import '@testing-library/jest-dom';
 import { beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { server } from './mocks/server';
-import zhTW from './locales/zh-TW.json';
+import enUS from './locales/en-US.json';
 
-// Mock I18n globally with zh-TW (most tests expect Chinese)
+// Mock I18n globally with en-US (most tests expect English)
 vi.mock('./contexts/I18nContext', async () => {
   const actual = await vi.importActual('./contexts/I18nContext');
   return {
     ...actual,
     useI18n: () => ({
-      locale: 'zh-TW' as const,
+      locale: 'en-US' as const,
       setLocale: vi.fn(),
       t: (key: string, params?: Record<string, any>) => {
         const keys = key.split('.');
-        let value: any = zhTW;
+        let value: any = enUS;
         for (const k of keys) {
           value = value?.[k];
         }

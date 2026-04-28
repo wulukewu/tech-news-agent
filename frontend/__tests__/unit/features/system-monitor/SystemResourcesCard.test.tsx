@@ -36,28 +36,28 @@ describe('SystemResourcesCard', () => {
   it('should render system resources card', () => {
     render(<SystemResourcesCard resources={mockResources} />);
 
-    expect(screen.getByText('系統資源使用情況')).toBeInTheDocument();
+    expect(screen.getByText('System Resources')).toBeInTheDocument();
   });
 
   it('should display CPU usage', () => {
     render(<SystemResourcesCard resources={mockResources} />);
 
-    expect(screen.getByText('CPU 使用率')).toBeInTheDocument();
+    expect(screen.getByText('CPU Usage')).toBeInTheDocument();
     expect(screen.getByText('45.5%')).toBeInTheDocument();
-    expect(screen.getByText('8 核心')).toBeInTheDocument();
+    expect(screen.getByText('8 cores')).toBeInTheDocument();
   });
 
   it('should display memory usage', () => {
     render(<SystemResourcesCard resources={mockResources} />);
 
-    expect(screen.getByText('記憶體使用率')).toBeInTheDocument();
+    expect(screen.getByText('Memory Usage')).toBeInTheDocument();
     expect(screen.getByText('75.0%')).toBeInTheDocument();
   });
 
   it('should display disk usage', () => {
     render(<SystemResourcesCard resources={mockResources} />);
 
-    expect(screen.getByText('磁碟使用率')).toBeInTheDocument();
+    expect(screen.getByText('Disk Usage')).toBeInTheDocument();
     expect(screen.getByText('50.0%')).toBeInTheDocument();
   });
 
@@ -115,6 +115,6 @@ describe('SystemResourcesCard', () => {
   it('should display last updated time', () => {
     render(<SystemResourcesCard resources={mockResources} />);
 
-    expect(screen.getByText(/最後更新:/)).toBeInTheDocument();
+    expect(screen.getByText(/Last updated:/)).toBeInTheDocument();
   });
 });
