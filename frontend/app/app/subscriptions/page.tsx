@@ -527,25 +527,13 @@ export default function SubscriptionsPage() {
                   disabled={!!batchLoading}
                   className="shrink-0 gap-2"
                 >
-                  {batchLoading ? (
-                    <>
-                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                      {batchLoading}
-                    </>
-                  ) : (
-                    t('subscriptions.subscribe-all-recommended')
+                  {batchLoading?.startsWith('訂閱推薦') && (
+                    <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
                   )}
+                  {t('subscriptions.subscribe-all-recommended')}
                 </Button>
               </CardContent>
             </Card>
-          )}
-
-          {/* Batch loading status bar */}
-          {batchLoading && (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground px-1">
-              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent shrink-0" />
-              <span>{batchLoading}⋯ 正在同步至伺服器</span>
-            </div>
           )}
 
           <div className="flex flex-wrap items-center gap-2">
