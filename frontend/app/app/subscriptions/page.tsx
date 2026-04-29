@@ -156,34 +156,25 @@ export default function SubscriptionsPage() {
 
     if (feedsToToggle.length === 0) return;
 
-    const updater = (prev: Feed[]) =>
-      prev.map((feed) =>
-        feed.category === category ? { ...feed, is_subscribed: subscribe } : feed
-      );
-    setFeeds(updater);
-    setFilteredFeeds(updater);
     setBatchLoading(subscribe ? `訂閱 ${category}` : `取消 ${category}`);
 
     try {
       if (subscribe) {
         await batchSubscribe(feedsToToggle.map((f) => f.id));
       } else {
-        await Promise.all(feedsToToggle.map((feed) => toggleSubscription(feed.id)));
+        const subscribedToToggle = feedsToToggle.filter((f) => f.is_subscribed);
+        await Promise.all(subscribedToToggle.map((feed) => toggleSubscription(feed.id)));
       }
       toast.success(
         subscribe
           ? t('subscriptions.subscribed', { count: feedsToToggle.length })
           : t('subscriptions.unsubscribed', { count: feedsToToggle.length })
       );
+      await loadFeeds();
     } catch (err) {
-      const reverter = (prev: Feed[]) =>
-        prev.map((feed) =>
-          feed.category === category ? { ...feed, is_subscribed: !subscribe } : feed
-        );
-      setFeeds(reverter);
-      setFilteredFeeds(reverter);
       console.error('Failed to toggle category:', err);
       toast.error(t('subscriptions.batch-operation-failed'));
+      await loadFeeds();
     } finally {
       setBatchLoading(null);
     }
@@ -194,10 +185,6 @@ export default function SubscriptionsPage() {
 
     if (feedsToToggle.length === 0) return;
 
-    // Optimistic update — update both feeds and filteredFeeds
-    const updater = (prev: Feed[]) => prev.map((feed) => ({ ...feed, is_subscribed: subscribe }));
-    setFeeds(updater);
-    setFilteredFeeds(updater);
     setBatchLoading(
       subscribe ? `訂閱全部 ${feedsToToggle.length} 個` : `取消全部 ${feedsToToggle.length} 個`
     );
@@ -206,24 +193,21 @@ export default function SubscriptionsPage() {
       if (subscribe) {
         await batchSubscribe(feedsToToggle.map((f) => f.id));
       } else {
-        await Promise.all(feedsToToggle.map((feed) => toggleSubscription(feed.id)));
+        // Only unsubscribe feeds that are currently subscribed
+        const subscribedToToggle = feedsToToggle.filter((f) => f.is_subscribed);
+        await Promise.all(subscribedToToggle.map((feed) => toggleSubscription(feed.id)));
       }
       toast.success(
         subscribe
           ? t('subscriptions.subscribed', { count: feedsToToggle.length })
           : t('subscriptions.unsubscribed', { count: feedsToToggle.length })
       );
+      // Reload from server to get accurate state
+      await loadFeeds();
     } catch (err) {
-      // Revert only the feeds that were changed
-      const toggledIds = new Set(feedsToToggle.map((f) => f.id));
-      const reverter = (prev: Feed[]) =>
-        prev.map((feed) =>
-          toggledIds.has(feed.id) ? { ...feed, is_subscribed: !subscribe } : feed
-        );
-      setFeeds(reverter);
-      setFilteredFeeds(reverter);
       console.error('Failed to toggle all:', err);
       toast.error(t('subscriptions.batch-operation-failed'));
+      await loadFeeds();
     } finally {
       setBatchLoading(null);
     }
