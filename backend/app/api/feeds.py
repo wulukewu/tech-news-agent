@@ -23,7 +23,6 @@ from app.schemas.feed import (
     SubscriptionToggleResponse,
 )
 from app.schemas.responses import SuccessResponse, success_response
-from app.services.subscription_service import SubscriptionService
 from app.services.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
@@ -241,13 +240,31 @@ async def batch_subscribe(
     """
     try:
         supabase = SupabaseService()
-        subscription_service = SubscriptionService(supabase.client)
-
-        # Use the authenticated user's UUID directly
         user_uuid = current_user["user_id"]
 
-        # Perform batch subscription
-        result = await subscription_service.batch_subscribe(user_uuid, request.feed_ids)
+        # Direct upsert — bypass SubscriptionService which requires deleted_at column
+        subscribed_count = 0
+        failed_count = 0
+        errors: list[str] = []
+
+        for feed_id in request.feed_ids:
+            try:
+                supabase.client.table("user_subscriptions").upsert(
+                    {"user_id": str(user_uuid), "feed_id": str(feed_id)},
+                    on_conflict="user_id,feed_id",
+                ).execute()
+                subscribed_count += 1
+            except Exception as e:
+                failed_count += 1
+                errors.append(str(e))
+
+        from app.schemas.feed import BatchSubscribeResponse
+
+        result = BatchSubscribeResponse(
+            subscribed_count=subscribed_count,
+            failed_count=failed_count,
+            errors=errors,
+        )
 
         logger.info(
             f"Batch subscription for user {current_user['user_id']}: "
