@@ -154,12 +154,12 @@ export default function SubscriptionsPage() {
 
     if (feedsToToggle.length === 0) return;
 
-    // Optimistic update first
-    setFeeds((prev) =>
+    const updater = (prev: Feed[]) =>
       prev.map((feed) =>
         feed.category === category ? { ...feed, is_subscribed: subscribe } : feed
-      )
-    );
+      );
+    setFeeds(updater);
+    setFilteredFeeds(updater);
 
     try {
       if (subscribe) {
@@ -173,12 +173,12 @@ export default function SubscriptionsPage() {
           : t('subscriptions.unsubscribed', { count: feedsToToggle.length })
       );
     } catch (err) {
-      // Revert on failure
-      setFeeds((prev) =>
+      const reverter = (prev: Feed[]) =>
         prev.map((feed) =>
           feed.category === category ? { ...feed, is_subscribed: !subscribe } : feed
-        )
-      );
+        );
+      setFeeds(reverter);
+      setFilteredFeeds(reverter);
       console.error('Failed to toggle category:', err);
       toast.error(t('subscriptions.batch-operation-failed'));
     }
@@ -189,8 +189,10 @@ export default function SubscriptionsPage() {
 
     if (feedsToToggle.length === 0) return;
 
-    // Optimistic update first — UI responds immediately
-    setFeeds((prev) => prev.map((feed) => ({ ...feed, is_subscribed: subscribe })));
+    // Optimistic update — update both feeds and filteredFeeds
+    const updater = (prev: Feed[]) => prev.map((feed) => ({ ...feed, is_subscribed: subscribe }));
+    setFeeds(updater);
+    setFilteredFeeds(updater);
 
     try {
       if (subscribe) {
@@ -204,8 +206,14 @@ export default function SubscriptionsPage() {
           : t('subscriptions.unsubscribed', { count: feedsToToggle.length })
       );
     } catch (err) {
-      // Revert on failure
-      setFeeds((prev) => prev.map((feed) => ({ ...feed, is_subscribed: !subscribe })));
+      // Revert only the feeds that were changed
+      const toggledIds = new Set(feedsToToggle.map((f) => f.id));
+      const reverter = (prev: Feed[]) =>
+        prev.map((feed) =>
+          toggledIds.has(feed.id) ? { ...feed, is_subscribed: !subscribe } : feed
+        );
+      setFeeds(reverter);
+      setFilteredFeeds(reverter);
       console.error('Failed to toggle all:', err);
       toast.error(t('subscriptions.batch-operation-failed'));
     }
@@ -219,21 +227,20 @@ export default function SubscriptionsPage() {
       return;
     }
 
-    // Optimistic update
-    setFeeds((prev) =>
-      prev.map((feed) => (feed.is_recommended ? { ...feed, is_subscribed: true } : feed))
-    );
+    const updater = (prev: Feed[]) =>
+      prev.map((feed) => (feed.is_recommended ? { ...feed, is_subscribed: true } : feed));
+    setFeeds(updater);
+    setFilteredFeeds(updater);
 
     try {
       await batchSubscribe(recommendedFeeds.map((f) => f.id));
       toast.success(t('subscriptions.subscribed-recommended', { count: recommendedFeeds.length }));
     } catch (err) {
-      // Revert
-      setFeeds((prev) =>
-        prev.map((feed) =>
-          recommendedFeeds.find((r) => r.id === feed.id) ? { ...feed, is_subscribed: false } : feed
-        )
-      );
+      const toggledIds = new Set(recommendedFeeds.map((f) => f.id));
+      const reverter = (prev: Feed[]) =>
+        prev.map((feed) => (toggledIds.has(feed.id) ? { ...feed, is_subscribed: false } : feed));
+      setFeeds(reverter);
+      setFilteredFeeds(reverter);
       console.error('Failed to subscribe recommended:', err);
       toast.error(t('subscriptions.subscribe-recommended-failed'));
     }
