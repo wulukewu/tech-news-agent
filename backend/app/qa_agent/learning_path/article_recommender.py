@@ -66,10 +66,9 @@ class ArticleRecommender:
         # Find relevant articles for current stage skills
         candidate_articles = await self._find_relevant_articles(current_stage, target_skill)
 
-        # Filter out already read articles
-        candidate_articles = [
-            article for article in candidate_articles if str(article.id) not in read_articles
-        ]
+        # If no candidates found, fall back to top articles
+        if not candidate_articles:
+            candidate_articles = await self._find_fallback_articles(set())
 
         # Score and rank articles
         scored_articles = []
@@ -127,14 +126,40 @@ class ArticleRecommender:
                 "difficulty_preference": 3,
             }
 
+    async def _find_fallback_articles(self, exclude_ids: set) -> list:
+        """Return top articles by tinkering_index, excluding already completed ones."""
+        try:
+            select_fields = "id, feed_id, title, url, published_at, tinkering_index, ai_summary, created_at, category"
+            resp = (
+                self.supabase.client.table("articles")
+                .select(select_fields)
+                .order("tinkering_index", desc=True)
+                .limit(50)
+                .execute()
+            )
+            articles = []
+            for record in resp.data or []:
+                if str(record["id"]) in exclude_ids:
+                    continue
+                try:
+                    record.setdefault("feed_name", record.get("category") or "")
+                    if isinstance(record.get("embedding"), str):
+                        record["embedding"] = None
+                    articles.append(ArticleSchema(**record))
+                except Exception:
+                    pass
+            return articles[:20]
+        except Exception:
+            return []
+
     async def _get_read_articles(self, user_id: str) -> set:
-        """Get set of article IDs user has already read"""
+        """Get set of article IDs user has already completed in learning progress"""
         try:
             response = (
-                self.supabase.client.table("reading_list")
+                self.supabase.client.table("learning_progress")
                 .select("article_id")
                 .eq("user_id", user_id)
-                .eq("status", "read")
+                .eq("status", "completed")
                 .execute()
             )
             return {str(record["article_id"]) for record in response.data}
@@ -188,7 +213,7 @@ class ArticleRecommender:
                             .limit(10)
                             .execute()
                         )
-                    add_articles(resp.data or [])
+                        add_articles(resp.data or [])
 
             # 3. Fallback: use target_skill keyword against title + category
             if not articles and target_skill:
@@ -212,6 +237,17 @@ class ArticleRecommender:
                     self.supabase.client.table("articles")
                     .select(select_fields)
                     .order("tinkering_index", desc=True)
+                    .limit(20)
+                    .execute()
+                )
+                add_articles(resp.data or [])
+
+            # 5. Absolute fallback: any recent articles
+            if not articles:
+                resp = (
+                    self.supabase.client.table("articles")
+                    .select(select_fields)
+                    .order("created_at", desc=True)
                     .limit(20)
                     .execute()
                 )
@@ -251,12 +287,15 @@ class ArticleRecommender:
 
             # Difficulty matching (prefer articles matching stage difficulty)
             article_difficulty = article.tinkering_index or 3
-            stage_difficulty = sum(skill.difficulty_level.value for skill in stage.skills) / len(
-                stage.skills
-            )
+            if stage.skills:
+                stage_difficulty = sum(
+                    skill.difficulty_level.value for skill in stage.skills
+                ) / len(stage.skills)
+            else:
+                stage_difficulty = 3
             difficulty_diff = abs(article_difficulty - stage_difficulty)
             difficulty_match = max(0, 1 - (difficulty_diff / 5))
-            relevance_score += difficulty_match * 0.3
+            relevance_score += difficulty_match * 0.3 + 0.1  # base score so fallback articles pass
 
             # Boost recent articles slightly
             if article.published_at:
@@ -271,7 +310,7 @@ class ArticleRecommender:
                     relevance_score += 0.1
 
             # Only recommend if minimum relevance threshold met
-            if relevance_score < 0.3:
+            if relevance_score < 0.1:
                 return None
 
             # Generate recommendation reason
@@ -304,17 +343,6 @@ class ArticleRecommender:
     async def mark_article_completed(self, user_id: str, article_id: str, goal_id: str) -> None:
         """Mark an article as completed in learning progress"""
         try:
-            # Add to reading list if not exists
-            self.supabase.client.table("reading_list").upsert(
-                {
-                    "user_id": user_id,
-                    "article_id": article_id,
-                    "status": "read",
-                    "updated_at": datetime.now().isoformat(),
-                }
-            ).execute()
-
-            # Update learning progress
             self.supabase.client.table("learning_progress").upsert(
                 {
                     "user_id": user_id,
@@ -323,9 +351,9 @@ class ArticleRecommender:
                     "status": "completed",
                     "completion_percentage": 100,
                     "completed_at": datetime.now().isoformat(),
-                }
+                },
+                on_conflict="user_id,goal_id,article_id",
             ).execute()
-
         except Exception as e:
             raise Exception(f"Failed to mark article completed: {e}")
 

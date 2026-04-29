@@ -134,23 +134,27 @@ class ProgressTracker:
         stage_name = stage_data["name"]
         stage_order = stage_data["order"]
 
-        # Get articles for this stage's skills
-        stage_articles = await self._get_stage_articles(stage_data["skills"])
-        articles_total = len(stage_articles)
+        # All completed records for this goal — deduplicate by article_id
+        seen_article_ids: set = set()
+        all_completed = []
+        for r in progress_records:
+            if r["status"] == "completed" and r.get("article_id") not in seen_article_ids:
+                seen_article_ids.add(r.get("article_id"))
+                all_completed.append(r)
 
-        # Count completed articles for this goal (ignore stage_id requirement)
-        completed_articles = [
-            record for record in progress_records if record["status"] == "completed"
-        ]
-        articles_completed = len(completed_articles)
+        # Use all completed articles for progress (stage_order is unreliable from frontend)
+        stage_completed = all_completed
 
-        # Calculate completion percentage
+        articles_completed = len(stage_completed)
+        articles_total = max(articles_completed, 10)  # default 10 articles per stage
+
+        # Calculate completion percentage (capped at 100)
         completion_percentage = (
-            (articles_completed / articles_total * 100) if articles_total > 0 else 0
+            min(articles_completed / articles_total * 100, 100) if articles_total > 0 else 0
         )
 
         # Sum time spent
-        time_spent = sum(record.get("time_spent_minutes", 0) for record in completed_articles)
+        time_spent = sum(record.get("time_spent_minutes", 0) for record in stage_completed)
 
         # Determine status
         if completion_percentage == 0:
@@ -268,6 +272,7 @@ class ProgressTracker:
         status: ProgressStatus,
         time_spent_minutes: int = 0,
         notes: str = "",
+        stage_order: Optional[int] = None,
     ) -> None:
         """Update progress for a specific article"""
         try:
@@ -281,11 +286,25 @@ class ProgressTracker:
                 "updated_at": datetime.now().isoformat(),
             }
 
+            if stage_order is not None:
+                progress_data["stage_order"] = stage_order
+
             if status == ProgressStatus.COMPLETED:
                 progress_data["completed_at"] = datetime.now().isoformat()
                 progress_data["completion_percentage"] = 100
 
-            self.supabase.client.table("learning_progress").upsert(progress_data).execute()
+            try:
+                self.supabase.client.table("learning_progress").upsert(
+                    progress_data,
+                    on_conflict="user_id,goal_id,article_id",
+                ).execute()
+            except Exception:
+                # Fallback: retry without stage_order if column doesn't exist yet
+                progress_data.pop("stage_order", None)
+                self.supabase.client.table("learning_progress").upsert(
+                    progress_data,
+                    on_conflict="user_id,goal_id,article_id",
+                ).execute()
 
         except Exception as e:
             raise Exception(f"Failed to update article progress: {e}")

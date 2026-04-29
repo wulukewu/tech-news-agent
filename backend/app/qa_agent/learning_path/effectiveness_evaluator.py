@@ -386,7 +386,7 @@ class LearningEffectivenessEvaluator:
 
         # Simplified skill proficiency (would be more sophisticated in real implementation)
         for stage in stage_reports:
-            skill_proficiency[stage.stage_name] = stage.completion_percentage / 100
+            skill_proficiency[stage.stage_name] = stage.efficiency_metrics.completion_rate
 
         # Learning style indicators (simplified)
         learning_style = {

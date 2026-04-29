@@ -98,6 +98,7 @@ export interface ArticleRecommendation {
 export interface CompleteArticleRequest {
   time_spent_minutes: number;
   notes: string;
+  stage_order?: number;
 }
 
 export interface LearningEvaluation {

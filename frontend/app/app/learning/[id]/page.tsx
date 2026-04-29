@@ -69,8 +69,12 @@ export default function LearningGoalDetailPage() {
   });
 
   const completeArticleMutation = useMutation({
-    mutationFn: ({ articleId }: { articleId: string }) =>
-      markArticleComplete(goalId, articleId, { time_spent_minutes: 30, notes: '' }),
+    mutationFn: ({ articleId, stageOrder }: { articleId: string; stageOrder: number }) =>
+      markArticleComplete(goalId, articleId, {
+        time_spent_minutes: 30,
+        notes: '',
+        stage_order: stageOrder,
+      }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['learningProgress', goalId] });
       // Use prefix match to invalidate all stages
@@ -264,7 +268,10 @@ export default function LearningGoalDetailPage() {
           ) : recommendations?.articles?.length ? (
             <div className="space-y-3">
               {recommendations.articles.map((article: any) => (
-                <Card key={article.id} className="hover:shadow-sm transition-shadow">
+                <Card
+                  key={article.id}
+                  className={`hover:shadow-sm transition-shadow ${article.is_completed ? 'opacity-60' : ''}`}
+                >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
@@ -295,9 +302,15 @@ export default function LearningGoalDetailPage() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="h-8 w-8 text-green-600 hover:text-green-700"
-                          onClick={() => completeArticleMutation.mutate({ articleId: article.id })}
+                          className={`h-8 w-8 ${article.is_completed ? 'text-green-600' : 'text-muted-foreground hover:text-green-600'}`}
+                          onClick={() =>
+                            completeArticleMutation.mutate({
+                              articleId: article.id,
+                              stageOrder: selectedStage,
+                            })
+                          }
                           disabled={completeArticleMutation.isPending}
+                          title={article.is_completed ? '點擊取消完成' : '標記為已完成'}
                         >
                           <CheckCircle className="h-4 w-4" />
                         </Button>

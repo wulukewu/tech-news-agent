@@ -72,6 +72,7 @@ class RecommendationResponse(BaseModel):
 class CompleteArticleRequest(BaseModel):
     time_spent_minutes: int = 0
     notes: str = ""
+    stage_order: Optional[int] = None
 
 
 class AdjustPlanRequest(BaseModel):
@@ -335,6 +336,17 @@ async def get_article_recommendations(
             user_id, learning_path, stage, limit, target_skill=target_skill
         )
 
+        # Get completed article IDs for this goal
+        completed_resp = (
+            supabase.client.table("learning_progress")
+            .select("article_id")
+            .eq("user_id", user_id)
+            .eq("goal_id", goal_id)
+            .eq("status", "completed")
+            .execute()
+        )
+        completed_ids = {str(r["article_id"]) for r in (completed_resp.data or [])}
+
         stage_name = ""
         if stage <= len(learning_path.stages):
             stage_name = learning_path.stages[stage - 1].stage_name
@@ -352,6 +364,7 @@ async def get_article_recommendations(
                     "relevance_score": rec.relevance_score,
                     "difficulty_match": rec.difficulty_match,
                     "reason": rec.reason,
+                    "is_completed": str(rec.article.id) in completed_ids,
                 }
                 for rec in recommendations
             ],
@@ -375,25 +388,41 @@ async def mark_article_complete(
     current_user: dict = Depends(get_current_user),
     supabase: SupabaseService = Depends(get_supabase_service),
 ):
-    """Mark an article as completed"""
+    """Toggle article completion status"""
     try:
         user_id = str(current_user["user_id"])
 
-        progress_tracker = ProgressTracker(supabase)
-        await progress_tracker.update_article_progress(
-            user_id,
-            goal_id,
-            article_id,
-            ProgressStatus.COMPLETED,
-            request.time_spent_minutes,
-            request.notes,
+        # Check current status
+        existing = (
+            supabase.client.table("learning_progress")
+            .select("status")
+            .eq("user_id", user_id)
+            .eq("goal_id", goal_id)
+            .eq("article_id", article_id)
+            .execute()
         )
+        is_completed = existing.data and existing.data[0]["status"] == "completed"
 
-        # Also mark in article recommender
-        recommender = ArticleRecommender(supabase)
-        await recommender.mark_article_completed(user_id, article_id, goal_id)
-
-        return {"success": True, "message": "文章標記為已完成"}
+        progress_tracker = ProgressTracker(supabase)
+        if is_completed:
+            # Uncheck: revert to not_started
+            await progress_tracker.update_article_progress(
+                user_id, goal_id, article_id, ProgressStatus.NOT_STARTED, 0, "", request.stage_order
+            )
+            return {"success": True, "completed": False, "message": "文章標記為未完成"}
+        else:
+            await progress_tracker.update_article_progress(
+                user_id,
+                goal_id,
+                article_id,
+                ProgressStatus.COMPLETED,
+                request.time_spent_minutes,
+                request.notes,
+                request.stage_order,
+            )
+            recommender = ArticleRecommender(supabase)
+            await recommender.mark_article_completed(user_id, article_id, goal_id)
+            return {"success": True, "completed": True, "message": "文章標記為已完成"}
 
     except Exception as e:
         raise HTTPException(
