@@ -142,13 +142,13 @@ export default function AnalyticsSettingsPage() {
 
                 <div className="text-sm text-muted-foreground">
                   {readingRate >= 80 ? (
-                    <p>🎉 優秀！您的閱讀完成率很高</p>
+                    <p>優秀！您的閱讀完成率很高</p>
                   ) : readingRate >= 50 ? (
-                    <p>👍 不錯！繼續保持閱讀習慣</p>
+                    <p>不錯！繼續保持閱讀習慣</p>
                   ) : readingRate > 0 ? (
-                    <p>📚 開始閱讀了！試著完成更多文章</p>
+                    <p>開始閱讀了！試著完成更多文章</p>
                   ) : (
-                    <p>🚀 開始您的閱讀之旅吧</p>
+                    <p>開始您的閱讀之旅吧</p>
                   )}
                 </div>
               </CardContent>
@@ -199,12 +199,12 @@ export default function AnalyticsSettingsPage() {
             </CardHeader>
             <CardContent>
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 text-sm text-muted-foreground">
-                <div>📊 閱讀時間趨勢</div>
-                <div>🏷️ 分類偏好分析</div>
-                <div>📈 每週/每月報告</div>
-                <div>🎯 個人化推薦</div>
-                <div>⏰ 閱讀時段分析</div>
-                <div>🔥 熱門文章追蹤</div>
+                <div>閱讀時間趨勢</div>
+                <div>分類偏好分析</div>
+                <div>每週/每月報告</div>
+                <div>個人化推薦</div>
+                <div>閱讀時段分析</div>
+                <div>熱門文章追蹤</div>
               </div>
             </CardContent>
           </Card>
