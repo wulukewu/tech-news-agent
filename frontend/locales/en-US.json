@@ -1096,6 +1096,7 @@
   },
   "status": {
     "active": "Active",
+    "not-started": "Not Started",
     "completed": "Completed",
     "paused": "Paused",
     "cancelled": "Cancelled"

@@ -1096,6 +1096,7 @@
   },
   "status": {
     "active": "進行中",
+    "not-started": "未開始",
     "completed": "已完成",
     "paused": "暫停",
     "cancelled": "已取消"

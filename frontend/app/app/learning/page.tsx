@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BookOpen, Target, Clock, TrendingUp, Plus, ChevronRight, Trash2 } from 'lucide-react';
@@ -14,32 +15,92 @@ import { useI18n } from '@/contexts/I18nContext';
 import {
   createLearningGoal,
   getLearningGoals,
+  getLearningProgress,
   deleteLearningGoal,
   type LearningGoal,
 } from '@/lib/api/learning-path';
 
-const statusConfig = {
-  active: {
-    label: null,
-    labelKey: 'status.active',
-    className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-  },
-  completed: {
-    label: null,
-    labelKey: 'status.completed',
-    className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-  },
-  paused: {
-    label: null,
-    labelKey: 'status.paused',
-    className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-  },
-  cancelled: {
-    label: null,
-    labelKey: 'status.cancelled',
-    className: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-  },
-};
+function GoalCard({
+  goal,
+  onDelete,
+  onClick,
+}: {
+  goal: LearningGoal;
+  onDelete: () => void;
+  onClick: () => void;
+}) {
+  const { t } = useI18n();
+  const { data: progress } = useQuery({
+    queryKey: ['learningProgress', goal.id],
+    queryFn: () => getLearningProgress(goal.id),
+    staleTime: 30_000,
+  });
+
+  const pct = progress?.overall_completion ?? 0;
+  const badgeClass =
+    pct >= 100
+      ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+      : pct > 0
+        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+        : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+  const badgeLabel =
+    pct >= 100 ? t('status.completed') : pct > 0 ? t('status.active') : t('status.not-started');
+
+  return (
+    <Card
+      className="cursor-pointer hover:shadow-md transition-all hover:border-primary/30"
+      onClick={onClick}
+    >
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-semibold truncate">{goal.title}</span>
+              <Badge variant="secondary" className={`text-xs shrink-0 ${badgeClass}`}>
+                {badgeLabel}
+              </Badge>
+            </div>
+            {goal.description && (
+              <p className="text-sm text-muted-foreground line-clamp-1 mb-2">{goal.description}</p>
+            )}
+            <div className="flex items-center gap-4 text-xs text-muted-foreground mb-3">
+              <span className="flex items-center gap-1">
+                <BookOpen className="h-3 w-3" />
+                {goal.target_skill}
+              </span>
+              <span className="flex items-center gap-1">
+                <Clock className="h-3 w-3" />
+                {t('learning.stage-hours', { hours: goal.estimated_hours })}
+              </span>
+              <span className="flex items-center gap-1">
+                <TrendingUp className="h-3 w-3" />
+                {goal.difficulty_level}/5
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Progress value={pct} className="h-1.5 flex-1" />
+              <span className="text-xs text-muted-foreground shrink-0 w-8 text-right">{pct}%</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1 shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-destructive"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (confirm(t('messages.confirm-delete'))) onDelete();
+              }}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function LearningPathPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -147,68 +208,14 @@ export default function LearningPathPage() {
       {/* Goals List */}
       {goals.length > 0 ? (
         <div className="space-y-3">
-          {goals.map((goal: LearningGoal) => {
-            const status =
-              statusConfig[goal.status as keyof typeof statusConfig] ?? statusConfig.active;
-            return (
-              <Card
-                key={goal.id}
-                className="cursor-pointer hover:shadow-md transition-all hover:border-primary/30"
-                onClick={() => router.push(`/app/learning/${goal.id}`)}
-              >
-                <CardContent className="p-5">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold truncate">{goal.title}</span>
-                        <Badge
-                          variant="secondary"
-                          className={`text-xs shrink-0 ${status.className}`}
-                        >
-                          {t(status.labelKey as Parameters<typeof t>[0])}
-                        </Badge>
-                      </div>
-                      {goal.description && (
-                        <p className="text-sm text-muted-foreground line-clamp-1 mb-2">
-                          {goal.description}
-                        </p>
-                      )}
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <BookOpen className="h-3 w-3" />
-                          {goal.target_skill}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {t('learning.stage-hours', { hours: goal.estimated_hours })}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <TrendingUp className="h-3 w-3" />
-                          {goal.difficulty_level}/5
-                        </span>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 shrink-0">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (confirm(t('messages.confirm-delete'))) {
-                            deleteGoalMutation.mutate(goal.id);
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {goals.map((goal: LearningGoal) => (
+            <GoalCard
+              key={goal.id}
+              goal={goal}
+              onDelete={() => deleteGoalMutation.mutate(goal.id)}
+              onClick={() => router.push(`/app/learning/${goal.id}`)}
+            />
+          ))}
         </div>
       ) : (
         <Card>

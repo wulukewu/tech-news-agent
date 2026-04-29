@@ -276,6 +276,7 @@ async def get_learning_progress(
         current_stage = await progress_tracker.get_current_stage(user_id, goal_id)
 
         # Get actual recommendation count to use as articles_total
+        recs = []
         try:
             goal_resp = (
                 supabase.client.table("learning_goals")
@@ -300,11 +301,33 @@ async def get_learning_progress(
         except Exception:
             rec_total = None
 
+        # Get completed article IDs for this goal (once, outside the loop)
+        prog_resp = (
+            supabase.client.table("learning_progress")
+            .select("article_id")
+            .eq("user_id", user_id)
+            .eq("goal_id", goal_id)
+            .eq("status", "completed")
+            .execute()
+        )
+        completed_ids = {str(r["article_id"]) for r in (prog_resp.data or [])}
+        rec_ids = {str(r.article.id) for r in recs} if (rec_total is not None and recs) else None
+
         stages_data = []
         for stage in progress_report.stages:
             total = rec_total if rec_total is not None else stage.articles_total
-            completed = min(stage.articles_completed, total)
+            # Count only completions that are in the recommendation list
+            if rec_ids is not None:
+                completed = len(rec_ids & completed_ids)
+            else:
+                completed = min(stage.articles_completed, total)
             pct = int(completed / total * 100) if total > 0 else 0
+            if pct >= 100:
+                status_val = "completed"
+            elif pct > 0:
+                status_val = "in_progress"
+            else:
+                status_val = "not_started"
             stages_data.append(
                 {
                     "name": stage.stage_name,
@@ -313,7 +336,7 @@ async def get_learning_progress(
                     "articles_completed": completed,
                     "articles_total": total,
                     "time_spent_hours": stage.time_spent_minutes / 60,
-                    "status": stage.status.value,
+                    "status": status_val,
                 }
             )
 
