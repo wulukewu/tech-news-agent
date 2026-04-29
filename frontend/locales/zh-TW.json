@@ -29,6 +29,26 @@
     "reminders": "智能提醒"
   },
   "pages": {
+    "reminders": {
+      "title": "智能提醒",
+      "description": "當你儲存或評分文章時，系統會找出相似文章並透過 Discord DM 通知你。",
+      "enable": "啟用智能提醒",
+      "enable-desc": "關閉後所有提醒都不會發送",
+      "triggers": "觸發條件",
+      "triggers-desc": "選擇哪些操作會觸發提醒",
+      "on-add": "加入閱讀清單時",
+      "on-add-desc": "每次儲存文章後推薦相似內容",
+      "on-rate": "評 4-5 星時",
+      "on-rate-desc": "根據高評分文章推薦更多同類內容",
+      "advanced": "進階設定",
+      "cooldown": "提醒間隔",
+      "cooldown-desc": "兩次提醒之間的最短間隔，避免頻繁打擾",
+      "cooldown-value": "{hours} 小時",
+      "similarity": "相似度門檻",
+      "similarity-desc": "越高代表推薦越精準但數量較少；越低則推薦更多但可能較不精準",
+      "dm-note": "提醒透過 Discord DM 發送，請確認已在 {link} 中開啟 DM 通知。",
+      "dm-note-link": "通知設定"
+    },
     "articles": {
       "title": "文章",
       "description": "探索並閱讀來自您訂閱的技術文章"

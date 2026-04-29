@@ -29,6 +29,26 @@
     "reminders": "Reminders"
   },
   "pages": {
+    "reminders": {
+      "title": "Smart Reminders",
+      "description": "When you save or rate an article, the system finds similar articles and sends them via Discord DM.",
+      "enable": "Enable Smart Reminders",
+      "enable-desc": "Turn off to stop all reminder notifications",
+      "triggers": "Triggers",
+      "triggers-desc": "Choose which actions send a reminder",
+      "on-add": "When saving to reading list",
+      "on-add-desc": "Recommend similar articles after each save",
+      "on-rate": "When rating 4–5 stars",
+      "on-rate-desc": "Find more content like your highly-rated articles",
+      "advanced": "Advanced",
+      "cooldown": "Cooldown period",
+      "cooldown-desc": "Minimum time between reminders to avoid being spammed",
+      "cooldown-value": "{hours}h",
+      "similarity": "Similarity threshold",
+      "similarity-desc": "Higher = more precise matches, fewer suggestions. Lower = more suggestions, less precise.",
+      "dm-note": "Reminders are sent via Discord DM. Make sure DM notifications are enabled in {link}.",
+      "dm-note-link": "Notifications"
+    },
     "articles": {
       "title": "Articles",
       "description": "Discover and read tech articles from your subscriptions"
