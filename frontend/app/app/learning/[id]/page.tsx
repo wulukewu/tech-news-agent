@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   BookOpen,
@@ -20,8 +21,8 @@ import {
   Lightbulb,
   Circle,
 } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from '@/lib/toast';
+import { useI18n } from '@/contexts/I18nContext';
 import {
   getLearningGoalDetails,
   getLearningProgress,
@@ -36,12 +37,6 @@ const stageColorMap: Record<string, string> = {
   advanced: 'bg-red-500',
 };
 
-const stageLabelMap: Record<string, string> = {
-  foundation: '基礎',
-  intermediate: '中級',
-  advanced: '進階',
-};
-
 export default function LearningGoalDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -49,6 +44,7 @@ export default function LearningGoalDetailPage() {
   const [selectedStage, setSelectedStage] = useState(1);
   const [selectedTab, setSelectedTab] = useState('path');
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   const { data: goalDetails, isLoading } = useQuery({
     queryKey: ['learningGoal', goalId],
@@ -69,7 +65,7 @@ export default function LearningGoalDetailPage() {
   const { data: evaluation } = useQuery({
     queryKey: ['evaluation', goalId],
     queryFn: () => getLearningEvaluation(goalId),
-    enabled: selectedTab === 'evaluation',
+    enabled: selectedTab === 'progress',
   });
 
   const completeArticleMutation = useMutation({
@@ -78,10 +74,16 @@ export default function LearningGoalDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['learningProgress', goalId] });
       queryClient.invalidateQueries({ queryKey: ['recommendations', goalId] });
-      toast.success('已標記為完成');
+      toast.success(t('learning.mark-complete'));
     },
-    onError: () => toast.error('標記失敗'),
+    onError: () => toast.error(t('learning.mark-complete-failed')),
   });
+
+  const stageLabel = (name: string) => {
+    const key = `learning.stage-${name}` as Parameters<typeof t>[0];
+    const translated = t(key);
+    return translated !== key ? translated : name;
+  };
 
   if (isLoading) {
     return (
@@ -108,12 +110,12 @@ export default function LearningGoalDetailPage() {
     return (
       <div className="container mx-auto px-4 py-8">
         <Button variant="ghost" onClick={() => router.push('/app/learning')} className="mb-4">
-          <ChevronLeft className="h-4 w-4 mr-1" /> 返回
+          <ChevronLeft className="h-4 w-4 mr-1" /> {t('learning.back')}
         </Button>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Target className="h-12 w-12 text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">學習目標不存在</p>
+            <p className="text-muted-foreground">{t('learning.goal-not-found')}</p>
           </CardContent>
         </Card>
       </div>
@@ -126,9 +128,8 @@ export default function LearningGoalDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
-      {/* Back */}
       <Button variant="ghost" onClick={() => router.push('/app/learning')} className="mb-4 -ml-2">
-        <ChevronLeft className="h-4 w-4 mr-1" /> 返回學習路徑
+        <ChevronLeft className="h-4 w-4 mr-1" /> {t('learning.back')}
       </Button>
 
       {/* Header */}
@@ -142,17 +143,18 @@ export default function LearningGoalDetailPage() {
             <BookOpen className="h-4 w-4" /> {goal.target_skill}
           </span>
           <span className="flex items-center gap-1">
-            <Clock className="h-4 w-4" /> {goal.estimated_hours} 小時
+            <Clock className="h-4 w-4" />{' '}
+            {t('learning.stage-hours', { hours: goal.estimated_hours })}
           </span>
           <span className="flex items-center gap-1">
-            <TrendingUp className="h-4 w-4" /> 難度 {goal.difficulty_level}/5
+            <TrendingUp className="h-4 w-4" /> {goal.difficulty_level}/5
           </span>
         </div>
 
         {progress && (
           <div className="mt-4">
             <div className="flex justify-between text-sm mb-1">
-              <span className="text-muted-foreground">整體進度</span>
+              <span className="text-muted-foreground">{t('learning.overall-progress')}</span>
               <span className="font-medium">{progress.overall_completion}%</span>
             </div>
             <Progress value={progress.overall_completion} className="h-2" />
@@ -162,9 +164,9 @@ export default function LearningGoalDetailPage() {
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
         <TabsList className="grid w-full grid-cols-3 mb-6">
-          <TabsTrigger value="path">學習路徑</TabsTrigger>
-          <TabsTrigger value="recommendations">推薦文章</TabsTrigger>
-          <TabsTrigger value="progress">進度 & 評估</TabsTrigger>
+          <TabsTrigger value="path">{t('learning.path-tab')}</TabsTrigger>
+          <TabsTrigger value="recommendations">{t('learning.recommendations-tab')}</TabsTrigger>
+          <TabsTrigger value="progress">{t('learning.progress-tab')}</TabsTrigger>
         </TabsList>
 
         {/* Path Tab */}
@@ -173,16 +175,15 @@ export default function LearningGoalDetailPage() {
             stages.map((stage: any, index: number) => {
               const stageProgress = progress?.stages?.[index];
               const colorClass = stageColorMap[stage.name] ?? 'bg-gray-500';
-              const label = stageLabelMap[stage.name] ?? stage.name;
               return (
                 <Card key={stage.order}>
                   <CardContent className="p-5">
                     <div className="flex items-start justify-between gap-4 mb-3">
                       <div className="flex items-center gap-2">
                         <span className={`inline-block w-2 h-2 rounded-full ${colorClass}`} />
-                        <span className="font-semibold">{label} 階段</span>
+                        <span className="font-semibold">{stageLabel(stage.name)}</span>
                         <span className="text-xs text-muted-foreground">
-                          {stage.estimated_hours} 小時
+                          {t('learning.stage-hours', { hours: stage.estimated_hours })}
                         </span>
                       </div>
                       {stageProgress && (
@@ -221,7 +222,7 @@ export default function LearningGoalDetailPage() {
                         setSelectedTab('recommendations');
                       }}
                     >
-                      查看推薦文章 →
+                      {t('learning.view-recommendations')}
                     </Button>
                   </CardContent>
                 </Card>
@@ -231,7 +232,7 @@ export default function LearningGoalDetailPage() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <BookOpen className="h-10 w-10 text-muted-foreground mb-3" />
-                <p className="text-muted-foreground text-sm">學習路徑生成中，請稍候...</p>
+                <p className="text-muted-foreground text-sm">{t('learning.path-generating')}</p>
               </CardContent>
             </Card>
           )}
@@ -239,10 +240,9 @@ export default function LearningGoalDetailPage() {
 
         {/* Recommendations Tab */}
         <TabsContent value="recommendations" className="space-y-4">
-          {/* Stage selector */}
           {stages.length > 0 && (
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm text-muted-foreground">選擇階段：</span>
+              <span className="text-sm text-muted-foreground">{t('learning.select-stage')}</span>
               {stages.map((stage: any) => (
                 <Button
                   key={stage.order}
@@ -250,7 +250,7 @@ export default function LearningGoalDetailPage() {
                   size="sm"
                   onClick={() => setSelectedStage(stage.order)}
                 >
-                  {stageLabelMap[stage.name] ?? stage.name}
+                  {stageLabel(stage.name)}
                 </Button>
               ))}
             </div>
@@ -282,7 +282,7 @@ export default function LearningGoalDetailPage() {
                               {article.category}
                             </Badge>
                           )}
-                          <span>相關度 {Math.round(article.relevance_score * 100)}%</span>
+                          <span>{Math.round(article.relevance_score * 100)}%</span>
                         </div>
                       </div>
                       <div className="flex gap-1 shrink-0">
@@ -297,7 +297,6 @@ export default function LearningGoalDetailPage() {
                           className="h-8 w-8 text-green-600 hover:text-green-700"
                           onClick={() => completeArticleMutation.mutate({ articleId: article.id })}
                           disabled={completeArticleMutation.isPending}
-                          title="標記為已讀"
                         >
                           <CheckCircle className="h-4 w-4" />
                         </Button>
@@ -311,9 +310,7 @@ export default function LearningGoalDetailPage() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Lightbulb className="h-10 w-10 text-muted-foreground mb-3" />
-                <p className="text-muted-foreground text-sm">
-                  目前沒有符合此階段的推薦文章，等待更多文章被抓取後會自動出現
-                </p>
+                <p className="text-muted-foreground text-sm">{t('learning.no-recommendations')}</p>
               </CardContent>
             </Card>
           )}
@@ -321,22 +318,19 @@ export default function LearningGoalDetailPage() {
 
         {/* Progress & Evaluation Tab */}
         <TabsContent value="progress" className="space-y-4">
-          {/* Stage progress */}
           {progress ? (
             <>
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">各階段進度</CardTitle>
+                  <CardTitle className="text-base">{t('learning.stage-progress')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   {progress.stages.map((stage: any, i: number) => (
                     <div key={i}>
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="font-medium">
-                          {stageLabelMap[stage.name] ?? stage.name} 階段
-                        </span>
+                        <span className="font-medium">{stageLabel(stage.name)}</span>
                         <span className="text-muted-foreground">
-                          {stage.articles_completed}/{stage.articles_total} 篇 ·{' '}
+                          {stage.articles_completed}/{stage.articles_total} ·{' '}
                           {stage.completion_percentage}%
                         </span>
                       </div>
@@ -350,7 +344,8 @@ export default function LearningGoalDetailPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-base flex items-center gap-2">
-                      <Lightbulb className="h-4 w-4 text-yellow-500" /> 學習建議
+                      <Lightbulb className="h-4 w-4 text-yellow-500" />
+                      {t('learning.learning-suggestions')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -373,24 +368,35 @@ export default function LearningGoalDetailPage() {
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <BarChart3 className="h-10 w-10 text-muted-foreground mb-3" />
-                <p className="text-sm text-muted-foreground">開始學習後將顯示進度統計</p>
+                <p className="text-sm text-muted-foreground">{t('learning.no-progress')}</p>
               </CardContent>
             </Card>
           )}
 
-          {/* Evaluation */}
           {evaluation && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">學習成效評估</CardTitle>
+                <CardTitle className="text-base">{t('learning.evaluation-title')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    { label: '時間效率', value: evaluation.efficiency_metrics.time_efficiency },
-                    { label: '完成率', value: evaluation.efficiency_metrics.completion_rate },
-                    { label: '知識保持', value: evaluation.efficiency_metrics.retention_score },
-                    { label: '學習一致性', value: evaluation.efficiency_metrics.consistency_score },
+                    {
+                      label: t('learning.time-efficiency'),
+                      value: evaluation.efficiency_metrics.time_efficiency,
+                    },
+                    {
+                      label: t('learning.completion-rate'),
+                      value: evaluation.efficiency_metrics.completion_rate,
+                    },
+                    {
+                      label: t('learning.knowledge-retention'),
+                      value: evaluation.efficiency_metrics.retention_score,
+                    },
+                    {
+                      label: t('learning.consistency'),
+                      value: evaluation.efficiency_metrics.consistency_score,
+                    },
                   ].map(({ label, value }) => (
                     <div key={label} className="text-center p-3 rounded-lg bg-muted/50">
                       <div className="text-lg font-bold">{Math.round(value * 100)}%</div>
@@ -401,7 +407,9 @@ export default function LearningGoalDetailPage() {
 
                 {evaluation.strengths.length > 0 && (
                   <div>
-                    <p className="text-sm font-medium text-green-600 mb-2">優勢</p>
+                    <p className="text-sm font-medium text-green-600 mb-2">
+                      {t('learning.strengths')}
+                    </p>
                     <ul className="space-y-1">
                       {evaluation.strengths.map((s: string, i: number) => (
                         <li
@@ -418,7 +426,7 @@ export default function LearningGoalDetailPage() {
 
                 {evaluation.next_steps.length > 0 && (
                   <div>
-                    <p className="text-sm font-medium mb-2">下一步</p>
+                    <p className="text-sm font-medium mb-2">{t('learning.next-steps')}</p>
                     <ul className="space-y-1">
                       {evaluation.next_steps.map((s: string, i: number) => (
                         <li

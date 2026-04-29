@@ -110,7 +110,8 @@
     "no-articles": "No new articles found",
     "fetching-articles": "Fetching articles...",
     "scheduler-running": "Scheduler is running, please wait",
-    "fetch-complete": "Article fetch complete"
+    "fetch-complete": "Article fetch complete",
+    "confirm-delete": "Are you sure you want to delete?"
   },
   "errors": {
     "network-error": "Network connection error. Please check your network settings",
@@ -143,7 +144,8 @@
     "opml-invalid": "Invalid OPML file: {error}",
     "opml-no-feeds": "No feeds found in OPML file",
     "opml-read-failed": "Failed to read OPML file",
-    "opml-import-failed": "Import failed, please try again later"
+    "opml-import-failed": "Import failed, please try again later",
+    "required-field": "This field is required"
   },
   "success": {
     "article-saved": "Article added to reading list",
@@ -1048,5 +1050,54 @@
     "generate-first": "Generate First Report",
     "load-failed": "Failed to load insights.",
     "generate-failed": "Generation failed — showing last available data."
+  },
+  "learning": {
+    "title": "Learning Paths",
+    "subtitle": "Set goals and let the system plan your learning journey",
+    "add-goal": "Add Goal",
+    "create-goal-title": "New Learning Goal",
+    "create-goal-placeholder": "e.g. Learn Kubernetes, Master React development...",
+    "create-goal-submit": "Create & Generate Path",
+    "empty-title": "No learning goals yet",
+    "empty-desc": "Enter a technology you want to learn and the system will generate a step-by-step plan",
+    "create-first": "Create First Goal",
+    "goal-created": "Learning goal created!",
+    "goal-created-with-feeds": "Goal created! Suggested feeds to subscribe: {feeds}",
+    "goal-create-failed": "Failed to create learning goal",
+    "goal-deleted": "Learning goal deleted",
+    "goal-delete-failed": "Delete failed",
+    "back": "Back to Learning Paths",
+    "path-tab": "Learning Path",
+    "recommendations-tab": "Recommended Articles",
+    "progress-tab": "Progress & Evaluation",
+    "view-recommendations": "View Recommendations →",
+    "path-generating": "Generating learning path, please wait...",
+    "no-recommendations": "No articles match this stage yet. More will appear after the next fetch.",
+    "mark-complete": "Marked as complete",
+    "mark-complete-failed": "Failed to mark",
+    "stage-foundation": "Foundation",
+    "stage-intermediate": "Intermediate",
+    "stage-advanced": "Advanced",
+    "stage-hours": "{hours} hours",
+    "overall-progress": "Overall Progress",
+    "stage-progress": "Stage Progress",
+    "learning-suggestions": "Learning Suggestions",
+    "evaluation-title": "Learning Effectiveness",
+    "time-efficiency": "Time Efficiency",
+    "completion-rate": "Completion Rate",
+    "knowledge-retention": "Knowledge Retention",
+    "consistency": "Consistency",
+    "strengths": "Strengths",
+    "next-steps": "Next Steps",
+    "no-progress": "Progress stats will appear after you start learning",
+    "goal-not-found": "Learning goal not found",
+    "select-stage": "Select stage:",
+    "articles-count": "{count} articles"
+  },
+  "status": {
+    "active": "Active",
+    "completed": "Completed",
+    "paused": "Paused",
+    "cancelled": "Cancelled"
   }
 }

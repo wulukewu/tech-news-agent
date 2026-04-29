@@ -115,7 +115,7 @@ export default function NotificationSettingsPage() {
           >
             <Bell className="h-3.5 w-3.5 flex-shrink-0" />
             <span className="hidden sm:inline">{t('settings.notifications.tab-schedule')}</span>
-            <span className="sm:hidden">排程</span>
+            <span className="sm:hidden">{t('settings.notifications.tab-schedule')}</span>
           </TabsTrigger>
           <TabsTrigger
             value="quiet-hours"
@@ -123,7 +123,7 @@ export default function NotificationSettingsPage() {
           >
             <Moon className="h-3.5 w-3.5 flex-shrink-0" />
             <span className="hidden sm:inline">{t('settings.notifications.tab-quiet-hours')}</span>
-            <span className="sm:hidden">勿擾</span>
+            <span className="sm:hidden">{t('settings.notifications.tab-quiet-hours')}</span>
           </TabsTrigger>
           <TabsTrigger
             value="filters"
@@ -131,12 +131,12 @@ export default function NotificationSettingsPage() {
           >
             <Brain className="h-3.5 w-3.5 flex-shrink-0" />
             <span className="hidden sm:inline">{t('settings.notifications.tab-filters')}</span>
-            <span className="sm:hidden">篩選</span>
+            <span className="sm:hidden">{t('settings.notifications.tab-filters')}</span>
           </TabsTrigger>
           <TabsTrigger value="feeds" className="flex items-center gap-1.5 py-2 text-xs sm:text-sm">
             <Rss className="h-3.5 w-3.5 flex-shrink-0" />
             <span className="hidden sm:inline">{t('settings.notifications.tab-feeds')}</span>
-            <span className="sm:hidden">來源</span>
+            <span className="sm:hidden">{t('settings.notifications.tab-feeds')}</span>
           </TabsTrigger>
         </TabsList>
 

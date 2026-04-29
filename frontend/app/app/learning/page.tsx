@@ -7,9 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { BookOpen, Target, Clock, TrendingUp, Plus, ChevronRight, Trash2 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { BookOpen, Target, Clock, TrendingUp, Plus, ChevronRight, Trash2 } from 'lucide-react';
 import { toast } from '@/lib/toast';
+import { useI18n } from '@/contexts/I18nContext';
 import {
   createLearningGoal,
   getLearningGoals,
@@ -19,19 +20,23 @@ import {
 
 const statusConfig = {
   active: {
-    label: '進行中',
+    label: null,
+    labelKey: 'status.active',
     className: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
   },
   completed: {
-    label: '已完成',
+    label: null,
+    labelKey: 'status.completed',
     className: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
   },
   paused: {
-    label: '暫停',
+    label: null,
+    labelKey: 'status.paused',
     className: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
   },
   cancelled: {
-    label: '已取消',
+    label: null,
+    labelKey: 'status.cancelled',
     className: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
   },
 };
@@ -41,6 +46,7 @@ export default function LearningPathPage() {
   const [goalText, setGoalText] = useState('');
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { t } = useI18n();
 
   const { data: goals = [], isLoading } = useQuery({
     queryKey: ['learningGoals'],
@@ -55,27 +61,29 @@ export default function LearningPathPage() {
       setShowCreateForm(false);
       if (data.suggested_feeds?.length) {
         toast.success(
-          `學習目標創建成功！建議訂閱相關 feeds：${data.suggested_feeds.map((f) => f.name).join('、')}`
+          t('learning.goal-created-with-feeds', {
+            feeds: data.suggested_feeds.map((f) => f.name).join('、'),
+          })
         );
       } else {
-        toast.success('學習目標創建成功！');
+        toast.success(t('learning.goal-created'));
       }
       if (data.goal_id) router.push(`/app/learning/${data.goal_id}`);
     },
-    onError: () => toast.error('創建學習目標失敗'),
+    onError: () => toast.error(t('learning.goal-create-failed')),
   });
 
   const deleteGoalMutation = useMutation({
     mutationFn: deleteLearningGoal,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['learningGoals'] });
-      toast.success('學習目標已刪除');
+      toast.success(t('learning.goal-deleted'));
     },
-    onError: () => toast.error('刪除失敗'),
+    onError: () => toast.error(t('learning.goal-delete-failed')),
   });
 
   const handleCreate = () => {
-    if (!goalText.trim()) return toast.error('請輸入學習目標');
+    if (!goalText.trim()) return toast.error(t('errors.required-field'));
     createGoalMutation.mutate({ goal_text: goalText });
   };
 
@@ -101,12 +109,12 @@ export default function LearningPathPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold">學習路徑</h1>
-          <p className="text-muted-foreground text-sm mt-1">設定目標，系統自動規劃學習計劃</p>
+          <h1 className="text-2xl font-bold">{t('learning.title')}</h1>
+          <p className="text-muted-foreground text-sm mt-1">{t('learning.subtitle')}</p>
         </div>
         <Button onClick={() => setShowCreateForm(!showCreateForm)}>
           <Plus className="h-4 w-4 mr-2" />
-          新增目標
+          {t('learning.add-goal')}
         </Button>
       </div>
 
@@ -114,11 +122,11 @@ export default function LearningPathPage() {
       {showCreateForm && (
         <Card className="mb-6 border-primary/20">
           <CardHeader>
-            <CardTitle className="text-base">新增學習目標</CardTitle>
+            <CardTitle className="text-base">{t('learning.create-goal-title')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <Textarea
-              placeholder="例如：學習 Kubernetes 容器編排、掌握 React 前端開發..."
+              placeholder={t('learning.create-goal-placeholder')}
               value={goalText}
               onChange={(e) => setGoalText(e.target.value)}
               rows={2}
@@ -126,10 +134,10 @@ export default function LearningPathPage() {
             />
             <div className="flex gap-2">
               <Button onClick={handleCreate} disabled={createGoalMutation.isPending} size="sm">
-                {createGoalMutation.isPending ? '生成中...' : '建立並生成路徑'}
+                {createGoalMutation.isPending ? '...' : t('learning.create-goal-submit')}
               </Button>
               <Button variant="ghost" size="sm" onClick={() => setShowCreateForm(false)}>
-                取消
+                {t('buttons.cancel')}
               </Button>
             </div>
           </CardContent>
@@ -157,7 +165,7 @@ export default function LearningPathPage() {
                           variant="secondary"
                           className={`text-xs shrink-0 ${status.className}`}
                         >
-                          {status.label}
+                          {t(status.labelKey as Parameters<typeof t>[0])}
                         </Badge>
                       </div>
                       {goal.description && (
@@ -172,11 +180,11 @@ export default function LearningPathPage() {
                         </span>
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {goal.estimated_hours} 小時
+                          {t('learning.stage-hours', { hours: goal.estimated_hours })}
                         </span>
                         <span className="flex items-center gap-1">
                           <TrendingUp className="h-3 w-3" />
-                          難度 {goal.difficulty_level}/5
+                          {goal.difficulty_level}/5
                         </span>
                       </div>
                     </div>
@@ -187,7 +195,7 @@ export default function LearningPathPage() {
                         className="h-8 w-8 text-muted-foreground hover:text-destructive"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (confirm('確定要刪除這個學習目標嗎？')) {
+                          if (confirm(t('messages.confirm-delete'))) {
                             deleteGoalMutation.mutate(goal.id);
                           }
                         }}
@@ -206,13 +214,13 @@ export default function LearningPathPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Target className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="font-semibold mb-1">還沒有學習目標</h3>
+            <h3 className="font-semibold mb-1">{t('learning.empty-title')}</h3>
             <p className="text-sm text-muted-foreground text-center mb-4">
-              輸入你想學的技術，系統會自動生成階段性學習計劃
+              {t('learning.empty-desc')}
             </p>
             <Button onClick={() => setShowCreateForm(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              建立第一個目標
+              {t('learning.create-first')}
             </Button>
           </CardContent>
         </Card>

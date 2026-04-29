@@ -110,7 +110,8 @@
     "no-articles": "沒有發現新文章",
     "fetching-articles": "正在抓取文章...",
     "scheduler-running": "排程器執行中，請稍候",
-    "fetch-complete": "文章抓取完成"
+    "fetch-complete": "文章抓取完成",
+    "confirm-delete": "確定要刪除嗎？"
   },
   "errors": {
     "network-error": "網路連線異常，請檢查您的網路設定",
@@ -143,7 +144,8 @@
     "opml-invalid": "無效的 OPML 檔案：{error}",
     "opml-no-feeds": "OPML 檔案中沒有找到任何 Feed",
     "opml-read-failed": "讀取 OPML 檔案失敗",
-    "opml-import-failed": "匯入失敗，請稍後再試"
+    "opml-import-failed": "匯入失敗，請稍後再試",
+    "required-field": "此欄位為必填"
   },
   "success": {
     "article-saved": "文章已加入閱讀清單",
@@ -1048,5 +1050,54 @@
     "search-status-favorite": "收藏",
     "search-status-archived": "已歸檔",
     "search-open-aria": "開啟對話：{title}"
+  },
+  "learning": {
+    "title": "學習路徑",
+    "subtitle": "設定目標，系統自動規劃學習計劃",
+    "add-goal": "新增目標",
+    "create-goal-title": "新增學習目標",
+    "create-goal-placeholder": "例如：學習 Kubernetes 容器編排、掌握 React 前端開發...",
+    "create-goal-submit": "建立並生成路徑",
+    "empty-title": "還沒有學習目標",
+    "empty-desc": "輸入你想學的技術，系統會自動生成階段性學習計劃",
+    "create-first": "建立第一個目標",
+    "goal-created": "學習目標創建成功！",
+    "goal-created-with-feeds": "學習目標創建成功！建議訂閱相關 feeds：{feeds}",
+    "goal-create-failed": "創建學習目標失敗",
+    "goal-deleted": "學習目標已刪除",
+    "goal-delete-failed": "刪除失敗",
+    "back": "返回學習路徑",
+    "path-tab": "學習路徑",
+    "recommendations-tab": "推薦文章",
+    "progress-tab": "進度 & 評估",
+    "view-recommendations": "查看推薦文章 →",
+    "path-generating": "學習路徑生成中，請稍候...",
+    "no-recommendations": "目前沒有符合此階段的推薦文章，等待更多文章被抓取後會自動出現",
+    "mark-complete": "已標記為完成",
+    "mark-complete-failed": "標記失敗",
+    "stage-foundation": "基礎",
+    "stage-intermediate": "中級",
+    "stage-advanced": "進階",
+    "stage-hours": "{hours} 小時",
+    "overall-progress": "整體進度",
+    "stage-progress": "各階段進度",
+    "learning-suggestions": "學習建議",
+    "evaluation-title": "學習成效評估",
+    "time-efficiency": "時間效率",
+    "completion-rate": "完成率",
+    "knowledge-retention": "知識保持",
+    "consistency": "學習一致性",
+    "strengths": "優勢",
+    "next-steps": "下一步",
+    "no-progress": "開始學習後將顯示進度統計",
+    "goal-not-found": "學習目標不存在",
+    "select-stage": "選擇階段：",
+    "articles-count": "{count} 篇文章"
+  },
+  "status": {
+    "active": "進行中",
+    "completed": "已完成",
+    "paused": "暫停",
+    "cancelled": "已取消"
   }
 }
