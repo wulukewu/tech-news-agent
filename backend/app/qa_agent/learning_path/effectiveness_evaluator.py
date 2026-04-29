@@ -158,7 +158,7 @@ class LearningEffectivenessEvaluator:
         difficulty_progression = await self._calculate_difficulty_progression(user_id, goal_id)
 
         return EfficiencyMetrics(
-            time_efficiency=min(time_efficiency, 2.0),  # Cap at 2x efficiency
+            time_efficiency=min(time_efficiency, 1.0),  # Cap at 100%
             completion_rate=completion_rate,
             retention_score=retention_score,
             consistency_score=consistency_score,
@@ -274,7 +274,9 @@ class LearningEffectivenessEvaluator:
             estimated_minutes = stage.estimated_hours * 60
 
             stage_efficiency = EfficiencyMetrics(
-                time_efficiency=estimated_minutes / actual_minutes if actual_minutes > 0 else 0,
+                time_efficiency=min(estimated_minutes / actual_minutes, 1.0)
+                if actual_minutes > 0
+                else 0,
                 completion_rate=stage.completion_percentage / 100,
                 retention_score=0.8,  # Simplified
                 consistency_score=0.7,  # Simplified

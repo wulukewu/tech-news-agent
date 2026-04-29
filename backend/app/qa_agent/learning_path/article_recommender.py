@@ -61,7 +61,8 @@ class ArticleRecommender:
 
         # Get user's reading history and preferences
         user_preferences = await self._get_user_preferences(user_id)
-        read_articles = await self._get_read_articles(user_id)
+        goal_id = learning_path.goal_id if hasattr(learning_path, "goal_id") else ""
+        read_articles = await self._get_read_articles(user_id, goal_id)
 
         # Find relevant articles for current stage skills
         candidate_articles = await self._find_relevant_articles(current_stage, target_skill)
@@ -70,10 +71,37 @@ class ArticleRecommender:
         if not candidate_articles:
             candidate_articles = await self._find_fallback_articles(set())
 
-        # Score and rank articles
+        # Fetch completed articles that may not appear in candidates (e.g. low relevance score)
+        if read_articles:
+            candidate_ids = {str(a.id) for a in candidate_articles}
+            missing_ids = read_articles - candidate_ids
+            if missing_ids:
+                select_fields = "id, feed_id, title, url, published_at, tinkering_index, ai_summary, created_at, category"
+                for aid in missing_ids:
+                    resp = (
+                        self.supabase.client.table("articles")
+                        .select(select_fields)
+                        .eq("id", aid)
+                        .execute()
+                    )
+                    for record in resp.data or []:
+                        try:
+                            record.setdefault("feed_name", record.get("category") or "")
+                            if isinstance(record.get("embedding"), str):
+                                record["embedding"] = None
+                            candidate_articles.append(ArticleSchema(**record))
+                        except Exception:
+                            pass
+
+        # Score and rank articles; completed articles always pass the threshold
         scored_articles = []
         for article in candidate_articles:
-            score_data = await self._score_article(article, current_stage, user_preferences)
+            score_data = await self._score_article(
+                article,
+                current_stage,
+                user_preferences,
+                force_include=str(article.id) in read_articles,
+            )
             if score_data:
                 scored_articles.append(score_data)
 
@@ -152,16 +180,18 @@ class ArticleRecommender:
         except Exception:
             return []
 
-    async def _get_read_articles(self, user_id: str) -> set:
-        """Get set of article IDs user has already completed in learning progress"""
+    async def _get_read_articles(self, user_id: str, goal_id: str = "") -> set:
+        """Get set of article IDs user has already completed in this learning goal"""
         try:
-            response = (
+            query = (
                 self.supabase.client.table("learning_progress")
                 .select("article_id")
                 .eq("user_id", user_id)
                 .eq("status", "completed")
-                .execute()
             )
+            if goal_id:
+                query = query.eq("goal_id", goal_id)
+            response = query.execute()
             return {str(record["article_id"]) for record in response.data}
         except Exception:
             return set()
@@ -258,7 +288,11 @@ class ArticleRecommender:
             return []
 
     async def _score_article(
-        self, article: ArticleSchema, stage: LearningStage, user_preferences: Dict
+        self,
+        article: ArticleSchema,
+        stage: LearningStage,
+        user_preferences: Dict,
+        force_include: bool = False,
     ) -> Optional[RecommendedArticle]:
         """Score article relevance for current stage"""
         try:
@@ -309,8 +343,8 @@ class ArticleRecommender:
                 if days_old < 30:
                     relevance_score += 0.1
 
-            # Only recommend if minimum relevance threshold met
-            if relevance_score < 0.1:
+            # Only recommend if minimum relevance threshold met (completed articles always pass)
+            if not force_include and relevance_score < 0.1:
                 return None
 
             # Generate recommendation reason

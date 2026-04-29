@@ -275,22 +275,59 @@ async def get_learning_progress(
         progress_report = await progress_tracker.get_progress_report(user_id, goal_id)
         current_stage = await progress_tracker.get_current_stage(user_id, goal_id)
 
-        return ProgressResponse(
-            goal_id=goal_id,
-            overall_completion=progress_report.overall_completion,
-            current_stage=current_stage or 1,
-            stages=[
+        # Get actual recommendation count to use as articles_total
+        try:
+            goal_resp = (
+                supabase.client.table("learning_goals")
+                .select("target_skill")
+                .eq("id", goal_id)
+                .single()
+                .execute()
+            )
+            target_skill = goal_resp.data.get("target_skill", "") if goal_resp.data else ""
+            skill_tree = await initialize_skill_tree(supabase)
+            learning_path = await LearningPathGenerator(supabase, skill_tree).get_path_by_goal_id(
+                goal_id
+            )
+            if learning_path:
+                recommender = ArticleRecommender(supabase)
+                recs = await recommender.get_recommendations(
+                    user_id, learning_path, current_stage or 1, 100, target_skill=target_skill
+                )
+                rec_total = len(recs)
+            else:
+                rec_total = None
+        except Exception:
+            rec_total = None
+
+        stages_data = []
+        for stage in progress_report.stages:
+            total = rec_total if rec_total is not None else stage.articles_total
+            completed = min(stage.articles_completed, total)
+            pct = int(completed / total * 100) if total > 0 else 0
+            stages_data.append(
                 {
                     "name": stage.stage_name,
                     "order": stage.stage_order,
-                    "completion_percentage": stage.completion_percentage,
-                    "articles_completed": stage.articles_completed,
-                    "articles_total": stage.articles_total,
+                    "completion_percentage": pct,
+                    "articles_completed": completed,
+                    "articles_total": total,
                     "time_spent_hours": stage.time_spent_minutes / 60,
                     "status": stage.status.value,
                 }
-                for stage in progress_report.stages
-            ],
+            )
+
+        overall = (
+            int(sum(s["completion_percentage"] for s in stages_data) / len(stages_data))
+            if stages_data
+            else 0
+        )
+
+        return ProgressResponse(
+            goal_id=goal_id,
+            overall_completion=overall,
+            current_stage=current_stage or 1,
+            stages=stages_data,
             recommendations=progress_report.recommendations,
         )
 

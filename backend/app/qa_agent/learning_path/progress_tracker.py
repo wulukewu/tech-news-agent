@@ -146,7 +146,11 @@ class ProgressTracker:
         stage_completed = all_completed
 
         articles_completed = len(stage_completed)
-        articles_total = max(articles_completed, 10)  # default 10 articles per stage
+
+        # articles_total = how many distinct articles exist for this goal
+        # Query learning_progress to find all known articles (completed or not)
+        all_known = {r.get("article_id") for r in progress_records if r.get("article_id")}
+        articles_total = max(len(all_known), articles_completed, 1)
 
         # Calculate completion percentage (capped at 100)
         completion_percentage = (
