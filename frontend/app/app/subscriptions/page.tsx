@@ -76,6 +76,7 @@ export default function SubscriptionsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [toggling, setToggling] = useState<Set<string>>(new Set());
+  const [batchLoading, setBatchLoading] = useState<string | null>(null); // label of current batch op
   const [currentTab, setCurrentTab] = useState<'subscriptions' | 'explore'>('subscriptions');
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(() => {
     // Load collapsed state from localStorage
@@ -160,6 +161,7 @@ export default function SubscriptionsPage() {
       );
     setFeeds(updater);
     setFilteredFeeds(updater);
+    setBatchLoading(subscribe ? `訂閱 ${category}` : `取消 ${category}`);
 
     try {
       if (subscribe) {
@@ -181,6 +183,8 @@ export default function SubscriptionsPage() {
       setFilteredFeeds(reverter);
       console.error('Failed to toggle category:', err);
       toast.error(t('subscriptions.batch-operation-failed'));
+    } finally {
+      setBatchLoading(null);
     }
   };
 
@@ -193,6 +197,9 @@ export default function SubscriptionsPage() {
     const updater = (prev: Feed[]) => prev.map((feed) => ({ ...feed, is_subscribed: subscribe }));
     setFeeds(updater);
     setFilteredFeeds(updater);
+    setBatchLoading(
+      subscribe ? `訂閱全部 ${feedsToToggle.length} 個` : `取消全部 ${feedsToToggle.length} 個`
+    );
 
     try {
       if (subscribe) {
@@ -216,6 +223,8 @@ export default function SubscriptionsPage() {
       setFilteredFeeds(reverter);
       console.error('Failed to toggle all:', err);
       toast.error(t('subscriptions.batch-operation-failed'));
+    } finally {
+      setBatchLoading(null);
     }
   };
 
@@ -231,6 +240,7 @@ export default function SubscriptionsPage() {
       prev.map((feed) => (feed.is_recommended ? { ...feed, is_subscribed: true } : feed));
     setFeeds(updater);
     setFilteredFeeds(updater);
+    setBatchLoading(`訂閱推薦 ${recommendedFeeds.length} 個`);
 
     try {
       await batchSubscribe(recommendedFeeds.map((f) => f.id));
@@ -243,6 +253,8 @@ export default function SubscriptionsPage() {
       setFilteredFeeds(reverter);
       console.error('Failed to subscribe recommended:', err);
       toast.error(t('subscriptions.subscribe-recommended-failed'));
+    } finally {
+      setBatchLoading(null);
     }
   };
 
@@ -512,35 +524,58 @@ export default function SubscriptionsPage() {
                 </div>
                 <Button
                   onClick={handleSubscribeRecommended}
-                  disabled={toggling.size > 0}
-                  className="shrink-0"
+                  disabled={!!batchLoading}
+                  className="shrink-0 gap-2"
                 >
-                  {t('subscriptions.subscribe-all-recommended')}
+                  {batchLoading ? (
+                    <>
+                      <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      {batchLoading}
+                    </>
+                  ) : (
+                    t('subscriptions.subscribe-all-recommended')
+                  )}
                 </Button>
               </CardContent>
             </Card>
+          )}
+
+          {/* Batch loading status bar */}
+          {batchLoading && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground px-1">
+              <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-primary border-t-transparent shrink-0" />
+              <span>{batchLoading}⋯ 正在同步至伺服器</span>
+            </div>
           )}
 
           <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               onClick={() => handleToggleAll(true)}
-              disabled={allSubscribed || toggling.size > 0}
+              disabled={allSubscribed || !!batchLoading}
+              className="gap-2"
             >
+              {batchLoading?.startsWith('訂閱全部') ? (
+                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              ) : null}
               {t('subscriptions.subscribe-all')}
             </Button>
             <Button
               variant="outline"
               onClick={() => handleToggleAll(false)}
-              disabled={noneSubscribed || toggling.size > 0}
+              disabled={noneSubscribed || !!batchLoading}
+              className="gap-2"
             >
+              {batchLoading?.startsWith('取消全部') ? (
+                <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              ) : null}
               {t('subscriptions.unsubscribe-all')}
             </Button>
             <Button
               variant="outline"
               onClick={handleRetryFailedFeeds}
               disabled={
-                feeds.filter((f) => f.health_status === 'error').length === 0 || toggling.size > 0
+                feeds.filter((f) => f.health_status === 'error').length === 0 || !!batchLoading
               }
               className="gap-2"
             >
@@ -616,15 +651,19 @@ export default function SubscriptionsPage() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleCategoryToggle(category, true)}
-                        disabled={allCategorySubscribed || toggling.size > 0}
+                        disabled={allCategorySubscribed || !!batchLoading}
+                        className="gap-1.5"
                       >
+                        {batchLoading === `訂閱 ${category}` ? (
+                          <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                        ) : null}
                         {t('ui.select-all')}
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => handleCategoryToggle(category, false)}
-                        disabled={noneCategorySubscribed || toggling.size > 0}
+                        disabled={noneCategorySubscribed || !!batchLoading}
                       >
                         {t('ui.deselect-all')}
                       </Button>
