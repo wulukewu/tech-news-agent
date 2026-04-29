@@ -25,7 +25,8 @@
     "notifications": "Notifications",
     "appearance": "Appearance",
     "account": "Account",
-    "preferences": "Preferences"
+    "preferences": "Preferences",
+    "reminders": "Reminders"
   },
   "pages": {
     "articles": {

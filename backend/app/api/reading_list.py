@@ -7,6 +7,7 @@ Implements POST /api/reading-list, GET /api/reading-list, and DELETE /api/readin
 Validates: Requirements 1.1, 1.3, 1.6, 6.1, 6.7, 13.1, 13.2, 13.3
 """
 
+import asyncio
 import logging
 from uuid import UUID
 
@@ -31,6 +32,16 @@ from app.services.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+async def _fire_reminder(discord_id: str, article_id: UUID, trigger: str) -> None:
+    """背景觸發智能提醒，失敗不影響主流程"""
+    try:
+        from app.services.reminder_service import send_similar_articles_reminder
+
+        await send_similar_articles_reminder(discord_id, article_id, trigger)
+    except Exception as e:
+        logger.warning(f"Reminder task failed silently: {e}")
 
 
 @router.post("/reading-list", response_model=SuccessResponse[MessageResponse])
@@ -81,6 +92,9 @@ async def add_to_reading_list(
             "Successfully added article to reading list",
             extra={"discord_id": discord_id, "article_id": str(article_id)},
         )
+
+        # 背景觸發智能提醒（非阻塞）
+        asyncio.create_task(_fire_reminder(discord_id, article_id, "added"))
 
         return success_response(
             MessageResponse(message="Article added to reading list", article_id=article_id)
@@ -505,6 +519,10 @@ async def update_reading_list_rating(
                 "new_rating": request.rating if request.rating is not None else "null",
             },
         )
+
+        # 評 4-5 星時觸發智能提醒（非阻塞）
+        if request.rating and request.rating >= 4:
+            asyncio.create_task(_fire_reminder(discord_id, article_id, "rated"))
 
         return success_response(
             MessageResponse(

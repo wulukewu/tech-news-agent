@@ -25,7 +25,8 @@
     "notifications": "通知",
     "appearance": "外觀",
     "account": "帳戶",
-    "preferences": "偏好"
+    "preferences": "偏好",
+    "reminders": "智能提醒"
   },
   "pages": {
     "articles": {

@@ -73,7 +73,7 @@ class TechNewsBot(commands.Bot):
             if settings.dev_guild_id:
                 # Clear global commands so prod bot handles them exclusively
                 await self.tree.clear_commands(guild=None)
-                await self.tree.sync()
+                synced = await self.tree.sync() or []
                 # Guild-specific sync: commands only visible in this guild,
                 # preventing dev bot from competing with prod on global interactions
                 guild = discord.Object(id=settings.dev_guild_id)

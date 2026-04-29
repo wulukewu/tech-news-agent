@@ -18,6 +18,7 @@ import {
   MessageSquare,
   Lightbulb,
   Brain,
+  Bell,
 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useUser } from '@/contexts/UserContext';
@@ -46,6 +47,7 @@ const mainNavItems: NavItem[] = [
   { href: '/app/learning', labelKey: 'nav.learning-path', icon: Brain },
   { href: '/app/chat', labelKey: 'nav.chat', icon: MessageSquare },
   { href: '/app/insights', labelKey: 'nav.insights', icon: Lightbulb },
+  { href: '/app/reminders', labelKey: 'nav.reminders', icon: Bell },
 ];
 
 // Secondary items moved to user menu (Req 4.2)

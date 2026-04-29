@@ -52,6 +52,28 @@ from app.tasks._fetch_job import background_fetch_job
 from app.tasks._notify_jobs import cleanup_token_blacklist
 
 
+async def version_tracking_job():
+    """
+    Background job to check for technology version updates.
+    Runs every 6 hours to monitor technology frameworks and create reminders.
+    """
+    logger.info("Starting version tracking job...")
+
+    try:
+        from app.qa_agent.intelligent_reminder import IntelligentReminderAgent
+
+        # Initialize the intelligent reminder agent
+        reminder_agent = IntelligentReminderAgent()
+
+        # Check for version updates
+        await reminder_agent.check_version_updates()
+
+        logger.info("Version tracking job completed successfully")
+
+    except Exception as e:
+        logger.error(f"Version tracking job failed: {e}", exc_info=True)
+
+
 async def weekly_insights_job():
     """
     Scheduled job: generate weekly insights report every Monday at 09:00.
@@ -219,6 +241,15 @@ def setup_scheduler():
         trigger=CronTrigger(hour="*/6", timezone=scheduler_tz),  # Every 6 hours
         id="dynamic_scheduler_cleanup",
         name="Dynamic Scheduler Cleanup",
+        replace_existing=True,
+    )
+
+    # Register intelligent reminder version tracking job (runs every 6 hours)
+    _scheduler.add_job(
+        version_tracking_job,
+        trigger=CronTrigger(hour="*/6", timezone=scheduler_tz),  # Every 6 hours
+        id="version_tracking",
+        name="Technology Version Tracking",
         replace_existing=True,
     )
 

@@ -385,6 +385,11 @@ from app.api import proactive_learning as proactive_learning_api
 
 app.include_router(proactive_learning_api.router, prefix="/api", tags=["proactive-learning"])
 
+# Import and register Intelligent Reminder router
+from app.api import intelligent_reminder as intelligent_reminder_api
+
+app.include_router(intelligent_reminder_api.router, tags=["intelligent-reminders"])
+
 # Import and register Platforms router (user platform linking + sync)
 from app.api import platforms as platforms_api
 

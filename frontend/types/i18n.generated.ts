@@ -531,6 +531,7 @@ export type TranslationKey =
   | 'nav.preferences'
   | 'nav.reading-list'
   | 'nav.recommendations'
+  | 'nav.reminders'
   | 'nav.settings'
   | 'nav.subscriptions'
   | 'nav.system-status'
