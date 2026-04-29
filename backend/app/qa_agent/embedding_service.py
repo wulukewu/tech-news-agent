@@ -9,7 +9,7 @@ Validates: Requirements 7.1, 7.3, 7.4
 
 import logging
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 
 from bs4 import BeautifulSoup
@@ -405,7 +405,10 @@ class TextChunker:
         return chunks
 
 
-class EmbeddingService:
+from app.qa_agent._es_batch_mixin import EsBatchMixin
+
+
+class EmbeddingService(EsBatchMixin):
     """
     Service for generating embeddings using OpenAI API (or Groq-compatible endpoint).
 
@@ -607,50 +610,7 @@ class EmbeddingService:
             logger.error(f"Unexpected error processing article {article_id}: {e}", exc_info=True)
             raise EmbeddingError(f"Failed to process and embed article: {e}", original_error=e)
 
-    async def batch_process_articles(
-        self,
-        articles: List[Tuple[UUID, str, str, Optional[Dict[str, Any]]]],
-        max_concurrent: int = 5,
-    ) -> List[Dict[str, Any]]:
-        """
-        Process multiple articles in batch with concurrency control.
 
-        Args:
-            articles: List of tuples (article_id, title, content, metadata)
-            max_concurrent: Maximum concurrent processing tasks
-
-        Returns:
-            List of processing results
-
-        Validates: Requirements 7.1, 7.5
-        """
-        import asyncio
-
-        semaphore = asyncio.Semaphore(max_concurrent)
-
-        async def process_with_semaphore(article_data):
-            async with semaphore:
-                article_id, title, content, metadata = article_data
-                try:
-                    return await self.process_and_embed_article(
-                        article_id, title, content, metadata
-                    )
-                except Exception as e:
-                    logger.error(f"Failed to process article {article_id}: {e}")
-                    return {"article_id": str(article_id), "success": False, "error": str(e)}
-
-        tasks = [process_with_semaphore(article) for article in articles]
-        results = await asyncio.gather(*tasks, return_exceptions=False)
-
-        successful = sum(1 for r in results if r.get("success"))
-        logger.info(
-            f"Batch processing complete: {successful}/{len(articles)} articles processed successfully"
-        )
-
-        return results
-
-
-# Convenience function
 def get_embedding_service() -> EmbeddingService:
     """
     Get an EmbeddingService instance.
