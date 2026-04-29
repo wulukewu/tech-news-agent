@@ -11,7 +11,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/lib/hooks/useAuth';
-import { BarChart3, Settings, Bell, Monitor, User, LogOut } from 'lucide-react';
+import { Settings, User, LogOut } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/lib/toast';
 import { useI18n } from '@/contexts/I18nContext';
@@ -79,30 +79,9 @@ export function UserMenu() {
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild>
-          <Link href="/app/analytics" className="cursor-pointer">
-            <BarChart3 className="mr-2 h-4 w-4" aria-hidden="true" />
-            <span>{t('nav.analytics')}</span>
-          </Link>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem asChild>
           <Link href="/app/settings" className="cursor-pointer">
             <Settings className="mr-2 h-4 w-4" aria-hidden="true" />
             <span>{t('nav.settings')}</span>
-          </Link>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem asChild>
-          <Link href="/app/settings/notifications" className="cursor-pointer">
-            <Bell className="mr-2 h-4 w-4" aria-hidden="true" />
-            <span>{t('nav.notifications')}</span>
-          </Link>
-        </DropdownMenuItem>
-
-        <DropdownMenuItem asChild>
-          <Link href="/app/system-status" className="cursor-pointer">
-            <Monitor className="mr-2 h-4 w-4" aria-hidden="true" />
-            <span>{t('nav.system-status')}</span>
           </Link>
         </DropdownMenuItem>
 
