@@ -27,7 +27,11 @@ token_blacklist = None
 
 
 def create_access_token(
-    user_id: UUID, discord_id: str, expires_delta: timedelta | None = None
+    user_id: UUID,
+    discord_id: str,
+    username: str = None,
+    avatar_url: str = None,
+    expires_delta: timedelta | None = None,
 ) -> str:
     """
     生成 JWT Access Token
@@ -60,6 +64,11 @@ def create_access_token(
         "exp": expire,  # Expiration time
         "iat": now,  # Issued at
     }
+
+    if username:
+        payload["username"] = username
+    if avatar_url:
+        payload["avatar_url"] = avatar_url
 
     # 生成 JWT Token
     token = jwt.encode(payload, settings.jwt_secret, algorithm=settings.jwt_algorithm)
@@ -315,6 +324,7 @@ async def discord_callback(
 
             user_data = user_response.json()
             discord_id = user_data.get("id")
+            username = user_data.get("username")
             avatar_hash = user_data.get("avatar")
 
             avatar_url = None
@@ -338,7 +348,9 @@ async def discord_callback(
 
     # 7. 生成 JWT Token
     try:
-        jwt_token = create_access_token(user_id=user_uuid, discord_id=discord_id)
+        jwt_token = create_access_token(
+            user_id=user_uuid, discord_id=discord_id, username=username, avatar_url=avatar_url
+        )
     except Exception:
         return redirect_error("Failed to generate authentication token")
 
@@ -426,7 +438,12 @@ async def get_current_user(
         raise HTTPException(status_code=401, detail="Invalid token")
 
     # 5. 返回使用者資訊
-    return {"user_id": user_id, "discord_id": discord_id}
+    return {
+        "user_id": user_id,
+        "discord_id": discord_id,
+        "username": payload.get("username"),
+        "avatar_url": payload.get("avatar_url"),
+    }
 
 
 @router.post("/set-cookie")
@@ -490,8 +507,8 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
         return {
             "id": str(current_user["user_id"]),
             "discord_id": current_user["discord_id"],
-            "username": None,  # 前端可以選擇性顯示 discord_id
-            "avatar": None,
+            "username": current_user.get("username"),
+            "avatar": current_user.get("avatar_url"),
         }
 
     except Exception:
@@ -564,7 +581,10 @@ async def refresh_token(
     try:
         # 1. 生成新的 JWT Token（使用相同的 user_id 和 discord_id）
         new_token = create_access_token(
-            user_id=current_user["user_id"], discord_id=current_user["discord_id"]
+            user_id=current_user["user_id"],
+            discord_id=current_user["discord_id"],
+            username=current_user.get("username"),
+            avatar_url=current_user.get("avatar_url"),
         )
 
         # 2. 將舊 Token 加入黑名單
