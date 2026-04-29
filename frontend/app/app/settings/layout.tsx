@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
-import { Bell, Brain } from 'lucide-react';
+import { Bell, Brain, User, Palette, BarChart3, Monitor } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 
 interface SettingsLayoutProps {
@@ -17,6 +17,10 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
   const settingsNav = [
     { title: t('nav.notifications'), href: '/app/settings/notifications', icon: Bell },
     { title: t('nav.preferences'), href: '/app/settings/preferences', icon: Brain },
+    { title: t('nav.account'), href: '/app/settings/account', icon: User },
+    { title: t('nav.appearance'), href: '/app/settings/appearance', icon: Palette },
+    { title: t('nav.analytics'), href: '/app/settings/analytics', icon: BarChart3 },
+    { title: t('nav.system-status'), href: '/app/settings/system-status', icon: Monitor },
   ];
 
   return (
