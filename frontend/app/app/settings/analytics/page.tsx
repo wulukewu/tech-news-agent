@@ -46,12 +46,12 @@ export default function AnalyticsSettingsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t('nav.analytics')}</h1>
-          <p className="text-muted-foreground text-sm">查看您的閱讀統計和活動分析</p>
+          <h1 className="text-2xl font-bold">{t('pages.analytics.title')}</h1>
+          <p className="text-muted-foreground text-sm">{t('pages.analytics.description')}</p>
         </div>
         <Button variant="outline" size="sm" onClick={loadStats} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-          重新整理
+          {t('pages.analytics.refresh')}
         </Button>
       </div>
 
@@ -71,46 +71,61 @@ export default function AnalyticsSettingsPage() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">總訂閱數</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {t('pages.analytics.total-subscriptions')}
+                </CardTitle>
                 <Rss className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats?.subscriptions_count || 0}</div>
-                <p className="text-xs text-muted-foreground">RSS 來源</p>
+                <p className="text-xs text-muted-foreground">{t('pages.analytics.rss-sources')}</p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">閱讀清單</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {t('pages.analytics.reading-list')}
+                </CardTitle>
                 <BookMarked className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats?.reading_list_count || 0}</div>
-                <p className="text-xs text-muted-foreground">已收藏文章</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('pages.analytics.saved-articles')}
+                </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">已讀文章</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {t('pages.analytics.articles-read')}
+                </CardTitle>
                 <BarChart3 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{stats?.articles_read_count || 0}</div>
-                <p className="text-xs text-muted-foreground">完成閱讀</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('pages.analytics.completed-reading')}
+                </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">閱讀完成率</CardTitle>
+                <CardTitle className="text-sm font-medium">
+                  {t('pages.analytics.reading-completion-rate')}
+                </CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{readingRate}%</div>
                 <p className="text-xs text-muted-foreground">
-                  {stats?.reading_list_count || 0} 篇中已讀 {stats?.articles_read_count || 0} 篇
+                  {t('pages.analytics.articles-progress', {
+                    total: stats?.reading_list_count || 0,
+                    read: stats?.articles_read_count || 0,
+                  })}
                 </p>
               </CardContent>
             </Card>
@@ -122,14 +137,14 @@ export default function AnalyticsSettingsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Target className="h-5 w-5" />
-                  閱讀目標
+                  {t('pages.analytics.reading-goals')}
                 </CardTitle>
-                <CardDescription>您的閱讀習慣分析</CardDescription>
+                <CardDescription>{t('pages.analytics.reading-habits-analysis')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>閱讀進度</span>
+                    <span>{t('pages.analytics.reading-progress')}</span>
                     <span>{readingRate}%</span>
                   </div>
                   <div className="w-full bg-secondary rounded-full h-2">
@@ -142,13 +157,13 @@ export default function AnalyticsSettingsPage() {
 
                 <div className="text-sm text-muted-foreground">
                   {readingRate >= 80 ? (
-                    <p>優秀！您的閱讀完成率很高</p>
+                    <p>{t('pages.analytics.excellent-completion')}</p>
                   ) : readingRate >= 50 ? (
-                    <p>不錯！繼續保持閱讀習慣</p>
+                    <p>{t('pages.analytics.good-progress')}</p>
                   ) : readingRate > 0 ? (
-                    <p>開始閱讀了！試著完成更多文章</p>
+                    <p>{t('pages.analytics.getting-started')}</p>
                   ) : (
-                    <p>開始您的閱讀之旅吧</p>
+                    <p>{t('pages.analytics.start-journey')}</p>
                   )}
                 </div>
               </CardContent>
@@ -158,33 +173,39 @@ export default function AnalyticsSettingsPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="h-5 w-5" />
-                  活動摘要
+                  {t('pages.analytics.activity-summary')}
                 </CardTitle>
-                <CardDescription>您的平台使用情況</CardDescription>
+                <CardDescription>{t('pages.analytics.platform-usage')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">訂閱來源</span>
-                    <span className="font-medium">{stats?.subscriptions_count || 0} 個</span>
+                    <span className="text-sm">{t('pages.analytics.subscription-sources')}</span>
+                    <span className="font-medium">
+                      {stats?.subscriptions_count || 0} {t('pages.analytics.sources-unit')}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">收藏文章</span>
-                    <span className="font-medium">{stats?.reading_list_count || 0} 篇</span>
+                    <span className="text-sm">{t('pages.analytics.saved-articles-count')}</span>
+                    <span className="font-medium">
+                      {stats?.reading_list_count || 0} {t('pages.analytics.articles-unit')}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm">完成閱讀</span>
-                    <span className="font-medium">{stats?.articles_read_count || 0} 篇</span>
+                    <span className="text-sm">{t('pages.analytics.completed-reading-count')}</span>
+                    <span className="font-medium">
+                      {stats?.articles_read_count || 0} {t('pages.analytics.articles-unit')}
+                    </span>
                   </div>
                 </div>
 
                 <div className="pt-2 border-t">
                   <p className="text-xs text-muted-foreground">
-                    平均每個來源收藏{' '}
-                    {stats?.subscriptions_count
-                      ? Math.round((stats.reading_list_count || 0) / stats.subscriptions_count)
-                      : 0}{' '}
-                    篇文章
+                    {t('pages.analytics.average-per-source', {
+                      count: stats?.subscriptions_count
+                        ? Math.round((stats.reading_list_count || 0) / stats.subscriptions_count)
+                        : 0,
+                    })}
                   </p>
                 </div>
               </CardContent>
@@ -194,17 +215,17 @@ export default function AnalyticsSettingsPage() {
           {/* Future Features */}
           <Card>
             <CardHeader>
-              <CardTitle>進階分析功能</CardTitle>
-              <CardDescription>即將推出的功能</CardDescription>
+              <CardTitle>{t('pages.analytics.advanced-features')}</CardTitle>
+              <CardDescription>{t('pages.analytics.coming-soon-features')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3 text-sm text-muted-foreground">
-                <div>閱讀時間趨勢</div>
-                <div>分類偏好分析</div>
-                <div>每週/每月報告</div>
-                <div>個人化推薦</div>
-                <div>閱讀時段分析</div>
-                <div>熱門文章追蹤</div>
+                <div>{t('pages.analytics.reading-time-trends')}</div>
+                <div>{t('pages.analytics.category-preferences')}</div>
+                <div>{t('pages.analytics.weekly-monthly-reports')}</div>
+                <div>{t('pages.analytics.personalized-recommendations')}</div>
+                <div>{t('pages.analytics.reading-time-analysis')}</div>
+                <div>{t('pages.analytics.trending-articles')}</div>
               </div>
             </CardContent>
           </Card>
