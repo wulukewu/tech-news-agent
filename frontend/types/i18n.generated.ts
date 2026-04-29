@@ -822,6 +822,7 @@ export type TranslationKey =
   | 'status.active'
   | 'status.cancelled'
   | 'status.completed'
+  | 'status.not-started'
   | 'status.paused'
   | 'subscriptions.already-subscribed-all-recommended'
   | 'subscriptions.back-to-dashboard'
