@@ -11,6 +11,7 @@ import { Settings, BookMarked, Rss, BarChart3 } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from '@/lib/toast';
 import { useI18n } from '@/contexts/I18nContext';
+import { Skeleton } from '@/components/ui/skeleton';
 
 /**
  * Profile Page
@@ -47,10 +48,20 @@ export default function ProfilePage() {
 
   if (!user) {
     return (
-      <div className="container mx-auto py-8 px-4 max-w-4xl">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+      <div className="container mx-auto py-8 px-4 max-w-4xl space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-32" />
+          <Skeleton className="h-4 w-56" />
         </div>
+        <div className="flex items-center gap-4">
+          <Skeleton className="h-20 w-20 rounded-full" />
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-4 w-32" />
+          </div>
+        </div>
+        <Skeleton className="h-48 rounded-lg" />
+        <Skeleton className="h-32 rounded-lg" />
       </div>
     );
   }
