@@ -16,6 +16,7 @@ interface SchedulerStatusResponse {
   failed_operations: number;
   total_operations: number;
   is_healthy: boolean;
+  is_enabled: boolean;
   issues: string[];
 }
 
@@ -97,14 +98,30 @@ export default function SystemStatusSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                {status.is_healthy ? (
-                  <CheckCircle className="h-5 w-5 text-green-500" />
+                {!status.is_enabled ? (
+                  <>
+                    <AlertCircle className="h-5 w-5 text-yellow-500" />
+                    排程器狀態（已禁用）
+                  </>
+                ) : status.is_healthy ? (
+                  <>
+                    <CheckCircle className="h-5 w-5 text-green-500" />
+                    排程器狀態
+                  </>
                 ) : (
-                  <XCircle className="h-5 w-5 text-red-500" />
+                  <>
+                    <XCircle className="h-5 w-5 text-red-500" />
+                    排程器狀態
+                  </>
                 )}
-                排程器狀態
               </CardTitle>
-              <CardDescription>{status.is_healthy ? '運行正常' : '發現問題'}</CardDescription>
+              <CardDescription>
+                {!status.is_enabled
+                  ? '開發環境中排程器已禁用'
+                  : status.is_healthy
+                    ? '運行正常'
+                    : '發現問題'}
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
@@ -136,7 +153,7 @@ export default function SystemStatusSettingsPage() {
 
               {status.issues.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-destructive">問題：</p>
+                  <p className="text-sm font-medium text-muted-foreground">狀態：</p>
                   {status.issues.map((issue, i) => (
                     <p key={i} className="text-xs text-muted-foreground">
                       • {issue}
@@ -146,7 +163,11 @@ export default function SystemStatusSettingsPage() {
               )}
 
               <div className="pt-2">
-                {showConfirm ? (
+                {!status.is_enabled ? (
+                  <p className="text-xs text-muted-foreground">
+                    排程器在開發環境中被禁用。生產環境中會自動執行。
+                  </p>
+                ) : showConfirm ? (
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">確定要手動觸發抓取嗎？</p>
                     <div className="flex gap-2">
