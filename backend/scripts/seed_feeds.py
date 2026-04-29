@@ -437,6 +437,222 @@ def main():
             "category": "Platform Aggregators",
             "is_active": True,
         },
+        # Tech News & Industry
+        {
+            "name": "Hacker News",
+            "url": "https://news.ycombinator.com/rss",
+            "category": "Tech News & Industry",
+            "is_active": True,
+        },
+        {
+            "name": "The Verge - Tech",
+            "url": "https://www.theverge.com/rss/tech/index.xml",
+            "category": "Tech News & Industry",
+            "is_active": True,
+        },
+        {
+            "name": "Ars Technica",
+            "url": "https://feeds.arstechnica.com/arstechnica/technology-lab",
+            "category": "Tech News & Industry",
+            "is_active": True,
+        },
+        {
+            "name": "VentureBeat",
+            "url": "https://venturebeat.com/feed/",
+            "category": "Tech News & Industry",
+            "is_active": True,
+        },
+        {
+            "name": "TechCrunch",
+            "url": "https://techcrunch.com/feed/",
+            "category": "Tech News & Industry",
+            "is_active": True,
+        },
+        {
+            "name": "Wired",
+            "url": "https://www.wired.com/feed/rss",
+            "category": "Tech News & Industry",
+            "is_active": True,
+        },
+        # Engineering Blogs - Big Tech
+        {
+            "name": "Engineering at Meta",
+            "url": "https://engineering.fb.com/feed/",
+            "category": "Engineering Blogs - Big Tech",
+            "is_active": True,
+        },
+        {
+            "name": "Uber Engineering",
+            "url": "https://www.uber.com/blog/engineering/rss/",
+            "category": "Engineering Blogs - Big Tech",
+            "is_active": True,
+        },
+        {
+            "name": "Spotify Engineering",
+            "url": "https://engineering.atspotify.com/feed/",
+            "category": "Engineering Blogs - Big Tech",
+            "is_active": True,
+        },
+        {
+            "name": "Airbnb Engineering",
+            "url": "https://medium.com/feed/airbnb-engineering",
+            "category": "Engineering Blogs - Big Tech",
+            "is_active": True,
+        },
+        {
+            "name": "Slack Engineering",
+            "url": "https://slack.engineering/feed",
+            "category": "Engineering Blogs - Big Tech",
+            "is_active": True,
+        },
+        {
+            "name": "Shopify Engineering",
+            "url": "https://shopifyengineering.myshopify.com/blogs/engineering.atom",
+            "category": "Engineering Blogs - Big Tech",
+            "is_active": True,
+        },
+        {
+            "name": "Dropbox Tech",
+            "url": "https://dropbox.tech/feed",
+            "category": "Engineering Blogs - Big Tech",
+            "is_active": True,
+        },
+        # Individual Engineers & Thought Leaders
+        {
+            "name": "Julia Evans",
+            "url": "https://jvns.ca/atom.xml",
+            "category": "Individual Engineers & Thought Leaders",
+            "is_active": True,
+        },
+        {
+            "name": "Joel on Software",
+            "url": "https://www.joelonsoftware.com/feed/",
+            "category": "Individual Engineers & Thought Leaders",
+            "is_active": True,
+        },
+        {
+            "name": "Dan Luu",
+            "url": "https://danluu.com/atom.xml",
+            "category": "Individual Engineers & Thought Leaders",
+            "is_active": True,
+        },
+        {
+            "name": "Overreacted (Dan Abramov)",
+            "url": "https://overreacted.io/rss.xml",
+            "category": "Individual Engineers & Thought Leaders",
+            "is_active": True,
+        },
+        {
+            "name": "Lil'Log (Lilian Weng)",
+            "url": "https://lilianweng.github.io/lil-log/feed.xml",
+            "category": "Individual Engineers & Thought Leaders",
+            "is_active": True,
+        },
+        {
+            "name": "Martin Kleppmann",
+            "url": "https://feeds.feedburner.com/martinkl?format=xml",
+            "category": "Individual Engineers & Thought Leaders",
+            "is_active": True,
+        },
+        {
+            "name": "Josh Comeau",
+            "url": "https://joshwcomeau.com/rss.xml",
+            "category": "Individual Engineers & Thought Leaders",
+            "is_active": True,
+        },
+        # Open Source & Developer Tools
+        {
+            "name": "Docker Blog",
+            "url": "https://www.docker.com/blog/feed/",
+            "category": "Open Source & Developer Tools",
+            "is_active": True,
+        },
+        {
+            "name": "CNCF Blog",
+            "url": "https://www.cncf.io/feed/",
+            "category": "Open Source & Developer Tools",
+            "is_active": True,
+        },
+        {
+            "name": "Nvidia Developer Blog",
+            "url": "https://developer.nvidia.com/blog/feed",
+            "category": "Open Source & Developer Tools",
+            "is_active": True,
+        },
+        {
+            "name": "PyTorch Blog",
+            "url": "https://pytorch.org/feed",
+            "category": "Open Source & Developer Tools",
+            "is_active": True,
+        },
+        {
+            "name": "AWS Blog",
+            "url": "https://aws.amazon.com/blogs/aws/feed/",
+            "category": "Open Source & Developer Tools",
+            "is_active": True,
+        },
+        # Research & Academia
+        {
+            "name": "OpenAI Engineering",
+            "url": "https://openai.com/news/engineering/rss.xml",
+            "category": "Research & Academia",
+            "is_active": True,
+        },
+        {
+            "name": "DeepMind Blog",
+            "url": "https://deepmind.com/blog/feed/basic/",
+            "category": "Research & Academia",
+            "is_active": True,
+        },
+        {
+            "name": "BAIR (Berkeley AI)",
+            "url": "http://bair.berkeley.edu/blog/feed.xml",
+            "category": "Research & Academia",
+            "is_active": True,
+        },
+        {
+            "name": "The Gradient",
+            "url": "https://thegradient.pub/rss/",
+            "category": "Research & Academia",
+            "is_active": True,
+        },
+        {
+            "name": "MIT News - AI",
+            "url": "http://news.mit.edu/rss/topic/artificial-intelligence2",
+            "category": "Research & Academia",
+            "is_active": True,
+        },
+        {
+            "name": "Amazon Science",
+            "url": "https://www.amazon.science/index.rss",
+            "category": "Research & Academia",
+            "is_active": True,
+        },
+        # Product & Startup
+        {
+            "name": "Product Hunt",
+            "url": "http://www.producthunt.com/feed",
+            "category": "Product & Startup",
+            "is_active": True,
+        },
+        {
+            "name": "First Round Review",
+            "url": "http://firstround.com/review/feed.xml",
+            "category": "Product & Startup",
+            "is_active": True,
+        },
+        {
+            "name": "Irrational Exuberance (Will Larson)",
+            "url": "https://lethain.com/feeds/",
+            "category": "Product & Startup",
+            "is_active": True,
+        },
+        {
+            "name": "Mind the Product",
+            "url": "https://www.mindtheproduct.com/feed/",
+            "category": "Product & Startup",
+            "is_active": True,
+        },
     ]
 
     print("Supabase client initialized successfully")
