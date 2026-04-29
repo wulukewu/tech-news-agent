@@ -653,6 +653,169 @@ def main():
             "category": "Product & Startup",
             "is_active": True,
         },
+        # Database & Storage
+        {
+            "name": "PostgreSQL News",
+            "url": "https://www.postgresql.org/news.rss",
+            "category": "Database & Storage",
+            "is_active": True,
+        },
+        {
+            "name": "Redis Blog",
+            "url": "https://redis.io/blog/feed/",
+            "category": "Database & Storage",
+            "is_active": True,
+        },
+        {
+            "name": "MongoDB Blog",
+            "url": "https://www.mongodb.com/blog/rss",
+            "category": "Database & Storage",
+            "is_active": True,
+        },
+        {
+            "name": "PlanetScale Blog",
+            "url": "https://planetscale.com/blog/feed.rss",
+            "category": "Database & Storage",
+            "is_active": True,
+        },
+        {
+            "name": "Supabase Blog",
+            "url": "https://supabase.com/rss.xml",
+            "category": "Database & Storage",
+            "is_active": True,
+        },
+        # Security
+        {
+            "name": "OWASP Blog",
+            "url": "https://owasp.org/feed.xml",
+            "category": "Security",
+            "is_active": True,
+        },
+        {
+            "name": "Snyk Blog",
+            "url": "https://snyk.io/blog/feed/",
+            "category": "Security",
+            "is_active": True,
+        },
+        {
+            "name": "Trail of Bits Blog",
+            "url": "https://blog.trailofbits.com/feed/",
+            "category": "Security",
+            "is_active": True,
+        },
+        {
+            "name": "Schneier on Security",
+            "url": "https://www.schneier.com/feed/atom/",
+            "category": "Security",
+            "is_active": True,
+        },
+        # Python & Data Science
+        {
+            "name": "Python Official News",
+            "url": "https://blog.python.org/feeds/posts/default",
+            "category": "Python & Data Science",
+            "is_active": True,
+        },
+        {
+            "name": "Towards Data Science",
+            "url": "https://towardsdatascience.com/feed",
+            "category": "Python & Data Science",
+            "is_active": True,
+        },
+        {
+            "name": "Analytics Vidhya",
+            "url": "https://www.analyticsvidhya.com/feed/",
+            "category": "Python & Data Science",
+            "is_active": True,
+        },
+        {
+            "name": "Seattle Data Guy",
+            "url": "https://seattledataguy.substack.com/feed",
+            "category": "Python & Data Science",
+            "is_active": True,
+        },
+        # TypeScript & JavaScript Ecosystem
+        {
+            "name": "TypeScript Blog",
+            "url": "https://devblogs.microsoft.com/typescript/feed/",
+            "category": "TypeScript & JavaScript Ecosystem",
+            "is_active": True,
+        },
+        {
+            "name": "Deno Blog",
+            "url": "https://deno.com/feed",
+            "category": "TypeScript & JavaScript Ecosystem",
+            "is_active": True,
+        },
+        {
+            "name": "Bun Blog",
+            "url": "https://bun.sh/blog.rss",
+            "category": "TypeScript & JavaScript Ecosystem",
+            "is_active": True,
+        },
+        # Frontend & Mobile (expanded)
+        {
+            "name": "web.dev",
+            "url": "https://web.dev/feed.xml",
+            "category": "Frontend & Mobile Development",
+            "is_active": True,
+        },
+        {
+            "name": "Flutter Blog",
+            "url": "https://medium.com/feed/flutter",
+            "category": "Frontend & Mobile Development",
+            "is_active": True,
+        },
+        {
+            "name": "React Native Blog",
+            "url": "https://reactnative.dev/blog/rss.xml",
+            "category": "Frontend & Mobile Development",
+            "is_active": True,
+        },
+        # Engineering Management & Career
+        {
+            "name": "StaffEng",
+            "url": "https://staffeng.com/feed.xml",
+            "category": "Engineering Management & Career",
+            "is_active": True,
+        },
+        {
+            "name": "Lenny's Newsletter",
+            "url": "https://www.lennysnewsletter.com/feed",
+            "category": "Engineering Management & Career",
+            "is_active": True,
+        },
+        {
+            "name": "LeadDev",
+            "url": "https://leaddev.com/feed",
+            "category": "Engineering Management & Career",
+            "is_active": True,
+        },
+        # Community Aggregators (expanded)
+        {
+            "name": "Reddit r/programming",
+            "url": "https://www.reddit.com/r/programming/top.rss?t=day",
+            "category": "Platform Aggregators",
+            "is_active": True,
+        },
+        {
+            "name": "Reddit r/MachineLearning",
+            "url": "https://www.reddit.com/r/MachineLearning/top.rss?t=day",
+            "category": "Platform Aggregators",
+            "is_active": True,
+        },
+        {
+            "name": "TLDR AI",
+            "url": "https://tldr.tech/api/rss/ai",
+            "category": "Platform Aggregators",
+            "is_active": True,
+        },
+        {
+            "name": "TLDR DevOps",
+            "url": "https://tldr.tech/api/rss/devops",
+            "category": "Platform Aggregators",
+            "is_active": True,
+        },
     ]
 
     print("Supabase client initialized successfully")
