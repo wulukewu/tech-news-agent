@@ -40,6 +40,7 @@ class ArticleRecommender:
         learning_path: LearningPath,
         current_stage_order: int = 1,
         limit: int = 10,
+        target_skill: str = "",
     ) -> List[RecommendedArticle]:
         """
         Get article recommendations for current learning stage.
@@ -63,7 +64,7 @@ class ArticleRecommender:
         read_articles = await self._get_read_articles(user_id)
 
         # Find relevant articles for current stage skills
-        candidate_articles = await self._find_relevant_articles(current_stage)
+        candidate_articles = await self._find_relevant_articles(current_stage, target_skill)
 
         # Filter out already read articles
         candidate_articles = [
@@ -137,47 +138,72 @@ class ArticleRecommender:
         except Exception:
             return set()
 
-    async def _find_relevant_articles(self, stage: LearningStage) -> List[ArticleSchema]:
+    async def _find_relevant_articles(
+        self, stage: LearningStage, target_skill: str = ""
+    ) -> List[ArticleSchema]:
         """Find articles relevant to current learning stage"""
         try:
-            # Build search terms from stage skills
+            articles: List[ArticleSchema] = []
+            seen_ids: set = set()
+
+            def add_articles(records: list) -> None:
+                for record in records:
+                    if record["id"] not in seen_ids:
+                        seen_ids.add(record["id"])
+                        articles.append(ArticleSchema(**record))
+
+            # 1. Search by skill names in title
             skill_names = [skill.name.replace("-", " ") for skill in stage.skills]
-            skill_tags = []
-            for skill in stage.skills:
-                skill_tags.extend(skill.tags)
-
-            # Search articles by title and category matching
-            articles = []
-
-            # Search by skill names in title
             for skill_name in skill_names:
-                response = (
+                resp = (
                     self.supabase.client.table("articles")
                     .select("*")
                     .ilike("title", f"%{skill_name}%")
                     .limit(20)
                     .execute()
                 )
-                for record in response.data:
-                    article = ArticleSchema(**record)
-                    if article not in articles:
-                        articles.append(article)
+                add_articles(resp.data or [])
 
-            # Search by tags in category
-            for tag in skill_tags:
-                response = (
+            # 2. Search by skill tags in category
+            for skill in stage.skills:
+                for tag in skill.tags:
+                    resp = (
+                        self.supabase.client.table("articles")
+                        .select("*")
+                        .ilike("category", f"%{tag}%")
+                        .limit(10)
+                        .execute()
+                    )
+                    add_articles(resp.data or [])
+
+            # 3. Fallback: use target_skill keyword against title + category
+            if not articles and target_skill:
+                for keyword in target_skill.replace("-", " ").split():
+                    if len(keyword) < 3:
+                        continue
+                    for field in ("title", "category"):
+                        resp = (
+                            self.supabase.client.table("articles")
+                            .select("*")
+                            .ilike(field, f"%{keyword}%")
+                            .order("tinkering_index", desc=True)
+                            .limit(20)
+                            .execute()
+                        )
+                        add_articles(resp.data or [])
+
+            # 4. Last resort: top articles by tinkering_index
+            if not articles:
+                resp = (
                     self.supabase.client.table("articles")
                     .select("*")
-                    .ilike("category", f"%{tag}%")
-                    .limit(10)
+                    .order("tinkering_index", desc=True)
+                    .limit(20)
                     .execute()
                 )
-                for record in response.data:
-                    article = ArticleSchema(**record)
-                    if article not in articles:
-                        articles.append(article)
+                add_articles(resp.data or [])
 
-            return articles[:50]  # Limit candidates
+            return articles[:50]
         except Exception:
             return []
 

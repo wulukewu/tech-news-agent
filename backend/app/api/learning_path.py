@@ -309,6 +309,16 @@ async def get_article_recommendations(
     try:
         user_id = str(current_user["user_id"])
 
+        # Get goal's target_skill for keyword search
+        goal_resp = (
+            supabase.client.table("learning_goals")
+            .select("target_skill, title")
+            .eq("id", goal_id)
+            .single()
+            .execute()
+        )
+        target_skill = goal_resp.data.get("target_skill", "") if goal_resp.data else ""
+
         # Get learning path
         skill_tree = await initialize_skill_tree(supabase)
         path_generator = LearningPathGenerator(supabase, skill_tree)
@@ -320,7 +330,7 @@ async def get_article_recommendations(
         # Get recommendations
         recommender = ArticleRecommender(supabase)
         recommendations = await recommender.get_recommendations(
-            user_id, learning_path, stage, limit
+            user_id, learning_path, stage, limit, target_skill=target_skill
         )
 
         stage_name = ""
