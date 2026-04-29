@@ -54,12 +54,12 @@ export default function SystemStatusSettingsPage() {
   const triggerMutation = useMutation({
     mutationFn: triggerManualFetch,
     onSuccess: () => {
-      toast.success('手動抓取已觸發');
+      toast.success(t('pages.system-status.triggering'));
       queryClient.invalidateQueries({ queryKey: ['scheduler-status'] });
       setShowConfirm(false);
     },
     onError: () => {
-      toast.error('觸發失敗');
+      toast.error(t('errors.server-error'));
       setShowConfirm(false);
     },
   });
@@ -68,12 +68,12 @@ export default function SystemStatusSettingsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">{t('nav.system-status')}</h1>
-          <p className="text-muted-foreground text-sm">查看系統健康狀態和排程器狀況</p>
+          <h1 className="text-2xl font-bold">{t('pages.system-status.title')}</h1>
+          <p className="text-muted-foreground text-sm">{t('pages.system-status.description')}</p>
         </div>
         <Button variant="outline" size="sm" onClick={() => refetch()} disabled={isLoading}>
           <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-          重新整理
+          {t('pages.system-status.refresh')}
         </Button>
       </div>
 
@@ -88,7 +88,7 @@ export default function SystemStatusSettingsPage() {
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-destructive">
               <AlertCircle className="h-5 w-5" />
-              <p>無法載入系統狀態</p>
+              <p>{t('pages.system-status.load-error')}</p>
             </div>
           </CardContent>
         </Card>
@@ -101,36 +101,38 @@ export default function SystemStatusSettingsPage() {
                 {!status.is_enabled ? (
                   <>
                     <AlertCircle className="h-5 w-5 text-yellow-500" />
-                    排程器狀態（已禁用）
+                    {t('pages.system-status.scheduler-disabled')}
                   </>
                 ) : status.is_healthy ? (
                   <>
                     <CheckCircle className="h-5 w-5 text-green-500" />
-                    排程器狀態
+                    {t('pages.system-status.scheduler-status')}
                   </>
                 ) : (
                   <>
                     <XCircle className="h-5 w-5 text-red-500" />
-                    排程器狀態
+                    {t('pages.system-status.scheduler-status')}
                   </>
                 )}
               </CardTitle>
               <CardDescription>
                 {!status.is_enabled
-                  ? '開發環境中排程器已禁用'
+                  ? t('pages.system-status.scheduler-disabled-desc')
                   : status.is_healthy
-                    ? '運行正常'
-                    : '發現問題'}
+                    ? t('pages.system-status.scheduler-healthy')
+                    : t('pages.system-status.scheduler-unhealthy')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-muted-foreground">處理文章數</p>
+                  <p className="text-muted-foreground">
+                    {t('pages.system-status.articles-processed')}
+                  </p>
                   <p className="font-medium">{status.articles_processed}</p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">成功率</p>
+                  <p className="text-muted-foreground">{t('pages.system-status.success-rate')}</p>
                   <p className="font-medium">
                     {status.total_operations > 0
                       ? Math.round(
@@ -147,13 +149,16 @@ export default function SystemStatusSettingsPage() {
               {status.last_execution_time && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Clock className="h-4 w-4" />
-                  上次執行：{new Date(status.last_execution_time).toLocaleString('zh-TW')}
+                  {t('pages.system-status.last-execution')}：
+                  {new Date(status.last_execution_time).toLocaleString()}
                 </div>
               )}
 
               {status.issues.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-muted-foreground">狀態：</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {t('pages.system-status.status-label')}：
+                  </p>
                   {status.issues.map((issue, i) => (
                     <p key={i} className="text-xs text-muted-foreground">
                       • {issue}
@@ -165,27 +170,31 @@ export default function SystemStatusSettingsPage() {
               <div className="pt-2">
                 {!status.is_enabled ? (
                   <p className="text-xs text-muted-foreground">
-                    排程器在開發環境中被禁用。生產環境中會自動執行。
+                    {t('pages.system-status.scheduler-disabled-note')}
                   </p>
                 ) : showConfirm ? (
                   <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">確定要手動觸發抓取嗎？</p>
+                    <p className="text-sm text-muted-foreground">
+                      {t('pages.system-status.confirm-trigger')}
+                    </p>
                     <div className="flex gap-2">
                       <Button
                         size="sm"
                         onClick={() => triggerMutation.mutate()}
                         disabled={triggerMutation.isPending}
                       >
-                        {triggerMutation.isPending ? '觸發中...' : '確定'}
+                        {triggerMutation.isPending
+                          ? t('pages.system-status.triggering')
+                          : t('pages.system-status.confirm')}
                       </Button>
                       <Button size="sm" variant="outline" onClick={() => setShowConfirm(false)}>
-                        取消
+                        {t('pages.system-status.cancel')}
                       </Button>
                     </div>
                   </div>
                 ) : (
                   <Button size="sm" onClick={() => setShowConfirm(true)}>
-                    手動觸發抓取
+                    {t('pages.system-status.manual-trigger')}
                   </Button>
                 )}
               </div>
@@ -195,27 +204,29 @@ export default function SystemStatusSettingsPage() {
           {/* System Info */}
           <Card>
             <CardHeader>
-              <CardTitle>系統資訊</CardTitle>
-              <CardDescription>基本系統狀態</CardDescription>
+              <CardTitle>{t('pages.system-status.system-info')}</CardTitle>
+              <CardDescription>{t('pages.system-status.system-info-desc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <p className="text-muted-foreground">資料庫</p>
+                  <p className="text-muted-foreground">{t('pages.system-status.database')}</p>
                   <div className="flex items-center gap-1">
                     <CheckCircle className="h-3 w-3 text-green-500" />
-                    <span className="font-medium">正常</span>
+                    <span className="font-medium">{t('pages.system-status.healthy')}</span>
                   </div>
                 </div>
                 <div>
-                  <p className="text-muted-foreground">API</p>
+                  <p className="text-muted-foreground">{t('pages.system-status.api')}</p>
                   <div className="flex items-center gap-1">
                     <CheckCircle className="h-3 w-3 text-green-500" />
-                    <span className="font-medium">正常</span>
+                    <span className="font-medium">{t('pages.system-status.healthy')}</span>
                   </div>
                 </div>
               </div>
-              <div className="text-xs text-muted-foreground">自動更新間隔：30 秒</div>
+              <div className="text-xs text-muted-foreground">
+                {t('pages.system-status.auto-refresh')}
+              </div>
             </CardContent>
           </Card>
         </div>

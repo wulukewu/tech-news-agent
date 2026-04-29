@@ -35,19 +35,19 @@ export default function AppearancePage() {
     {
       id: 'light',
       name: t('theme.light'),
-      description: '明亮的外觀，適合白天使用',
+      description: t('pages.appearance.light-theme'),
       icon: Sun,
     },
     {
       id: 'dark',
       name: t('theme.dark'),
-      description: '深色的外觀，適合夜間使用',
+      description: t('pages.appearance.dark-theme'),
       icon: Moon,
     },
     {
       id: 'system',
       name: t('theme.system'),
-      description: '跟隨系統設定自動切換',
+      description: t('pages.appearance.system-theme'),
       icon: Monitor,
     },
   ];
@@ -55,8 +55,8 @@ export default function AppearancePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">外觀</h1>
-        <p className="text-muted-foreground text-sm">自訂應用程式的外觀和主題</p>
+        <h1 className="text-2xl font-bold">{t('pages.appearance.title')}</h1>
+        <p className="text-muted-foreground text-sm">{t('pages.appearance.description')}</p>
       </div>
 
       {/* Theme Selection */}
@@ -65,8 +65,8 @@ export default function AppearancePage() {
           <div className="flex items-center gap-3">
             <Palette className="h-5 w-5" />
             <div>
-              <CardTitle>主題</CardTitle>
-              <CardDescription>選擇您偏好的外觀主題</CardDescription>
+              <CardTitle>{t('pages.appearance.theme')}</CardTitle>
+              <CardDescription>{t('pages.appearance.theme-description')}</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -102,10 +102,15 @@ export default function AppearancePage() {
           <div className="pt-4 border-t">
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-sm font-medium">目前主題</Label>
+                <Label className="text-sm font-medium">{t('pages.appearance.current-theme')}</Label>
                 <p className="text-sm text-muted-foreground">
                   {theme === 'system'
-                    ? `系統 (${currentTheme === 'dark' ? '深色' : '明亮'})`
+                    ? t('pages.appearance.system-with-mode', {
+                        mode:
+                          currentTheme === 'dark'
+                            ? t('pages.appearance.dark-mode')
+                            : t('pages.appearance.light-mode'),
+                      })
                     : themes.find((t) => t.id === theme)?.name}
                 </p>
               </div>
@@ -124,8 +129,8 @@ export default function AppearancePage() {
       {/* Theme Preview */}
       <Card>
         <CardHeader>
-          <CardTitle>預覽</CardTitle>
-          <CardDescription>查看目前主題的外觀</CardDescription>
+          <CardTitle>{t('pages.appearance.preview')}</CardTitle>
+          <CardDescription>{t('pages.appearance.preview-description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -133,27 +138,31 @@ export default function AppearancePage() {
             <div className="p-4 border rounded-lg bg-card">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-semibold">範例文章標題</h3>
-                  <div className="text-xs text-muted-foreground">2 小時前</div>
+                  <h3 className="font-semibold">{t('pages.appearance.sample-title')}</h3>
+                  <div className="text-xs text-muted-foreground">
+                    {t('pages.appearance.sample-time')}
+                  </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  這是一個範例文章的摘要內容，用來展示目前主題的文字顏色和對比度。
+                  {t('pages.appearance.sample-content')}
                 </p>
                 <div className="flex gap-2">
                   <Button size="sm" variant="default">
-                    主要按鈕
+                    {t('pages.appearance.primary-button')}
                   </Button>
                   <Button size="sm" variant="outline">
-                    次要按鈕
+                    {t('pages.appearance.secondary-button')}
                   </Button>
                   <Button size="sm" variant="ghost">
-                    文字按鈕
+                    {t('pages.appearance.text-button')}
                   </Button>
                 </div>
               </div>
             </div>
 
-            <div className="text-xs text-muted-foreground">主題變更會立即套用到整個應用程式</div>
+            <div className="text-xs text-muted-foreground">
+              {t('pages.appearance.theme-applies-immediately')}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -161,15 +170,15 @@ export default function AppearancePage() {
       {/* Future Features */}
       <Card>
         <CardHeader>
-          <CardTitle>即將推出</CardTitle>
-          <CardDescription>未來的外觀自訂功能</CardDescription>
+          <CardTitle>{t('pages.appearance.coming-soon')}</CardTitle>
+          <CardDescription>{t('pages.appearance.future-features')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid gap-2 text-sm text-muted-foreground">
-            <div>• 自訂主色調</div>
-            <div>• 字體大小調整</div>
-            <div>• 緊湊/寬鬆佈局模式</div>
-            <div>• 高對比度模式</div>
+            <div>• {t('pages.appearance.custom-colors')}</div>
+            <div>• {t('pages.appearance.font-size')}</div>
+            <div>• {t('pages.appearance.layout-mode')}</div>
+            <div>• {t('pages.appearance.high-contrast')}</div>
           </div>
         </CardContent>
       </Card>
