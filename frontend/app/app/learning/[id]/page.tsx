@@ -73,7 +73,8 @@ export default function LearningGoalDetailPage() {
       markArticleComplete(goalId, articleId, { time_spent_minutes: 30, notes: '' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['learningProgress', goalId] });
-      queryClient.invalidateQueries({ queryKey: ['recommendations', goalId] });
+      // Use prefix match to invalidate all stages
+      queryClient.invalidateQueries({ queryKey: ['recommendations', goalId], exact: false });
       toast.success(t('learning.mark-complete'));
     },
     onError: () => toast.error(t('learning.mark-complete-failed')),
