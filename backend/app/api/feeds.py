@@ -84,10 +84,32 @@ async def list_feeds(current_user: dict[str, Any] = Depends(get_current_user)):
         subscription_map = {sub.feed_id: sub for sub in subscriptions}
         subscribed_feed_ids = set(subscription_map.keys())
 
+        # Batch query article stats per feed (one query, not N queries)
+        from datetime import datetime, timedelta, timezone
+
+        week_ago = (datetime.now(timezone.utc) - timedelta(days=7)).isoformat()
+        stats_resp = (
+            supabase.client.table("articles")
+            .select("feed_id, tinkering_index, published_at")
+            .execute()
+        )
+        feed_stats: dict = {}
+        for row in stats_resp.data or []:
+            fid = row.get("feed_id")
+            if not fid:
+                continue
+            s = feed_stats.setdefault(fid, {"total": 0, "this_week": 0, "ti_sum": 0.0})
+            s["total"] += 1
+            if row.get("published_at") and row["published_at"] >= week_ago:
+                s["this_week"] += 1
+            s["ti_sum"] += row.get("tinkering_index") or 0
+
         # Build response with subscription status
         feed_responses = []
         for feed in feeds:
             sub = subscription_map.get(feed.id)
+            s = feed_stats.get(str(feed.id), {"total": 0, "this_week": 0, "ti_sum": 0.0})
+            avg_ti = round(s["ti_sum"] / s["total"], 1) if s["total"] > 0 else 0.0
             feed_response = FeedResponse(
                 id=feed.id,
                 name=feed.name,
@@ -97,6 +119,9 @@ async def list_feeds(current_user: dict[str, Any] = Depends(get_current_user)):
                 is_custom=feed.created_by is not None,
                 last_updated=feed.last_fetched_at.isoformat() if feed.last_fetched_at else None,
                 notification_enabled=sub.notification_enabled if sub else True,
+                total_articles=s["total"],
+                articles_this_week=s["this_week"],
+                average_tinkering_index=avg_ti,
             )
             feed_responses.append(feed_response)
 

@@ -30,6 +30,11 @@ class FeedResponse(BaseModel):
     notification_enabled: bool = Field(
         default=True, description="Whether DM notifications are enabled for this feed"
     )
+    total_articles: int = Field(default=0, description="Total number of articles from this feed")
+    articles_this_week: int = Field(default=0, description="Number of articles published this week")
+    average_tinkering_index: float = Field(
+        default=0.0, description="Average tinkering index of articles from this feed"
+    )
 
     model_config = ConfigDict(
         json_schema_extra={
