@@ -9,6 +9,9 @@ from app.qa_agent.models.enums import ConversationStatus, QueryIntent, QueryLang
 from app.qa_agent.models.query_models import ParsedQuery
 from app.qa_agent.models.user_profile import (
     UserProfile,
+    validate_embedding_vector,
+    validate_query_text,
+    validate_similarity_score,
 )
 
 __all__ = [
@@ -23,4 +26,7 @@ __all__ = [
     "ConversationTurn",
     "ConversationContext",
     "UserProfile",
+    "validate_embedding_vector",
+    "validate_query_text",
+    "validate_similarity_score",
 ]
