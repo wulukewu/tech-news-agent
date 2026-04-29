@@ -735,6 +735,20 @@ def setup_scheduler():
         f"Proactive learning job registered: Runs daily at 10:00 in timezone '{scheduler_tz}'"
     )
 
+    # Register learning stagnation check job (daily at 10:00)
+    from app.tasks.learning_stagnation import learning_stagnation_check_job
+
+    _scheduler.add_job(
+        learning_stagnation_check_job,
+        trigger=CronTrigger(hour=10, minute=5, timezone=scheduler_tz),
+        id="learning_stagnation_check",
+        name="Learning Stagnation Check",
+        replace_existing=True,
+    )
+    logger.info(
+        f"Learning stagnation check job registered: Runs daily at 10:05 in timezone '{scheduler_tz}'"
+    )
+
     # Log the configured schedule
     logger.info(
         f"Scheduler configured successfully: "

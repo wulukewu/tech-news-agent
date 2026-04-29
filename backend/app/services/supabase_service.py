@@ -1308,6 +1308,14 @@ class SupabaseService:
                 },
             )
 
+            # Auto-sync learning progress when rating >= 3
+            if rating >= 3:
+                try:
+                    await self._sync_learning_progress(str(user_uuid), str(article_id))
+                except Exception as sync_err:
+                    # Non-critical: log but don't fail the rating update
+                    logger.warning("Failed to sync learning progress: %s", sync_err)
+
         except (ValueError, SupabaseServiceError):
             # 重新拋出驗證錯誤和已包裝的錯誤
             raise
@@ -1333,6 +1341,81 @@ class SupabaseService:
                     "operation": "update_article_rating",
                 },
             )
+
+    async def _sync_learning_progress(self, user_id: str, article_id: str) -> None:
+        """Auto-sync learning progress when user rates an article >= 3.
+
+        Checks if the article matches any active learning goal stage and marks it complete.
+        """
+        # Get article category
+        article_resp = (
+            self.client.table("articles").select("category").eq("id", article_id).single().execute()
+        )
+        if not article_resp.data:
+            return
+        article_category = (article_resp.data.get("category") or "").lower()
+        if not article_category:
+            return
+
+        # Get user's active learning goals with their stages
+        goals_resp = (
+            self.client.table("learning_goals")
+            .select("id, learning_paths(id, learning_stages(id, stage_name, prerequisites))")
+            .eq("user_id", user_id)
+            .eq("status", "active")
+            .execute()
+        )
+        if not goals_resp.data:
+            return
+
+        # Check if already recorded in learning_progress
+        existing_resp = (
+            self.client.table("learning_progress")
+            .select("id")
+            .eq("user_id", user_id)
+            .eq("article_id", article_id)
+            .eq("status", "completed")
+            .execute()
+        )
+        if existing_resp.data:
+            return  # Already marked, skip
+
+        for goal in goals_resp.data:
+            goal_id = goal["id"]
+            paths = goal.get("learning_paths") or []
+            if not paths:
+                continue
+            path = paths[0]
+            stages = path.get("learning_stages") or []
+
+            for stage in stages:
+                # Match article category against stage skills (prerequisites field)
+                skills = [s.lower() for s in (stage.get("prerequisites") or [])]
+                stage_name = (stage.get("stage_name") or "").lower()
+                all_keywords = skills + [stage_name]
+
+                if any(
+                    kw in article_category or article_category in kw for kw in all_keywords if kw
+                ):
+                    # Mark as completed
+                    self.client.table("learning_progress").upsert(
+                        {
+                            "user_id": user_id,
+                            "goal_id": goal_id,
+                            "stage_id": stage["id"],
+                            "article_id": article_id,
+                            "status": "completed",
+                            "completion_percentage": 100,
+                            "completed_at": datetime.utcnow().isoformat(),
+                        }
+                    ).execute()
+                    logger.info(
+                        "Auto-synced learning progress: article %s → goal %s stage %s",
+                        article_id,
+                        goal_id,
+                        stage["id"],
+                    )
+                    break  # One match per goal is enough
 
     async def get_reading_list(
         self, discord_id: str, status: str | None = None

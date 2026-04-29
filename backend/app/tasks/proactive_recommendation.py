@@ -16,6 +16,8 @@ from app.services.supabase_service import SupabaseService
 logger = logging.getLogger(__name__)
 
 TOP_N = 5
+LEARNING_PATH_SLOTS = 3  # Max articles from learning path per DM
+PREFERENCE_SLOTS = 2  # Remaining slots from preference model
 MIN_RATINGS_FOR_PERSONALIZATION = 5
 
 
@@ -179,8 +181,23 @@ async def _build_recommendations(
     if not top_articles:
         return []
 
+    # Try to mix in learning path articles
+    learning_items = await _get_learning_path_articles(supabase, user_id, new_articles)
+
     result = []
+    used_ids: set[str] = set()
+
+    # Add learning path articles first
+    for item in learning_items[:LEARNING_PATH_SLOTS]:
+        result.append(item)
+        used_ids.add(item["article"]["id"])
+
+    # Fill remaining slots with preference-based articles
     for article in top_articles:
+        if len(result) >= TOP_N:
+            break
+        if article.get("id") in used_ids:
+            continue
         if has_enough_history or has_summary:
             reason = generate_reason(article, rating_history, preference_summary)
         else:
@@ -202,3 +219,70 @@ def _score_by_summary(articles: list[dict], summary: str) -> list[dict]:
         scored.append({**article, "preference_score": round(min(1.0, base + boost), 3)})
     scored.sort(key=lambda a: a["preference_score"], reverse=True)
     return scored
+
+
+async def _get_learning_path_articles(
+    supabase: SupabaseService,
+    user_id: str,
+    new_articles: list[dict],
+) -> list[dict]:
+    """Return articles from new_articles that match the user's active learning path stage."""
+    try:
+        # Get active learning goals
+        goals_resp = (
+            supabase.client.table("learning_goals")
+            .select(
+                "id, title, learning_paths(id, learning_stages(id, stage_order, stage_name, prerequisites))"
+            )
+            .eq("user_id", user_id)
+            .eq("status", "active")
+            .limit(1)
+            .execute()
+        )
+        if not goals_resp.data:
+            return []
+
+        goal = goals_resp.data[0]
+        goal_id = goal["id"]
+        goal_title = goal["title"]
+        paths = goal.get("learning_paths") or []
+        if not paths:
+            return []
+
+        stages = sorted(paths[0].get("learning_stages") or [], key=lambda s: s["stage_order"])
+        if not stages:
+            return []
+
+        # Find current stage (lowest order with incomplete progress)
+        progress_resp = (
+            supabase.client.table("learning_progress")
+            .select("stage_id")
+            .eq("user_id", user_id)
+            .eq("goal_id", goal_id)
+            .eq("status", "completed")
+            .execute()
+        )
+        completed_stage_ids = {r["stage_id"] for r in (progress_resp.data or [])}
+        current_stage = next(
+            (s for s in stages if s["id"] not in completed_stage_ids),
+            stages[-1],
+        )
+
+        stage_name = current_stage.get("stage_name", "")
+        skills = [s.lower() for s in (current_stage.get("prerequisites") or [])]
+        keywords = skills + [stage_name.lower()]
+
+        # Filter new_articles by keyword match
+        matched = []
+        for article in new_articles:
+            category = (article.get("category") or "").lower()
+            title = (article.get("title") or "").lower()
+            if any(kw and (kw in category or kw in title) for kw in keywords):
+                reason = f"符合你的「{goal_title}」學習路徑 - {stage_name} 階段"
+                matched.append({"article": article, "reason": reason, "user_id": user_id})
+
+        return matched[:LEARNING_PATH_SLOTS]
+
+    except Exception as exc:
+        logger.warning("Could not fetch learning path articles for %s: %s", user_id, exc)
+        return []
