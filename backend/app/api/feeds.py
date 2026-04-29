@@ -280,6 +280,45 @@ async def batch_subscribe(
         raise HTTPException(status_code=500, detail="Database operation failed")
 
 
+@router.post(
+    "/subscriptions/batch-unsubscribe", response_model=SuccessResponse[BatchSubscribeResponse]
+)
+async def batch_unsubscribe(
+    request: BatchSubscribeRequest, current_user: dict[str, Any] = Depends(get_current_user)
+):
+    """Unsubscribe from multiple feeds at once"""
+    try:
+        supabase = SupabaseService()
+        user_uuid = current_user["user_id"]
+
+        unsubscribed_count = 0
+        failed_count = 0
+        errors: list[str] = []
+
+        for feed_id in request.feed_ids:
+            try:
+                supabase.client.table("user_subscriptions").delete().eq(
+                    "user_id", str(user_uuid)
+                ).eq("feed_id", str(feed_id)).execute()
+                unsubscribed_count += 1
+            except Exception as e:
+                failed_count += 1
+                errors.append(str(e))
+
+        from app.schemas.feed import BatchSubscribeResponse
+
+        result = BatchSubscribeResponse(
+            subscribed_count=unsubscribed_count,
+            failed_count=failed_count,
+            errors=errors,
+        )
+        return success_response(result)
+
+    except Exception as e:
+        logger.error(f"Failed batch unsubscription: {e!s}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Database operation failed")
+
+
 @router.post("/feeds/preview")
 async def preview_feed(
     request: AddCustomFeedRequest,

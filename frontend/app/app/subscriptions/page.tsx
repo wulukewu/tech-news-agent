@@ -8,6 +8,7 @@ import {
   fetchFeeds,
   toggleSubscription,
   batchSubscribe,
+  batchUnsubscribe,
   addCustomFeed,
   previewFeed,
   deleteFeed,
@@ -104,9 +105,9 @@ export default function SubscriptionsPage() {
     }
   }, [isAuthenticated]);
 
-  const loadFeeds = async () => {
+  const loadFeeds = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       setError(null);
       const data = await fetchFeeds();
       setFeeds(data || []);
@@ -163,18 +164,18 @@ export default function SubscriptionsPage() {
         await batchSubscribe(feedsToToggle.map((f) => f.id));
       } else {
         const subscribedToToggle = feedsToToggle.filter((f) => f.is_subscribed);
-        await Promise.all(subscribedToToggle.map((feed) => toggleSubscription(feed.id)));
+        await batchUnsubscribe(subscribedToToggle.map((f) => f.id));
       }
       toast.success(
         subscribe
           ? t('subscriptions.subscribed', { count: feedsToToggle.length })
           : t('subscriptions.unsubscribed', { count: feedsToToggle.length })
       );
-      await loadFeeds();
+      await loadFeeds(true);
     } catch (err) {
       console.error('Failed to toggle category:', err);
       toast.error(t('subscriptions.batch-operation-failed'));
-      await loadFeeds();
+      await loadFeeds(true);
     } finally {
       setBatchLoading(null);
     }
@@ -195,19 +196,19 @@ export default function SubscriptionsPage() {
       } else {
         // Only unsubscribe feeds that are currently subscribed
         const subscribedToToggle = feedsToToggle.filter((f) => f.is_subscribed);
-        await Promise.all(subscribedToToggle.map((feed) => toggleSubscription(feed.id)));
+        await batchUnsubscribe(subscribedToToggle.map((f) => f.id));
       }
       toast.success(
         subscribe
           ? t('subscriptions.subscribed', { count: feedsToToggle.length })
           : t('subscriptions.unsubscribed', { count: feedsToToggle.length })
       );
-      // Reload from server to get accurate state
-      await loadFeeds();
+      // Reload from server to get accurate state (silent = no loading spinner)
+      await loadFeeds(true);
     } catch (err) {
       console.error('Failed to toggle all:', err);
       toast.error(t('subscriptions.batch-operation-failed'));
-      await loadFeeds();
+      await loadFeeds(true);
     } finally {
       setBatchLoading(null);
     }

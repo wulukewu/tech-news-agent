@@ -66,6 +66,14 @@ export async function batchSubscribe(feedIds: string[]): Promise<BatchSubscribeR
   return response.data;
 }
 
+export async function batchUnsubscribe(feedIds: string[]): Promise<BatchSubscribeResponse> {
+  const response = await apiClient.post<BatchSubscribeResponse>(
+    '/api/subscriptions/batch-unsubscribe',
+    { feed_ids: feedIds }
+  );
+  return response.data;
+}
+
 /**
  * Add custom RSS feed
  *
