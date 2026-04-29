@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useParams, useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -14,11 +14,11 @@ import {
   Clock,
   TrendingUp,
   CheckCircle,
-  Circle,
   ExternalLink,
+  ChevronLeft,
   BarChart3,
-  Settings,
   Lightbulb,
+  Circle,
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import {
@@ -27,18 +27,15 @@ import {
   getArticleRecommendations,
   markArticleComplete,
   getLearningEvaluation,
-  type LearningGoalDetails,
-  type LearningProgress,
-  type ArticleRecommendation,
 } from '@/lib/api/learning-path';
 
-const stageColors = {
+const stageColorMap: Record<string, string> = {
   foundation: 'bg-blue-500',
-  intermediate: 'bg-yellow-500',
+  intermediate: 'bg-amber-500',
   advanced: 'bg-red-500',
 };
 
-const stageLabels = {
+const stageLabelMap: Record<string, string> = {
   foundation: '基礎',
   intermediate: '中級',
   advanced: '進階',
@@ -46,60 +43,49 @@ const stageLabels = {
 
 export default function LearningGoalDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const goalId = params.id as string;
   const [selectedStage, setSelectedStage] = useState(1);
   const [selectedTab, setSelectedTab] = useState('path');
   const queryClient = useQueryClient();
 
-  const { data: goalDetails, isLoading: goalLoading } = useQuery({
+  const { data: goalDetails, isLoading } = useQuery({
     queryKey: ['learningGoal', goalId],
     queryFn: () => getLearningGoalDetails(goalId),
   });
 
-  const { data: progress, isLoading: progressLoading } = useQuery({
+  const { data: progress } = useQuery({
     queryKey: ['learningProgress', goalId],
     queryFn: () => getLearningProgress(goalId),
   });
 
-  const { data: recommendations, isLoading: recommendationsLoading } = useQuery({
+  const { data: recommendations, isLoading: recLoading } = useQuery({
     queryKey: ['recommendations', goalId, selectedStage],
     queryFn: () => getArticleRecommendations(goalId, selectedStage),
+    enabled: selectedTab === 'recommendations',
   });
 
   const { data: evaluation } = useQuery({
     queryKey: ['evaluation', goalId],
     queryFn: () => getLearningEvaluation(goalId),
+    enabled: selectedTab === 'evaluation',
   });
 
   const completeArticleMutation = useMutation({
-    mutationFn: ({
-      articleId,
-      timeSpent,
-      notes,
-    }: {
-      articleId: string;
-      timeSpent: number;
-      notes: string;
-    }) => markArticleComplete(goalId, articleId, { time_spent_minutes: timeSpent, notes }),
+    mutationFn: ({ articleId }: { articleId: string }) =>
+      markArticleComplete(goalId, articleId, { time_spent_minutes: 30, notes: '' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['learningProgress', goalId] });
       queryClient.invalidateQueries({ queryKey: ['recommendations', goalId] });
-      toast.success('文章標記為已完成');
+      toast.success('已標記為完成');
     },
     onError: () => toast.error('標記失敗'),
   });
 
-  const handleCompleteArticle = (articleId: string) => {
-    const timeSpent = Math.floor(Math.random() * 60) + 15; // 15-75 minutes
-    completeArticleMutation.mutate({ articleId, timeSpent, notes: '' });
-  };
-
-  if (goalLoading || progressLoading) {
+  if (isLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
+      <div className="container mx-auto px-4 py-8 flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     );
   }
@@ -107,11 +93,13 @@ export default function LearningGoalDetailPage() {
   if (!goalDetails) {
     return (
       <div className="container mx-auto px-4 py-8">
+        <Button variant="ghost" onClick={() => router.push('/app/learning')} className="mb-4">
+          <ChevronLeft className="h-4 w-4 mr-1" /> 返回
+        </Button>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Target className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">學習目標不存在</h3>
-            <Button onClick={() => (window.location.href = '/app/learning')}>返回學習路徑</Button>
+            <p className="text-muted-foreground">學習目標不存在</p>
           </CardContent>
         </Card>
       </div>
@@ -120,123 +108,187 @@ export default function LearningGoalDetailPage() {
 
   const goal = goalDetails.goal;
   const learningPath = goalDetails.learning_path;
+  const stages = learningPath?.stages ?? [];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Back button */}
-      <Button
-        variant="ghost"
-        className="mb-4 -ml-2"
-        onClick={() => (window.location.href = '/app/learning')}
-      >
-        ← 返回學習路徑
+    <div className="container mx-auto px-4 py-8 max-w-4xl">
+      {/* Back */}
+      <Button variant="ghost" onClick={() => router.push('/app/learning')} className="mb-4 -ml-2">
+        <ChevronLeft className="h-4 w-4 mr-1" /> 返回學習路徑
       </Button>
 
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <Target className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl font-bold">{goal.title}</h1>
-        </div>
-        <p className="text-muted-foreground">{goal.description}</p>
-
-        {/* Goal Stats */}
-        <div className="flex gap-6 mt-4">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">難度 {goal.difficulty_level}/5</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">預估 {goal.estimated_hours} 小時</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">目標技能：{goal.target_skill}</span>
-          </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-1">{goal.title}</h1>
+        {goal.description && (
+          <p className="text-muted-foreground text-sm mb-3">{goal.description}</p>
+        )}
+        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <BookOpen className="h-4 w-4" /> {goal.target_skill}
+          </span>
+          <span className="flex items-center gap-1">
+            <Clock className="h-4 w-4" /> {goal.estimated_hours} 小時
+          </span>
+          <span className="flex items-center gap-1">
+            <TrendingUp className="h-4 w-4" /> 難度 {goal.difficulty_level}/5
+          </span>
         </div>
 
-        {/* Overall Progress */}
         {progress && (
-          <div className="mt-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">整體進度</span>
-              <span className="text-sm text-muted-foreground">{progress.overall_completion}%</span>
+          <div className="mt-4">
+            <div className="flex justify-between text-sm mb-1">
+              <span className="text-muted-foreground">整體進度</span>
+              <span className="font-medium">{progress.overall_completion}%</span>
             </div>
             <Progress value={progress.overall_completion} className="h-2" />
           </div>
         )}
       </div>
 
-      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs value={selectedTab} onValueChange={setSelectedTab}>
+        <TabsList className="grid w-full grid-cols-3 mb-6">
           <TabsTrigger value="path">學習路徑</TabsTrigger>
           <TabsTrigger value="recommendations">推薦文章</TabsTrigger>
-          <TabsTrigger value="progress">學習進度</TabsTrigger>
-          <TabsTrigger value="evaluation">成效評估</TabsTrigger>
+          <TabsTrigger value="progress">進度 & 評估</TabsTrigger>
         </TabsList>
 
-        {/* Learning Path Tab */}
-        <TabsContent value="path" className="space-y-6">
-          {learningPath && learningPath.stages ? (
-            <div className="grid gap-6">
-              {learningPath.stages.map((stage: any, index: number) => (
-                <Card key={stage.order} className="relative">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <Badge
-                          className={`${stageColors[stage.name as keyof typeof stageColors]} text-white`}
-                        >
-                          階段 {stage.order}
-                        </Badge>
-                        <CardTitle>
-                          {stageLabels[stage.name as keyof typeof stageLabels] || stage.name}
-                        </CardTitle>
+        {/* Path Tab */}
+        <TabsContent value="path" className="space-y-4">
+          {stages.length > 0 ? (
+            stages.map((stage: any, index: number) => {
+              const stageProgress = progress?.stages?.[index];
+              const colorClass = stageColorMap[stage.name] ?? 'bg-gray-500';
+              const label = stageLabelMap[stage.name] ?? stage.name;
+              return (
+                <Card key={stage.order}>
+                  <CardContent className="p-5">
+                    <div className="flex items-start justify-between gap-4 mb-3">
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-block w-2 h-2 rounded-full ${colorClass}`} />
+                        <span className="font-semibold">{label} 階段</span>
+                        <span className="text-xs text-muted-foreground">
+                          {stage.estimated_hours} 小時
+                        </span>
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Clock className="h-4 w-4" />
-                        {stage.estimated_hours} 小時
-                      </div>
+                      {stageProgress && (
+                        <span className="text-sm font-medium text-muted-foreground shrink-0">
+                          {stageProgress.completion_percentage}%
+                        </span>
+                      )}
                     </div>
-                    <CardDescription>{stage.description}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <h4 className="font-medium">涵蓋技能：</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {stage.skills.map((skill: string, skillIndex: number) => (
-                          <Badge key={skillIndex} variant="outline">
+
+                    {stage.description && (
+                      <p className="text-sm text-muted-foreground mb-3">{stage.description}</p>
+                    )}
+
+                    {stage.skills?.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        {stage.skills.map((skill: string, i: number) => (
+                          <Badge key={i} variant="outline" className="text-xs">
                             {skill}
                           </Badge>
                         ))}
                       </div>
-                    </div>
+                    )}
 
-                    {progress && progress.stages[index] && (
-                      <div className="mt-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium">階段進度</span>
-                          <span className="text-sm text-muted-foreground">
-                            {progress.stages[index].completion_percentage}%
-                          </span>
-                        </div>
-                        <Progress
-                          value={progress.stages[index].completion_percentage}
-                          className="h-2"
-                        />
-                      </div>
+                    {stageProgress && (
+                      <Progress
+                        value={stageProgress.completion_percentage}
+                        className="h-1.5 mb-3"
+                      />
                     )}
 
                     <Button
-                      className="mt-4"
+                      size="sm"
+                      variant="outline"
                       onClick={() => {
                         setSelectedStage(stage.order);
                         setSelectedTab('recommendations');
                       }}
                     >
-                      查看推薦文章
+                      查看推薦文章 →
                     </Button>
+                  </CardContent>
+                </Card>
+              );
+            })
+          ) : (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <BookOpen className="h-10 w-10 text-muted-foreground mb-3" />
+                <p className="text-muted-foreground text-sm">學習路徑生成中，請稍候...</p>
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Recommendations Tab */}
+        <TabsContent value="recommendations" className="space-y-4">
+          {/* Stage selector */}
+          {stages.length > 0 && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-muted-foreground">選擇階段：</span>
+              {stages.map((stage: any) => (
+                <Button
+                  key={stage.order}
+                  variant={selectedStage === stage.order ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedStage(stage.order)}
+                >
+                  {stageLabelMap[stage.name] ?? stage.name}
+                </Button>
+              ))}
+            </div>
+          )}
+
+          {recLoading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            </div>
+          ) : recommendations?.articles?.length ? (
+            <div className="space-y-3">
+              {recommendations.articles.map((article: any) => (
+                <Card key={article.id} className="hover:shadow-sm transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <a
+                          href={article.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-medium text-sm hover:text-primary transition-colors line-clamp-2"
+                        >
+                          {article.title}
+                        </a>
+                        <p className="text-xs text-muted-foreground mt-1">{article.reason}</p>
+                        <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                          {article.category && (
+                            <Badge variant="outline" className="text-xs">
+                              {article.category}
+                            </Badge>
+                          )}
+                          <span>相關度 {Math.round(article.relevance_score * 100)}%</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-1 shrink-0">
+                        <Button size="icon" variant="ghost" className="h-8 w-8" asChild>
+                          <a href={article.url} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-green-600 hover:text-green-700"
+                          onClick={() => completeArticleMutation.mutate({ articleId: article.id })}
+                          disabled={completeArticleMutation.isPending}
+                          title="標記為已讀"
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
@@ -244,326 +296,128 @@ export default function LearningGoalDetailPage() {
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">學習路徑生成中</h3>
-                <p className="text-muted-foreground">請稍候...</p>
+                <Lightbulb className="h-10 w-10 text-muted-foreground mb-3" />
+                <p className="text-muted-foreground text-sm">
+                  目前沒有符合此階段的推薦文章，等待更多文章被抓取後會自動出現
+                </p>
               </CardContent>
             </Card>
           )}
         </TabsContent>
 
-        {/* Recommendations Tab */}
-        <TabsContent value="recommendations" className="space-y-6">
-          <div className="flex items-center gap-4 mb-4">
-            <span className="font-medium">選擇階段：</span>
-            {learningPath?.stages?.map((stage: any) => (
-              <Button
-                key={stage.order}
-                variant={selectedStage === stage.order ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedStage(stage.order)}
-              >
-                階段 {stage.order}
-              </Button>
-            ))}
-          </div>
-
-          {recommendationsLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : recommendations && recommendations.articles.length > 0 ? (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">{recommendations.stage_name} 階段推薦文章</h3>
-                <Badge variant="secondary">{recommendations.total_count} 篇文章</Badge>
-              </div>
-
-              <div className="grid gap-4">
-                {recommendations.articles.map((article: any) => (
-                  <Card key={article.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h4 className="font-semibold mb-2">{article.title}</h4>
-                          <p className="text-sm text-muted-foreground mb-3">{article.reason}</p>
-                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                            <span>相關度: {(article.relevance_score * 100).toFixed(0)}%</span>
-                            <span>難度匹配: {(article.difficulty_match * 100).toFixed(0)}%</span>
-                            {article.category && (
-                              <Badge variant="outline">{article.category}</Badge>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex gap-2 ml-4">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => window.open(article.url, '_blank')}
-                          >
-                            <ExternalLink className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => handleCompleteArticle(article.id)}
-                            disabled={completeArticleMutation.isPending}
-                          >
-                            <CheckCircle className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <Lightbulb className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">暫無推薦文章</h3>
-                <p className="text-muted-foreground">請稍後再試或選擇其他階段</p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-
-        {/* Progress Tab */}
-        <TabsContent value="progress" className="space-y-6">
+        {/* Progress & Evaluation Tab */}
+        <TabsContent value="progress" className="space-y-4">
+          {/* Stage progress */}
           {progress ? (
-            <div className="space-y-6">
+            <>
               <Card>
                 <CardHeader>
-                  <CardTitle>學習統計</CardTitle>
+                  <CardTitle className="text-base">各階段進度</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">
-                        {progress.overall_completion}%
+                <CardContent className="space-y-4">
+                  {progress.stages.map((stage: any, i: number) => (
+                    <div key={i}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className="font-medium">
+                          {stageLabelMap[stage.name] ?? stage.name} 階段
+                        </span>
+                        <span className="text-muted-foreground">
+                          {stage.articles_completed}/{stage.articles_total} 篇 ·{' '}
+                          {stage.completion_percentage}%
+                        </span>
                       </div>
-                      <div className="text-sm text-muted-foreground">整體完成度</div>
+                      <Progress value={stage.completion_percentage} className="h-2" />
                     </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">
-                        {progress.current_stage}
-                      </div>
-                      <div className="text-sm text-muted-foreground">當前階段</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">
-                        {progress.stages.length}
-                      </div>
-                      <div className="text-sm text-muted-foreground">總階段數</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-primary">
-                        {progress.stages.reduce((sum, stage) => sum + stage.articles_completed, 0)}
-                      </div>
-                      <div className="text-sm text-muted-foreground">已完成文章</div>
-                    </div>
-                  </div>
+                  ))}
                 </CardContent>
               </Card>
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">各階段進度</h3>
-                {progress.stages.map((stage: any, index: number) => (
-                  <Card key={index}>
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h4 className="font-medium">
-                          階段 {stage.order}: {stage.name}
-                        </h4>
-                        <Badge variant={stage.status === 'completed' ? 'default' : 'secondary'}>
-                          {stage.status === 'completed'
-                            ? '已完成'
-                            : stage.status === 'in_progress'
-                              ? '進行中'
-                              : '未開始'}
-                        </Badge>
-                      </div>
-
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between text-sm">
-                          <span>完成進度</span>
-                          <span>{stage.completion_percentage}%</span>
-                        </div>
-                        <Progress value={stage.completion_percentage} className="h-2" />
-
-                        <div className="grid grid-cols-2 gap-4 text-sm text-muted-foreground">
-                          <div>
-                            已完成文章: {stage.articles_completed}/{stage.articles_total}
-                          </div>
-                          <div>學習時間: {stage.time_spent_hours.toFixed(1)} 小時</div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
 
               {progress.recommendations.length > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle>學習建議</CardTitle>
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Lightbulb className="h-4 w-4 text-yellow-500" /> 學習建議
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
-                      {progress.recommendations.map((rec: string, index: number) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <Lightbulb className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm">{rec}</span>
+                      {progress.recommendations.map((rec: string, i: number) => (
+                        <li
+                          key={i}
+                          className="text-sm text-muted-foreground flex items-start gap-2"
+                        >
+                          <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-muted-foreground shrink-0" />
+                          {rec}
                         </li>
                       ))}
                     </ul>
                   </CardContent>
                 </Card>
               )}
-            </div>
+            </>
           ) : (
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">暫無進度數據</h3>
-                <p className="text-muted-foreground">開始學習後將顯示進度統計</p>
+                <BarChart3 className="h-10 w-10 text-muted-foreground mb-3" />
+                <p className="text-sm text-muted-foreground">開始學習後將顯示進度統計</p>
               </CardContent>
             </Card>
           )}
-        </TabsContent>
 
-        {/* Evaluation Tab */}
-        <TabsContent value="evaluation" className="space-y-6">
-          {evaluation ? (
-            <div className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>整體表現</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-center">
-                    <div className="text-3xl font-bold text-primary mb-2">
-                      {evaluation.overall_performance === 'excellent'
-                        ? '優秀'
-                        : evaluation.overall_performance === 'good'
-                          ? '良好'
-                          : evaluation.overall_performance === 'average'
-                            ? '一般'
-                            : evaluation.overall_performance === 'below_average'
-                              ? '待改進'
-                              : '需要努力'}
-                    </div>
-                    <p className="text-muted-foreground">學習表現評級</p>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>效率指標</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="text-center">
-                      <div className="text-xl font-bold">
-                        {(evaluation.efficiency_metrics.time_efficiency * 100).toFixed(0)}%
-                      </div>
-                      <div className="text-sm text-muted-foreground">時間效率</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xl font-bold">
-                        {(evaluation.efficiency_metrics.completion_rate * 100).toFixed(0)}%
-                      </div>
-                      <div className="text-sm text-muted-foreground">完成率</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xl font-bold">
-                        {(evaluation.efficiency_metrics.retention_score * 100).toFixed(0)}%
-                      </div>
-                      <div className="text-sm text-muted-foreground">知識保持</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-xl font-bold">
-                        {(evaluation.efficiency_metrics.consistency_score * 100).toFixed(0)}%
-                      </div>
-                      <div className="text-sm text-muted-foreground">學習一致性</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <div className="grid md:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-green-600">學習優勢</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {evaluation.strengths.map((strength: string, index: number) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <CheckCircle className="h-4 w-4 text-green-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm">{strength}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-orange-600">改進空間</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {evaluation.weaknesses.map((weakness: string, index: number) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <Circle className="h-4 w-4 text-orange-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm">{weakness}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>優化建議</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {evaluation.recommendations.map((rec: string, index: number) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <Lightbulb className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
-                        <span className="text-sm">{rec}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>下一步行動</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2">
-                    {evaluation.next_steps.map((step: string, index: number) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <Target className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                        <span className="text-sm">{step}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            </div>
-          ) : (
+          {/* Evaluation */}
+          {evaluation && (
             <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <BarChart3 className="h-12 w-12 text-muted-foreground mb-4" />
-                <h3 className="text-lg font-semibold mb-2">暫無評估數據</h3>
-                <p className="text-muted-foreground">需要更多學習數據才能生成評估報告</p>
+              <CardHeader>
+                <CardTitle className="text-base">學習成效評估</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: '時間效率', value: evaluation.efficiency_metrics.time_efficiency },
+                    { label: '完成率', value: evaluation.efficiency_metrics.completion_rate },
+                    { label: '知識保持', value: evaluation.efficiency_metrics.retention_score },
+                    { label: '學習一致性', value: evaluation.efficiency_metrics.consistency_score },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="text-center p-3 rounded-lg bg-muted/50">
+                      <div className="text-lg font-bold">{Math.round(value * 100)}%</div>
+                      <div className="text-xs text-muted-foreground">{label}</div>
+                    </div>
+                  ))}
+                </div>
+
+                {evaluation.strengths.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-green-600 mb-2">優勢</p>
+                    <ul className="space-y-1">
+                      {evaluation.strengths.map((s: string, i: number) => (
+                        <li
+                          key={i}
+                          className="text-sm text-muted-foreground flex items-start gap-2"
+                        >
+                          <CheckCircle className="h-3.5 w-3.5 text-green-500 mt-0.5 shrink-0" />
+                          {s}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {evaluation.next_steps.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium mb-2">下一步</p>
+                    <ul className="space-y-1">
+                      {evaluation.next_steps.map((s: string, i: number) => (
+                        <li
+                          key={i}
+                          className="text-sm text-muted-foreground flex items-start gap-2"
+                        >
+                          <Circle className="h-3.5 w-3.5 text-primary mt-0.5 shrink-0" />
+                          {s}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
