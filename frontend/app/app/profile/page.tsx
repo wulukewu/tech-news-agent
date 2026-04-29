@@ -1,231 +1,159 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Settings, BookMarked, Rss, BarChart3 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { BookMarked, Rss, BarChart3, ExternalLink } from 'lucide-react';
 import Link from 'next/link';
-import { toast } from '@/lib/toast';
+import { apiClient } from '@/lib/api/client';
 import { useI18n } from '@/contexts/I18nContext';
 import { Skeleton } from '@/components/ui/skeleton';
 
-/**
- * Profile Page
- *
- * Displays user information, edit functionality, and account statistics
- * Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6
- */
+interface UserStats {
+  reading_list_count: number;
+  subscriptions_count: number;
+  articles_read_count: number;
+}
+
 export default function ProfilePage() {
   const { user } = useUser();
   const { t } = useI18n();
-  const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    username: user?.username || '',
-    email: user?.email || '',
-  });
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
 
-  const handleSave = async () => {
-    try {
-      // TODO: Implement API call to update user profile
-      toast.success(t('success.profile-updated'));
-      setIsEditing(false);
-    } catch (error) {
-      toast.error(t('errors.profile-update-failed'));
-    }
-  };
-
-  const handleCancel = () => {
-    setFormData({
-      username: user?.username || '',
-      email: user?.email || '',
-    });
-    setIsEditing(false);
-  };
+  useEffect(() => {
+    if (!user) return;
+    apiClient
+      .get<UserStats>('/api/auth/me/stats')
+      .then((res) => setStats(res.data))
+      .catch(() =>
+        setStats({ reading_list_count: 0, subscriptions_count: 0, articles_read_count: 0 })
+      )
+      .finally(() => setStatsLoading(false));
+  }, [user]);
 
   if (!user) {
     return (
-      <div className="container mx-auto py-8 px-4 max-w-4xl space-y-6">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-32" />
-          <Skeleton className="h-4 w-56" />
-        </div>
-        <div className="flex items-center gap-4">
-          <Skeleton className="h-20 w-20 rounded-full" />
-          <div className="space-y-2">
-            <Skeleton className="h-6 w-40" />
-            <Skeleton className="h-4 w-32" />
-          </div>
-        </div>
-        <Skeleton className="h-48 rounded-lg" />
+      <div className="container mx-auto py-8 px-4 max-w-3xl space-y-6">
+        <Skeleton className="h-8 w-32" />
+        <Skeleton className="h-32 rounded-lg" />
         <Skeleton className="h-32 rounded-lg" />
       </div>
     );
   }
 
+  const displayName = user.username || user.discordId;
+
   return (
-    <div className="container mx-auto py-8 px-4 max-w-4xl">
-      <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold">{t('pages.profile.title')}</h1>
-          <p className="text-muted-foreground">{t('pages.profile.description')}</p>
-        </div>
-
-        {/* Profile Information Card */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>{t('pages.profile.profile-information')}</CardTitle>
-                <CardDescription>{t('pages.profile.profile-information-desc')}</CardDescription>
-              </div>
-              {!isEditing && (
-                <Button onClick={() => setIsEditing(true)}>{t('buttons.edit-profile')}</Button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Avatar */}
-            <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20">
-                {user.avatar && <AvatarImage src={user.avatar} alt={user.username} />}
-                <AvatarFallback className="text-2xl">
-                  {user.username?.[0]?.toUpperCase()}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="text-lg font-semibold">{user.username}</h3>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
-              </div>
-            </div>
-
-            {/* Edit Form */}
-            {isEditing ? (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="username">{t('pages.profile.username')}</Label>
-                  <Input
-                    id="username"
-                    value={formData.username}
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    placeholder={t('pages.profile.enter-username')}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="email">{t('pages.profile.email')}</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder={t('pages.profile.enter-email')}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button onClick={handleSave}>{t('buttons.save-changes')}</Button>
-                  <Button variant="outline" onClick={handleCancel}>
-                    {t('buttons.cancel')}
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <Label className="text-muted-foreground">{t('pages.profile.username')}</Label>
-                  <p className="text-lg">{user.username}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">{t('pages.profile.email')}</Label>
-                  <p className="text-lg">{user.email}</p>
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Account Statistics */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('pages.profile.account-statistics')}</CardTitle>
-            <CardDescription>{t('pages.profile.account-statistics-desc')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <BookMarked className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">{t('pages.profile.reading-list')}</p>
-                  <p className="text-2xl font-bold">0</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <Rss className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    {t('pages.profile.subscriptions')}
-                  </p>
-                  <p className="text-2xl font-bold">0</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/50">
-                <div className="p-2 rounded-full bg-primary/10">
-                  <BarChart3 className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    {t('pages.profile.articles-read')}
-                  </p>
-                  <p className="text-2xl font-bold">0</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Quick Links */}
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('pages.profile.quick-links')}</CardTitle>
-            <CardDescription>{t('pages.profile.quick-links-desc')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Link href="/dashboard/settings">
-                <Button variant="ghost" className="w-full justify-start gap-2">
-                  <Settings className="h-4 w-4" />
-                  {t('pages.profile.settings')}
-                </Button>
-              </Link>
-              <Link href="/dashboard/analytics">
-                <Button variant="ghost" className="w-full justify-start gap-2">
-                  <BarChart3 className="h-4 w-4" />
-                  {t('pages.profile.analytics')}
-                </Button>
-              </Link>
-              <Link href="/dashboard/reading-list">
-                <Button variant="ghost" className="w-full justify-start gap-2">
-                  <BookMarked className="h-4 w-4" />
-                  {t('pages.profile.reading-list')}
-                </Button>
-              </Link>
-              <Link href="/dashboard/subscriptions">
-                <Button variant="ghost" className="w-full justify-start gap-2">
-                  <Rss className="h-4 w-4" />
-                  {t('pages.profile.subscriptions')}
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+    <div className="container mx-auto py-8 px-4 max-w-3xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">{t('pages.profile.title')}</h1>
+        <p className="text-muted-foreground text-sm">{t('pages.profile.description')}</p>
       </div>
+
+      {/* Profile Card */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16">
+              {user.avatar && <AvatarImage src={user.avatar} alt={displayName} />}
+              <AvatarFallback className="text-xl">{displayName?.[0]?.toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg font-semibold truncate">{displayName}</h2>
+              <div className="flex items-center gap-2 mt-1">
+                <Badge variant="secondary" className="text-xs">
+                  Discord
+                </Badge>
+                <span className="text-xs text-muted-foreground truncate">{user.discordId}</span>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" asChild>
+              <a href="https://discord.com/channels/@me" target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                Discord
+              </a>
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-4">{t('pages.profile.discord-managed')}</p>
+        </CardContent>
+      </Card>
+
+      {/* Stats */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{t('pages.profile.account-statistics')}</CardTitle>
+          <CardDescription className="text-sm">
+            {t('pages.profile.account-statistics-desc')}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-4">
+            {[
+              {
+                icon: BookMarked,
+                label: t('pages.profile.reading-list'),
+                value: stats?.reading_list_count,
+                href: '/app/reading-list',
+              },
+              {
+                icon: Rss,
+                label: t('pages.profile.subscriptions'),
+                value: stats?.subscriptions_count,
+                href: '/app/subscriptions',
+              },
+              {
+                icon: BarChart3,
+                label: t('pages.profile.articles-read'),
+                value: stats?.articles_read_count,
+                href: '/app/reading-list',
+              },
+            ].map(({ icon: Icon, label, value, href }) => (
+              <Link key={label} href={href}>
+                <div className="flex flex-col items-center gap-2 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors cursor-pointer text-center">
+                  <div className="p-2 rounded-full bg-primary/10">
+                    <Icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <p className="text-xs text-muted-foreground">{label}</p>
+                  {statsLoading ? (
+                    <Skeleton className="h-7 w-8" />
+                  ) : (
+                    <p className="text-2xl font-bold">{value ?? 0}</p>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Quick Links */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">{t('pages.profile.quick-links')}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-1">
+          {[
+            { href: '/app/subscriptions', icon: Rss, label: t('pages.profile.subscriptions') },
+            { href: '/app/reading-list', icon: BookMarked, label: t('pages.profile.reading-list') },
+            {
+              href: '/app/settings/preferences',
+              icon: BarChart3,
+              label: t('pages.profile.settings'),
+            },
+          ].map(({ href, icon: Icon, label }) => (
+            <Link key={href} href={href}>
+              <Button variant="ghost" className="w-full justify-start gap-2">
+                <Icon className="h-4 w-4" />
+                {label}
+              </Button>
+            </Link>
+          ))}
+        </CardContent>
+      </Card>
     </div>
   );
 }

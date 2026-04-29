@@ -56,7 +56,8 @@
       "subscriptions": "訂閱",
       "articles-read": "已讀文章",
       "settings": "設定",
-      "analytics": "分析"
+      "analytics": "分析",
+      "discord-managed": "個人資料由 Discord 管理，如需修改請前往 Discord 設定"
     }
   },
   "language": {

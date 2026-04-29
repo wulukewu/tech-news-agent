@@ -498,6 +498,46 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Failed to retrieve user information")
 
 
+@router.get("/me/stats")
+async def get_user_stats(current_user: dict = Depends(get_current_user)):
+    """Get user profile statistics: reading list count, subscriptions, articles read."""
+    try:
+        supabase = SupabaseService()
+        user_id = str(current_user["user_id"])
+        discord_id = current_user["discord_id"]
+
+        # Reading list count
+        reading_list_resp = (
+            supabase.client.table("reading_list")
+            .select("id", count="exact")
+            .eq("user_id", user_id)
+            .execute()
+        )
+        reading_list_count = reading_list_resp.count or 0
+
+        # Articles read (status = 'Read')
+        articles_read_resp = (
+            supabase.client.table("reading_list")
+            .select("id", count="exact")
+            .eq("user_id", user_id)
+            .eq("status", "Read")
+            .execute()
+        )
+        articles_read_count = articles_read_resp.count or 0
+
+        # Subscriptions count
+        subscriptions = await supabase.get_user_subscriptions(discord_id)
+        subscriptions_count = len(subscriptions)
+
+        return {
+            "reading_list_count": reading_list_count,
+            "subscriptions_count": subscriptions_count,
+            "articles_read_count": articles_read_count,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve user stats: {e}")
+
+
 # ============================================================================
 # Token 管理端點
 # ============================================================================

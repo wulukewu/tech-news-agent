@@ -579,6 +579,7 @@ export type TranslationKey =
   | 'pages.profile.account-statistics'
   | 'pages.profile.account-statistics-desc'
   | 'pages.profile.analytics'
+  | 'pages.profile.discord-managed'
   | 'pages.profile.articles-read'
   | 'pages.profile.description'
   | 'pages.profile.email'

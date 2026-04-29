@@ -56,7 +56,8 @@
       "subscriptions": "Subscriptions",
       "articles-read": "Articles Read",
       "settings": "Settings",
-      "analytics": "Analytics"
+      "analytics": "Analytics",
+      "discord-managed": "Your profile is managed by Discord. To update it, go to Discord settings."
     }
   },
   "language": {
