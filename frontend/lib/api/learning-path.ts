@@ -46,6 +46,7 @@ export interface CreateGoalResponse {
   };
   success: boolean;
   message: string;
+  suggested_feeds: Array<{ name: string; url: string; category: string }>;
 }
 
 export interface LearningGoalDetails {

@@ -52,7 +52,13 @@ export default function LearningPathPage() {
       queryClient.invalidateQueries({ queryKey: ['learningGoals'] });
       setGoalText('');
       setShowCreateForm(false);
-      toast.success('學習目標創建成功！');
+      if (data.suggested_feeds?.length) {
+        toast.success(
+          `學習目標創建成功！建議訂閱相關 feeds：${data.suggested_feeds.map((f) => f.name).join('、')}`
+        );
+      } else {
+        toast.success('學習目標創建成功！');
+      }
       if (data.goal_id) router.push(`/app/learning/${data.goal_id}`);
     },
     onError: () => toast.error('創建學習目標失敗'),

@@ -164,28 +164,30 @@ class ArticleRecommender:
 
             select_fields = "id, feed_id, title, url, published_at, tinkering_index, ai_summary, created_at, category"
 
-            # 1. Search by skill names in title
+            # 1. Search by skill names in title and ai_summary
             skill_names = [skill.name.replace("-", " ") for skill in stage.skills]
             for skill_name in skill_names:
-                resp = (
-                    self.supabase.client.table("articles")
-                    .select(select_fields)
-                    .ilike("title", f"%{skill_name}%")
-                    .limit(20)
-                    .execute()
-                )
-                add_articles(resp.data or [])
-
-            # 2. Search by skill tags in category
-            for skill in stage.skills:
-                for tag in skill.tags:
+                for field in ("title", "ai_summary"):
                     resp = (
                         self.supabase.client.table("articles")
                         .select(select_fields)
-                        .ilike("category", f"%{tag}%")
-                        .limit(10)
+                        .ilike(field, f"%{skill_name}%")
+                        .limit(20)
                         .execute()
                     )
+                    add_articles(resp.data or [])
+
+            # 2. Search by skill tags in category and ai_summary
+            for skill in stage.skills:
+                for tag in skill.tags:
+                    for field in ("category", "ai_summary"):
+                        resp = (
+                            self.supabase.client.table("articles")
+                            .select(select_fields)
+                            .ilike(field, f"%{tag}%")
+                            .limit(10)
+                            .execute()
+                        )
                     add_articles(resp.data or [])
 
             # 3. Fallback: use target_skill keyword against title + category
@@ -193,7 +195,7 @@ class ArticleRecommender:
                 for keyword in target_skill.replace("-", " ").split():
                     if len(keyword) < 3:
                         continue
-                    for field in ("title", "category"):
+                    for field in ("title", "ai_summary", "category"):
                         resp = (
                             self.supabase.client.table("articles")
                             .select(select_fields)

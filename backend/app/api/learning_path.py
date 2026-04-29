@@ -41,6 +41,7 @@ class CreateGoalResponse(BaseModel):
     learning_path: dict
     success: bool
     message: str
+    suggested_feeds: list = []
 
 
 class LearningGoalResponse(BaseModel):
@@ -152,6 +153,7 @@ async def create_learning_goal(
             },
             success=True,
             message="學習目標創建成功",
+            suggested_feeds=_get_suggested_feeds(parsed_goal.target_skill),
         )
 
     except Exception as e:
@@ -502,3 +504,61 @@ async def delete_learning_goal(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"刪除學習目標失敗: {str(e)}"
         )
+
+
+# Curated feed suggestions per skill keyword
+_FEED_SUGGESTIONS: dict[str, list[dict]] = {
+    "kubernetes": [
+        {"name": "Kubernetes Blog", "url": "https://kubernetes.io/feed.xml", "category": "DevOps"},
+        {"name": "CNCF Blog", "url": "https://www.cncf.io/feed/", "category": "DevOps"},
+    ],
+    "docker": [
+        {"name": "Docker Blog", "url": "https://www.docker.com/blog/feed/", "category": "DevOps"},
+    ],
+    "react": [
+        {"name": "React Blog", "url": "https://react.dev/rss.xml", "category": "Frontend"},
+        {"name": "CSS-Tricks", "url": "https://css-tricks.com/feed/", "category": "Frontend"},
+    ],
+    "python": [
+        {"name": "Real Python", "url": "https://realpython.com/atom.xml", "category": "Backend"},
+        {
+            "name": "Python Blog",
+            "url": "https://blog.python.org/feeds/posts/default",
+            "category": "Backend",
+        },
+    ],
+    "nextjs": [
+        {"name": "Vercel Blog", "url": "https://vercel.com/atom", "category": "Frontend"},
+    ],
+    "aws": [
+        {"name": "AWS Blog", "url": "https://aws.amazon.com/blogs/aws/feed/", "category": "Cloud"},
+    ],
+    "machine-learning": [
+        {
+            "name": "Towards Data Science",
+            "url": "https://towardsdatascience.com/feed",
+            "category": "AI/ML",
+        },
+        {
+            "name": "Google AI Blog",
+            "url": "https://blog.google/technology/ai/rss/",
+            "category": "AI/ML",
+        },
+    ],
+    "postgresql": [
+        {
+            "name": "PostgreSQL News",
+            "url": "https://www.postgresql.org/news.rss",
+            "category": "Database",
+        },
+    ],
+}
+
+
+def _get_suggested_feeds(target_skill: str) -> list[dict]:
+    """Return curated feed suggestions for a given skill."""
+    skill_lower = target_skill.lower().replace(" ", "-")
+    for key, feeds in _FEED_SUGGESTIONS.items():
+        if key in skill_lower or skill_lower in key:
+            return feeds
+    return []
