@@ -138,11 +138,9 @@ class ProgressTracker:
         stage_articles = await self._get_stage_articles(stage_data["skills"])
         articles_total = len(stage_articles)
 
-        # Count completed articles
+        # Count completed articles for this goal (ignore stage_id requirement)
         completed_articles = [
-            record
-            for record in progress_records
-            if record.get("stage_id") and record["status"] == "completed"
+            record for record in progress_records if record["status"] == "completed"
         ]
         articles_completed = len(completed_articles)
 
@@ -181,9 +179,25 @@ class ProgressTracker:
 
     async def _get_stage_articles(self, skill_names: List[str]) -> List[str]:
         """Get article IDs relevant to stage skills"""
-        # Simplified: return mock article IDs
-        # In real implementation, would search articles by skill relevance
-        return [f"article_{skill}_{i}" for skill in skill_names for i in range(3)]
+        try:
+            article_ids = []
+            seen: set = set()
+            for skill in skill_names:
+                for field in ("title", "ai_summary", "category"):
+                    resp = (
+                        self.supabase.client.table("articles")
+                        .select("id")
+                        .ilike(field, f"%{skill}%")
+                        .limit(10)
+                        .execute()
+                    )
+                    for row in resp.data or []:
+                        if row["id"] not in seen:
+                            seen.add(row["id"])
+                            article_ids.append(row["id"])
+            return article_ids if article_ids else ["placeholder"]
+        except Exception:
+            return ["placeholder"]
 
     async def _calculate_learning_velocity(self, user_id: str, goal_id: str) -> float:
         """Calculate articles completed per week"""
