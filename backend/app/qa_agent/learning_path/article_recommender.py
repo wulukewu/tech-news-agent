@@ -85,10 +85,13 @@ class ArticleRecommender:
     def _get_stage_by_order(
         self, learning_path: LearningPath, stage_order: int
     ) -> Optional[LearningStage]:
-        """Get stage by order number"""
+        """Get stage by order number, fallback to first stage if not found"""
         for stage in learning_path.stages:
             if stage.stage_order == stage_order:
                 return stage
+        # Fallback: return the stage with the lowest order
+        if learning_path.stages:
+            return min(learning_path.stages, key=lambda s: s.stage_order)
         return None
 
     async def _get_user_preferences(self, user_id: str) -> Dict:
@@ -150,14 +153,23 @@ class ArticleRecommender:
                 for record in records:
                     if record["id"] not in seen_ids:
                         seen_ids.add(record["id"])
-                        articles.append(ArticleSchema(**record))
+                        try:
+                            # Normalize fields not present in plain articles query
+                            record.setdefault("feed_name", record.get("category") or "")
+                            if isinstance(record.get("embedding"), str):
+                                record["embedding"] = None
+                            articles.append(ArticleSchema(**record))
+                        except Exception:
+                            pass
+
+            select_fields = "id, feed_id, title, url, published_at, tinkering_index, ai_summary, created_at, category"
 
             # 1. Search by skill names in title
             skill_names = [skill.name.replace("-", " ") for skill in stage.skills]
             for skill_name in skill_names:
                 resp = (
                     self.supabase.client.table("articles")
-                    .select("*")
+                    .select(select_fields)
                     .ilike("title", f"%{skill_name}%")
                     .limit(20)
                     .execute()
@@ -169,7 +181,7 @@ class ArticleRecommender:
                 for tag in skill.tags:
                     resp = (
                         self.supabase.client.table("articles")
-                        .select("*")
+                        .select(select_fields)
                         .ilike("category", f"%{tag}%")
                         .limit(10)
                         .execute()
@@ -184,7 +196,7 @@ class ArticleRecommender:
                     for field in ("title", "category"):
                         resp = (
                             self.supabase.client.table("articles")
-                            .select("*")
+                            .select(select_fields)
                             .ilike(field, f"%{keyword}%")
                             .order("tinkering_index", desc=True)
                             .limit(20)
@@ -196,7 +208,7 @@ class ArticleRecommender:
             if not articles:
                 resp = (
                     self.supabase.client.table("articles")
-                    .select("*")
+                    .select(select_fields)
                     .order("tinkering_index", desc=True)
                     .limit(20)
                     .execute()
@@ -246,7 +258,13 @@ class ArticleRecommender:
 
             # Boost recent articles slightly
             if article.published_at:
-                days_old = (datetime.now() - article.published_at).days
+                from datetime import timezone
+
+                now = datetime.now(timezone.utc)
+                pub = article.published_at
+                if pub.tzinfo is None:
+                    pub = pub.replace(tzinfo=timezone.utc)
+                days_old = (now - pub).days
                 if days_old < 30:
                     relevance_score += 0.1
 
