@@ -48,6 +48,7 @@ export default function LearningGoalDetailPage() {
   const params = useParams();
   const goalId = params.id as string;
   const [selectedStage, setSelectedStage] = useState(1);
+  const [selectedTab, setSelectedTab] = useState('path');
   const queryClient = useQueryClient();
 
   const { data: goalDetails, isLoading: goalLoading } = useQuery({
@@ -122,6 +123,15 @@ export default function LearningGoalDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Back button */}
+      <Button
+        variant="ghost"
+        className="mb-4 -ml-2"
+        onClick={() => (window.location.href = '/app/learning')}
+      >
+        ← 返回學習路徑
+      </Button>
+
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-2">
@@ -158,7 +168,7 @@ export default function LearningGoalDetailPage() {
         )}
       </div>
 
-      <Tabs defaultValue="path" className="space-y-6">
+      <Tabs value={selectedTab} onValueChange={setSelectedTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="path">學習路徑</TabsTrigger>
           <TabsTrigger value="recommendations">推薦文章</TabsTrigger>
@@ -222,11 +232,7 @@ export default function LearningGoalDetailPage() {
                       className="mt-4"
                       onClick={() => {
                         setSelectedStage(stage.order);
-                        // Switch to recommendations tab
-                        const tabsTrigger = document.querySelector(
-                          '[value="recommendations"]'
-                        ) as HTMLElement;
-                        tabsTrigger?.click();
+                        setSelectedTab('recommendations');
                       }}
                     >
                       查看推薦文章
