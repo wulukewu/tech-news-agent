@@ -80,7 +80,7 @@ function DashboardContent() {
   const handleTabChange = (value: string) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('tab', value);
-    router.push(`/dashboard/articles?${params.toString()}`, { scroll: false });
+    router.push(`/app/articles?${params.toString()}`, { scroll: false });
 
     // Load saved articles when switching to saved tab
     if (value === 'saved' && savedArticles.length === 0) {
@@ -144,17 +144,6 @@ function DashboardContent() {
     loading: loadingMore,
   });
 
-  if (loading || loadingCategories) {
-    return (
-      <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6 lg:px-8">
-        <header className="mb-6">
-          <h1 className="text-3xl font-bold">{t('pages.articles.title')}</h1>
-        </header>
-        <ArticleListSkeleton />
-      </div>
-    );
-  }
-
   return (
     <div className="container mx-auto max-w-7xl py-8 px-4 md:px-6 lg:px-8">
       <div className="mb-6">
@@ -163,29 +152,31 @@ function DashboardContent() {
       </div>
 
       <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="all">{t('ui.all')}</TabsTrigger>
-          <TabsTrigger value="saved">{t('ui.saved')}</TabsTrigger>
-        </TabsList>
-
         {/* Filters and Controls */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 justify-end">
-            <SortSelector value={sortOption} onChange={setSortOption} />
-            <ViewModeSelector value={viewMode} onChange={setViewMode} />
+          <div className="flex items-center gap-2">
+            <TabsList>
+              <TabsTrigger value="all">{t('ui.all')}</TabsTrigger>
+              <TabsTrigger value="saved">{t('ui.saved')}</TabsTrigger>
+            </TabsList>
+            <div className="flex items-center gap-2 ml-auto">
+              <SortSelector value={sortOption} onChange={setSortOption} />
+              <ViewModeSelector value={viewMode} onChange={setViewMode} />
+            </div>
           </div>
           <CategoryFilter
             categories={categories}
             selectedCategories={selectedCategories}
             onToggleCategory={toggleCategory}
-            onSelectAll={selectAllCategories}
             onClearAll={deselectAllCategories}
             loading={loadingCategories}
           />
         </div>
 
         <TabsContent value="all" className="mt-6">
-          {filteredArticles.length === 0 ? (
+          {loading ? (
+            <ArticleListSkeleton />
+          ) : filteredArticles.length === 0 ? (
             <EmptyState
               searchQuery={searchQuery}
               selectedCategoriesCount={selectedCategories.length}

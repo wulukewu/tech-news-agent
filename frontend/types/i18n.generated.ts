@@ -75,6 +75,7 @@ export type TranslationKey =
   | 'buttons.import-opml'
   | 'buttons.importing'
   | 'buttons.loading'
+  | 'buttons.loading-preparing'
   | 'buttons.login'
   | 'buttons.login-with-discord'
   | 'buttons.manage-subscriptions'

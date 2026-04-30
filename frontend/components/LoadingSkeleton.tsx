@@ -311,8 +311,10 @@ export function LoadingScreen() {
           <div className="absolute inset-0 h-12 w-12 animate-ping rounded-full border-2 border-primary/20" />
         </div>
         <div className="text-center space-y-2 animate-in slide-in-from-bottom-2 duration-500 delay-300">
-          <p className="text-lg font-medium">{t('ui.loading')}</p>
-          <p className="text-sm text-muted-foreground animate-pulse">{t('ui.loading-preparing')}</p>
+          <p className="text-lg font-medium">{t('buttons.loading')}</p>
+          <p className="text-sm text-muted-foreground animate-pulse">
+            {t('buttons.loading-preparing')}
+          </p>
         </div>
       </div>
     </div>

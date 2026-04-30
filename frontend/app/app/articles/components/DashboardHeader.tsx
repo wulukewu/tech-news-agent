@@ -13,7 +13,6 @@ interface DashboardHeaderProps {
   loadingCategories: boolean;
   onSearch: (query: string) => void;
   onToggleCategory: (category: string) => void;
-  onSelectAll: () => void;
   onClearAll: () => void;
 }
 
@@ -25,7 +24,6 @@ export function DashboardHeader({
   loadingCategories,
   onSearch,
   onToggleCategory,
-  onSelectAll,
   onClearAll,
 }: DashboardHeaderProps) {
   const router = useRouter();
@@ -51,7 +49,6 @@ export function DashboardHeader({
         categories={categories}
         selectedCategories={selectedCategories}
         onToggleCategory={onToggleCategory}
-        onSelectAll={onSelectAll}
         onClearAll={onClearAll}
         loading={loadingCategories}
       />
