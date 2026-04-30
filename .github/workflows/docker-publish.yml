@@ -40,6 +40,9 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.OWNER }}/tech-news-agent-backend:latest
             ${{ env.REGISTRY }}/${{ env.OWNER }}/tech-news-agent-backend:${{ steps.tag.outputs.value }}
 
+      - name: Trigger deploy hook
+        run: curl -s "${{ secrets.DEPLOY_HOOK_BACKEND }}"
+
   build-frontend:
     runs-on: ubuntu-latest
     permissions:
@@ -70,3 +73,6 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.OWNER }}/tech-news-agent-frontend:latest
             ${{ env.REGISTRY }}/${{ env.OWNER }}/tech-news-agent-frontend:${{ steps.tag.outputs.value }}
+
+      - name: Trigger deploy hook
+        run: curl -s "${{ secrets.DEPLOY_HOOK_FRONTEND }}"
