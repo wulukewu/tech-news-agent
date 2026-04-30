@@ -27,16 +27,18 @@ function StarRating({ rating }: { rating: number }) {
       {Array.from({ length: 5 }).map((_, i) => (
         <Star
           key={i}
-          className={`w-3 h-3 ${
+          className={`w-3 h-3 transition-all duration-200 hover:scale-110 ${
             i < Math.floor(rating)
-              ? 'fill-yellow-400 text-yellow-400'
+              ? 'fill-yellow-400 text-yellow-400 animate-pulse'
               : i < rating
                 ? 'fill-yellow-200 text-yellow-400'
                 : 'text-gray-300 dark:text-gray-600'
           }`}
         />
       ))}
-      <span className="ml-1 text-xs text-muted-foreground">({rating.toFixed(1)})</span>
+      <span className="ml-1 text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground">
+        ({rating.toFixed(1)})
+      </span>
     </div>
   );
 }
@@ -75,19 +77,40 @@ export function FeedStatistics({
 
   return (
     <div className={`grid grid-cols-3 gap-3 ${className}`}>
-      {stats.map((stat) => {
+      {stats.map((stat, index) => {
         const Icon = stat.icon;
         return (
-          <Card key={stat.label} className="border-muted">
+          <Card
+            key={stat.label}
+            className="border-muted animate-in slide-in-from-bottom-4 duration-500 hover:shadow-md transition-all hover:border-primary/20"
+            style={{ animationDelay: `${index * 150}ms` }}
+          >
             <CardContent className="p-3">
-              <div className="flex items-center gap-2">
-                <Icon className={`w-4 h-4 ${stat.color}`} />
+              <div
+                className="flex items-center gap-2 animate-in slide-in-from-left-2 duration-300"
+                style={{ animationDelay: `${index * 150 + 200}ms` }}
+              >
+                <Icon
+                  className={`w-4 h-4 ${stat.color} transition-transform duration-200 hover:scale-110 animate-pulse`}
+                />
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs text-muted-foreground truncate">{stat.label}</div>
+                  <div className="text-xs text-muted-foreground truncate transition-colors duration-200 hover:text-foreground">
+                    {stat.label}
+                  </div>
                   {stat.content ? (
-                    <div className="mt-1">{stat.content}</div>
+                    <div
+                      className="mt-1 animate-in fade-in duration-300"
+                      style={{ animationDelay: `${index * 150 + 300}ms` }}
+                    >
+                      {stat.content}
+                    </div>
                   ) : (
-                    <div className="text-lg font-semibold">{stat.value}</div>
+                    <div
+                      className="text-lg font-semibold transition-all duration-200 hover:scale-110 hover:text-primary animate-in zoom-in-50 duration-300"
+                      style={{ animationDelay: `${index * 150 + 300}ms` }}
+                    >
+                      {stat.value}
+                    </div>
                   )}
                 </div>
               </div>

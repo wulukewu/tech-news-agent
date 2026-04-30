@@ -128,8 +128,12 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
   return (
     <>
       <div className={`flex gap-2 ${className}`}>
-        <Button variant="outline" onClick={handleExport} className="gap-2">
-          <Download className="w-4 h-4" />
+        <Button
+          variant="outline"
+          onClick={handleExport}
+          className="gap-2 transition-all duration-200 hover:scale-105"
+        >
+          <Download className="w-4 h-4 transition-transform duration-200 hover:scale-110" />
           {t('buttons.export-opml')}
         </Button>
 
@@ -137,7 +141,7 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
           variant="outline"
           onClick={() => fileInputRef.current?.click()}
           disabled={importing}
-          className="gap-2"
+          className="gap-2 transition-all duration-200 hover:scale-105"
         >
           {importing ? (
             <>
@@ -146,7 +150,7 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
             </>
           ) : (
             <>
-              <Upload className="w-4 h-4" />
+              <Upload className="w-4 h-4 transition-transform duration-200 hover:scale-110" />
               {t('buttons.import-opml')}
             </>
           )}
@@ -162,44 +166,76 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
       </div>
 
       <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
-          <DialogHeader>
-            <DialogTitle>{t('dialogs.opml-import.title')}</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300">
+          <DialogHeader className="animate-in slide-in-from-top-4 duration-500 delay-200">
+            <DialogTitle className="animate-in fade-in duration-300 delay-300">
+              {t('dialogs.opml-import.title')}
+            </DialogTitle>
+            <DialogDescription className="animate-in fade-in duration-300 delay-400">
               {t('dialogs.opml-import.description', { count: parsedFeeds.length })}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="flex-1 overflow-y-auto py-4">
+          <div className="flex-1 overflow-y-auto py-4 animate-in slide-in-from-bottom-4 duration-500 delay-500">
             <div className="space-y-3">
               {parsedFeeds.map((feed, index) => (
-                <Card key={index} className="border-muted">
+                <Card
+                  key={index}
+                  className="border-muted animate-in slide-in-from-bottom-4 duration-500 hover:shadow-md transition-all hover:border-primary/20"
+                  style={{ animationDelay: `${500 + index * 100}ms` }}
+                >
                   <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-2">
+                    <div
+                      className="flex items-start justify-between gap-2 animate-in slide-in-from-left-2 duration-300"
+                      style={{ animationDelay: `${600 + index * 100}ms` }}
+                    >
                       <div className="flex-1 min-w-0">
-                        <CardTitle className="text-base truncate">{feed.text}</CardTitle>
+                        <CardTitle className="text-base truncate transition-colors duration-200 hover:text-primary">
+                          {feed.text}
+                        </CardTitle>
                         {feed.category && (
-                          <Badge variant="secondary" className="mt-1">
+                          <Badge
+                            variant="secondary"
+                            className="mt-1 animate-in zoom-in-50 duration-300 transition-all hover:scale-105"
+                            style={{ animationDelay: `${700 + index * 100}ms` }}
+                          >
                             {feed.category}
                           </Badge>
                         )}
                       </div>
-                      <FileText className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <FileText
+                        className="w-4 h-4 text-muted-foreground flex-shrink-0 animate-in zoom-in-50 duration-300 transition-transform hover:scale-110"
+                        style={{ animationDelay: `${800 + index * 100}ms` }}
+                      />
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0">
-                    <CardDescription className="text-xs break-all">{feed.xmlUrl}</CardDescription>
+                    <CardDescription
+                      className="text-xs break-all animate-in fade-in duration-300 transition-colors hover:text-foreground"
+                      style={{ animationDelay: `${900 + index * 100}ms` }}
+                    >
+                      {feed.xmlUrl}
+                    </CardDescription>
                   </CardContent>
                 </Card>
               ))}
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={handleImportCancel} disabled={importing}>
+          <DialogFooter className="animate-in slide-in-from-bottom-4 duration-500 delay-700">
+            <Button
+              variant="outline"
+              onClick={handleImportCancel}
+              disabled={importing}
+              className="transition-all duration-200 hover:scale-105"
+            >
               {t('buttons.cancel')}
             </Button>
-            <Button onClick={handleImportConfirm} disabled={importing}>
+            <Button
+              onClick={handleImportConfirm}
+              disabled={importing}
+              className="transition-all duration-200 hover:scale-105"
+            >
               {importing ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
