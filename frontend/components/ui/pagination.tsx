@@ -96,7 +96,10 @@ export function Pagination({
     <nav
       role="navigation"
       aria-label={t('ui.pagination-navigation')}
-      className={cn('flex items-center justify-center gap-1', className)}
+      className={cn(
+        'flex items-center justify-center gap-1 animate-in fade-in slide-in-from-bottom-2 duration-500',
+        className
+      )}
     >
       {/* First page button */}
       {showFirstLast && currentPage > 1 && (
@@ -106,7 +109,7 @@ export function Pagination({
           onClick={() => handlePageChange(1)}
           disabled={disabled}
           aria-label={t('ui.pagination-first')}
-          className="h-9 w-9"
+          className="h-9 w-9 transition-all duration-200 hover:scale-105 animate-in slide-in-from-left-2 duration-300"
         >
           <span className="text-xs">{t('ui.pagination-first-short')}</span>
         </Button>
@@ -120,9 +123,9 @@ export function Pagination({
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage <= 1 || disabled}
           aria-label={t('ui.pagination-previous')}
-          className="h-9 w-9"
+          className="h-9 w-9 transition-all duration-200 hover:scale-105 animate-in slide-in-from-left-2 duration-300 delay-100"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-4 w-4 transition-transform duration-200 hover:-translate-x-0.5" />
         </Button>
       )}
 
@@ -133,10 +136,11 @@ export function Pagination({
             return (
               <div
                 key={`dots-${index}`}
-                className="flex h-9 w-9 items-center justify-center"
+                className="flex h-9 w-9 items-center justify-center animate-in zoom-in-50 duration-300"
+                style={{ animationDelay: `${200 + index * 50}ms` }}
                 aria-hidden="true"
               >
-                <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                <MoreHorizontal className="h-4 w-4 text-muted-foreground animate-pulse" />
               </div>
             );
           }
@@ -154,7 +158,11 @@ export function Pagination({
               disabled={disabled}
               aria-label={t('ui.pagination-page', { page })}
               aria-current={isCurrentPage ? 'page' : undefined}
-              className={cn('h-9 w-9', isCurrentPage && 'pointer-events-none')}
+              className={cn(
+                'h-9 w-9 transition-all duration-200 hover:scale-105 animate-in zoom-in-50 duration-300',
+                isCurrentPage && 'pointer-events-none scale-110 shadow-md'
+              )}
+              style={{ animationDelay: `${200 + index * 50}ms` }}
             >
               {page}
             </Button>
@@ -170,9 +178,9 @@ export function Pagination({
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage >= totalPages || disabled}
           aria-label={t('ui.pagination-next')}
-          className="h-9 w-9"
+          className="h-9 w-9 transition-all duration-200 hover:scale-105 animate-in slide-in-from-right-2 duration-300 delay-100"
         >
-          <ChevronRight className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4 transition-transform duration-200 hover:translate-x-0.5" />
         </Button>
       )}
 
@@ -184,7 +192,7 @@ export function Pagination({
           onClick={() => handlePageChange(totalPages)}
           disabled={disabled}
           aria-label={t('ui.pagination-last')}
-          className="h-9 w-9"
+          className="h-9 w-9 transition-all duration-200 hover:scale-105 animate-in slide-in-from-right-2 duration-300"
         >
           <span className="text-xs">{t('ui.pagination-last-short')}</span>
         </Button>
@@ -214,10 +222,17 @@ export function PaginationInfo({
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
   return (
-    <div className={cn('text-sm text-muted-foreground', className)}>
-      {t('ui.pagination-showing', { start: startItem, end: endItem, total: totalItems })}
+    <div
+      className={cn(
+        'text-sm text-muted-foreground animate-in fade-in slide-in-from-bottom-2 duration-500 delay-200',
+        className
+      )}
+    >
+      <span className="animate-in slide-in-from-left-2 duration-300">
+        {t('ui.pagination-showing', { start: startItem, end: endItem, total: totalItems })}
+      </span>
       {totalPages > 1 && (
-        <span className="ml-2">
+        <span className="ml-2 animate-in slide-in-from-right-2 duration-300 delay-100">
           {t('ui.pagination-page-info', { current: currentPage, total: totalPages })}
         </span>
       )}

@@ -14,14 +14,14 @@ export function Logo({
   textClassName = '',
 }: LogoProps) {
   return (
-    <div className={`flex items-center gap-3 ${className}`}>
+    <div className={`flex items-center gap-3 group ${className}`}>
       <svg
         width={size}
         height={size}
         viewBox="0 0 32 32"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="flex-shrink-0"
+        className="flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
       >
         <defs>
           <linearGradient id={`primaryGradient-${size}`} x1="0%" y1="0%" x2="100%" y2="100%">
@@ -38,6 +38,7 @@ export function Logo({
         <path
           d="M8 6 L24 6 L24 10 L18 10 L18 26 L14 26 L14 10 L8 10 Z"
           fill={`url(#primaryGradient-${size})`}
+          className="transition-all duration-300 group-hover:drop-shadow-sm"
         />
 
         {/* News feed lines - representing data streams */}
@@ -49,6 +50,8 @@ export function Logo({
           rx="0.75"
           fill={`url(#accentGradient-${size})`}
           opacity="0.8"
+          className="transition-all duration-300 group-hover:opacity-100 animate-pulse"
+          style={{ animationDelay: '0ms' }}
         />
         <rect
           x="20"
@@ -58,6 +61,8 @@ export function Logo({
           rx="0.75"
           fill={`url(#accentGradient-${size})`}
           opacity="0.6"
+          className="transition-all duration-300 group-hover:opacity-90 animate-pulse"
+          style={{ animationDelay: '200ms' }}
         />
         <rect
           x="20"
@@ -67,15 +72,46 @@ export function Logo({
           rx="0.75"
           fill={`url(#accentGradient-${size})`}
           opacity="0.4"
+          className="transition-all duration-300 group-hover:opacity-80 animate-pulse"
+          style={{ animationDelay: '400ms' }}
         />
 
         {/* Signal dots - representing connectivity */}
-        <circle cx="4" cy="16" r="1.5" fill={`url(#primaryGradient-${size})`} />
-        <circle cx="4" cy="20" r="1" fill={`url(#primaryGradient-${size})`} opacity="0.7" />
-        <circle cx="4" cy="24" r="0.5" fill={`url(#primaryGradient-${size})`} opacity="0.5" />
+        <circle
+          cx="4"
+          cy="16"
+          r="1.5"
+          fill={`url(#primaryGradient-${size})`}
+          className="transition-all duration-300 group-hover:r-2 animate-pulse"
+          style={{ animationDelay: '100ms' }}
+        />
+        <circle
+          cx="4"
+          cy="20"
+          r="1"
+          fill={`url(#primaryGradient-${size})`}
+          opacity="0.7"
+          className="transition-all duration-300 group-hover:opacity-100 animate-pulse"
+          style={{ animationDelay: '300ms' }}
+        />
+        <circle
+          cx="4"
+          cy="24"
+          r="0.5"
+          fill={`url(#primaryGradient-${size})`}
+          opacity="0.5"
+          className="transition-all duration-300 group-hover:opacity-80 animate-pulse"
+          style={{ animationDelay: '500ms' }}
+        />
       </svg>
 
-      {showText && <span className={`font-bold ${textClassName}`}>Tech News Agent</span>}
+      {showText && (
+        <span
+          className={`font-bold transition-colors duration-300 group-hover:text-primary ${textClassName}`}
+        >
+          Tech News Agent
+        </span>
+      )}
     </div>
   );
 }
