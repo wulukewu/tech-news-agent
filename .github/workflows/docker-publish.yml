@@ -1,0 +1,100 @@
+name: Build and Push Docker Images
+
+on:
+  push:
+    branches: [main]
+
+env:
+  REGISTRY: ghcr.io
+  OWNER: ${{ github.repository_owner }}
+
+jobs:
+  build-backend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check backend changes
+        id: changes
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -q '^backend/'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate tag
+        if: steps.changes.outputs.changed == 'true'
+        id: tag
+        run: |
+          DATE=$(TZ='Asia/Taipei' date +%Y-%m-%d)
+          SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "value=${DATE}-${SHA}" >> $GITHUB_OUTPUT
+
+      - name: Log in to GHCR
+        if: steps.changes.outputs.changed == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend
+        if: steps.changes.outputs.changed == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.OWNER }}/tech-news-agent-backend:latest
+            ${{ env.REGISTRY }}/${{ env.OWNER }}/tech-news-agent-backend:${{ steps.tag.outputs.value }}
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Check frontend changes
+        id: changes
+        run: |
+          if git diff --name-only HEAD~1 HEAD | grep -q '^frontend/'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generate tag
+        if: steps.changes.outputs.changed == 'true'
+        id: tag
+        run: |
+          DATE=$(TZ='Asia/Taipei' date +%Y-%m-%d)
+          SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "value=${DATE}-${SHA}" >> $GITHUB_OUTPUT
+
+      - name: Log in to GHCR
+        if: steps.changes.outputs.changed == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push frontend
+        if: steps.changes.outputs.changed == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.OWNER }}/tech-news-agent-frontend:latest
+            ${{ env.REGISTRY }}/${{ env.OWNER }}/tech-news-agent-frontend:${{ steps.tag.outputs.value }}
