@@ -81,7 +81,7 @@ export function RatingSelector({
 
   return (
     <div
-      className="flex items-center gap-1"
+      className="flex items-center gap-1 group/rating"
       role="group"
       aria-label={ratingText}
       onMouseLeave={() => setHoverRating(null)}
@@ -103,16 +103,22 @@ export function RatingSelector({
             aria-label={t('rating-selector.rate-aria', { index })}
             className={cn(
               'transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded',
+              'hover:scale-125 active:scale-110',
+              'group-hover/rating:animate-pulse',
               disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
               'motion-reduce:transition-none'
             )}
+            style={{
+              animationDelay: `${index * 50}ms`,
+            }}
           >
             <Star
               className={cn(
                 sizeClasses[size],
-                'transition-colors duration-150',
-                isFilled && !isHovering && 'fill-yellow-400 text-yellow-400',
-                isHovering && 'fill-yellow-300 text-yellow-300',
+                'transition-all duration-200',
+                'hover:drop-shadow-lg',
+                isFilled && !isHovering && 'fill-yellow-400 text-yellow-400 animate-in zoom-in-50',
+                isHovering && 'fill-yellow-300 text-yellow-300 scale-110',
                 !isFilled && !isHovering && 'text-gray-300 dark:text-gray-600',
                 'motion-reduce:transition-none'
               )}

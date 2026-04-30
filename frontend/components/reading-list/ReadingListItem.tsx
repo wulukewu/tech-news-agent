@@ -120,7 +120,8 @@ export function ReadingListItem({
     <article
       className={cn(
         'bg-card border border-border rounded-lg p-4 md:p-6',
-        'transition-shadow duration-200 hover:shadow-lg',
+        'transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-[1.01]',
+        'group cursor-pointer',
         'motion-reduce:transition-none'
       )}
     >
@@ -132,20 +133,20 @@ export function ReadingListItem({
           rel="noopener noreferrer"
           className={cn(
             'text-xl font-semibold text-foreground hover:text-primary',
-            'line-clamp-2 transition-colors',
+            'line-clamp-2 transition-colors duration-200',
             'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded',
-            'inline-flex items-center gap-2'
+            'inline-flex items-center gap-2 group-hover:text-primary'
           )}
         >
           {item.title}
-          <ExternalLink className="h-4 w-4 flex-shrink-0" />
+          <ExternalLink className="h-4 w-4 flex-shrink-0 transition-transform duration-200 group-hover:scale-110" />
         </a>
       </div>
 
       {/* Metadata row */}
       <div className="flex flex-wrap items-center gap-2 mb-4 text-sm">
         {/* Category badge */}
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground font-medium">
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground font-medium transition-all duration-200 hover:scale-105 cursor-default">
           {item.category}
         </span>
 
@@ -191,7 +192,8 @@ export function ReadingListItem({
               className={cn(
                 'inline-flex items-center gap-2 px-3 py-2 rounded-md',
                 'bg-primary text-primary-foreground',
-                'hover:bg-primary/90 transition-colors',
+                'hover:bg-primary/90 hover:scale-105 active:scale-95',
+                'transition-all duration-200',
                 'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
                 'text-sm font-medium',
@@ -201,7 +203,7 @@ export function ReadingListItem({
               {loadingAction === 'status' ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Check className="h-4 w-4" />
+                <Check className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
               )}
               <span className="hidden sm:inline">{t('buttons.mark-as-read')}</span>
             </button>
@@ -215,7 +217,8 @@ export function ReadingListItem({
               className={cn(
                 'inline-flex items-center gap-2 px-3 py-2 rounded-md',
                 'bg-primary text-primary-foreground',
-                'hover:bg-primary/90 transition-colors',
+                'hover:bg-primary/90 hover:scale-105 active:scale-95',
+                'transition-all duration-200',
                 'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
                 'text-sm font-medium',
@@ -225,7 +228,7 @@ export function ReadingListItem({
               {loadingAction === 'status' ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <RotateCcw className="h-4 w-4" />
+                <RotateCcw className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
               )}
               <span className="hidden sm:inline">
                 {t('reading-list-item.mark-as-unread-label')}
@@ -241,7 +244,8 @@ export function ReadingListItem({
               className={cn(
                 'inline-flex items-center gap-2 px-3 py-2 rounded-md',
                 'bg-primary text-primary-foreground',
-                'hover:bg-primary/90 transition-colors',
+                'hover:bg-primary/90 hover:scale-105 active:scale-95',
+                'transition-all duration-200',
                 'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2',
                 'disabled:opacity-50 disabled:cursor-not-allowed',
                 'text-sm font-medium',

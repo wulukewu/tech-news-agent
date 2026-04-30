@@ -56,15 +56,16 @@ export function StatusFilterTabs({
               key={tab.value}
               value={tab.value}
               className={cn(
-                'relative px-4 py-3 text-sm font-medium transition-colors',
+                'relative px-4 py-3 text-sm font-medium transition-all duration-200',
                 'whitespace-nowrap flex-shrink-0', // Prevent text wrapping and shrinking
                 'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-t',
-                'hover:text-foreground',
+                'hover:text-foreground hover:scale-105',
                 'data-[state=active]:text-primary',
                 'data-[state=inactive]:text-muted-foreground',
                 'after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5',
-                'after:transition-colors after:duration-200',
-                'data-[state=active]:after:bg-primary',
+                'after:transition-all after:duration-300 after:ease-out',
+                'data-[state=active]:after:bg-primary data-[state=active]:after:scale-x-100',
+                'data-[state=inactive]:after:bg-transparent data-[state=inactive]:after:scale-x-0',
                 'motion-reduce:transition-none',
                 // Mobile touch targets
                 'min-h-[44px] min-w-[44px]', // Ensure minimum touch target size
@@ -72,17 +73,18 @@ export function StatusFilterTabs({
               )}
               aria-selected={currentValue === tab.value}
             >
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-2 transition-transform duration-200 hover:scale-105">
                 {tab.label}
                 {tab.count !== undefined && (
                   <span
                     className={cn(
                       'inline-flex items-center justify-center',
                       'min-w-[1.5rem] h-5 px-1.5 rounded-full',
-                      'text-xs font-medium',
+                      'text-xs font-medium transition-all duration-200',
+                      'animate-in zoom-in-50',
                       currentValue === tab.value
-                        ? 'bg-primary/10 text-primary'
-                        : 'bg-muted text-muted-foreground'
+                        ? 'bg-primary/10 text-primary scale-110'
+                        : 'bg-muted text-muted-foreground hover:scale-105'
                     )}
                   >
                     {tab.count}
