@@ -61,28 +61,33 @@ export function RecommendationCard({
 
   return (
     <Card
-      className="relative hover:shadow-lg transition-shadow cursor-pointer"
+      className="group relative hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:-translate-y-1"
       onClick={handleClick}
     >
       {/* Dismiss button */}
       <Button
         variant="ghost"
         size="icon"
-        className="absolute top-2 right-2 h-8 w-8 rounded-full hover:bg-destructive/10"
+        className="absolute top-2 right-2 h-8 w-8 rounded-full hover:bg-destructive/10 transition-all duration-200 hover:scale-110 opacity-0 group-hover:opacity-100"
         onClick={handleDismiss}
         aria-label="忽略推薦"
       >
-        <X className="h-4 w-4" />
+        <X className="h-4 w-4 transition-transform duration-200 hover:rotate-90" />
       </Button>
 
       <CardHeader className="pb-3">
         <div className="flex items-start gap-2 pr-8">
           <div className="flex-1">
-            <CardTitle className="text-lg line-clamp-2 mb-2">{article.title}</CardTitle>
+            <CardTitle className="text-lg line-clamp-2 mb-2 group-hover:text-primary transition-colors duration-200">
+              {article.title}
+            </CardTitle>
             <CardDescription className="flex items-center gap-2 flex-wrap">
               <span className="text-sm">{article.feedName}</span>
               <span className="text-muted-foreground">•</span>
-              <Badge variant="secondary" className="text-xs">
+              <Badge
+                variant="secondary"
+                className="text-xs transition-all duration-200 hover:scale-105"
+              >
                 {article.category}
               </Badge>
               {article.publishedAt && (
@@ -104,19 +109,22 @@ export function RecommendationCard({
       <CardContent className="space-y-3">
         {/* AI Summary */}
         {article.aiSummary && (
-          <div className="text-sm text-muted-foreground line-clamp-3">{article.aiSummary}</div>
+          <div className="text-sm text-muted-foreground line-clamp-3 transition-colors duration-200 group-hover:text-foreground/80">
+            {article.aiSummary}
+          </div>
         )}
 
         {/* Recommendation Reason */}
-        <div className="bg-primary/5 rounded-lg p-3 border border-primary/10">
+        <div className="bg-primary/5 rounded-lg p-3 border border-primary/10 transition-all duration-200 group-hover:bg-primary/10 group-hover:border-primary/20">
           <div className="flex items-start gap-2">
             <div className="flex items-center gap-1 mt-0.5">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star
                   key={i}
-                  className={`h-3 w-3 ${
+                  className={`h-3 w-3 transition-all duration-200 hover:scale-125 ${
                     i < confidenceStars ? 'fill-primary text-primary' : 'text-muted-foreground/30'
                   }`}
+                  style={{ animationDelay: `${i * 50}ms` }}
                 />
               ))}
             </div>
@@ -135,19 +143,25 @@ export function RecommendationCard({
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star
                   key={i}
-                  className={`h-3 w-3 ${
+                  className={`h-3 w-3 transition-all duration-200 hover:scale-125 ${
                     i < article.tinkeringIndex
                       ? 'fill-yellow-500 text-yellow-500'
                       : 'text-muted-foreground/30'
                   }`}
+                  style={{ animationDelay: `${i * 50}ms` }}
                 />
               ))}
             </div>
           </div>
 
-          <Button variant="outline" size="sm" onClick={handleOpenArticle} className="gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleOpenArticle}
+            className="gap-2 transition-all duration-200 hover:scale-105 hover:shadow-md"
+          >
             閱讀文章
-            <ExternalLink className="h-3 w-3" />
+            <ExternalLink className="h-3 w-3 transition-transform duration-200 hover:scale-110" />
           </Button>
         </div>
       </CardContent>

@@ -119,13 +119,15 @@ export default function RecommendationsPage() {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between animate-in fade-in-50 slide-in-from-top-4 duration-500">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{t('recommendations.title')}</h1>
             <p className="text-muted-foreground">{t('recommendations.description')}</p>
           </div>
         </div>
-        <ArticleListSkeleton />
+        <div className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-200">
+          <ArticleListSkeleton />
+        </div>
       </div>
     );
   }
@@ -133,15 +135,18 @@ export default function RecommendationsPage() {
   if (error) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between animate-in fade-in-50 slide-in-from-top-4 duration-500">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{t('recommendations.title')}</h1>
             <p className="text-muted-foreground">{t('recommendations.description')}</p>
           </div>
         </div>
-        <div className="rounded-lg border bg-destructive/10 p-6 text-center">
+        <div className="rounded-lg border bg-destructive/10 p-6 text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-200">
           <p className="text-destructive">{t('recommendations.loading-error')}</p>
-          <Button onClick={() => window.location.reload()} className="mt-4">
+          <Button
+            onClick={() => window.location.reload()}
+            className="mt-4 transition-all duration-200 hover:scale-105 hover:shadow-md"
+          >
             {t('buttons.reload-page')}
           </Button>
         </div>
@@ -156,16 +161,18 @@ export default function RecommendationsPage() {
   if (!data?.hasSufficientData) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between animate-in fade-in-50 slide-in-from-top-4 duration-500">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{t('recommendations.title')}</h1>
             <p className="text-muted-foreground">{t('recommendations.description')}</p>
           </div>
         </div>
-        <InsufficientDataMessage
-          userRatingCount={data?.userRatingCount || 0}
-          minRatingsRequired={data?.minRatingsRequired || 3}
-        />
+        <div className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-200">
+          <InsufficientDataMessage
+            userRatingCount={data?.userRatingCount || 0}
+            minRatingsRequired={data?.minRatingsRequired || 3}
+          />
+        </div>
       </div>
     );
   }
@@ -177,21 +184,27 @@ export default function RecommendationsPage() {
   if (!data?.recommendations || data.recommendations.length === 0) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between animate-in fade-in-50 slide-in-from-top-4 duration-500">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">{t('recommendations.title')}</h1>
             <p className="text-muted-foreground">{t('recommendations.description')}</p>
           </div>
-          <Button onClick={handleRefresh} disabled={refreshMutation.isPending} className="gap-2">
-            <RefreshCw className={`h-4 w-4 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
+          <Button
+            onClick={handleRefresh}
+            disabled={refreshMutation.isPending}
+            className="gap-2 transition-all duration-200 hover:scale-105 hover:shadow-md"
+          >
+            <RefreshCw
+              className={`h-4 w-4 transition-transform duration-200 ${refreshMutation.isPending ? 'animate-spin' : 'hover:rotate-180'}`}
+            />
             {t('recommendations.refresh')}
           </Button>
         </div>
-        <div className="rounded-lg border bg-card p-6 text-center">
-          <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+        <div className="rounded-lg border bg-card p-6 text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-200 hover:shadow-lg transition-all">
+          <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground animate-pulse" />
           <h3 className="text-lg font-semibold mb-2">{t('recommendations.no-recommendations')}</h3>
           <p className="text-muted-foreground mb-4">{t('recommendations.rate-more-articles')}</p>
-          <Button asChild>
+          <Button asChild className="transition-all duration-200 hover:scale-105 hover:shadow-md">
             <a href="/articles">{t('recommendations.go-to-articles')}</a>
           </Button>
         </div>
@@ -202,28 +215,39 @@ export default function RecommendationsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between animate-in fade-in-50 slide-in-from-top-4 duration-500">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('recommendations.title')}</h1>
           <p className="text-muted-foreground">
             {t('recommendations.description-with-count', { count: data.totalCount })}
           </p>
         </div>
-        <Button onClick={handleRefresh} disabled={refreshMutation.isPending} className="gap-2">
-          <RefreshCw className={`h-4 w-4 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
+        <Button
+          onClick={handleRefresh}
+          disabled={refreshMutation.isPending}
+          className="gap-2 transition-all duration-200 hover:scale-105 hover:shadow-md"
+        >
+          <RefreshCw
+            className={`h-4 w-4 transition-transform duration-200 ${refreshMutation.isPending ? 'animate-spin' : 'hover:rotate-180'}`}
+          />
           {t('recommendations.refresh-recommendations')}
         </Button>
       </div>
 
       {/* Recommendations Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {data.recommendations.map((recommendation) => (
-          <RecommendationCard
+        {data.recommendations.map((recommendation, index) => (
+          <div
             key={recommendation.id}
-            recommendation={recommendation}
-            onDismiss={handleDismiss}
-            onClick={handleClick}
-          />
+            className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500"
+            style={{ animationDelay: `${200 + index * 100}ms` }}
+          >
+            <RecommendationCard
+              recommendation={recommendation}
+              onDismiss={handleDismiss}
+              onClick={handleClick}
+            />
+          </div>
         ))}
       </div>
     </div>
