@@ -255,7 +255,7 @@ export function ArticleCard({
   // Desktop horizontal layout (Task 6.2)
   return (
     <article>
-      <Card className="hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer overflow-hidden">
+      <Card className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.01]">
         <CardContent className="p-0">
           {/* Horizontal layout: image left (if available), content right */}
           <div className="flex gap-0">
@@ -267,13 +267,14 @@ export function ArticleCard({
                   alt={article.title}
                   width={176}
                   height={132}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   sizes="176px"
                   priority={false}
                   onError={(e) => {
                     e.currentTarget.parentElement!.style.display = 'none';
                   }}
                 />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
               </div>
             )}
 
@@ -285,7 +286,7 @@ export function ArticleCard({
                   href={article.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:underline flex-1"
+                  className="hover:underline flex-1 group-hover:text-primary transition-colors duration-200"
                 >
                   <h3 className="text-lg font-semibold line-clamp-3">{article.title}</h3>
                 </a>
@@ -307,7 +308,7 @@ export function ArticleCard({
                     }
                   }}
                   aria-label="Share article"
-                  className="min-h-[44px] min-w-[44px] cursor-pointer"
+                  className="min-h-[44px] min-w-[44px] cursor-pointer transition-all duration-200 hover:scale-110"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -334,7 +335,11 @@ export function ArticleCard({
               <div className="flex items-center gap-3 text-sm text-muted-foreground">
                 {article.feedName && <span className="truncate">{article.feedName}</span>}
                 {article.feedName && <span aria-hidden="true">•</span>}
-                <Badge variant="secondary" style={categoryStyles}>
+                <Badge
+                  variant="secondary"
+                  style={categoryStyles}
+                  className="transition-all duration-200 hover:scale-105 cursor-default"
+                >
                   {article.category}
                 </Badge>
                 <span aria-hidden="true">•</span>

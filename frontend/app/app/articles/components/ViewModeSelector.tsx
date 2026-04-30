@@ -19,18 +19,21 @@ export function ViewModeSelector({ value, onChange }: ViewModeSelectorProps) {
   ];
 
   return (
-    <div className="flex items-center gap-1 border rounded-md p-1">
+    <div className="flex items-center gap-1 border rounded-md p-1 bg-background">
       {modes.map((mode) => (
         <Button
           key={mode.value}
           variant="ghost"
           size="sm"
           onClick={() => onChange(mode.value)}
-          className={cn('h-8 px-2', value === mode.value && 'bg-primary/10 text-primary')}
+          className={cn(
+            'h-8 px-2 transition-all duration-200 hover:scale-105',
+            value === mode.value && 'bg-primary text-primary-foreground shadow-sm'
+          )}
           aria-label={`${mode.label} view`}
           aria-pressed={value === mode.value}
         >
-          {mode.icon}
+          <span className="transition-transform duration-200 hover:scale-110">{mode.icon}</span>
           <span className="sr-only">{mode.label}</span>
         </Button>
       ))}

@@ -195,7 +195,7 @@ function DashboardContent() {
           ) : (
             <>
               <section aria-label={t('articles-page.article-list-aria')}>
-                <ArticleGrid articles={filteredArticles} />
+                <ArticleGrid articles={filteredArticles} viewMode={viewMode} />
               </section>
 
               {hasNextPage && <div ref={sentinelRef} className="h-px" aria-hidden="true" />}
@@ -226,7 +226,7 @@ function DashboardContent() {
             </section>
           ) : (
             <section aria-label={t('articles-page.saved-aria')}>
-              <ArticleGrid articles={savedArticles} />
+              <ArticleGrid articles={savedArticles} viewMode={viewMode} />
             </section>
           )}
         </TabsContent>

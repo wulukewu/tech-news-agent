@@ -13,6 +13,8 @@ interface ArticleGridProps {
   onAnalyze?: (articleId: string) => void;
   /** Callback when article is added to reading list */
   onAddToReadingList?: (articleId: string) => void;
+  /** View mode for articles display */
+  viewMode?: 'card' | 'list' | 'compact';
 }
 
 /**
@@ -37,13 +39,34 @@ export function ArticleGrid({
   showReadingListButton = true,
   onAnalyze,
   onAddToReadingList,
+  viewMode = 'card',
 }: ArticleGridProps) {
+  // Different layouts based on view mode
+  const getGridClasses = () => {
+    switch (viewMode) {
+      case 'list':
+        return 'flex flex-col gap-4';
+      case 'compact':
+        return 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3';
+      case 'card':
+      default:
+        return 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
+    }
+  };
+
+  const getArticleLayout = () => {
+    switch (viewMode) {
+      case 'list':
+        return 'desktop';
+      case 'compact':
+      case 'card':
+      default:
+        return 'mobile';
+    }
+  };
+
   return (
-    <div
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-      role="list"
-      aria-label="Articles grid"
-    >
+    <div className={getGridClasses()} role="list" aria-label="Articles grid">
       {articles.map((article) => (
         <div key={article.id} role="listitem">
           <ArticleCard
@@ -52,7 +75,7 @@ export function ArticleGrid({
             showReadingListButton={showReadingListButton}
             onAnalyze={onAnalyze}
             onAddToReadingList={onAddToReadingList}
-            layout="mobile"
+            layout={getArticleLayout()}
           />
         </div>
       ))}
