@@ -1,38 +1,16 @@
 'use client';
 
-/**
- * Login Page
- *
- * Dedicated login page for authentication.
- * Displays a "Login with Discord" button and handles authentication flow.
- *
- * Features:
- * - Discord OAuth2 login button
- * - Automatic redirect to original path or /app/articles for authenticated users
- * - Responsive design with shadcn/ui components
- * - Discord brand colors and styling
- * - Back to Home link
- *
- * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7
- */
-
 import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { AuthGuard } from '@/components/AuthGuard';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Logo } from '@/components/Logo';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useI18n } from '@/contexts/I18nContext';
 
-/**
- * Discord Icon Component
- *
- * SVG icon for Discord logo using official brand colors.
- * Source: Discord Brand Guidelines
- */
 function DiscordIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -46,16 +24,6 @@ function DiscordIcon({ className }: { className?: string }) {
   );
 }
 
-/**
- * Login Page Component
- *
- * Main component for the login page.
- * Handles authentication state and redirects.
- *
- * Requirement 2.1: Login page accessible at /login
- * Requirement 2.4: Redirects authenticated users to /app/articles
- * Requirement 2.5: Redirects to original path after login
- */
 export default function LoginPage() {
   return (
     <Suspense fallback={<LoginPageFallback />}>
@@ -86,92 +54,95 @@ function LoginPageInner() {
   const redirect = searchParams.get('redirect') || '/app/articles';
   const { t } = useI18n();
 
-  /**
-   * Redirect authenticated users to their intended destination
-   *
-   * Requirement 2.4: Redirect authenticated users
-   * Requirement 2.5: Use redirect query parameter
-   */
   useEffect(() => {
     if (!loading && isAuthenticated) {
       router.push(redirect);
     }
   }, [isAuthenticated, loading, redirect, router]);
 
-  /**
-   * Handle login button click
-   *
-   * Redirects to the FastAPI Discord OAuth2 login endpoint.
-   * The backend will handle the OAuth2 flow and redirect back
-   * to the callback page after successful authentication.
-   *
-   * Requirement 2.2: Display Discord OAuth login button
-   * Requirement 2.5: Pass redirect parameter through OAuth flow
-   */
   const handleLogin = () => {
     login(redirect);
   };
 
-  /**
-   * Show loading state while checking authentication
-   *
-   * Requirement 2.6: Display loading indicator
-   */
   if (loading) {
     return <LoginPageFallback />;
   }
 
-  /**
-   * Don't render login page if user is authenticated
-   * (will redirect in useEffect)
-   */
   if (isAuthenticated) {
     return null;
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header with Back to Home link - Requirement 2.3 */}
-      <header className="border-b">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
+      {/* Background decoration */}
+      <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] dark:bg-grid-slate-700/25 dark:[mask-image:linear-gradient(0deg,rgba(255,255,255,0.1),rgba(255,255,255,0.5))]" />
+
+      {/* Header */}
+      <header className="relative z-10 border-b bg-background/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Logo size={32} showText />
+          <div className="flex items-center gap-3">
+            <Logo size={32} />
+            <span className="font-bold text-xl">Tech News Agent</span>
+          </div>
           <Link href="/">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
-              {t('pages.login.back-to-home')}
+              Back to Home
             </Button>
           </Link>
         </div>
       </header>
 
-      {/* Main login content - Requirement 2.7: Responsive */}
-      <main className="flex-1 flex items-center justify-center p-4 bg-muted/30">
-        <Card className="w-full max-w-md shadow-lg border-border/50">
-          <CardHeader className="space-y-1 text-center">
-            <div className="flex justify-center mb-4">
-              <Logo size={64} />
-            </div>
-            <CardTitle className="text-3xl font-bold tracking-tight">
-              {t('pages.login.title')}
-            </CardTitle>
-            <CardDescription className="text-base">{t('pages.login.description')}</CardDescription>
-            <CardDescription className="pt-2">{t('pages.login.no-account')}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button
-              onClick={handleLogin}
-              className="w-full h-12 text-base font-semibold bg-[#5865F2] hover:bg-[#4752C4] text-white transition-colors"
-              size="lg"
-            >
-              <DiscordIcon className="mr-2 h-5 w-5" />
-              {t('buttons.login-with-discord')}
-            </Button>
+      {/* Main content */}
+      <main className="relative z-10 flex-1 flex items-center justify-center p-4 min-h-[calc(100vh-80px)]">
+        <div className="w-full max-w-md">
+          <Card className="shadow-2xl border-border/50 bg-background/80 backdrop-blur-sm">
+            <CardContent className="p-8">
+              {/* Logo */}
+              <div className="text-center mb-8">
+                <div className="flex justify-center mb-6">
+                  <div className="relative">
+                    <div className="absolute inset-0 blur-2xl bg-primary/20 rounded-full" />
+                    <Logo size={80} />
+                  </div>
+                </div>
+                <h1 className="text-2xl font-bold tracking-tight mb-2">Welcome Back</h1>
+                <p className="text-muted-foreground">
+                  Sign in to access your personalized tech news feed
+                </p>
+              </div>
 
-            <div className="text-center text-sm text-muted-foreground">
-              <p>{t('pages.login.terms-agreement')}</p>
-            </div>
-          </CardContent>
-        </Card>
+              {/* Login Button */}
+              <Button
+                onClick={handleLogin}
+                className="w-full h-12 text-base font-semibold bg-[#5865F2] hover:bg-[#4752C4] text-white transition-all duration-200 shadow-lg hover:shadow-xl"
+                size="lg"
+              >
+                <DiscordIcon className="mr-3 h-5 w-5" />
+                Continue with Discord
+              </Button>
+
+              {/* Features */}
+              <div className="mt-8 pt-6 border-t border-border/50">
+                <p className="text-sm text-muted-foreground text-center mb-4">What you'll get:</p>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                    <span>AI-powered article recommendations</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                    <span>Smart reminders via Discord DM</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-1.5 h-1.5 bg-primary rounded-full" />
+                    <span>Personalized reading lists</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   );

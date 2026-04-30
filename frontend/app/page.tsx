@@ -1,7 +1,5 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
-import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,14 +7,7 @@ import { ArrowRight, Zap, Brain, MessageSquare, Star, FileText } from 'lucide-re
 import Link from 'next/link';
 import { Logo } from '@/components/Logo';
 
-// Mock data for demo (replace with real API calls)
-const mockStats = {
-  totalArticles: 15420,
-  activeUsers: 342,
-  avgAccuracy: 94.2,
-  weeklyGrowth: 12.5,
-};
-
+// Mock data for demo
 const mockArticles = [
   {
     id: '1',
@@ -37,16 +28,6 @@ const mockArticles = [
 ];
 
 export default function ModernLandingPage() {
-  const { isAuthenticated, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       {/* Navigation */}
@@ -57,15 +38,9 @@ export default function ModernLandingPage() {
             <span className="font-bold text-xl">Tech News Agent</span>
           </div>
           <div className="flex items-center gap-4">
-            {isAuthenticated ? (
-              <Button asChild>
-                <Link href="/app">Dashboard</Link>
-              </Button>
-            ) : (
-              <Button asChild>
-                <Link href="/login">Get Started</Link>
-              </Button>
-            )}
+            <Button asChild>
+              <Link href="/app">Get Started</Link>
+            </Button>
           </div>
         </div>
       </nav>
@@ -113,7 +88,7 @@ export default function ModernLandingPage() {
             {/* CTA */}
             <div className="flex gap-4">
               <Button size="lg" asChild>
-                <Link href="/login">
+                <Link href="/app">
                   Start Free <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
@@ -225,7 +200,7 @@ export default function ModernLandingPage() {
             </p>
             <div className="flex gap-4 justify-center">
               <Button size="lg" asChild>
-                <Link href="/login">
+                <Link href="/app">
                   Get Started Free <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
