@@ -210,39 +210,56 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] animate-in fade-in zoom-in-95 duration-500">
         {state.currentStep === 'welcome' && (
           <>
             <DialogHeader>
-              <div className="flex items-center justify-center mb-4">
-                <Sparkles className="h-12 w-12 text-primary" />
+              <div className="flex items-center justify-center mb-4 animate-in zoom-in-50 duration-1000 delay-200">
+                <div className="relative">
+                  <Sparkles className="h-12 w-12 text-primary animate-pulse" />
+                  <div className="absolute inset-0 h-12 w-12 text-primary/20 animate-ping">
+                    <Sparkles className="h-12 w-12" />
+                  </div>
+                </div>
               </div>
-              <DialogTitle className="text-2xl text-center">
+              <DialogTitle className="text-2xl text-center animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-400">
                 {t('onboarding.welcome-title')}
               </DialogTitle>
-              <DialogDescription className="text-center text-base mt-4">
+              <DialogDescription className="text-center text-base mt-4 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-600">
                 {t('onboarding.welcome-description')}
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-3 my-6">
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                <p className="text-sm">{t('onboarding.feature-1')}</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                <p className="text-sm">{t('onboarding.feature-2')}</p>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                <p className="text-sm">{t('onboarding.feature-3')}</p>
-              </div>
+              {[
+                t('onboarding.feature-1'),
+                t('onboarding.feature-2'),
+                t('onboarding.feature-3'),
+              ].map((feature, index) => (
+                <div
+                  key={index}
+                  className="flex items-start gap-3 animate-in slide-in-from-left-4 duration-500"
+                  style={{ animationDelay: `${800 + index * 200}ms` }}
+                >
+                  <CheckCircle2
+                    className="h-5 w-5 text-primary mt-0.5 flex-shrink-0 animate-in zoom-in-50 duration-300"
+                    style={{ animationDelay: `${900 + index * 200}ms` }}
+                  />
+                  <p className="text-sm">{feature}</p>
+                </div>
+              ))}
             </div>
-            <DialogFooter className="flex-col sm:flex-row gap-2">
-              <Button variant="outline" onClick={handleSkip} className="w-full sm:w-auto">
+            <DialogFooter className="flex-col sm:flex-row gap-2 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-1400">
+              <Button
+                variant="outline"
+                onClick={handleSkip}
+                className="w-full sm:w-auto transition-all duration-300 hover:scale-105"
+              >
                 {t('onboarding.skip')}
               </Button>
-              <Button onClick={handleStart} className="w-full sm:w-auto">
+              <Button
+                onClick={handleStart}
+                className="w-full sm:w-auto transition-all duration-300 hover:scale-105 hover:shadow-lg"
+              >
                 {t('onboarding.get-started')}
               </Button>
             </DialogFooter>
@@ -251,31 +268,38 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
 
         {state.currentStep === 'recommendations' && (
           <>
-            <DialogHeader>
+            <DialogHeader className="animate-in fade-in slide-in-from-top-4 duration-500">
               <DialogTitle>{t('onboarding.select-sources')}</DialogTitle>
               <DialogDescription>{t('onboarding.select-sources-description')}</DialogDescription>
             </DialogHeader>
-            <div className="max-h-[400px] overflow-y-auto space-y-4 my-4">
-              {Object.entries(state.groupedFeeds).map(([category, feeds]) => (
-                <div key={category} className="space-y-2">
+            <div className="max-h-[400px] overflow-y-auto space-y-4 my-4 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-200">
+              {Object.entries(state.groupedFeeds).map(([category, feeds], categoryIndex) => (
+                <div
+                  key={category}
+                  className="space-y-2 animate-in slide-in-from-left-4 duration-500"
+                  style={{ animationDelay: `${300 + categoryIndex * 100}ms` }}
+                >
                   <h3 className="font-semibold text-sm text-muted-foreground">{category}</h3>
                   <div className="space-y-2">
-                    {feeds.map((feed) => (
+                    {feeds.map((feed, feedIndex) => (
                       <div
                         key={feed.id}
-                        className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-accent transition-colors cursor-pointer"
+                        className="flex items-start space-x-3 p-3 rounded-lg border hover:bg-accent transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:shadow-sm animate-in slide-in-from-right-2 duration-300"
+                        style={{
+                          animationDelay: `${400 + categoryIndex * 100 + feedIndex * 50}ms`,
+                        }}
                         onClick={() => handleFeedSelection(feed.id)}
                       >
                         <Checkbox
                           id={feed.id}
                           checked={state.selectedFeeds.includes(feed.id)}
                           onCheckedChange={() => handleFeedSelection(feed.id)}
-                          className="mt-1"
+                          className="mt-1 transition-transform duration-200 hover:scale-110"
                         />
                         <div className="flex-1 space-y-1">
                           <Label
                             htmlFor={feed.id}
-                            className="text-sm font-medium leading-none cursor-pointer"
+                            className="text-sm font-medium leading-none cursor-pointer transition-colors duration-200 hover:text-primary"
                           >
                             {feed.name}
                           </Label>
@@ -289,14 +313,18 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
                 </div>
               ))}
             </div>
-            <DialogFooter className="flex-col sm:flex-row gap-2">
-              <Button variant="outline" onClick={handleSkip} className="w-full sm:w-auto">
+            <DialogFooter className="flex-col sm:flex-row gap-2 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-600">
+              <Button
+                variant="outline"
+                onClick={handleSkip}
+                className="w-full sm:w-auto transition-all duration-300 hover:scale-105"
+              >
                 {t('onboarding.skip')}
               </Button>
               <Button
                 onClick={handleComplete}
                 disabled={state.isLoading || state.selectedFeeds.length === 0}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto transition-all duration-300 hover:scale-105 hover:shadow-lg disabled:hover:scale-100"
               >
                 {state.isLoading ? (
                   <>
@@ -314,13 +342,18 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
         {state.currentStep === 'complete' && (
           <>
             <DialogHeader>
-              <div className="flex items-center justify-center mb-4">
-                <CheckCircle2 className="h-16 w-16 text-green-500" />
+              <div className="flex items-center justify-center mb-4 animate-in zoom-in-50 duration-1000">
+                <div className="relative">
+                  <CheckCircle2 className="h-16 w-16 text-green-500 animate-pulse" />
+                  <div className="absolute inset-0 h-16 w-16 text-green-500/20 animate-ping">
+                    <CheckCircle2 className="h-16 w-16" />
+                  </div>
+                </div>
               </div>
-              <DialogTitle className="text-2xl text-center">
+              <DialogTitle className="text-2xl text-center animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
                 {t('onboarding.setup-complete')}
               </DialogTitle>
-              <DialogDescription className="text-center text-base mt-4">
+              <DialogDescription className="text-center text-base mt-4 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500">
                 {t('onboarding.subscribed-sources', { count: state.selectedFeeds.length })}
                 <br />
                 {t('onboarding.system-will-fetch')}

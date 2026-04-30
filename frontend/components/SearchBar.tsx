@@ -86,12 +86,18 @@ export function SearchBar({
 
   return (
     <div
-      className={cn('relative flex items-center w-full md:w-auto md:min-w-[320px]', className)}
+      className={cn(
+        'relative flex items-center w-full md:w-auto md:min-w-[320px] animate-in fade-in slide-in-from-top-2 duration-500',
+        className
+      )}
       role="search"
     >
       {/* Search Icon */}
       <Search
-        className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none"
+        className={cn(
+          'absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none transition-all duration-300',
+          query && 'text-primary scale-110'
+        )}
         aria-hidden="true"
       />
 
@@ -103,7 +109,7 @@ export function SearchBar({
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         className={cn(
-          'pl-9 pr-9',
+          'pl-9 pr-9 transition-all duration-300 hover:shadow-md focus:shadow-lg',
           query && 'pr-16' // Extra padding when clear button is visible
         )}
         aria-label="Search articles"
@@ -117,22 +123,25 @@ export function SearchBar({
           variant="ghost"
           size="icon"
           onClick={handleClear}
-          className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-transparent"
+          className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-transparent transition-all duration-200 hover:scale-110 animate-in zoom-in-50 duration-300"
           aria-label="Clear search"
         >
-          <X className="h-4 w-4" />
+          <X className="h-4 w-4 transition-transform duration-200 hover:rotate-90" />
         </Button>
       )}
 
       {/* Loading Indicator */}
       {isLoading && (
         <div
-          className="absolute right-3 top-1/2 -translate-y-1/2"
+          className="absolute right-3 top-1/2 -translate-y-1/2 animate-in zoom-in-50 duration-300"
           role="status"
           aria-live="polite"
           id="search-loading"
         >
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <div className="relative">
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            <div className="absolute inset-0 h-4 w-4 animate-ping rounded-full border-2 border-primary/20" />
+          </div>
           <span className="sr-only">Searching...</span>
         </div>
       )}
