@@ -116,7 +116,10 @@ export function Navigation() {
       <nav className="container mx-auto px-4" aria-label="Main navigation">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-4 lg:gap-6 min-w-0 flex-1">
-            <Link href="/" className="hover:opacity-80 transition-opacity flex-shrink-0">
+            <Link
+              href="/"
+              className="hover:opacity-80 transition-all duration-200 hover:scale-105 flex-shrink-0"
+            >
               <Logo size={28} showText={true} textClassName="hidden sm:inline text-xl" />
             </Link>
 
@@ -130,21 +133,27 @@ export function Navigation() {
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      'flex items-center gap-2 px-3 lg:px-4 py-2.5 rounded-md transition-all duration-200 cursor-pointer relative',
-                      'hover:bg-accent hover:text-accent-foreground hover:shadow-sm',
+                      'group flex items-center gap-2 px-3 lg:px-4 py-2.5 rounded-md transition-all duration-200 cursor-pointer relative',
+                      'hover:bg-accent hover:text-accent-foreground hover:shadow-sm hover:scale-105',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                       'min-h-[44px] min-w-[44px]', // Touch-friendly targets (Req 9.2)
                       isActive
-                        ? 'bg-primary text-primary-foreground shadow-md font-semibold border border-primary/20'
+                        ? 'bg-primary text-primary-foreground shadow-md font-semibold border border-primary/20 scale-105'
                         : 'text-foreground hover:bg-muted/50'
                     )}
                     aria-current={isActive ? 'page' : undefined}
                     title={item.translatedLabel}
                   >
-                    <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-                    <span className="text-sm font-medium whitespace-nowrap hidden xl:inline">
+                    <Icon
+                      className="h-5 w-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110"
+                      aria-hidden="true"
+                    />
+                    <span className="text-sm font-medium whitespace-nowrap hidden xl:inline transition-transform duration-200 group-hover:scale-105">
                       {item.translatedLabel}
                     </span>
+                    {isActive && (
+                      <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary-foreground rounded-full animate-in zoom-in-50 duration-300" />
+                    )}
                   </Link>
                 );
               })}
@@ -162,12 +171,18 @@ export function Navigation() {
             <Button
               variant="ghost"
               size="sm"
-              className="md:hidden touch-target cursor-pointer"
+              className="md:hidden touch-target cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95"
               onClick={() => setIsDrawerOpen(!isDrawerOpen)}
               aria-label="Toggle navigation menu"
               aria-expanded={isDrawerOpen}
             >
-              {isDrawerOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              <div className="transition-transform duration-300">
+                {isDrawerOpen ? (
+                  <X className="h-5 w-5 rotate-0 animate-in spin-in-180 duration-300" />
+                ) : (
+                  <Menu className="h-5 w-5 animate-in fade-in-50 duration-300" />
+                )}
+              </div>
             </Button>
           </div>
         </div>
@@ -178,14 +193,14 @@ export function Navigation() {
         <div className="fixed inset-0 z-[100] md:hidden">
           {/* Backdrop overlay (Req 23.3, 23.4) */}
           <div
-            className="absolute inset-0 bg-black/50 animate-fade-in"
+            className="absolute inset-0 bg-black/50 animate-in fade-in-0 duration-300"
             onClick={closeDrawer}
             aria-hidden="true"
           />
 
           {/* Drawer panel - slides in from left (Req 23.2) */}
           <nav
-            className="absolute left-0 top-0 bottom-0 w-[280px] sm:w-72 bg-background border-r shadow-xl animate-slide-in-from-left flex flex-col"
+            className="absolute left-0 top-0 bottom-0 w-[280px] sm:w-72 bg-background border-r shadow-xl animate-in slide-in-from-left-full duration-300 ease-out flex flex-col"
             aria-label="Mobile navigation"
           >
             {/* User profile section at top (Req 23.7) */}
@@ -205,11 +220,11 @@ export function Navigation() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="touch-target cursor-pointer"
+                  className="touch-target cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95"
                   onClick={closeDrawer}
                   aria-label="Close navigation menu"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-5 w-5 transition-transform duration-200 hover:rotate-90" />
                 </Button>
               </div>
             )}
@@ -218,11 +233,11 @@ export function Navigation() {
             <div className="flex-1 py-2 overflow-y-auto">
               {/* Main navigation section */}
               <div className="px-2 py-2">
-                <p className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                <p className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider animate-in fade-in-50 slide-in-from-left-2 duration-500">
                   {t('nav.main-menu')}
                 </p>
                 <div className="space-y-1">
-                  {translatedMainNavItems.map((item) => {
+                  {translatedMainNavItems.map((item, index) => {
                     const Icon = item.icon;
                     const isActive = pathname === item.href;
                     return (
@@ -230,17 +245,25 @@ export function Navigation() {
                         key={item.href}
                         href={item.href}
                         className={cn(
-                          'flex items-center gap-3 px-3 py-3 min-h-[48px] w-full cursor-pointer transition-all duration-200 rounded-lg relative',
-                          'hover:bg-accent hover:text-accent-foreground',
+                          'group flex items-center gap-3 px-3 py-3 min-h-[48px] w-full cursor-pointer transition-all duration-200 rounded-lg relative',
+                          'hover:bg-accent hover:text-accent-foreground hover:scale-[1.02] hover:shadow-sm',
                           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                          'animate-in slide-in-from-left-4 fade-in-0',
                           isActive
                             ? 'bg-primary text-primary-foreground shadow-lg font-semibold border-l-4 border-l-primary-foreground/30'
                             : 'hover:bg-muted/50'
                         )}
+                        style={{
+                          animationDelay: `${index * 50}ms`,
+                          animationDuration: '400ms',
+                        }}
                         onClick={closeDrawer}
                         aria-current={isActive ? 'page' : undefined}
                       >
-                        <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+                        <Icon
+                          className="h-5 w-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110"
+                          aria-hidden="true"
+                        />
                         <span className="text-sm font-medium">{item.translatedLabel}</span>
                       </Link>
                     );

@@ -46,20 +46,23 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-full"
+        className="focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-full transition-all duration-200 hover:scale-110"
         aria-label={t('ui.user-menu')}
       >
-        <Avatar className="h-8 w-8 cursor-pointer hover:opacity-80 transition-opacity">
+        <Avatar className="h-8 w-8 cursor-pointer hover:opacity-80 transition-all duration-200 hover:shadow-md">
           {user.avatar && <AvatarImage src={user.avatar} alt={user.username || 'User'} />}
-          <AvatarFallback className="text-xs">
+          <AvatarFallback className="text-xs transition-colors duration-200 hover:bg-primary hover:text-primary-foreground">
             {user.username?.[0]?.toUpperCase() || 'U'}
           </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent
+        align="end"
+        className="w-56 animate-in slide-in-from-top-2 fade-in-0 duration-200"
+      >
         {/* User info section (Req 4.2) */}
-        <DropdownMenuLabel>
+        <DropdownMenuLabel className="animate-in fade-in-50 duration-300">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">{user.username}</p>
             {user.email && (
@@ -72,15 +75,27 @@ export function UserMenu() {
 
         {/* Secondary navigation items (Req 4.3) */}
         <DropdownMenuItem asChild>
-          <Link href="/app/profile" className="cursor-pointer">
-            <User className="mr-2 h-4 w-4" aria-hidden="true" />
+          <Link
+            href="/app/profile"
+            className="cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:bg-accent/80"
+          >
+            <User
+              className="mr-2 h-4 w-4 transition-transform duration-200 hover:scale-110"
+              aria-hidden="true"
+            />
             <span>{t('ui.profile')}</span>
           </Link>
         </DropdownMenuItem>
 
         <DropdownMenuItem asChild>
-          <Link href="/app/settings" className="cursor-pointer">
-            <Settings className="mr-2 h-4 w-4" aria-hidden="true" />
+          <Link
+            href="/app/settings"
+            className="cursor-pointer transition-all duration-200 hover:scale-[1.02] hover:bg-accent/80"
+          >
+            <Settings
+              className="mr-2 h-4 w-4 transition-transform duration-200 hover:scale-110"
+              aria-hidden="true"
+            />
             <span>{t('nav.settings')}</span>
           </Link>
         </DropdownMenuItem>
@@ -89,9 +104,12 @@ export function UserMenu() {
 
         <DropdownMenuItem
           onClick={handleLogout}
-          className="cursor-pointer text-destructive focus:text-destructive"
+          className="cursor-pointer text-destructive focus:text-destructive transition-all duration-200 hover:scale-[1.02] hover:bg-destructive/10"
         >
-          <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
+          <LogOut
+            className="mr-2 h-4 w-4 transition-transform duration-200 hover:scale-110"
+            aria-hidden="true"
+          />
           <span>{t('nav.logout')}</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
