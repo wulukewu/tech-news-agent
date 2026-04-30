@@ -271,7 +271,11 @@ export function ArticleBrowser({
   const filteredCount = filteredAndSortedArticles.length;
 
   return (
-    <div className={cn('space-y-6', className)} role="main" aria-label="文章瀏覽器">
+    <div
+      className={cn('space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500', className)}
+      role="main"
+      aria-label="文章瀏覽器"
+    >
       {/* Keyboard Navigation Help */}
       <div className="sr-only" aria-live="polite">
         使用 j/k 鍵導航文章，r 鍵重新整理，/ 鍵聚焦搜尋，Escape 鍵清除焦點
@@ -279,11 +283,11 @@ export function ArticleBrowser({
 
       {/* Filter Section */}
       {(showCategoryFilter || showTinkeringIndexFilter || showSortingControls) && (
-        <div className="space-y-4">
+        <div className="space-y-4 animate-in slide-in-from-top-4 duration-500 delay-200">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Category Filter */}
             {showCategoryFilter && (
-              <div className="space-y-2">
+              <div className="space-y-2 animate-in slide-in-from-left-4 duration-500 delay-300">
                 <CategoryFilterMenu
                   selectedCategories={filters.categories || []}
                   onCategoryChange={handleCategoryChange}
@@ -294,7 +298,7 @@ export function ArticleBrowser({
 
             {/* Tinkering Index Filter */}
             {showTinkeringIndexFilter && (
-              <div className="space-y-2">
+              <div className="space-y-2 animate-in slide-in-from-bottom-4 duration-500 delay-400">
                 <TinkeringIndexFilter
                   minValue={filters.minTinkeringIndex}
                   maxValue={filters.maxTinkeringIndex}
@@ -310,7 +314,7 @@ export function ArticleBrowser({
 
             {/* Sorting Controls */}
             {showSortingControls && (
-              <div className="space-y-2">
+              <div className="space-y-2 animate-in slide-in-from-right-4 duration-500 delay-500">
                 <SortingControls
                   sortBy={filters.sortBy || 'date'}
                   sortOrder={filters.sortOrder || 'desc'}
@@ -328,8 +332,12 @@ export function ArticleBrowser({
       )}
 
       {/* Article Statistics */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-        <div className="text-sm text-muted-foreground" role="status" aria-live="polite">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 animate-in slide-in-from-left-4 duration-500 delay-600">
+        <div
+          className="text-sm text-muted-foreground transition-colors duration-200 hover:text-foreground"
+          role="status"
+          aria-live="polite"
+        >
           <span className="font-medium">總計: {totalCount}</span>
           {filteredCount !== totalCount && (
             <>
@@ -354,12 +362,12 @@ export function ArticleBrowser({
         {/* Active Filters Summary */}
         <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
           {filters.categories && filters.categories.length > 0 && (
-            <span className="bg-muted px-2 py-1 rounded">
+            <span className="bg-muted px-2 py-1 rounded animate-in zoom-in-50 duration-300 delay-700 transition-all hover:scale-105">
               {t('filters.category')}: {filters.categories.join(', ')}
             </span>
           )}
           {(filters.minTinkeringIndex || filters.maxTinkeringIndex) && (
-            <span className="bg-muted px-2 py-1 rounded">
+            <span className="bg-muted px-2 py-1 rounded animate-in zoom-in-50 duration-300 delay-800 transition-all hover:scale-105">
               {t('filters.depth')}:{' '}
               {t('filters.depth-range', {
                 min: filters.minTinkeringIndex || 1,
@@ -368,7 +376,7 @@ export function ArticleBrowser({
             </span>
           )}
           {filters.sortBy && (
-            <span className="bg-muted px-2 py-1 rounded">
+            <span className="bg-muted px-2 py-1 rounded animate-in zoom-in-50 duration-300 delay-900 transition-all hover:scale-105">
               {t('filters.sort')}:{' '}
               {filters.sortBy === 'date'
                 ? t('filters.date')
@@ -397,9 +405,10 @@ export function ArticleBrowser({
             data-article-index={index}
             tabIndex={focusedIndex === index ? 0 : -1}
             className={cn(
-              'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg',
+              'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-lg animate-in slide-in-from-bottom-4 duration-500 hover:scale-[1.02] transition-all',
               focusedIndex === index && 'ring-2 ring-primary ring-offset-2'
             )}
+            style={{ animationDelay: `${700 + index * 100}ms` }}
             role="gridcell"
             aria-label={`文章: ${article.title}`}
           >
@@ -416,8 +425,8 @@ export function ArticleBrowser({
 
       {/* Pagination Info */}
       {articleData?.hasNextPage && (
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground">
+        <div className="text-center animate-in slide-in-from-bottom-4 duration-500 delay-1000">
+          <p className="text-sm text-muted-foreground transition-colors duration-200 hover:text-foreground">
             第 {currentPage} 頁，共 {Math.ceil(totalCount / pageSize)} 頁
           </p>
         </div>

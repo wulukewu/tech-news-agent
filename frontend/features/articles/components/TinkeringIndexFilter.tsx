@@ -71,13 +71,13 @@ export function TinkeringIndexFilter({
   const hasFilters = minValue !== undefined || maxValue !== undefined;
 
   return (
-    <div className={cn('space-y-3', className)}>
-      <div className="flex items-center justify-between">
+    <div className={cn('space-y-3 animate-in fade-in slide-in-from-top-4 duration-500', className)}>
+      <div className="flex items-center justify-between animate-in slide-in-from-left-4 duration-500 delay-200">
         <Label className="text-sm font-medium">{t('forms.labels.tinkering-filter')}</Label>
         {hasFilters && (
           <button
             onClick={handleClearAll}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+            className="text-xs text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-105 animate-in zoom-in-50 duration-300 delay-300"
             disabled={disabled}
           >
             {t('forms.messages.clear-filters')}
@@ -86,38 +86,48 @@ export function TinkeringIndexFilter({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div className="space-y-2">
-          <Label htmlFor="min-tinkering" className="text-xs text-muted-foreground">
+        <div className="space-y-2 animate-in slide-in-from-left-4 duration-500 delay-400">
+          <Label
+            htmlFor="min-tinkering"
+            className="text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground"
+          >
             {t('forms.labels.min-depth')}
           </Label>
-          <RatingDropdown
-            value={minValue}
-            onChange={handleMinChange}
-            placeholder={t('forms.placeholders.select-min')}
-            disabled={disabled}
-            size="sm"
-            showClear={true}
-          />
+          <div className="animate-in slide-in-from-bottom-2 duration-300 delay-500">
+            <RatingDropdown
+              value={minValue}
+              onChange={handleMinChange}
+              placeholder={t('forms.placeholders.select-min')}
+              disabled={disabled}
+              size="sm"
+              showClear={true}
+            />
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="max-tinkering" className="text-xs text-muted-foreground">
+        <div className="space-y-2 animate-in slide-in-from-right-4 duration-500 delay-600">
+          <Label
+            htmlFor="max-tinkering"
+            className="text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground"
+          >
             {t('forms.labels.max-depth')}
           </Label>
-          <RatingDropdown
-            value={maxValue}
-            onChange={handleMaxChange}
-            placeholder={t('forms.placeholders.select-max')}
-            disabled={disabled}
-            size="sm"
-            showClear={true}
-          />
+          <div className="animate-in slide-in-from-bottom-2 duration-300 delay-700">
+            <RatingDropdown
+              value={maxValue}
+              onChange={handleMaxChange}
+              placeholder={t('forms.placeholders.select-max')}
+              disabled={disabled}
+              size="sm"
+              showClear={true}
+            />
+          </div>
         </div>
       </div>
 
       {/* Filter summary */}
       {hasFilters && (
-        <div className="text-xs text-muted-foreground">
+        <div className="text-xs text-muted-foreground animate-in slide-in-from-bottom-4 duration-500 delay-800 transition-colors hover:text-foreground">
           {minValue && maxValue && minValue === maxValue ? (
             <span>{t('forms.messages.filter-summary-equal', { level: minValue })}</span>
           ) : (

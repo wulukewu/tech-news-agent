@@ -71,12 +71,20 @@ export function AnalysisTrigger({
         size={size}
         onClick={handleClick}
         disabled={disabled || isLoading}
-        className={className}
+        className={`${className} transition-all duration-200 hover:scale-105 animate-in fade-in zoom-in-50 duration-300`}
         data-testid="analysis-button"
       >
-        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Brain className="h-4 w-4" />}
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Brain className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
+        )}
 
-        {showText && <span className="ml-1">{isLoading ? '分析中...' : buttonText}</span>}
+        {showText && (
+          <span className="ml-1 transition-all duration-200">
+            {isLoading ? '分析中...' : buttonText}
+          </span>
+        )}
       </Button>
 
       <AnalysisModal

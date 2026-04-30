@@ -71,24 +71,26 @@ export function AnalysisModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent
-        className="max-w-4xl max-h-[90vh] overflow-y-auto"
+        className="max-w-4xl max-h-[90vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-300"
         data-testid="analysis-modal"
       >
-        <DialogHeader>
-          <DialogTitle className="text-xl font-bold leading-tight pr-8">{articleTitle}</DialogTitle>
+        <DialogHeader className="animate-in slide-in-from-top-4 duration-500 delay-200">
+          <DialogTitle className="text-xl font-bold leading-tight pr-8 animate-in fade-in duration-300 delay-300">
+            {articleTitle}
+          </DialogTitle>
 
           {/* Article metadata - Validates Requirements 2.2 */}
           <DialogDescription asChild>
-            <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+            <div className="flex flex-col gap-2 text-sm text-muted-foreground animate-in slide-in-from-left-4 duration-500 delay-400">
               <div className="flex items-center gap-4 flex-wrap">
-                <div className="flex items-center gap-1">
-                  <ExternalLink className="h-4 w-4" />
+                <div className="flex items-center gap-1 transition-colors duration-200 hover:text-foreground">
+                  <ExternalLink className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
                   <span>{articleSource}</span>
                 </div>
 
                 {articlePublishedAt && (
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
+                  <div className="flex items-center gap-1 transition-colors duration-200 hover:text-foreground">
+                    <Calendar className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
                     <span>
                       {new Date(articlePublishedAt).toLocaleDateString('zh-TW', {
                         year: 'numeric',
@@ -106,26 +108,26 @@ export function AnalysisModal({
         <div className="space-y-6">
           {/* Loading state - Validates Requirements 2.5 */}
           {isLoading && (
-            <div className="space-y-4">
+            <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-500 delay-500">
               <div className="flex items-center justify-center py-8">
                 <LoadingSpinner size="lg" text={progress.status} data-testid="analysis-loading" />
               </div>
 
               {/* Progress indicator */}
-              <div className="space-y-2">
+              <div className="space-y-2 animate-in slide-in-from-left-4 duration-500 delay-600">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">{progress.status}</span>
                   <span className="text-muted-foreground">{progress.progress}%</span>
                 </div>
                 <div className="w-full bg-secondary rounded-full h-2">
                   <div
-                    className="bg-primary h-2 rounded-full transition-all duration-500 ease-out"
+                    className="bg-primary h-2 rounded-full transition-all duration-500 ease-out animate-in slide-in-from-left-full"
                     style={{ width: `${progress.progress}%` }}
                   />
                 </div>
               </div>
 
-              <p className="text-sm text-muted-foreground text-center">
+              <p className="text-sm text-muted-foreground text-center animate-in fade-in duration-500 delay-700">
                 AI 正在深度分析文章內容，這可能需要最多 30 秒的時間...
               </p>
             </div>
@@ -133,14 +135,17 @@ export function AnalysisModal({
 
           {/* Error state - Validates Requirements 2.9 */}
           {progress.hasError && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
+            <Alert
+              variant="destructive"
+              className="animate-in slide-in-from-bottom-4 duration-500 delay-500"
+            >
+              <AlertCircle className="h-4 w-4 animate-pulse" />
               <AlertDescription>
                 {progress.errorMessage || '分析生成失敗，請稍後再試'}
                 <Button
                   variant="outline"
                   size="sm"
-                  className="ml-2"
+                  className="ml-2 transition-all duration-200 hover:scale-105"
                   onClick={() => window.location.reload()}
                 >
                   重試
@@ -151,28 +156,32 @@ export function AnalysisModal({
 
           {/* Analysis results - Validates Requirements 2.4 */}
           {analysis && (
-            <div className="space-y-6">
+            <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500 delay-600">
               {/* Analysis metadata */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between animate-in slide-in-from-left-4 duration-500 delay-700">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  <span className="text-sm text-muted-foreground">
+                  <CheckCircle2 className="h-5 w-5 text-green-500 animate-pulse" />
+                  <span className="text-sm text-muted-foreground transition-colors duration-200 hover:text-foreground">
                     分析完成於 {analysis.generatedAt.toLocaleString('zh-TW')}
                   </span>
-                  <Badge variant="secondary" className="text-xs">
+                  <Badge
+                    variant="secondary"
+                    className="text-xs animate-in zoom-in-50 duration-300 delay-800 transition-all hover:scale-105"
+                  >
                     {analysis.model}
                   </Badge>
                 </div>
 
                 {/* Action buttons - Validates Requirements 2.7, 2.8 */}
-                <div className="flex gap-2">
+                <div className="flex gap-2 animate-in slide-in-from-right-4 duration-500 delay-900">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={handleCopyAnalysis}
                     data-testid="copy-analysis"
+                    className="transition-all duration-200 hover:scale-105"
                   >
-                    <Copy className="h-4 w-4 mr-1" />
+                    <Copy className="h-4 w-4 mr-1 transition-transform duration-200 hover:scale-110" />
                     複製分析
                   </Button>
 
@@ -181,34 +190,43 @@ export function AnalysisModal({
                     size="sm"
                     onClick={handleShareAnalysis}
                     data-testid="share-analysis"
+                    className="transition-all duration-200 hover:scale-105"
                   >
-                    <Share2 className="h-4 w-4 mr-1" />
+                    <Share2 className="h-4 w-4 mr-1 transition-transform duration-200 hover:scale-110" />
                     分享分析
                   </Button>
                 </div>
               </div>
 
               {/* Core Technical Concepts */}
-              <AnalysisSection title="核心技術概念" items={analysis.coreConcepts} icon="🔧" />
+              <div className="animate-in slide-in-from-left-4 duration-500 delay-1000">
+                <AnalysisSection title="核心技術概念" items={analysis.coreConcepts} icon="🔧" />
+              </div>
 
               {/* Application Scenarios */}
-              <AnalysisSection title="應用場景" items={analysis.applicationScenarios} icon="🚀" />
+              <div className="animate-in slide-in-from-right-4 duration-500 delay-1100">
+                <AnalysisSection title="應用場景" items={analysis.applicationScenarios} icon="🚀" />
+              </div>
 
               {/* Potential Risks */}
-              <AnalysisSection
-                title="潛在風險"
-                items={analysis.potentialRisks}
-                icon="⚠️"
-                variant="warning"
-              />
+              <div className="animate-in slide-in-from-left-4 duration-500 delay-1200">
+                <AnalysisSection
+                  title="潛在風險"
+                  items={analysis.potentialRisks}
+                  icon="⚠️"
+                  variant="warning"
+                />
+              </div>
 
               {/* Recommended Steps */}
-              <AnalysisSection
-                title="建議步驟"
-                items={analysis.recommendedSteps}
-                icon="📋"
-                variant="success"
-              />
+              <div className="animate-in slide-in-from-right-4 duration-500 delay-1300">
+                <AnalysisSection
+                  title="建議步驟"
+                  items={analysis.recommendedSteps}
+                  icon="📋"
+                  variant="success"
+                />
+              </div>
             </div>
           )}
         </div>
@@ -241,23 +259,31 @@ function AnalysisSection({ title, items, icon, variant = 'default' }: AnalysisSe
   }[variant];
 
   return (
-    <div className={`rounded-lg border p-4 ${borderColor} ${bgColor}`}>
-      <h3 className="flex items-center gap-2 font-semibold mb-3">
-        <span className="text-lg">{icon}</span>
+    <div
+      className={`rounded-lg border p-4 ${borderColor} ${bgColor} hover:shadow-md transition-all duration-200`}
+    >
+      <h3 className="flex items-center gap-2 font-semibold mb-3 animate-in slide-in-from-left-2 duration-300">
+        <span className="text-lg transition-transform duration-200 hover:scale-110">{icon}</span>
         {title}
       </h3>
 
       {items.length > 0 ? (
         <ul className="space-y-2">
           {items.map((item, index) => (
-            <li key={index} className="flex items-start gap-2">
+            <li
+              key={index}
+              className="flex items-start gap-2 animate-in slide-in-from-left-2 duration-300 transition-colors hover:text-foreground"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
               <span className="text-muted-foreground mt-1">•</span>
               <span className="text-sm leading-relaxed">{item}</span>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-muted-foreground italic">此部分暫無內容</p>
+        <p className="text-sm text-muted-foreground italic animate-in fade-in duration-300">
+          此部分暫無內容
+        </p>
       )}
     </div>
   );
