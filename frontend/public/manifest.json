@@ -21,22 +21,22 @@
   ],
   "shortcuts": [
     {
-      "name": "Articles",
-      "short_name": "Articles",
+      "name": "Home",
+      "short_name": "Home",
       "description": "Browse latest tech articles",
-      "url": "/dashboard/articles"
+      "url": "/app/articles"
     },
     {
       "name": "Reading List",
       "short_name": "Reading",
       "description": "View your reading list",
-      "url": "/dashboard/reading-list"
+      "url": "/app/reading-list"
     },
     {
       "name": "Recommendations",
       "short_name": "Recommend",
       "description": "Get personalized recommendations",
-      "url": "/dashboard/recommendations"
+      "url": "/app/recommendations"
     }
   ],
   "screenshots": [],
