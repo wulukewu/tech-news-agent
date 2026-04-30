@@ -113,7 +113,7 @@ export function ArticleCard({
   if (layout === 'mobile') {
     return (
       <article>
-        <Card className="hover:shadow-md transition-shadow cursor-pointer overflow-hidden">
+        <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1">
           <CardContent className="p-0">
             {/* Vertical stack layout */}
             <div className="flex flex-col">
@@ -125,13 +125,14 @@ export function ArticleCard({
                     alt={article.title}
                     width={400}
                     height={225}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     sizes="(max-width: 768px) 100vw, 400px"
                     priority={false}
                     onError={(e) => {
                       e.currentTarget.parentElement!.style.display = 'none';
                     }}
                   />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
               )}
 
@@ -142,7 +143,7 @@ export function ArticleCard({
                   href={article.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="hover:underline"
+                  className="hover:underline group-hover:text-primary transition-colors duration-200"
                 >
                   <h3 className="text-base font-semibold line-clamp-2 leading-snug">
                     {article.title}
@@ -153,7 +154,11 @@ export function ArticleCard({
                 <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                   {article.feedName && <span className="truncate">{article.feedName}</span>}
                   {article.feedName && <span aria-hidden="true">•</span>}
-                  <Badge variant="secondary" style={categoryStyles}>
+                  <Badge
+                    variant="secondary"
+                    style={categoryStyles}
+                    className="transition-all duration-200 hover:scale-105 cursor-default"
+                  >
                     {article.category}
                   </Badge>
                   <span aria-hidden="true">•</span>
@@ -168,7 +173,7 @@ export function ArticleCard({
                   <div>
                     <p
                       className={cn(
-                        'text-sm text-muted-foreground',
+                        'text-sm text-muted-foreground transition-all duration-300',
                         !isExpanded && shouldShowReadMore && 'line-clamp-2'
                       )}
                     >
@@ -179,10 +184,12 @@ export function ArticleCard({
                         variant="link"
                         size="sm"
                         onClick={() => setIsExpanded(!isExpanded)}
-                        className="mt-1 p-0 h-auto text-xs"
+                        className="mt-1 p-0 h-auto text-xs transition-all duration-200 hover:scale-105"
                         aria-expanded={isExpanded}
                       >
-                        {isExpanded ? t('ui.show-less') : t('ui.read-more')}
+                        <span className="transition-transform duration-200">
+                          {isExpanded ? t('ui.show-less') : t('ui.read-more')}
+                        </span>
                       </Button>
                     )}
                   </div>
@@ -200,14 +207,14 @@ export function ArticleCard({
                           ? t('article-card.added-to-reading-list-aria')
                           : t('article-card.add-to-reading-list-aria')
                       }
-                      className="flex-1 min-h-[44px] min-w-[44px]"
+                      className="flex-1 min-h-[44px] min-w-[44px] transition-all duration-200 hover:scale-105 active:scale-95"
                     >
                       {addToReadingList.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       ) : isAdded ? (
-                        <BookmarkCheck className="h-4 w-4 mr-2" />
+                        <BookmarkCheck className="h-4 w-4 mr-2 text-green-600 animate-in zoom-in-50 duration-300" />
                       ) : (
-                        <BookmarkPlus className="h-4 w-4 mr-2" />
+                        <BookmarkPlus className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:scale-110" />
                       )}
                       <span className="text-sm">
                         {isAdded ? t('buttons.saved') : t('buttons.read-later')}
@@ -219,9 +226,9 @@ export function ArticleCard({
                     onClick={handleAddToReadingList}
                     disabled={isAdded}
                     aria-label={t('article-card.mark-as-read-aria')}
-                    className="flex-1 min-h-[44px] min-w-[44px]"
+                    className="flex-1 min-h-[44px] min-w-[44px] transition-all duration-200 hover:scale-105 active:scale-95"
                   >
-                    <CheckCircle className="h-4 w-4 mr-2" />
+                    <CheckCircle className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:scale-110" />
                     <span className="text-sm">{t('buttons.mark-as-read')}</span>
                   </Button>
                 </div>
@@ -232,7 +239,7 @@ export function ArticleCard({
                     variant="default"
                     onClick={handleAnalyze}
                     aria-label={t('article-card.deep-dive-aria')}
-                    className="w-full min-h-[44px]"
+                    className="w-full min-h-[44px] transition-all duration-200 hover:scale-105 active:scale-95 hover:shadow-md"
                   >
                     {t('article-card.deep-dive-label')}
                   </Button>
@@ -470,7 +477,7 @@ function TinkeringIndexStars({ index }: { index: number }) {
       <Tooltip>
         <TooltipTrigger asChild>
           <div
-            className="flex items-center gap-1 cursor-help"
+            className="flex items-center gap-1 cursor-help group/stars"
             aria-label={t('article-card.tinkering-aria', { index: clampedIndex, description })}
             role="img"
           >
@@ -480,8 +487,13 @@ function TinkeringIndexStars({ index }: { index: number }) {
                 className={cn(
                   'h-5 w-5 min-h-[20px] min-w-[20px]', // 20px standard, 24px on mobile via min-h/w
                   'md:h-5 md:w-5', // 20px on desktop
+                  'transition-all duration-200 hover:scale-110',
+                  'group-hover/stars:animate-pulse',
                   getStarColor(i)
                 )}
+                style={{
+                  animationDelay: `${i * 50}ms`,
+                }}
                 aria-hidden="true"
               />
             ))}

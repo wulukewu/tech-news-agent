@@ -11,13 +11,12 @@ function ShimmerSkeleton({ className, ...props }: React.HTMLAttributes<HTMLDivEl
   return (
     <div
       className={cn(
-        'animate-pulse rounded-md bg-gradient-to-r from-muted via-muted/50 to-muted',
-        'bg-[length:1000px_100%] animate-shimmer',
+        'relative overflow-hidden rounded-md bg-muted',
+        'before:absolute before:inset-0',
+        'before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent',
+        'before:animate-shimmer before:bg-[length:200%_100%]',
         className
       )}
-      style={{
-        backgroundImage: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)',
-      }}
       {...props}
     />
   );
@@ -31,7 +30,7 @@ function ShimmerSkeleton({ className, ...props }: React.HTMLAttributes<HTMLDivEl
 export function ArticleCardSkeletonMobile() {
   return (
     <article>
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden animate-in fade-in-50 duration-300">
         <CardContent className="p-0">
           <div className="flex flex-col gap-3">
             {/* Image skeleton - full width, aspect-video */}
@@ -55,7 +54,11 @@ export function ArticleCardSkeletonMobile() {
               {/* Tinkering index stars skeleton */}
               <div className="flex items-center gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <ShimmerSkeleton key={i} className="h-5 w-5 rounded-sm" />
+                  <ShimmerSkeleton
+                    key={i}
+                    className="h-5 w-5 rounded-sm"
+                    style={{ animationDelay: `${i * 100}ms` }}
+                  />
                 ))}
               </div>
 
