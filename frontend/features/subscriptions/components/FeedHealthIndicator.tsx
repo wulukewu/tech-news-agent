@@ -101,11 +101,16 @@ export function FeedHealthIndicator({
       <Tooltip>
         <TooltipTrigger asChild>
           <div className={`inline-flex items-center gap-2 ${className}`}>
-            <Badge variant={config.variant} className="gap-1 cursor-help">
-              <Icon className="w-3 h-3" />
+            <Badge
+              variant={config.variant}
+              className="gap-1 cursor-help transition-all duration-200 hover:scale-105 animate-in fade-in-50"
+            >
+              <Icon className="w-3 h-3 transition-transform duration-200 hover:scale-110" />
               {config.label}
             </Badge>
-            <span className="text-xs text-muted-foreground">{formattedTime}</span>
+            <span className="text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground">
+              {formattedTime}
+            </span>
           </div>
         </TooltipTrigger>
         <TooltipContent side="bottom" className="max-w-xs">
