@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -18,6 +19,10 @@ export default function RemindersSettingsPage() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
 
+  // Local state for sliders to provide smooth UX
+  const [localCooldown, setLocalCooldown] = useState<number | null>(null);
+  const [localSimilarity, setLocalSimilarity] = useState<number | null>(null);
+
   const { data: settings, isLoading } = useQuery({
     queryKey: ['reminder-settings'],
     queryFn: getReminderSettings,
@@ -27,9 +32,15 @@ export default function RemindersSettingsPage() {
     mutationFn: updateReminderSettings,
     onSuccess: (data) => {
       queryClient.setQueryData(['reminder-settings'], data);
+      // Clear local state after successful update
+      setLocalCooldown(null);
+      setLocalSimilarity(null);
       toast.success('Settings saved');
     },
     onError: (e: any) => {
+      // Reset local state on error
+      setLocalCooldown(null);
+      setLocalSimilarity(null);
       toast.error(e?.response?.data?.detail || 'Failed to save settings');
     },
   });
@@ -45,7 +56,8 @@ export default function RemindersSettingsPage() {
     );
   }
 
-  const similarityPct = Math.round(settings.reminder_min_similarity * 100);
+  const displayCooldown = localCooldown ?? settings.reminder_cooldown_hours;
+  const displaySimilarity = localSimilarity ?? Math.round(settings.reminder_min_similarity * 100);
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -126,15 +138,20 @@ export default function RemindersSettingsPage() {
                 <Label>{t('pages.reminders.cooldown')}</Label>
               </div>
               <span className="text-sm font-medium tabular-nums">
-                {t('pages.reminders.cooldown-value', { hours: settings.reminder_cooldown_hours })}
+                {displayCooldown === 0
+                  ? t('pages.reminders.cooldown-value-none')
+                  : t('pages.reminders.cooldown-value', { hours: displayCooldown })}
               </span>
             </div>
             <Slider
-              min={1}
+              min={0}
               max={24}
               step={1}
-              value={[settings.reminder_cooldown_hours]}
-              onValueChange={([v]) => update({ reminder_cooldown_hours: v })}
+              value={[displayCooldown]}
+              onValueChange={([v]) => setLocalCooldown(v)}
+              onValueCommit={([v]) => {
+                update({ reminder_cooldown_hours: v });
+              }}
               disabled={mutation.isPending}
             />
             <p className="text-xs text-muted-foreground">{t('pages.reminders.cooldown-desc')}</p>
@@ -143,14 +160,17 @@ export default function RemindersSettingsPage() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label>{t('pages.reminders.similarity')}</Label>
-              <span className="text-sm font-medium tabular-nums">{similarityPct}%</span>
+              <span className="text-sm font-medium tabular-nums">{displaySimilarity}%</span>
             </div>
             <Slider
               min={50}
               max={95}
-              step={1}
-              value={[similarityPct]}
-              onValueChange={([v]) => update({ reminder_min_similarity: v / 100 })}
+              step={5}
+              value={[displaySimilarity]}
+              onValueChange={([v]) => setLocalSimilarity(v)}
+              onValueCommit={([v]) => {
+                update({ reminder_min_similarity: v / 100 });
+              }}
               disabled={mutation.isPending}
             />
             <p className="text-xs text-muted-foreground">{t('pages.reminders.similarity-desc')}</p>

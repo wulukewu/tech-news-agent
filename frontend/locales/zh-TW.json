@@ -44,6 +44,7 @@
       "cooldown": "提醒間隔",
       "cooldown-desc": "兩次提醒之間的最短間隔，避免頻繁打擾",
       "cooldown-value": "{hours} 小時",
+      "cooldown-value-none": "無間隔",
       "similarity": "相似度門檻",
       "similarity-desc": "越高代表推薦越精準但數量較少；越低則推薦更多但可能較不精準",
       "dm-note": "提醒透過 Discord DM 發送，請確認已在 {link} 中開啟 DM 通知。",

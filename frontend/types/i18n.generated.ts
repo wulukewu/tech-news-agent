@@ -659,6 +659,7 @@ export type TranslationKey =
   | 'pages.reminders.cooldown'
   | 'pages.reminders.cooldown-desc'
   | 'pages.reminders.cooldown-value'
+  | 'pages.reminders.cooldown-value-none'
   | 'pages.reminders.description'
   | 'pages.reminders.dm-note'
   | 'pages.reminders.dm-note-link'

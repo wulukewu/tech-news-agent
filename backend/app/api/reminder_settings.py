@@ -26,7 +26,7 @@ class ReminderSettings(BaseModel):
     reminder_enabled: bool = True
     reminder_on_add: bool = True
     reminder_on_rate: bool = True
-    reminder_cooldown_hours: int = Field(default=4, ge=1, le=72)
+    reminder_cooldown_hours: int = Field(default=4, ge=0, le=72)
     reminder_min_similarity: float = Field(default=0.72, ge=0.5, le=0.99)
 
 

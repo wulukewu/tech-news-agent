@@ -44,6 +44,7 @@
       "cooldown": "Cooldown period",
       "cooldown-desc": "Minimum time between reminders to avoid being spammed",
       "cooldown-value": "{hours}h",
+      "cooldown-value-none": "No cooldown",
       "similarity": "Similarity threshold",
       "similarity-desc": "Higher = more precise matches, fewer suggestions. Lower = more suggestions, less precise.",
       "dm-note": "Reminders are sent via Discord DM. Make sure DM notifications are enabled in {link}.",
