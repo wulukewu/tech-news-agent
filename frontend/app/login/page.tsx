@@ -100,10 +100,10 @@ function LoginPageInner() {
                   </div>
                 </div>
                 <h1 className="text-2xl font-bold tracking-tight mb-2 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-700">
-                  Welcome Back
+                  {t('pages.login.title')}
                 </h1>
                 <p className="text-muted-foreground animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-800">
-                  Sign in to access your personalized tech news feed
+                  {t('pages.login.description')}
                 </p>
               </div>
 
@@ -115,18 +115,20 @@ function LoginPageInner() {
                   size="lg"
                 >
                   <DiscordIcon className="mr-3 h-5 w-5 transition-transform duration-300 group-hover:scale-[1.05]" />
-                  Continue with Discord
+                  {t('buttons.login-with-discord')}
                 </Button>
               </div>
 
               {/* Features */}
               <div className="mt-8 pt-6 border-t border-border/50 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-1200">
-                <p className="text-sm text-muted-foreground text-center mb-4">What you'll get:</p>
+                <p className="text-sm text-muted-foreground text-center mb-4">
+                  {t('pages.login.no-account')}
+                </p>
                 <div className="space-y-2 text-sm text-muted-foreground">
                   {[
-                    'AI-powered article recommendations',
-                    'Smart reminders via Discord DM',
-                    'Personalized reading lists',
+                    t('pages.landing.features.ai-powered'),
+                    t('pages.landing.features.smart-reminders'),
+                    t('pages.landing.features.discord'),
                   ].map((feature, index) => (
                     <div
                       key={index}
