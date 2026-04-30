@@ -56,30 +56,40 @@ export function SystemHealthCard({ health }: SystemHealthCardProps) {
   const errorRate = formatErrorRate(health.errors.rate);
 
   return (
-    <Card>
+    <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-lg transition-all">
       <CardHeader>
-        <CardTitle className="text-xl flex items-center gap-2">
-          <Activity className="h-5 w-5" />
+        <CardTitle className="text-xl flex items-center gap-2 animate-in slide-in-from-left-4 duration-500 delay-200">
+          <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-300 hover:scale-110 transition-transform">
+            <Activity className="h-5 w-5 animate-pulse" />
+          </div>
           {t('system.system-health')}
         </CardTitle>
-        <CardDescription>{t('system.system-health-desc')}</CardDescription>
+        <CardDescription className="animate-in fade-in duration-500 delay-400">
+          {t('system.system-health-desc')}
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
           {/* Database Connection */}
-          <div className="space-y-2">
+          <div className="space-y-2 animate-in slide-in-from-left-4 duration-500 delay-500">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Database className="h-4 w-4 text-muted-foreground" />
+                <Database className="h-4 w-4 text-muted-foreground transition-transform duration-200 hover:scale-110" />
                 <span className="text-sm font-medium">{t('system.database-connection')}</span>
               </div>
               {health.database.connected ? (
-                <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+                <Badge
+                  variant="default"
+                  className="bg-green-500 hover:bg-green-600 transition-all duration-200 hover:scale-105 animate-pulse"
+                >
                   <CheckCircle2 className="h-3 w-3 mr-1" />
                   {t('ui.connected')}
                 </Badge>
               ) : (
-                <Badge variant="destructive">
+                <Badge
+                  variant="destructive"
+                  className="transition-all duration-200 hover:scale-105 animate-pulse"
+                >
                   <XCircle className="h-3 w-3 mr-1" />
                   {t('ui.disconnected')}
                 </Badge>
@@ -87,7 +97,9 @@ export function SystemHealthCard({ health }: SystemHealthCardProps) {
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">{t('system.response-time')}</span>
-              <span className={`font-mono font-medium ${dbResponseTime.color}`}>
+              <span
+                className={`font-mono font-medium transition-colors duration-200 hover:scale-105 ${dbResponseTime.color}`}
+              >
                 {dbResponseTime.value}
               </span>
             </div>
@@ -102,33 +114,33 @@ export function SystemHealthCard({ health }: SystemHealthCardProps) {
             </div>
           </div>
 
-          <div className="border-t" />
+          <div className="border-t animate-in fade-in duration-300 delay-700" />
 
           {/* API Response Times */}
-          <div className="space-y-2">
+          <div className="space-y-2 animate-in slide-in-from-right-4 duration-500 delay-600">
             <div className="flex items-center gap-2 mb-3">
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <Activity className="h-4 w-4 text-muted-foreground transition-transform duration-200 hover:scale-110" />
               <span className="text-sm font-medium">{t('system.api-response-time')}</span>
             </div>
             <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">{t('system.average')}</div>
-                <div className={`text-lg font-mono font-semibold ${apiAvgResponseTime.color}`}>
-                  {apiAvgResponseTime.value}
+              {[
+                { label: t('system.average'), value: apiAvgResponseTime },
+                { label: 'P95', value: apiP95ResponseTime },
+                { label: 'P99', value: apiP99ResponseTime },
+              ].map((metric, index) => (
+                <div
+                  key={index}
+                  className="space-y-1 animate-in zoom-in-50 duration-300"
+                  style={{ animationDelay: `${800 + index * 100}ms` }}
+                >
+                  <div className="text-xs text-muted-foreground">{metric.label}</div>
+                  <div
+                    className={`text-lg font-mono font-semibold transition-all duration-200 hover:scale-110 ${metric.value.color}`}
+                  >
+                    {metric.value.value}
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">P95</div>
-                <div className={`text-lg font-mono font-semibold ${apiP95ResponseTime.color}`}>
-                  {apiP95ResponseTime.value}
-                </div>
-              </div>
-              <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">P99</div>
-                <div className={`text-lg font-mono font-semibold ${apiP99ResponseTime.color}`}>
-                  {apiP99ResponseTime.value}
-                </div>
-              </div>
+              ))}
             </div>
             <div className="flex items-center justify-between text-sm pt-2">
               <span className="text-muted-foreground">{t('system.last-checked')}</span>
@@ -141,28 +153,32 @@ export function SystemHealthCard({ health }: SystemHealthCardProps) {
             </div>
           </div>
 
-          <div className="border-t" />
+          <div className="border-t animate-in fade-in duration-300 delay-1000" />
 
           {/* Error Rates */}
-          <div className="space-y-2">
+          <div className="space-y-2 animate-in slide-in-from-left-4 duration-500 delay-900">
             <div className="flex items-center gap-2 mb-3">
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+              <AlertTriangle className="h-4 w-4 text-muted-foreground transition-transform duration-200 hover:scale-110" />
               <span className="text-sm font-medium">{t('system.error-rate')}</span>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
+              <div className="space-y-1 animate-in zoom-in-50 duration-300 delay-1100">
                 <div className="text-xs text-muted-foreground">{t('system.errors-per-minute')}</div>
-                <div className={`text-lg font-mono font-semibold ${errorRate.color}`}>
+                <div
+                  className={`text-lg font-mono font-semibold transition-all duration-200 hover:scale-110 ${errorRate.color}`}
+                >
                   {errorRate.value}
                 </div>
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1 animate-in zoom-in-50 duration-300 delay-1200">
                 <div className="text-xs text-muted-foreground">{t('system.total-errors-24h')}</div>
-                <div className="text-lg font-mono font-semibold">{health.errors.total24h}</div>
+                <div className="text-lg font-mono font-semibold transition-all duration-200 hover:scale-110">
+                  {health.errors.total24h}
+                </div>
               </div>
             </div>
             {health.errors.lastError && (
-              <div className="flex items-center justify-between text-sm pt-2">
+              <div className="flex items-center justify-between text-sm pt-2 animate-in fade-in duration-500 delay-1300">
                 <span className="text-muted-foreground">{t('system.last-error')}</span>
                 <span className="text-muted-foreground">
                   {formatDistanceToNow(health.errors.lastError, {
