@@ -47,13 +47,13 @@ export function CategoryFilter({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 animate-in fade-in-50 slide-in-from-left-2 duration-500">
         <span className="text-sm font-medium">{t('buttons.filter-by-category')}</span>
         <Button
           variant="ghost"
           size="sm"
           onClick={onSelectAll}
-          className="h-7 text-xs"
+          className="h-7 text-xs transition-all duration-200 hover:scale-105 hover:shadow-sm"
           disabled={selectedCategories.length === categories.length}
         >
           {t('buttons.select-all')}
@@ -62,7 +62,7 @@ export function CategoryFilter({
           variant="ghost"
           size="sm"
           onClick={onClearAll}
-          className="h-7 text-xs"
+          className="h-7 text-xs transition-all duration-200 hover:scale-105 hover:shadow-sm"
           disabled={selectedCategories.length === 0}
         >
           {t('buttons.clear-all')}
@@ -70,7 +70,7 @@ export function CategoryFilter({
       </div>
 
       {/* Horizontal scroll container with fade edges */}
-      <div className="relative">
+      <div className="relative animate-in fade-in-50 slide-in-from-bottom-2 duration-500 delay-200">
         <div className="pointer-events-none absolute left-0 top-0 bottom-2 w-8 bg-gradient-to-r from-background to-transparent z-10" />
         <div className="pointer-events-none absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-background to-transparent z-10" />
         <div
@@ -82,21 +82,23 @@ export function CategoryFilter({
           role="group"
           aria-label="Category filters"
         >
-          {categories.map((category) => {
+          {categories.map((category, index) => {
             const isSelected = selectedCategories.includes(category);
             return (
               <Badge
                 key={category}
                 variant={isSelected ? 'default' : 'outline'}
                 className={cn(
-                  'cursor-pointer transition-colors duration-150',
+                  'cursor-pointer transition-all duration-200',
                   'snap-start',
                   'h-7 px-3 py-1',
                   'whitespace-nowrap flex-shrink-0',
-                  'hover:shadow-sm',
+                  'hover:shadow-sm hover:scale-105 active:scale-95',
                   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
-                  isSelected && 'shadow-sm'
+                  'animate-in zoom-in-50',
+                  isSelected && 'shadow-sm scale-105'
                 )}
+                style={{ animationDelay: `${300 + index * 50}ms` }}
                 onClick={() => onToggleCategory(category)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' || e.key === ' ') {
