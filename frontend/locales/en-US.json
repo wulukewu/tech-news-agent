@@ -29,6 +29,41 @@
     "reminders": "Reminders"
   },
   "pages": {
+    "landing": {
+      "hero": {
+        "badge": "AI-Powered News Curation",
+        "title": "Your Personal",
+        "title-highlight": "Tech News Hub",
+        "description": "Intelligent article discovery, AI-powered summaries, and personalized recommendations delivered through web dashboard and Discord DM.",
+        "cta-primary": "Start Free",
+        "cta-secondary": "View Demo"
+      },
+      "features": {
+        "multi-source": "Multi-source RSS",
+        "ai-powered": "AI-Powered Analysis",
+        "discord": "Discord Integration",
+        "smart-reminders": "Smart Reminders",
+        "demo-title": "Live Article Feed"
+      },
+      "section": {
+        "title": "Intelligent News Curation",
+        "description": "Advanced AI algorithms analyze and curate tech news from multiple sources, delivering personalized content that matters to you.",
+        "smart-reminders-title": "Smart Reminders",
+        "smart-reminders-desc": "AI-powered recommendations based on your reading history and preferences, delivered via Discord DM at optimal times.",
+        "ai-analysis-title": "AI Analysis",
+        "ai-analysis-desc": "Every article gets a technical depth score and AI-generated summary, helping you quickly identify valuable content.",
+        "multi-platform-title": "Multi-Platform",
+        "multi-platform-desc": "Access your curated news through web dashboard, Discord bot commands, or REST API integration."
+      },
+      "cta": {
+        "title": "Ready to Transform Your Tech News Experience?",
+        "description": "Join hundreds of developers and tech enthusiasts who rely on AI-powered curation to stay ahead of the curve.",
+        "button": "Get Started Free"
+      },
+      "footer": {
+        "copyright": "© 2026 Tech News Agent. Intelligent news curation for developers."
+      }
+    },
     "reminders": {
       "title": "Smart Reminders",
       "description": "When you save or rate an article, the system finds similar articles and sends them via Discord DM.",

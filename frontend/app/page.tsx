@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowRight, Zap, Brain, MessageSquare, Star, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from '@/components/Logo';
+import { PublicNavbar } from '@/components/PublicNavbar';
+import { useI18n } from '@/contexts/I18nContext';
 
 // Mock data for demo
 const mockArticles = [
@@ -28,22 +30,18 @@ const mockArticles = [
 ];
 
 export default function ModernLandingPage() {
+  const { t } = useI18n();
+
+  const scrollToDemo = () => {
+    const demoSection = document.getElementById('demo-section');
+    if (demoSection) {
+      demoSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
-      {/* Navigation */}
-      <nav className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Logo size={32} />
-            <span className="font-bold text-xl">Tech News Agent</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button asChild>
-              <Link href="/app">Get Started</Link>
-            </Button>
-          </div>
-        </div>
-      </nav>
+      <PublicNavbar />
 
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-20">
@@ -53,15 +51,16 @@ export default function ModernLandingPage() {
             <div className="space-y-4">
               <Badge variant="secondary" className="w-fit">
                 <Zap className="w-3 h-3 mr-1" />
-                AI-Powered News Curation
+                {t('pages.landing.hero.badge')}
               </Badge>
               <h1 className="text-4xl lg:text-6xl font-bold tracking-tight">
-                Your Personal
-                <span className="text-primary block">Tech News Hub</span>
+                {t('pages.landing.hero.title')}
+                <span className="text-primary block">
+                  {t('pages.landing.hero.title-highlight')}
+                </span>
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed">
-                Intelligent article discovery, AI-powered summaries, and personalized
-                recommendations delivered through web dashboard and Discord DM.
+                {t('pages.landing.hero.description')}
               </p>
             </div>
 
@@ -69,19 +68,19 @@ export default function ModernLandingPage() {
             <div className="flex flex-wrap gap-3">
               <Badge variant="secondary" className="flex items-center gap-2">
                 <FileText className="w-3 h-3" />
-                Multi-source RSS
+                {t('pages.landing.features.multi-source')}
               </Badge>
               <Badge variant="secondary" className="flex items-center gap-2">
                 <Brain className="w-3 h-3" />
-                AI-Powered Analysis
+                {t('pages.landing.features.ai-powered')}
               </Badge>
               <Badge variant="secondary" className="flex items-center gap-2">
                 <MessageSquare className="w-3 h-3" />
-                Discord Integration
+                {t('pages.landing.features.discord')}
               </Badge>
               <Badge variant="secondary" className="flex items-center gap-2">
                 <Zap className="w-3 h-3" />
-                Smart Reminders
+                {t('pages.landing.features.smart-reminders')}
               </Badge>
             </div>
 
@@ -89,19 +88,21 @@ export default function ModernLandingPage() {
             <div className="flex gap-4">
               <Button size="lg" asChild>
                 <Link href="/app">
-                  Start Free <ArrowRight className="w-4 h-4 ml-2" />
+                  {t('pages.landing.hero.cta-primary')} <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
-              <Button variant="outline" size="lg">
-                View Demo
+              <Button variant="outline" size="lg" onClick={scrollToDemo}>
+                {t('pages.landing.hero.cta-secondary')}
               </Button>
             </div>
           </div>
 
           {/* Right: Live Demo */}
-          <div className="space-y-6">
+          <div className="space-y-6" id="demo-section">
             <div className="text-center">
-              <h3 className="text-lg font-semibold mb-4">Live Article Feed</h3>
+              <h3 className="text-lg font-semibold mb-4">
+                {t('pages.landing.features.demo-title')}
+              </h3>
             </div>
             <div className="space-y-4">
               {mockArticles.map((article) => (
@@ -140,10 +141,11 @@ export default function ModernLandingPage() {
       <section className="bg-muted/30 py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Intelligent News Curation</h2>
+            <h2 className="text-3xl lg:text-4xl font-bold mb-4">
+              {t('pages.landing.section.title')}
+            </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Advanced AI algorithms analyze and curate tech news from multiple sources, delivering
-              personalized content that matters to you.
+              {t('pages.landing.section.description')}
             </p>
           </div>
 
@@ -153,10 +155,11 @@ export default function ModernLandingPage() {
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Zap className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Smart Reminders</h3>
+              <h3 className="text-xl font-semibold mb-3">
+                {t('pages.landing.section.smart-reminders-title')}
+              </h3>
               <p className="text-muted-foreground">
-                AI-powered recommendations based on your reading history and preferences, delivered
-                via Discord DM at optimal times.
+                {t('pages.landing.section.smart-reminders-desc')}
               </p>
             </Card>
 
@@ -165,11 +168,10 @@ export default function ModernLandingPage() {
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <Brain className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">AI Analysis</h3>
-              <p className="text-muted-foreground">
-                Every article gets a technical depth score and AI-generated summary, helping you
-                quickly identify valuable content.
-              </p>
+              <h3 className="text-xl font-semibold mb-3">
+                {t('pages.landing.section.ai-analysis-title')}
+              </h3>
+              <p className="text-muted-foreground">{t('pages.landing.section.ai-analysis-desc')}</p>
             </Card>
 
             {/* Multi-Platform */}
@@ -177,10 +179,11 @@ export default function ModernLandingPage() {
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <MessageSquare className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold mb-3">Multi-Platform</h3>
+              <h3 className="text-xl font-semibold mb-3">
+                {t('pages.landing.section.multi-platform-title')}
+              </h3>
               <p className="text-muted-foreground">
-                Access your curated news through web dashboard, Discord bot commands, or REST API
-                integration.
+                {t('pages.landing.section.multi-platform-desc')}
               </p>
             </Card>
           </div>
@@ -191,17 +194,12 @@ export default function ModernLandingPage() {
       <section className="py-20">
         <div className="container mx-auto px-4 text-center">
           <div className="max-w-2xl mx-auto space-y-8">
-            <h2 className="text-3xl lg:text-4xl font-bold">
-              Ready to Transform Your Tech News Experience?
-            </h2>
-            <p className="text-xl text-muted-foreground">
-              Join hundreds of developers and tech enthusiasts who rely on AI-powered curation to
-              stay ahead of the curve.
-            </p>
+            <h2 className="text-3xl lg:text-4xl font-bold">{t('pages.landing.cta.title')}</h2>
+            <p className="text-xl text-muted-foreground">{t('pages.landing.cta.description')}</p>
             <div className="flex gap-4 justify-center">
               <Button size="lg" asChild>
                 <Link href="/app">
-                  Get Started Free <ArrowRight className="w-4 h-4 ml-2" />
+                  {t('pages.landing.cta.button')} <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
             </div>
@@ -217,9 +215,7 @@ export default function ModernLandingPage() {
               <Logo size={24} />
               <span className="font-semibold">Tech News Agent</span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              © 2026 Tech News Agent. Intelligent news curation for developers.
-            </p>
+            <p className="text-sm text-muted-foreground">{t('pages.landing.footer.copyright')}</p>
           </div>
         </div>
       </footer>

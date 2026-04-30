@@ -29,6 +29,41 @@
     "reminders": "智能提醒"
   },
   "pages": {
+    "landing": {
+      "hero": {
+        "badge": "AI 驅動的新聞策展",
+        "title": "你的個人",
+        "title-highlight": "科技新聞中心",
+        "description": "智能文章發現、AI 摘要和個性化推薦，透過網頁儀表板和 Discord DM 提供服務。",
+        "cta-primary": "免費開始",
+        "cta-secondary": "查看演示"
+      },
+      "features": {
+        "multi-source": "多來源 RSS",
+        "ai-powered": "AI 驅動分析",
+        "discord": "Discord 整合",
+        "smart-reminders": "智能提醒",
+        "demo-title": "即時文章動態"
+      },
+      "section": {
+        "title": "智能新聞策展",
+        "description": "先進的 AI 演算法分析並策展來自多個來源的科技新聞，提供對你重要的個性化內容。",
+        "smart-reminders-title": "智能提醒",
+        "smart-reminders-desc": "基於你的閱讀歷史和偏好的 AI 推薦，在最佳時機透過 Discord DM 發送。",
+        "ai-analysis-title": "AI 分析",
+        "ai-analysis-desc": "每篇文章都會獲得技術深度評分和 AI 生成的摘要，幫助你快速識別有價值的內容。",
+        "multi-platform-title": "多平台",
+        "multi-platform-desc": "透過網頁儀表板、Discord 機器人指令或 REST API 整合存取你的策展新聞。"
+      },
+      "cta": {
+        "title": "準備好轉變你的科技新聞體驗了嗎？",
+        "description": "加入數百位依賴 AI 驅動策展保持領先的開發者和科技愛好者。",
+        "button": "免費開始使用"
+      },
+      "footer": {
+        "copyright": "© 2026 Tech News Agent. 為開發者提供智能新聞策展。"
+      }
+    },
     "reminders": {
       "title": "智能提醒",
       "description": "當你儲存或評分文章時，系統會找出相似文章並透過 Discord DM 通知你。",

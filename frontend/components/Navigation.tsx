@@ -25,7 +25,7 @@ import { useI18n } from '@/contexts/I18nContext';
 import type { TranslationKey } from '@/types/i18n';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { ThemeCycleToggle } from '@/components/ThemeCycleToggle';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { Logo } from '@/components/Logo';
 import { UserMenu } from '@/components/UserMenu';
@@ -153,7 +153,7 @@ export function Navigation() {
 
           <div className="flex items-center gap-2 flex-shrink-0">
             <LanguageSwitcher variant="icon" />
-            <ThemeToggle variant="dropdown" />
+            <ThemeCycleToggle />
 
             {/* User menu for desktop - shows avatar with dropdown (Req 4.1, 4.2, 4.3, 4.4) */}
             {user && <UserMenu />}
@@ -293,7 +293,7 @@ export function Navigation() {
                 </div>
                 <div className="flex items-center justify-between px-2">
                   <span className="text-sm font-medium">{t('nav.theme')}</span>
-                  <ThemeToggle variant="dropdown" />
+                  <ThemeCycleToggle />
                 </div>
               </div>
               {user && (

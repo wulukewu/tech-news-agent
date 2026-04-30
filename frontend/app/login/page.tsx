@@ -7,8 +7,7 @@ import { AuthGuard } from '@/components/AuthGuard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Logo } from '@/components/Logo';
-import { ArrowLeft } from 'lucide-react';
-import Link from 'next/link';
+import { PublicNavbar } from '@/components/PublicNavbar';
 import { useI18n } from '@/contexts/I18nContext';
 
 function DiscordIcon({ className }: { className?: string }) {
@@ -78,20 +77,7 @@ function LoginPageInner() {
       <div className="absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] dark:bg-grid-slate-700/25 dark:[mask-image:linear-gradient(0deg,rgba(255,255,255,0.1),rgba(255,255,255,0.5))]" />
 
       {/* Header */}
-      <header className="relative z-10 border-b bg-background/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Logo size={32} />
-            <span className="font-bold text-xl">Tech News Agent</span>
-          </div>
-          <Link href="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
-            </Button>
-          </Link>
-        </div>
-      </header>
+      <PublicNavbar showBackButton={true} backHref="/" backText={t('pages.login.back-to-home')} />
 
       {/* Main content */}
       <main className="relative z-10 flex-1 flex items-center justify-center p-4 min-h-[calc(100vh-80px)]">

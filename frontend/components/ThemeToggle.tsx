@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 interface ThemeToggleProps {
-  variant?: 'button' | 'dropdown';
+  variant?: 'button' | 'dropdown' | 'icon';
   size?: 'sm' | 'default' | 'lg';
   showLabel?: boolean;
 }
@@ -103,6 +103,49 @@ export function ThemeToggle({
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
+    );
+  }
+
+  if (variant === 'icon') {
+    const cycleTheme = () => {
+      const themes = ['light', 'dark', 'system'];
+      const currentIndex = themes.indexOf(theme || 'light');
+      const nextIndex = (currentIndex + 1) % themes.length;
+      setTheme(themes[nextIndex]);
+    };
+
+    const getIconForTheme = () => {
+      return (
+        <>
+          <Sun
+            className={`h-5 w-5 transition-all duration-300 ${
+              theme === 'light' ? 'rotate-0 scale-100' : 'rotate-90 scale-0'
+            }`}
+          />
+          <Moon
+            className={`absolute h-5 w-5 transition-all duration-300 ${
+              theme === 'dark' ? 'rotate-0 scale-100' : '-rotate-90 scale-0'
+            }`}
+          />
+          <Monitor
+            className={`absolute h-5 w-5 transition-all duration-300 ${
+              theme === 'system' ? 'scale-100' : 'scale-0'
+            }`}
+          />
+        </>
+      );
+    };
+
+    return (
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={cycleTheme}
+        aria-label={t('theme.toggle')}
+        className="transition-all duration-200 hover:scale-105"
+      >
+        {getIconForTheme()}
+      </Button>
     );
   }
 
