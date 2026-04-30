@@ -66,7 +66,7 @@ export function SchedulerStatusWidget({
   const StatusIcon = statusBadge.icon;
 
   return (
-    <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-lg transition-all">
+    <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-md transition-all">
       <CardHeader>
         <div className="flex items-center justify-between animate-in slide-in-from-left-4 duration-500 delay-200">
           <div className="space-y-1">
@@ -93,10 +93,10 @@ export function SchedulerStatusWidget({
           {/* Last Execution */}
           <div className="space-y-1 animate-in slide-in-from-left-4 duration-300 delay-600">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <CheckCircle className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
+              <CheckCircle className="h-4 w-4 transition-transform duration-300 hover:scale-[1.05]" />
               <span>{t('scheduler.last-execution')}</span>
             </div>
-            <div className="text-sm font-medium transition-all duration-200 hover:text-primary">
+            <div className="text-sm font-medium transition-all duration-300 hover:text-primary">
               {status.lastExecutionTime ? (
                 <>
                   {formatRelativeTime(status.lastExecutionTime)}
@@ -115,10 +115,10 @@ export function SchedulerStatusWidget({
           {/* Next Execution */}
           <div className="space-y-1 animate-in slide-in-from-right-4 duration-300 delay-700">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
+              <Clock className="h-4 w-4 transition-transform duration-300 hover:scale-[1.05]" />
               <span>{t('scheduler.next-scheduled')}</span>
             </div>
-            <div className="text-sm font-medium transition-all duration-200 hover:text-primary">
+            <div className="text-sm font-medium transition-all duration-300 hover:text-primary">
               {status.nextExecutionTime ? (
                 formatRelativeTime(status.nextExecutionTime)
               ) : (
@@ -137,19 +137,19 @@ export function SchedulerStatusWidget({
             <div className="grid grid-cols-3 gap-4 text-sm">
               <div className="animate-in slide-in-from-left-2 duration-300 delay-1000">
                 <div className="text-muted-foreground">{t('scheduler.total-operations')}</div>
-                <div className="font-medium transition-all duration-200 hover:scale-110">
+                <div className="font-medium transition-all duration-300 hover:scale-[1.05]">
                   {status.totalOperations}
                 </div>
               </div>
               <div className="animate-in slide-in-from-bottom-2 duration-300 delay-1100">
                 <div className="text-muted-foreground">{t('scheduler.success')}</div>
-                <div className="font-medium text-green-600 dark:text-green-400 transition-all duration-200 hover:scale-110">
+                <div className="font-medium text-green-600 dark:text-green-400 transition-all duration-300 hover:scale-[1.05]">
                   {status.totalOperations - status.failedOperations}
                 </div>
               </div>
               <div className="animate-in slide-in-from-right-2 duration-300 delay-1200">
                 <div className="text-muted-foreground">{t('scheduler.failed')}</div>
-                <div className="font-medium text-red-600 dark:text-red-400 transition-all duration-200 hover:scale-110">
+                <div className="font-medium text-red-600 dark:text-red-400 transition-all duration-300 hover:scale-[1.05]">
                   {status.failedOperations}
                 </div>
               </div>
@@ -184,7 +184,7 @@ export function SchedulerStatusWidget({
           <Button
             onClick={onTrigger}
             disabled={status.isRunning || isTriggering}
-            className="w-full gap-2 animate-in slide-in-from-bottom-4 duration-500 delay-1300 transition-all hover:scale-105"
+            className="w-full gap-2 animate-in slide-in-from-bottom-4 duration-500 delay-1300 transition-all hover:scale-[1.02]"
             variant="outline"
           >
             {isTriggering ? (
@@ -194,7 +194,7 @@ export function SchedulerStatusWidget({
               </>
             ) : (
               <>
-                <PlayCircle className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
+                <PlayCircle className="h-4 w-4 transition-transform duration-300 hover:scale-[1.05]" />
                 {t('scheduler.manual-trigger')}
               </>
             )}

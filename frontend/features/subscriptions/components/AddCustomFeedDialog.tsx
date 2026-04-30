@@ -140,8 +140,11 @@ export function AddCustomFeedDialog({ onAddFeed, onPreviewFeed }: AddCustomFeedD
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2 transition-all duration-200 hover:scale-105">
-          <Plus className="w-4 h-4 transition-transform duration-200 hover:scale-110" />
+        <Button
+          variant="outline"
+          className="gap-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-sm"
+        >
+          <Plus className="w-4 h-4 transition-transform duration-300 hover:scale-[1.05]" />
           {t('buttons.add')} {t('forms.labels.feed-name')}
         </Button>
       </DialogTrigger>
@@ -173,7 +176,7 @@ export function AddCustomFeedDialog({ onAddFeed, onPreviewFeed }: AddCustomFeedD
                 variant="secondary"
                 onClick={handlePreview}
                 disabled={!url.trim() || loading || previewing}
-                className="transition-all duration-200 hover:scale-105"
+                className="transition-all duration-300 hover:scale-[1.02]"
               >
                 {previewing ? (
                   <>
@@ -205,7 +208,7 @@ export function AddCustomFeedDialog({ onAddFeed, onPreviewFeed }: AddCustomFeedD
                     href={preview.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-primary hover:underline animate-in zoom-in-50 duration-300 delay-1100 transition-transform hover:scale-110"
+                    className="text-primary hover:underline animate-in zoom-in-50 duration-300 delay-1100 transition-transform hover:scale-[1.05]"
                   >
                     <ExternalLink className="w-4 h-4" />
                   </a>
@@ -216,7 +219,7 @@ export function AddCustomFeedDialog({ onAddFeed, onPreviewFeed }: AddCustomFeedD
                   {preview.category && (
                     <Badge
                       variant="secondary"
-                      className="animate-in slide-in-from-left-2 duration-300 delay-1200 transition-all hover:scale-105"
+                      className="animate-in slide-in-from-left-2 duration-300 delay-1200 transition-all hover:scale-[1.02]"
                     >
                       {t('forms.feed-dialog.category-label')}: {preview.category}
                     </Badge>
@@ -224,7 +227,7 @@ export function AddCustomFeedDialog({ onAddFeed, onPreviewFeed }: AddCustomFeedD
                   {preview.articleCount !== undefined && (
                     <Badge
                       variant="outline"
-                      className="animate-in slide-in-from-bottom-2 duration-300 delay-1300 transition-all hover:scale-105"
+                      className="animate-in slide-in-from-bottom-2 duration-300 delay-1300 transition-all hover:scale-[1.02]"
                     >
                       {t('forms.feed-dialog.article-count')}: {preview.articleCount}
                     </Badge>
@@ -232,7 +235,7 @@ export function AddCustomFeedDialog({ onAddFeed, onPreviewFeed }: AddCustomFeedD
                   {preview.lastUpdated && (
                     <Badge
                       variant="outline"
-                      className="animate-in slide-in-from-right-2 duration-300 delay-1400 transition-all hover:scale-105"
+                      className="animate-in slide-in-from-right-2 duration-300 delay-1400 transition-all hover:scale-[1.02]"
                     >
                       {t('forms.feed-dialog.last-updated')}: {preview.lastUpdated}
                     </Badge>
@@ -276,14 +279,14 @@ export function AddCustomFeedDialog({ onAddFeed, onPreviewFeed }: AddCustomFeedD
             variant="outline"
             onClick={handleClose}
             disabled={loading}
-            className="transition-all duration-200 hover:scale-105"
+            className="transition-all duration-300 hover:scale-[1.02]"
           >
             {t('buttons.cancel')}
           </Button>
           <Button
             onClick={handleAdd}
             disabled={!url.trim() || loading || previewing}
-            className="transition-all duration-200 hover:scale-105"
+            className="transition-all duration-300 hover:scale-[1.02]"
           >
             {loading ? (
               <>

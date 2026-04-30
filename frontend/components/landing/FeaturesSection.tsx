@@ -66,12 +66,12 @@ export function FeaturesSection() {
               return (
                 <Card
                   key={index}
-                  className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-2 hover:scale-105 cursor-pointer border-2 hover:border-primary/50 animate-in fade-in slide-in-from-bottom-4 duration-1000"
+                  className="group hover:shadow-md transition-all duration-300 hover:-translate-y-2 hover:scale-[1.02] cursor-pointer border-2 hover:border-primary/50 animate-in fade-in slide-in-from-bottom-4 duration-1000"
                   style={{ animationDelay: `${400 + index * 150}ms` }}
                 >
                   <CardHeader>
-                    <div className="mb-4 inline-flex p-3 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
-                      <Icon className="h-6 w-6 transition-transform duration-300 group-hover:scale-110" />
+                    <div className="mb-4 inline-flex p-3 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 group-hover:scale-[1.05] group-hover:rotate-3">
+                      <Icon className="h-6 w-6 transition-transform duration-300 group-hover:scale-[1.05]" />
                     </div>
                     <CardTitle className="text-xl transition-colors duration-300 group-hover:text-primary">
                       {feature.title}

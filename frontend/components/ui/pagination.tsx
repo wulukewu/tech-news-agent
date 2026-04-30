@@ -109,7 +109,7 @@ export function Pagination({
           onClick={() => handlePageChange(1)}
           disabled={disabled}
           aria-label={t('ui.pagination-first')}
-          className="h-9 w-9 transition-all duration-200 hover:scale-105 animate-in slide-in-from-left-2 duration-300"
+          className="h-9 w-9 transition-all duration-300 hover:scale-[1.02] animate-in slide-in-from-left-2 duration-300"
         >
           <span className="text-xs">{t('ui.pagination-first-short')}</span>
         </Button>
@@ -123,9 +123,9 @@ export function Pagination({
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage <= 1 || disabled}
           aria-label={t('ui.pagination-previous')}
-          className="h-9 w-9 transition-all duration-200 hover:scale-105 animate-in slide-in-from-left-2 duration-300 delay-100"
+          className="h-9 w-9 transition-all duration-300 hover:scale-[1.02] animate-in slide-in-from-left-2 duration-300 delay-100"
         >
-          <ChevronLeft className="h-4 w-4 transition-transform duration-200 hover:-translate-x-0.5" />
+          <ChevronLeft className="h-4 w-4 transition-transform duration-300 hover:-translate-x-0.5" />
         </Button>
       )}
 
@@ -159,7 +159,7 @@ export function Pagination({
               aria-label={t('ui.pagination-page', { page })}
               aria-current={isCurrentPage ? 'page' : undefined}
               className={cn(
-                'h-9 w-9 transition-all duration-200 hover:scale-105 animate-in zoom-in-50 duration-300',
+                'h-9 w-9 transition-all duration-300 hover:scale-[1.02] animate-in zoom-in-50 duration-300',
                 isCurrentPage && 'pointer-events-none scale-110 shadow-md'
               )}
               style={{ animationDelay: `${200 + index * 50}ms` }}
@@ -178,9 +178,9 @@ export function Pagination({
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage >= totalPages || disabled}
           aria-label={t('ui.pagination-next')}
-          className="h-9 w-9 transition-all duration-200 hover:scale-105 animate-in slide-in-from-right-2 duration-300 delay-100"
+          className="h-9 w-9 transition-all duration-300 hover:scale-[1.02] animate-in slide-in-from-right-2 duration-300 delay-100"
         >
-          <ChevronRight className="h-4 w-4 transition-transform duration-200 hover:translate-x-0.5" />
+          <ChevronRight className="h-4 w-4 transition-transform duration-300 hover:translate-x-0.5" />
         </Button>
       )}
 
@@ -192,7 +192,7 @@ export function Pagination({
           onClick={() => handlePageChange(totalPages)}
           disabled={disabled}
           aria-label={t('ui.pagination-last')}
-          className="h-9 w-9 transition-all duration-200 hover:scale-105 animate-in slide-in-from-right-2 duration-300"
+          className="h-9 w-9 transition-all duration-300 hover:scale-[1.02] animate-in slide-in-from-right-2 duration-300"
         >
           <span className="text-xs">{t('ui.pagination-last-short')}</span>
         </Button>

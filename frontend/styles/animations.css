@@ -1,0 +1,105 @@
+/*
+ * Refined Animation System - More Subtle and Professional
+ *
+ * This file contains optimized animation classes that provide
+ * smooth, subtle interactions without being overwhelming.
+ */
+
+/* Button Hover Effects - More Subtle */
+.btn-hover-subtle {
+  @apply transition-all duration-300 hover:scale-[1.02] hover:shadow-sm;
+}
+
+.btn-hover-gentle {
+  @apply transition-all duration-300 hover:scale-[1.01] hover:shadow-sm;
+}
+
+/* Icon Hover Effects - Reduced Scale */
+.icon-hover-subtle {
+  @apply transition-transform duration-300 hover:scale-[1.05];
+}
+
+.icon-hover-gentle {
+  @apply transition-transform duration-300 hover:scale-[1.03];
+}
+
+/* Card Hover Effects - Very Subtle */
+.card-hover-subtle {
+  @apply transition-all duration-300 hover:scale-[1.01] hover:shadow-md;
+}
+
+/* Input Focus Effects - Minimal */
+.input-focus-subtle {
+  @apply transition-all duration-300 focus:scale-[1.01] focus:shadow-sm;
+}
+
+/* Badge Hover Effects - Gentle */
+.badge-hover-subtle {
+  @apply transition-all duration-300 hover:scale-[1.02];
+}
+
+/* Rotation Effects - Slower and Smoother */
+.rotate-gentle {
+  @apply transition-transform duration-500 hover:rotate-45;
+}
+
+.rotate-subtle {
+  @apply transition-transform duration-400 hover:rotate-90;
+}
+
+/* Pulse Effects - Less Intense */
+.pulse-subtle {
+  animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse-subtle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+/* Slide-in Effects - Smoother Timing */
+.slide-in-gentle {
+  animation: slide-in-gentle 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes slide-in-gentle {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Stagger Delays - More Gradual */
+.stagger-1 {
+  animation-delay: 50ms;
+}
+.stagger-2 {
+  animation-delay: 100ms;
+}
+.stagger-3 {
+  animation-delay: 150ms;
+}
+.stagger-4 {
+  animation-delay: 200ms;
+}
+.stagger-5 {
+  animation-delay: 250ms;
+}
+
+/* Hover State Colors - Subtle Changes */
+.text-hover-subtle {
+  @apply transition-colors duration-300 hover:text-foreground/80;
+}
+
+.bg-hover-subtle {
+  @apply transition-colors duration-300 hover:bg-muted/50;
+}

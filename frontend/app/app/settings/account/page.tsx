@@ -9,10 +9,10 @@ export default function AccountPage() {
 
   return (
     <div className="space-y-6">
-      <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-lg transition-all">
+      <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-md transition-all">
         <CardHeader>
           <div className="flex items-center gap-3 animate-in slide-in-from-left-4 duration-500 delay-200">
-            <div className="p-2 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-300 hover:scale-110 transition-transform">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-300 hover:scale-[1.05] transition-transform">
               <User className="h-5 w-5" />
             </div>
             <div>

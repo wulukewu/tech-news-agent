@@ -93,14 +93,14 @@ export function ManualFetchDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
-            className="transition-all duration-200 hover:scale-105"
+            className="transition-all duration-300 hover:scale-[1.02]"
           >
             {t('buttons.cancel')}
           </Button>
           <Button
             onClick={handleConfirm}
             disabled={isLoading}
-            className="transition-all duration-200 hover:scale-105"
+            className="transition-all duration-300 hover:scale-[1.02]"
           >
             {isLoading
               ? t('dialogs.manual-fetch.confirming-button')

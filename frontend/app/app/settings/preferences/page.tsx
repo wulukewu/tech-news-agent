@@ -80,9 +80,9 @@ function ConversationCard({
   };
 
   return (
-    <div className="rounded-xl border bg-card p-5 shadow-sm space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-lg transition-all group">
+    <div className="rounded-xl border bg-card p-5 shadow-sm space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-md transition-all group">
       <div className="flex items-start gap-3">
-        <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-200 group-hover:scale-110 transition-transform">
+        <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-200 group-hover:scale-[1.05] transition-transform">
           <Brain className="h-5 w-5 animate-pulse" aria-hidden="true" />
         </div>
         <p className="text-sm font-medium leading-relaxed animate-in slide-in-from-right-2 duration-500 delay-100">
@@ -96,7 +96,7 @@ function ConversationCard({
             <button
               key={opt}
               onClick={() => setSelectedOption(opt === selectedOption ? null : opt)}
-              className={`px-3 py-1.5 rounded-full text-sm border transition-all duration-200 cursor-pointer hover:scale-105 animate-in zoom-in-50 duration-300 ${
+              className={`px-3 py-1.5 rounded-full text-sm border transition-all duration-200 cursor-pointer hover:scale-[1.02] animate-in zoom-in-50 duration-300 ${
                 selectedOption === opt
                   ? 'bg-primary text-primary-foreground border-primary scale-105 shadow-md'
                   : 'bg-background hover:bg-muted border-border'
@@ -122,10 +122,10 @@ function ConversationCard({
         size="sm"
         onClick={handleSubmit}
         disabled={submitting || (!selectedOption && !response.trim())}
-        className="cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-md animate-in slide-in-from-left-2 duration-500 delay-500"
+        className="cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-md animate-in slide-in-from-left-2 duration-500 delay-500"
       >
         <Send
-          className="h-3.5 w-3.5 mr-1.5 transition-transform duration-200 hover:translate-x-0.5"
+          className="h-3.5 w-3.5 mr-1.5 transition-transform duration-300 hover:translate-x-0.5"
           aria-hidden="true"
         />
         {submitting ? t('preferences.submitting') : t('preferences.submit')}
@@ -222,7 +222,7 @@ export default function PreferencesPage() {
             size="sm"
             onClick={handleTrigger}
             disabled={triggering || settings?.learning_enabled === false}
-            className="cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-md animate-in slide-in-from-right-4 duration-500 delay-200"
+            className="cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-md animate-in slide-in-from-right-4 duration-500 delay-200"
             aria-label={t('preferences.analyse-now')}
           >
             <RefreshCw
@@ -248,7 +248,7 @@ export default function PreferencesPage() {
         <div className="space-y-6">
           {/* Settings card */}
           {settings && (
-            <div className="rounded-xl border bg-card p-5 shadow-sm animate-in fade-in slide-in-from-left-4 duration-500 delay-300 hover:shadow-lg transition-all">
+            <div className="rounded-xl border bg-card p-5 shadow-sm animate-in fade-in slide-in-from-left-4 duration-500 delay-300 hover:shadow-md transition-all">
               <h2 className="text-base font-semibold mb-4">{t('preferences.settings-title')}</h2>
               <div className="flex items-center justify-between">
                 <div className="animate-in slide-in-from-left-2 duration-500 delay-400">
@@ -262,7 +262,7 @@ export default function PreferencesPage() {
                 </div>
                 <button
                   onClick={handleToggleLearning}
-                  className="cursor-pointer transition-all duration-200 hover:scale-110 animate-in zoom-in-50 duration-500 delay-500"
+                  className="cursor-pointer transition-all duration-300 hover:scale-[1.05] animate-in zoom-in-50 duration-500 delay-500"
                   aria-label={
                     settings.learning_enabled
                       ? t('preferences.proactive-learning')
@@ -315,7 +315,7 @@ export default function PreferencesPage() {
             <h2 id="summary-heading" className="text-base font-semibold mb-3">
               偏好摘要
             </h2>
-            <div className="rounded-xl border bg-card p-5 shadow-sm space-y-3 hover:shadow-lg transition-all">
+            <div className="rounded-xl border bg-card p-5 shadow-sm space-y-3 hover:shadow-md transition-all">
               <p className="text-xs text-muted-foreground animate-in slide-in-from-top-2 duration-500 delay-600">
                 直接在 Discord DM 裡告訴 bot
                 你的偏好，每天會自動更新這份摘要。你也可以直接在這裡編輯。
@@ -342,9 +342,9 @@ export default function PreferencesPage() {
                   }
                 }}
                 disabled={savingSummary}
-                className="cursor-pointer transition-all duration-200 hover:scale-105 hover:shadow-md animate-in slide-in-from-left-2 duration-500 delay-800"
+                className="cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-md animate-in slide-in-from-left-2 duration-500 delay-800"
               >
-                <Save className="h-3.5 w-3.5 mr-1.5 transition-transform duration-200 hover:rotate-12" />
+                <Save className="h-3.5 w-3.5 mr-1.5 transition-transform duration-300 hover:rotate-12" />
                 {savingSummary ? '儲存中...' : '儲存'}
               </Button>
             </div>
@@ -356,7 +356,7 @@ export default function PreferencesPage() {
             className="animate-in fade-in slide-in-from-left-4 duration-500 delay-600"
           >
             <button
-              className="flex items-center gap-2 text-base font-semibold mb-3 cursor-pointer hover:text-primary transition-all duration-200 hover:scale-105"
+              className="flex items-center gap-2 text-base font-semibold mb-3 cursor-pointer hover:text-primary transition-all duration-300 hover:scale-[1.02]"
               onClick={() => setShowWeights((v) => !v)}
               aria-expanded={showWeights}
               id="weights-heading"
@@ -372,7 +372,7 @@ export default function PreferencesPage() {
             </button>
 
             {showWeights && (
-              <div className="rounded-xl border bg-card p-5 shadow-sm space-y-3 hover:shadow-lg transition-all animate-in slide-in-from-bottom-4 duration-500">
+              <div className="rounded-xl border bg-card p-5 shadow-sm space-y-3 hover:shadow-md transition-all animate-in slide-in-from-bottom-4 duration-500">
                 {hasWeights ? (
                   Object.entries(weights)
                     .sort(([, a], [, b]) => b - a)

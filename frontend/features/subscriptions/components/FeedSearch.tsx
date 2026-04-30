@@ -57,7 +57,7 @@ export function FeedSearch({ feeds, onFilteredFeedsChange, className = '' }: Fee
 
   return (
     <div className={`relative ${className} animate-in fade-in slide-in-from-top-4 duration-500`}>
-      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none transition-transform duration-200 hover:scale-110" />
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none transition-transform duration-300 hover:scale-[1.05]" />
       <Input
         type="text"
         placeholder={t('forms.placeholders.search-feed')}
@@ -70,9 +70,9 @@ export function FeedSearch({ feeds, onFilteredFeedsChange, className = '' }: Fee
           variant="ghost"
           size="sm"
           onClick={handleClear}
-          className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 animate-in zoom-in-50 duration-300 transition-all hover:scale-110 hover:bg-destructive/10 hover:text-destructive"
+          className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 animate-in zoom-in-50 duration-300 transition-all hover:scale-[1.05] hover:bg-destructive/10 hover:text-destructive"
         >
-          <X className="w-4 h-4 transition-transform duration-200 hover:rotate-90" />
+          <X className="w-4 h-4 transition-transform duration-300 hover:rotate-90" />
         </Button>
       )}
       {searchQuery && (

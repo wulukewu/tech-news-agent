@@ -32,7 +32,7 @@ export function HeroSection() {
           <div className="flex justify-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
             <div className="relative group">
               <div className="absolute inset-0 blur-3xl bg-primary/20 rounded-full animate-pulse group-hover:bg-primary/30 transition-colors duration-500" />
-              <div className="relative transform transition-transform duration-300 hover:scale-110">
+              <div className="relative transform transition-transform duration-300 hover:scale-[1.05]">
                 <Logo size={96} />
               </div>
             </div>
@@ -59,23 +59,23 @@ export function HeroSection() {
             <Link href="/login">
               <Button
                 size="lg"
-                className="text-base px-8 py-6 h-auto group transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                className="text-base px-8 py-6 h-auto group transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
               >
                 Get Started
-                <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-110" />
+                <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-[1.05]" />
               </Button>
             </Link>
             <a href="#features">
               <Button
                 size="lg"
                 variant="outline"
-                className="text-base px-8 py-6 h-auto group transition-all duration-300 hover:scale-105 hover:shadow-md"
+                className="text-base px-8 py-6 h-auto group transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
                 onClick={(e) => {
                   e.preventDefault();
                   document.querySelector('#features')?.scrollIntoView({ behavior: 'smooth' });
                 }}
               >
-                <Sparkles className="mr-2 h-5 w-5 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" />
+                <Sparkles className="mr-2 h-5 w-5 transition-transform duration-300 group-hover:rotate-12 group-hover:scale-[1.05]" />
                 Learn More
               </Button>
             </a>

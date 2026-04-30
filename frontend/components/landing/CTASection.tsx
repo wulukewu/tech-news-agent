@@ -29,7 +29,7 @@ export function CTASection() {
 
             <div className="relative text-center space-y-6">
               {/* Icon */}
-              <div className="inline-flex p-3 rounded-full bg-primary/10 text-primary mb-4 animate-in zoom-in-50 duration-500 delay-300 group-hover:scale-110 group-hover:rotate-12 transition-transform duration-300">
+              <div className="inline-flex p-3 rounded-full bg-primary/10 text-primary mb-4 animate-in zoom-in-50 duration-500 delay-300 group-hover:scale-[1.05] group-hover:rotate-12 transition-transform duration-300">
                 <Sparkles className="h-8 w-8 animate-pulse" />
               </div>
 
@@ -49,7 +49,7 @@ export function CTASection() {
                 <Link href="/login">
                   <Button
                     size="lg"
-                    className="text-lg px-10 py-7 h-auto group shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 animate-pulse hover:animate-none"
+                    className="text-lg px-10 py-7 h-auto group shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.05] animate-pulse hover:animate-none"
                   >
                     Login with Discord
                     <ArrowRight className="ml-2 h-5 w-5 transition-transform duration-300 group-hover:translate-x-2 group-hover:scale-125" />

@@ -53,7 +53,7 @@ export function CategoryFilter({
           variant="ghost"
           size="sm"
           onClick={onSelectAll}
-          className="h-7 text-xs transition-all duration-200 hover:scale-105 hover:shadow-sm"
+          className="h-7 text-xs transition-all duration-300 hover:scale-[1.02] hover:shadow-sm"
           disabled={selectedCategories.length === categories.length}
         >
           {t('buttons.select-all')}
@@ -62,7 +62,7 @@ export function CategoryFilter({
           variant="ghost"
           size="sm"
           onClick={onClearAll}
-          className="h-7 text-xs transition-all duration-200 hover:scale-105 hover:shadow-sm"
+          className="h-7 text-xs transition-all duration-300 hover:scale-[1.02] hover:shadow-sm"
           disabled={selectedCategories.length === 0}
         >
           {t('buttons.clear-all')}
@@ -93,7 +93,7 @@ export function CategoryFilter({
                   'snap-start',
                   'h-7 px-3 py-1',
                   'whitespace-nowrap flex-shrink-0',
-                  'hover:shadow-sm hover:scale-105 active:scale-95',
+                  'hover:shadow-sm hover:scale-[1.02] active:scale-95',
                   'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
                   'animate-in zoom-in-50',
                   isSelected && 'shadow-sm scale-105'

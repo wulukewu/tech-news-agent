@@ -93,7 +93,7 @@ export default function NotificationSettingsPage() {
           {status && typeof status === 'object' && 'scheduled' in status && status.scheduled ? (
             <Badge
               variant="outline"
-              className="text-green-600 border-green-300 dark:border-green-700 gap-1.5 hover:scale-105 transition-transform duration-200"
+              className="text-green-600 border-green-300 dark:border-green-700 gap-1.5 hover:scale-[1.02] transition-transform duration-200"
             >
               <CheckCircle className="h-3.5 w-3.5 animate-pulse" />
               {t('settings.notifications.status-active')}
@@ -101,7 +101,7 @@ export default function NotificationSettingsPage() {
           ) : status !== undefined ? (
             <Badge
               variant="outline"
-              className="text-muted-foreground gap-1.5 hover:scale-105 transition-transform duration-200"
+              className="text-muted-foreground gap-1.5 hover:scale-[1.02] transition-transform duration-200"
             >
               <AlertCircle className="h-3.5 w-3.5" />
               {t('settings.notifications.status-inactive')}
@@ -128,10 +128,10 @@ export default function NotificationSettingsPage() {
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className="flex items-center gap-1.5 py-2 text-xs sm:text-sm transition-all duration-200 hover:scale-105 animate-in slide-in-from-top-2"
+              className="flex items-center gap-1.5 py-2 text-xs sm:text-sm transition-all duration-300 hover:scale-[1.02] animate-in slide-in-from-top-2"
               style={{ animationDelay: `${400 + index * 100}ms` }}
             >
-              <tab.icon className="h-3.5 w-3.5 flex-shrink-0 transition-transform duration-200 hover:scale-110" />
+              <tab.icon className="h-3.5 w-3.5 flex-shrink-0 transition-transform duration-300 hover:scale-[1.05]" />
               <span className="hidden sm:inline">{tab.label}</span>
               <span className="sm:hidden">{tab.label}</span>
             </TabsTrigger>

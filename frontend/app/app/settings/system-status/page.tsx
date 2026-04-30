@@ -76,7 +76,7 @@ export default function SystemStatusSettingsPage() {
           size="sm"
           onClick={() => refetch()}
           disabled={isLoading}
-          className="transition-all duration-200 hover:scale-105 hover:shadow-sm animate-in zoom-in-50 duration-500 delay-200"
+          className="transition-all duration-300 hover:scale-[1.02] hover:shadow-sm animate-in zoom-in-50 duration-500 delay-200"
         >
           <RefreshCw
             className={`h-4 w-4 mr-2 transition-transform duration-200 ${isLoading ? 'animate-spin' : 'hover:rotate-180'}`}
@@ -103,7 +103,7 @@ export default function SystemStatusSettingsPage() {
       ) : status ? (
         <div className="grid gap-4 md:grid-cols-2">
           {/* Scheduler Status */}
-          <Card className="animate-in fade-in-50 slide-in-from-left-4 duration-500 delay-300 hover:shadow-lg transition-all">
+          <Card className="animate-in fade-in-50 slide-in-from-left-4 duration-500 delay-300 hover:shadow-md transition-all">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 {!status.is_enabled ? (
@@ -194,7 +194,7 @@ export default function SystemStatusSettingsPage() {
                         size="sm"
                         onClick={() => triggerMutation.mutate()}
                         disabled={triggerMutation.isPending}
-                        className="transition-all duration-200 hover:scale-105"
+                        className="transition-all duration-300 hover:scale-[1.02]"
                       >
                         {triggerMutation.isPending
                           ? t('pages.system-status.triggering')
@@ -204,7 +204,7 @@ export default function SystemStatusSettingsPage() {
                         size="sm"
                         variant="outline"
                         onClick={() => setShowConfirm(false)}
-                        className="transition-all duration-200 hover:scale-105"
+                        className="transition-all duration-300 hover:scale-[1.02]"
                       >
                         {t('pages.system-status.cancel')}
                       </Button>
@@ -214,7 +214,7 @@ export default function SystemStatusSettingsPage() {
                   <Button
                     size="sm"
                     onClick={() => setShowConfirm(true)}
-                    className="transition-all duration-200 hover:scale-105 hover:shadow-md"
+                    className="transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
                   >
                     {t('pages.system-status.manual-trigger')}
                   </Button>
@@ -224,7 +224,7 @@ export default function SystemStatusSettingsPage() {
           </Card>
 
           {/* System Info */}
-          <Card className="animate-in fade-in-50 slide-in-from-right-4 duration-500 delay-400 hover:shadow-lg transition-all">
+          <Card className="animate-in fade-in-50 slide-in-from-right-4 duration-500 delay-400 hover:shadow-md transition-all">
             <CardHeader>
               <CardTitle>{t('pages.system-status.system-info')}</CardTitle>
               <CardDescription>{t('pages.system-status.system-info-desc')}</CardDescription>

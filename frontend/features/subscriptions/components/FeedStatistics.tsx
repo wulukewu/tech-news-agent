@@ -27,7 +27,7 @@ function StarRating({ rating }: { rating: number }) {
       {Array.from({ length: 5 }).map((_, i) => (
         <Star
           key={i}
-          className={`w-3 h-3 transition-all duration-200 hover:scale-110 ${
+          className={`w-3 h-3 transition-all duration-300 hover:scale-[1.05] ${
             i < Math.floor(rating)
               ? 'fill-yellow-400 text-yellow-400 animate-pulse'
               : i < rating
@@ -91,7 +91,7 @@ export function FeedStatistics({
                 style={{ animationDelay: `${index * 150 + 200}ms` }}
               >
                 <Icon
-                  className={`w-4 h-4 ${stat.color} transition-transform duration-200 hover:scale-110 animate-pulse`}
+                  className={`w-4 h-4 ${stat.color} transition-transform duration-300 hover:scale-[1.05] animate-pulse`}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-muted-foreground truncate transition-colors duration-200 hover:text-foreground">
@@ -106,7 +106,7 @@ export function FeedStatistics({
                     </div>
                   ) : (
                     <div
-                      className="text-lg font-semibold transition-all duration-200 hover:scale-110 hover:text-primary animate-in zoom-in-50 duration-300"
+                      className="text-lg font-semibold transition-all duration-300 hover:scale-[1.05] hover:text-primary animate-in zoom-in-50 duration-300"
                       style={{ animationDelay: `${index * 150 + 300}ms` }}
                     >
                       {stat.value}

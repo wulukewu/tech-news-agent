@@ -118,7 +118,7 @@ export function Navigation() {
           <div className="flex items-center gap-4 lg:gap-6 min-w-0 flex-1">
             <Link
               href="/"
-              className="hover:opacity-80 transition-all duration-200 hover:scale-105 flex-shrink-0"
+              className="hover:opacity-80 transition-all duration-300 hover:scale-[1.02] flex-shrink-0"
             >
               <Logo size={28} showText={true} textClassName="hidden sm:inline text-xl" />
             </Link>
@@ -134,7 +134,7 @@ export function Navigation() {
                     href={item.href}
                     className={cn(
                       'group flex items-center gap-2 px-3 lg:px-4 py-2.5 rounded-md transition-all duration-200 cursor-pointer relative',
-                      'hover:bg-accent hover:text-accent-foreground hover:shadow-sm hover:scale-105',
+                      'hover:bg-accent hover:text-accent-foreground hover:shadow-sm hover:scale-[1.02]',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                       'min-h-[44px] min-w-[44px]', // Touch-friendly targets (Req 9.2)
                       isActive
@@ -145,10 +145,10 @@ export function Navigation() {
                     title={item.translatedLabel}
                   >
                     <Icon
-                      className="h-5 w-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110"
+                      className="h-5 w-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-[1.05]"
                       aria-hidden="true"
                     />
-                    <span className="text-sm font-medium whitespace-nowrap hidden xl:inline transition-transform duration-200 group-hover:scale-105">
+                    <span className="text-sm font-medium whitespace-nowrap hidden xl:inline transition-transform duration-200 group-hover:scale-[1.02]">
                       {item.translatedLabel}
                     </span>
                     {isActive && (
@@ -171,7 +171,7 @@ export function Navigation() {
             <Button
               variant="ghost"
               size="sm"
-              className="md:hidden touch-target cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95"
+              className="md:hidden touch-target cursor-pointer transition-all duration-300 hover:scale-[1.05] active:scale-95"
               onClick={() => setIsDrawerOpen(!isDrawerOpen)}
               aria-label="Toggle navigation menu"
               aria-expanded={isDrawerOpen}
@@ -220,11 +220,11 @@ export function Navigation() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="touch-target cursor-pointer transition-all duration-200 hover:scale-110 active:scale-95"
+                  className="touch-target cursor-pointer transition-all duration-300 hover:scale-[1.05] active:scale-95"
                   onClick={closeDrawer}
                   aria-label="Close navigation menu"
                 >
-                  <X className="h-5 w-5 transition-transform duration-200 hover:rotate-90" />
+                  <X className="h-5 w-5 transition-transform duration-300 hover:rotate-90" />
                 </Button>
               </div>
             )}
@@ -261,7 +261,7 @@ export function Navigation() {
                         aria-current={isActive ? 'page' : undefined}
                       >
                         <Icon
-                          className="h-5 w-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-110"
+                          className="h-5 w-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-[1.05]"
                           aria-hidden="true"
                         />
                         <span className="text-sm font-medium">{item.translatedLabel}</span>

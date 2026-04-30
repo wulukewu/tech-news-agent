@@ -113,7 +113,7 @@ export function ArticleCard({
   if (layout === 'mobile') {
     return (
       <article>
-        <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1">
+        <Card className="group hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1">
           <CardContent className="p-0">
             {/* Vertical stack layout */}
             <div className="flex flex-col">
@@ -125,7 +125,7 @@ export function ArticleCard({
                     alt={article.title}
                     width={400}
                     height={225}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                     sizes="(max-width: 768px) 100vw, 400px"
                     priority={false}
                     onError={(e) => {
@@ -157,7 +157,7 @@ export function ArticleCard({
                   <Badge
                     variant="secondary"
                     style={categoryStyles}
-                    className="transition-all duration-200 hover:scale-105 cursor-default"
+                    className="transition-all duration-300 hover:scale-[1.02] cursor-default"
                   >
                     {article.category}
                   </Badge>
@@ -184,7 +184,7 @@ export function ArticleCard({
                         variant="link"
                         size="sm"
                         onClick={() => setIsExpanded(!isExpanded)}
-                        className="mt-1 p-0 h-auto text-xs transition-all duration-200 hover:scale-105"
+                        className="mt-1 p-0 h-auto text-xs transition-all duration-300 hover:scale-[1.02]"
                         aria-expanded={isExpanded}
                       >
                         <span className="transition-transform duration-200">
@@ -207,14 +207,14 @@ export function ArticleCard({
                           ? t('article-card.added-to-reading-list-aria')
                           : t('article-card.add-to-reading-list-aria')
                       }
-                      className="flex-1 min-h-[44px] min-w-[44px] transition-all duration-200 hover:scale-105 active:scale-95"
+                      className="flex-1 min-h-[44px] min-w-[44px] transition-all duration-300 hover:scale-[1.02] active:scale-95"
                     >
                       {addToReadingList.isPending ? (
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       ) : isAdded ? (
                         <BookmarkCheck className="h-4 w-4 mr-2 text-green-600 animate-in zoom-in-50 duration-300" />
                       ) : (
-                        <BookmarkPlus className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:scale-110" />
+                        <BookmarkPlus className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:scale-[1.05]" />
                       )}
                       <span className="text-sm">
                         {isAdded ? t('buttons.saved') : t('buttons.read-later')}
@@ -226,9 +226,9 @@ export function ArticleCard({
                     onClick={handleAddToReadingList}
                     disabled={isAdded}
                     aria-label={t('article-card.mark-as-read-aria')}
-                    className="flex-1 min-h-[44px] min-w-[44px] transition-all duration-200 hover:scale-105 active:scale-95"
+                    className="flex-1 min-h-[44px] min-w-[44px] transition-all duration-300 hover:scale-[1.02] active:scale-95"
                   >
-                    <CheckCircle className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:scale-110" />
+                    <CheckCircle className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:scale-[1.05]" />
                     <span className="text-sm">{t('buttons.mark-as-read')}</span>
                   </Button>
                 </div>
@@ -239,7 +239,7 @@ export function ArticleCard({
                     variant="default"
                     onClick={handleAnalyze}
                     aria-label={t('article-card.deep-dive-aria')}
-                    className="w-full min-h-[44px] transition-all duration-200 hover:scale-105 active:scale-95 hover:shadow-md"
+                    className="w-full min-h-[44px] transition-all duration-300 hover:scale-[1.02] active:scale-95 hover:shadow-md"
                   >
                     {t('article-card.deep-dive-label')}
                   </Button>
@@ -255,7 +255,7 @@ export function ArticleCard({
   // Desktop horizontal layout (Task 6.2)
   return (
     <article>
-      <Card className="group hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.01]">
+      <Card className="group hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.01]">
         <CardContent className="p-0">
           {/* Horizontal layout: image left (if available), content right */}
           <div className="flex gap-0">
@@ -267,7 +267,7 @@ export function ArticleCard({
                   alt={article.title}
                   width={176}
                   height={132}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                   sizes="176px"
                   priority={false}
                   onError={(e) => {
@@ -308,7 +308,7 @@ export function ArticleCard({
                     }
                   }}
                   aria-label="Share article"
-                  className="min-h-[44px] min-w-[44px] cursor-pointer transition-all duration-200 hover:scale-110"
+                  className="min-h-[44px] min-w-[44px] cursor-pointer transition-all duration-300 hover:scale-[1.05]"
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -338,7 +338,7 @@ export function ArticleCard({
                 <Badge
                   variant="secondary"
                   style={categoryStyles}
-                  className="transition-all duration-200 hover:scale-105 cursor-default"
+                  className="transition-all duration-300 hover:scale-[1.02] cursor-default"
                 >
                   {article.category}
                 </Badge>
@@ -492,7 +492,7 @@ function TinkeringIndexStars({ index }: { index: number }) {
                 className={cn(
                   'h-5 w-5 min-h-[20px] min-w-[20px]', // 20px standard, 24px on mobile via min-h/w
                   'md:h-5 md:w-5', // 20px on desktop
-                  'transition-all duration-200 hover:scale-110',
+                  'transition-all duration-300 hover:scale-[1.05]',
                   'group-hover/stars:animate-pulse',
                   getStarColor(i)
                 )}

@@ -103,9 +103,9 @@ export function FeedHealthIndicator({
           <div className={`inline-flex items-center gap-2 ${className}`}>
             <Badge
               variant={config.variant}
-              className="gap-1 cursor-help transition-all duration-200 hover:scale-105 animate-in fade-in-50"
+              className="gap-1 cursor-help transition-all duration-300 hover:scale-[1.02] animate-in fade-in-50"
             >
-              <Icon className="w-3 h-3 transition-transform duration-200 hover:scale-110" />
+              <Icon className="w-3 h-3 transition-transform duration-300 hover:scale-[1.05]" />
               {config.label}
             </Badge>
             <span className="text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground">

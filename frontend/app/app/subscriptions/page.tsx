@@ -612,9 +612,9 @@ export default function SubscriptionsPage() {
                     className="flex items-center gap-2 flex-1 text-left hover:opacity-80 transition-all duration-200 group"
                   >
                     {isCollapsed ? (
-                      <ChevronRight className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
+                      <ChevronRight className="w-5 h-5 transition-transform duration-200 group-hover:scale-[1.05]" />
                     ) : (
-                      <ChevronDown className="w-5 h-5 transition-transform duration-200 group-hover:scale-110" />
+                      <ChevronDown className="w-5 h-5 transition-transform duration-200 group-hover:scale-[1.05]" />
                     )}
                     <div>
                       <div className="flex items-center gap-2">
@@ -624,9 +624,9 @@ export default function SubscriptionsPage() {
                         {hasRecommended && (
                           <Badge
                             variant="secondary"
-                            className="gap-1 transition-all duration-200 hover:scale-105 animate-in fade-in-50"
+                            className="gap-1 transition-all duration-300 hover:scale-[1.02] animate-in fade-in-50"
                           >
-                            <Star className="w-3 h-3 transition-transform duration-200 hover:scale-110" />
+                            <Star className="w-3 h-3 transition-transform duration-300 hover:scale-[1.05]" />
                             {t('ui.recommended')}
                           </Badge>
                         )}
@@ -644,7 +644,7 @@ export default function SubscriptionsPage() {
                         size="sm"
                         onClick={() => handleCategoryToggle(category, true)}
                         disabled={allCategorySubscribed || !!batchLoading}
-                        className="gap-1.5 transition-all duration-200 hover:scale-105 active:scale-95"
+                        className="gap-1.5 transition-all duration-300 hover:scale-[1.02] active:scale-95"
                       >
                         {batchLoading === `訂閱 ${category}` ? (
                           <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -656,7 +656,7 @@ export default function SubscriptionsPage() {
                         size="sm"
                         onClick={() => handleCategoryToggle(category, false)}
                         disabled={noneCategorySubscribed || !!batchLoading}
-                        className="transition-all duration-200 hover:scale-105 active:scale-95"
+                        className="transition-all duration-300 hover:scale-[1.02] active:scale-95"
                       >
                         {t('ui.deselect-all')}
                       </Button>
@@ -678,7 +678,7 @@ export default function SubscriptionsPage() {
                             checked={feed.is_subscribed}
                             onCheckedChange={() => handleToggle(feed.id)}
                             disabled={toggling.has(feed.id)}
-                            className="mt-1 flex-shrink-0 transition-all duration-200 hover:scale-110"
+                            className="mt-1 flex-shrink-0 transition-all duration-300 hover:scale-[1.05]"
                           />
                           <div className="flex-1 min-w-0">
                             <label
@@ -690,7 +690,7 @@ export default function SubscriptionsPage() {
                                 {feed.is_recommended && (
                                   <Badge
                                     variant="outline"
-                                    className="text-xs transition-all duration-200 hover:scale-105 animate-in fade-in-50"
+                                    className="text-xs transition-all duration-300 hover:scale-[1.02] animate-in fade-in-50"
                                   >
                                     {t('ui.recommended')}
                                   </Badge>
@@ -698,7 +698,7 @@ export default function SubscriptionsPage() {
                                 {feed.is_custom && (
                                   <Badge
                                     variant="secondary"
-                                    className="text-xs transition-all duration-200 hover:scale-105 animate-in fade-in-50"
+                                    className="text-xs transition-all duration-300 hover:scale-[1.02] animate-in fade-in-50"
                                   >
                                     {t('subscriptions.custom-feed')}
                                   </Badge>
@@ -709,7 +709,7 @@ export default function SubscriptionsPage() {
                                       <Badge
                                         key={tag}
                                         variant="secondary"
-                                        className="text-xs transition-all duration-200 hover:scale-105 animate-in fade-in-50"
+                                        className="text-xs transition-all duration-300 hover:scale-[1.02] animate-in fade-in-50"
                                         style={{ animationDelay: `${index * 100}ms` }}
                                       >
                                         {tag}
@@ -784,18 +784,18 @@ export default function SubscriptionsPage() {
                                         feed.notification_enabled || false
                                       )
                                     }
-                                    className="h-7 gap-1 self-start sm:self-auto transition-all duration-200 hover:scale-105 active:scale-95"
+                                    className="h-7 gap-1 self-start sm:self-auto transition-all duration-300 hover:scale-[1.02] active:scale-95"
                                   >
                                     {feed.notification_enabled ? (
                                       <>
-                                        <Bell className="w-3 h-3 transition-transform duration-200 hover:scale-110" />
+                                        <Bell className="w-3 h-3 transition-transform duration-300 hover:scale-[1.05]" />
                                         <span className="text-xs">
                                           {t('subscriptions.notification-enabled')}
                                         </span>
                                       </>
                                     ) : (
                                       <>
-                                        <BellOff className="w-3 h-3 transition-transform duration-200 hover:scale-110" />
+                                        <BellOff className="w-3 h-3 transition-transform duration-300 hover:scale-[1.05]" />
                                         <span className="text-xs">
                                           {t('subscriptions.enable-notification')}
                                         </span>
@@ -813,11 +813,11 @@ export default function SubscriptionsPage() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-7 w-7 text-muted-foreground hover:text-destructive flex-shrink-0 transition-all duration-200 hover:scale-110 active:scale-95"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive flex-shrink-0 transition-all duration-300 hover:scale-[1.05] active:scale-95"
                             onClick={() => handleDeleteFeed(feed.id, feed.name)}
                             aria-label={t('subscriptions.delete-feed')}
                           >
-                            <Trash2 className="w-3.5 h-3.5 transition-transform duration-200 hover:scale-110" />
+                            <Trash2 className="w-3.5 h-3.5 transition-transform duration-300 hover:scale-[1.05]" />
                           </Button>
                         ) : null}
                       </div>

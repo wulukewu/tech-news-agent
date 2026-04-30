@@ -21,7 +21,7 @@ export function Logo({
         viewBox="0 0 32 32"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
-        className="flex-shrink-0 transition-transform duration-300 group-hover:scale-110"
+        className="flex-shrink-0 transition-transform duration-300 group-hover:scale-[1.05]"
       >
         <defs>
           <linearGradient id={`primaryGradient-${size}`} x1="0%" y1="0%" x2="100%" y2="100%">

@@ -53,7 +53,7 @@ export function SystemResourcesCard({ resources }: SystemResourcesCardProps) {
       <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 animate-in slide-in-from-left-4 duration-500 delay-200">
-            <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-300 hover:scale-110 transition-transform">
+            <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-300 hover:scale-[1.05] transition-transform">
               <Cpu className="h-5 w-5 animate-pulse" />
             </div>
             {t('system.resource-usage')}
@@ -71,10 +71,10 @@ export function SystemResourcesCard({ resources }: SystemResourcesCardProps) {
   const { cpu, memory, disk } = resources;
 
   return (
-    <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-lg transition-all">
+    <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-md transition-all">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 animate-in slide-in-from-left-4 duration-500 delay-200">
-          <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-300 hover:scale-110 transition-transform">
+          <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-300 hover:scale-[1.05] transition-transform">
             <Cpu className="h-5 w-5 animate-pulse" />
           </div>
           {t('system.resource-usage')}
@@ -85,11 +85,11 @@ export function SystemResourcesCard({ resources }: SystemResourcesCardProps) {
         <div className="space-y-2 animate-in slide-in-from-left-4 duration-500 delay-400">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Cpu className="h-4 w-4 text-muted-foreground transition-transform duration-200 hover:scale-110" />
+              <Cpu className="h-4 w-4 text-muted-foreground transition-transform duration-300 hover:scale-[1.05]" />
               <span className="text-sm font-medium">{t('system.cpu-usage')}</span>
             </div>
             <span
-              className={`text-sm font-semibold ${getUsageColor(cpu.usage)} transition-all duration-200 hover:scale-110`}
+              className={`text-sm font-semibold ${getUsageColor(cpu.usage)} transition-all duration-300 hover:scale-[1.05]`}
             >
               {cpu.usage.toFixed(1)}%
             </span>
@@ -117,11 +117,11 @@ export function SystemResourcesCard({ resources }: SystemResourcesCardProps) {
         <div className="space-y-2 animate-in slide-in-from-right-4 duration-500 delay-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <MemoryStick className="h-4 w-4 text-muted-foreground transition-transform duration-200 hover:scale-110" />
+              <MemoryStick className="h-4 w-4 text-muted-foreground transition-transform duration-300 hover:scale-[1.05]" />
               <span className="text-sm font-medium">{t('system.memory-usage')}</span>
             </div>
             <span
-              className={`text-sm font-semibold ${getUsageColor(memory.usagePercentage)} transition-all duration-200 hover:scale-110`}
+              className={`text-sm font-semibold ${getUsageColor(memory.usagePercentage)} transition-all duration-300 hover:scale-[1.05]`}
             >
               {memory.usagePercentage.toFixed(1)}%
             </span>
@@ -147,11 +147,11 @@ export function SystemResourcesCard({ resources }: SystemResourcesCardProps) {
         <div className="space-y-2 animate-in slide-in-from-left-4 duration-500 delay-1000">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <HardDrive className="h-4 w-4 text-muted-foreground transition-transform duration-200 hover:scale-110" />
+              <HardDrive className="h-4 w-4 text-muted-foreground transition-transform duration-300 hover:scale-[1.05]" />
               <span className="text-sm font-medium">{t('system.disk-usage')}</span>
             </div>
             <span
-              className={`text-sm font-semibold ${getUsageColor(disk.usagePercentage)} transition-all duration-200 hover:scale-110`}
+              className={`text-sm font-semibold ${getUsageColor(disk.usagePercentage)} transition-all duration-300 hover:scale-[1.05]`}
             >
               {disk.usagePercentage.toFixed(1)}%
             </span>

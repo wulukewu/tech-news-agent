@@ -362,12 +362,12 @@ export function ArticleBrowser({
         {/* Active Filters Summary */}
         <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
           {filters.categories && filters.categories.length > 0 && (
-            <span className="bg-muted px-2 py-1 rounded animate-in zoom-in-50 duration-300 delay-700 transition-all hover:scale-105">
+            <span className="bg-muted px-2 py-1 rounded animate-in zoom-in-50 duration-300 delay-700 transition-all hover:scale-[1.02]">
               {t('filters.category')}: {filters.categories.join(', ')}
             </span>
           )}
           {(filters.minTinkeringIndex || filters.maxTinkeringIndex) && (
-            <span className="bg-muted px-2 py-1 rounded animate-in zoom-in-50 duration-300 delay-800 transition-all hover:scale-105">
+            <span className="bg-muted px-2 py-1 rounded animate-in zoom-in-50 duration-300 delay-800 transition-all hover:scale-[1.02]">
               {t('filters.depth')}:{' '}
               {t('filters.depth-range', {
                 min: filters.minTinkeringIndex || 1,
@@ -376,7 +376,7 @@ export function ArticleBrowser({
             </span>
           )}
           {filters.sortBy && (
-            <span className="bg-muted px-2 py-1 rounded animate-in zoom-in-50 duration-300 delay-900 transition-all hover:scale-105">
+            <span className="bg-muted px-2 py-1 rounded animate-in zoom-in-50 duration-300 delay-900 transition-all hover:scale-[1.02]">
               {t('filters.sort')}:{' '}
               {filters.sortBy === 'date'
                 ? t('filters.date')

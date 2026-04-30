@@ -123,10 +123,10 @@ export function SearchBar({
           variant="ghost"
           size="icon"
           onClick={handleClear}
-          className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-transparent transition-all duration-200 hover:scale-110 animate-in zoom-in-50 duration-300"
+          className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-transparent transition-all duration-300 hover:scale-[1.05] animate-in zoom-in-50 duration-300"
           aria-label="Clear search"
         >
-          <X className="h-4 w-4 transition-transform duration-200 hover:rotate-90" />
+          <X className="h-4 w-4 transition-transform duration-300 hover:rotate-90" />
         </Button>
       )}
 

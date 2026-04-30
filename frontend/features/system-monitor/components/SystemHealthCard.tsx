@@ -56,10 +56,10 @@ export function SystemHealthCard({ health }: SystemHealthCardProps) {
   const errorRate = formatErrorRate(health.errors.rate);
 
   return (
-    <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-lg transition-all">
+    <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-md transition-all">
       <CardHeader>
         <CardTitle className="text-xl flex items-center gap-2 animate-in slide-in-from-left-4 duration-500 delay-200">
-          <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-300 hover:scale-110 transition-transform">
+          <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-300 hover:scale-[1.05] transition-transform">
             <Activity className="h-5 w-5 animate-pulse" />
           </div>
           {t('system.system-health')}
@@ -74,13 +74,13 @@ export function SystemHealthCard({ health }: SystemHealthCardProps) {
           <div className="space-y-2 animate-in slide-in-from-left-4 duration-500 delay-500">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Database className="h-4 w-4 text-muted-foreground transition-transform duration-200 hover:scale-110" />
+                <Database className="h-4 w-4 text-muted-foreground transition-transform duration-300 hover:scale-[1.05]" />
                 <span className="text-sm font-medium">{t('system.database-connection')}</span>
               </div>
               {health.database.connected ? (
                 <Badge
                   variant="default"
-                  className="bg-green-500 hover:bg-green-600 transition-all duration-200 hover:scale-105 animate-pulse"
+                  className="bg-green-500 hover:bg-green-600 transition-all duration-300 hover:scale-[1.02] animate-pulse"
                 >
                   <CheckCircle2 className="h-3 w-3 mr-1" />
                   {t('ui.connected')}
@@ -88,7 +88,7 @@ export function SystemHealthCard({ health }: SystemHealthCardProps) {
               ) : (
                 <Badge
                   variant="destructive"
-                  className="transition-all duration-200 hover:scale-105 animate-pulse"
+                  className="transition-all duration-300 hover:scale-[1.02] animate-pulse"
                 >
                   <XCircle className="h-3 w-3 mr-1" />
                   {t('ui.disconnected')}
@@ -98,7 +98,7 @@ export function SystemHealthCard({ health }: SystemHealthCardProps) {
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">{t('system.response-time')}</span>
               <span
-                className={`font-mono font-medium transition-colors duration-200 hover:scale-105 ${dbResponseTime.color}`}
+                className={`font-mono font-medium transition-colors duration-200 hover:scale-[1.02] ${dbResponseTime.color}`}
               >
                 {dbResponseTime.value}
               </span>
@@ -119,7 +119,7 @@ export function SystemHealthCard({ health }: SystemHealthCardProps) {
           {/* API Response Times */}
           <div className="space-y-2 animate-in slide-in-from-right-4 duration-500 delay-600">
             <div className="flex items-center gap-2 mb-3">
-              <Activity className="h-4 w-4 text-muted-foreground transition-transform duration-200 hover:scale-110" />
+              <Activity className="h-4 w-4 text-muted-foreground transition-transform duration-300 hover:scale-[1.05]" />
               <span className="text-sm font-medium">{t('system.api-response-time')}</span>
             </div>
             <div className="grid grid-cols-3 gap-4">
@@ -135,7 +135,7 @@ export function SystemHealthCard({ health }: SystemHealthCardProps) {
                 >
                   <div className="text-xs text-muted-foreground">{metric.label}</div>
                   <div
-                    className={`text-lg font-mono font-semibold transition-all duration-200 hover:scale-110 ${metric.value.color}`}
+                    className={`text-lg font-mono font-semibold transition-all duration-300 hover:scale-[1.05] ${metric.value.color}`}
                   >
                     {metric.value.value}
                   </div>
@@ -158,21 +158,21 @@ export function SystemHealthCard({ health }: SystemHealthCardProps) {
           {/* Error Rates */}
           <div className="space-y-2 animate-in slide-in-from-left-4 duration-500 delay-900">
             <div className="flex items-center gap-2 mb-3">
-              <AlertTriangle className="h-4 w-4 text-muted-foreground transition-transform duration-200 hover:scale-110" />
+              <AlertTriangle className="h-4 w-4 text-muted-foreground transition-transform duration-300 hover:scale-[1.05]" />
               <span className="text-sm font-medium">{t('system.error-rate')}</span>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1 animate-in zoom-in-50 duration-300 delay-1100">
                 <div className="text-xs text-muted-foreground">{t('system.errors-per-minute')}</div>
                 <div
-                  className={`text-lg font-mono font-semibold transition-all duration-200 hover:scale-110 ${errorRate.color}`}
+                  className={`text-lg font-mono font-semibold transition-all duration-300 hover:scale-[1.05] ${errorRate.color}`}
                 >
                   {errorRate.value}
                 </div>
               </div>
               <div className="space-y-1 animate-in zoom-in-50 duration-300 delay-1200">
                 <div className="text-xs text-muted-foreground">{t('system.total-errors-24h')}</div>
-                <div className="text-lg font-mono font-semibold transition-all duration-200 hover:scale-110">
+                <div className="text-lg font-mono font-semibold transition-all duration-300 hover:scale-[1.05]">
                   {health.errors.total24h}
                 </div>
               </div>

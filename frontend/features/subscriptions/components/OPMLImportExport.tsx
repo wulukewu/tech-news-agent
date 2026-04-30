@@ -131,9 +131,9 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
         <Button
           variant="outline"
           onClick={handleExport}
-          className="gap-2 transition-all duration-200 hover:scale-105"
+          className="gap-2 transition-all duration-300 hover:scale-[1.02]"
         >
-          <Download className="w-4 h-4 transition-transform duration-200 hover:scale-110" />
+          <Download className="w-4 h-4 transition-transform duration-300 hover:scale-[1.05]" />
           {t('buttons.export-opml')}
         </Button>
 
@@ -141,7 +141,7 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
           variant="outline"
           onClick={() => fileInputRef.current?.click()}
           disabled={importing}
-          className="gap-2 transition-all duration-200 hover:scale-105"
+          className="gap-2 transition-all duration-300 hover:scale-[1.02]"
         >
           {importing ? (
             <>
@@ -150,7 +150,7 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
             </>
           ) : (
             <>
-              <Upload className="w-4 h-4 transition-transform duration-200 hover:scale-110" />
+              <Upload className="w-4 h-4 transition-transform duration-300 hover:scale-[1.05]" />
               {t('buttons.import-opml')}
             </>
           )}
@@ -196,7 +196,7 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
                         {feed.category && (
                           <Badge
                             variant="secondary"
-                            className="mt-1 animate-in zoom-in-50 duration-300 transition-all hover:scale-105"
+                            className="mt-1 animate-in zoom-in-50 duration-300 transition-all hover:scale-[1.02]"
                             style={{ animationDelay: `${700 + index * 100}ms` }}
                           >
                             {feed.category}
@@ -204,7 +204,7 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
                         )}
                       </div>
                       <FileText
-                        className="w-4 h-4 text-muted-foreground flex-shrink-0 animate-in zoom-in-50 duration-300 transition-transform hover:scale-110"
+                        className="w-4 h-4 text-muted-foreground flex-shrink-0 animate-in zoom-in-50 duration-300 transition-transform hover:scale-[1.05]"
                         style={{ animationDelay: `${800 + index * 100}ms` }}
                       />
                     </div>
@@ -227,14 +227,14 @@ export function OPMLImportExport({ feeds, onImport, className = '' }: OPMLImport
               variant="outline"
               onClick={handleImportCancel}
               disabled={importing}
-              className="transition-all duration-200 hover:scale-105"
+              className="transition-all duration-300 hover:scale-[1.02]"
             >
               {t('buttons.cancel')}
             </Button>
             <Button
               onClick={handleImportConfirm}
               disabled={importing}
-              className="transition-all duration-200 hover:scale-105"
+              className="transition-all duration-300 hover:scale-[1.02]"
             >
               {importing ? (
                 <>

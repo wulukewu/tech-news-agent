@@ -170,7 +170,7 @@ export function CategoryFilterMenu({
             role="combobox"
             aria-expanded={open}
             className={cn(
-              'w-full justify-between transition-all duration-200 hover:scale-[1.02] hover:shadow-md',
+              'w-full justify-between transition-all duration-300 hover:scale-[1.02] hover:shadow-md',
               selectedCategories.length === 0 && 'text-muted-foreground'
             )}
             disabled={disabled}
@@ -180,12 +180,12 @@ export function CategoryFilterMenu({
               {selectedCategories.length > 0 && (
                 <Badge
                   variant="secondary"
-                  className="text-xs animate-in zoom-in-50 duration-300 transition-all hover:scale-105"
+                  className="text-xs animate-in zoom-in-50 duration-300 transition-all hover:scale-[1.02]"
                 >
                   {selectedCategories.length}
                 </Badge>
               )}
-              <ChevronDown className="h-4 w-4 shrink-0 opacity-50 transition-transform duration-200 hover:scale-110" />
+              <ChevronDown className="h-4 w-4 shrink-0 opacity-50 transition-transform duration-300 hover:scale-[1.05]" />
             </div>
           </Button>
         </PopoverTrigger>
@@ -196,7 +196,7 @@ export function CategoryFilterMenu({
           <div className="flex flex-col max-h-[400px]">
             {/* Search Input */}
             <div className="flex items-center border-b px-3 py-2 animate-in slide-in-from-top-4 duration-500 delay-200">
-              <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 transition-transform duration-200 hover:scale-110" />
+              <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 transition-transform duration-300 hover:scale-[1.05]" />
               <Input
                 placeholder={t('forms.placeholders.search-categories')}
                 value={searchQuery}
@@ -215,9 +215,9 @@ export function CategoryFilterMenu({
                   variant="ghost"
                   size="sm"
                   onClick={handleClearAll}
-                  className="h-6 px-2 text-xs transition-all duration-200 hover:scale-105"
+                  className="h-6 px-2 text-xs transition-all duration-300 hover:scale-[1.02]"
                 >
-                  <X className="h-3 w-3 mr-1 transition-transform duration-200 hover:rotate-90" />
+                  <X className="h-3 w-3 mr-1 transition-transform duration-300 hover:rotate-90" />
                   {t('forms.messages.clear-filters')}
                 </Button>
               </div>
@@ -236,7 +236,7 @@ export function CategoryFilterMenu({
                     role="option"
                     aria-selected={selectedCategories.length === 0}
                     className={cn(
-                      'flex items-center justify-between cursor-pointer rounded-sm px-2 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-all duration-200 hover:scale-[1.02] animate-in slide-in-from-left-4 duration-300 delay-400',
+                      'flex items-center justify-between cursor-pointer rounded-sm px-2 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-all duration-300 hover:scale-[1.02] animate-in slide-in-from-left-4 duration-300 delay-400',
                       selectedCategories.length === 0 && 'bg-accent text-accent-foreground'
                     )}
                     onClick={handleShowAll}
@@ -265,7 +265,7 @@ export function CategoryFilterMenu({
                         role="option"
                         aria-selected={isSelected}
                         className={cn(
-                          'flex items-center justify-between cursor-pointer rounded-sm px-2 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-all duration-200 hover:scale-[1.02] animate-in slide-in-from-left-4 duration-300',
+                          'flex items-center justify-between cursor-pointer rounded-sm px-2 py-2 text-sm hover:bg-accent hover:text-accent-foreground transition-all duration-300 hover:scale-[1.02] animate-in slide-in-from-left-4 duration-300',
                           isSelected && 'bg-accent text-accent-foreground'
                         )}
                         style={{ animationDelay: `${500 + index * 50}ms` }}
@@ -295,7 +295,7 @@ export function CategoryFilterMenu({
                         variant="ghost"
                         size="sm"
                         onClick={handleToggleShowAll}
-                        className="w-full text-xs transition-all duration-200 hover:scale-105"
+                        className="w-full text-xs transition-all duration-300 hover:scale-[1.02]"
                       >
                         {showAll
                           ? t('forms.messages.show-less')
@@ -317,12 +317,12 @@ export function CategoryFilterMenu({
             <Badge
               key={categoryValue}
               variant="secondary"
-              className="text-xs cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-all duration-200 hover:scale-105 animate-in zoom-in-50 duration-300"
+              className="text-xs cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-all duration-300 hover:scale-[1.02] animate-in zoom-in-50 duration-300"
               style={{ animationDelay: `${400 + index * 100}ms` }}
               onClick={() => handleSelect(categoryValue)}
             >
               {categoryValue}
-              <X className="h-3 w-3 ml-1 transition-transform duration-200 hover:rotate-90" />
+              <X className="h-3 w-3 ml-1 transition-transform duration-300 hover:rotate-90" />
             </Badge>
           ))}
         </div>

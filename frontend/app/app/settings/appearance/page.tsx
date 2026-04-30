@@ -60,10 +60,10 @@ export default function AppearancePage() {
       </div>
 
       {/* Theme Selection */}
-      <Card className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-100 hover:shadow-lg transition-all">
+      <Card className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-100 hover:shadow-md transition-all">
         <CardHeader>
           <div className="flex items-center gap-3">
-            <Palette className="h-5 w-5 transition-transform duration-200 hover:scale-110" />
+            <Palette className="h-5 w-5 transition-transform duration-300 hover:scale-[1.05]" />
             <div>
               <CardTitle>{t('pages.appearance.theme')}</CardTitle>
               <CardDescription>{t('pages.appearance.theme-description')}</CardDescription>
@@ -84,11 +84,11 @@ export default function AppearancePage() {
                 >
                   <Button
                     variant={isSelected ? 'default' : 'outline'}
-                    className="w-full justify-start h-auto p-4 transition-all duration-200 hover:scale-[1.02] hover:shadow-md group"
+                    className="w-full justify-start h-auto p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-md group"
                     onClick={() => setTheme(themeOption.id)}
                   >
                     <div className="flex items-center gap-3 w-full">
-                      <Icon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
+                      <Icon className="h-5 w-5 transition-transform duration-200 group-hover:scale-[1.05]" />
                       <div className="flex-1 text-left">
                         <div className="font-medium">{themeOption.name}</div>
                         <div className="text-sm text-muted-foreground">
@@ -133,7 +133,7 @@ export default function AppearancePage() {
       </Card>
 
       {/* Theme Preview */}
-      <Card className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-200 hover:shadow-lg transition-all">
+      <Card className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-200 hover:shadow-md transition-all">
         <CardHeader>
           <CardTitle>{t('pages.appearance.preview')}</CardTitle>
           <CardDescription>{t('pages.appearance.preview-description')}</CardDescription>
@@ -156,21 +156,21 @@ export default function AppearancePage() {
                   <Button
                     size="sm"
                     variant="default"
-                    className="transition-all duration-200 hover:scale-105 hover:shadow-md"
+                    className="transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
                   >
                     {t('pages.appearance.primary-button')}
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    className="transition-all duration-200 hover:scale-105 hover:shadow-sm"
+                    className="transition-all duration-300 hover:scale-[1.02] hover:shadow-sm"
                   >
                     {t('pages.appearance.secondary-button')}
                   </Button>
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="transition-all duration-200 hover:scale-105"
+                    className="transition-all duration-300 hover:scale-[1.02]"
                   >
                     {t('pages.appearance.text-button')}
                   </Button>
@@ -186,7 +186,7 @@ export default function AppearancePage() {
       </Card>
 
       {/* Future Features */}
-      <Card className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-300 hover:shadow-lg transition-all">
+      <Card className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-300 hover:shadow-md transition-all">
         <CardHeader>
           <CardTitle>{t('pages.appearance.coming-soon')}</CardTitle>
           <CardDescription>{t('pages.appearance.future-features')}</CardDescription>

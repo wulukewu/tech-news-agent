@@ -39,7 +39,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
                 href={item.href}
                 className={cn(
                   'flex items-center gap-2 px-1 py-3 border-b-2 text-sm whitespace-nowrap',
-                  'transition-all duration-200 hover:scale-105',
+                  'transition-all duration-300 hover:scale-[1.02]',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                   'animate-in slide-in-from-top-2 fade-in-50',
                   isActive
@@ -51,7 +51,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
                 <Icon
                   className={cn(
                     'h-4 w-4 transition-transform duration-200',
-                    isActive ? 'scale-110' : 'hover:scale-110'
+                    isActive ? 'scale-110' : 'hover:scale-[1.05]'
                   )}
                 />
                 {item.title}

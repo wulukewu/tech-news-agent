@@ -257,7 +257,7 @@ export function InfoBadge({ content, type = 'info', className }: InfoBadgeProps)
       <span
         className={cn(
           'inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full border',
-          'transition-all duration-200 hover:shadow-sm',
+          'transition-all duration-300 hover:shadow-sm',
           'motion-reduce:transition-none',
           getBadgeStyles(),
           className

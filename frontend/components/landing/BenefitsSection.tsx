@@ -102,11 +102,11 @@ export function BenefitsSection() {
                 return (
                   <div
                     key={index}
-                    className="p-6 rounded-lg border bg-card hover:shadow-lg transition-all duration-300 hover:-translate-y-1 hover:scale-105 group animate-in fade-in slide-in-from-right-4 duration-1000"
+                    className="p-6 rounded-lg border bg-card hover:shadow-md transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] group animate-in fade-in slide-in-from-right-4 duration-1000"
                     style={{ animationDelay: `${600 + index * 200}ms` }}
                   >
-                    <div className="mb-4 inline-flex p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
-                      <Icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
+                    <div className="mb-4 inline-flex p-2 rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 group-hover:scale-[1.05] group-hover:rotate-3">
+                      <Icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-[1.05]" />
                     </div>
                     <h3 className="font-semibold mb-2 transition-colors duration-300 group-hover:text-primary">
                       {benefit.title}

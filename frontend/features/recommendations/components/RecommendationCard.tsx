@@ -61,18 +61,18 @@ export function RecommendationCard({
 
   return (
     <Card
-      className="group relative hover:shadow-lg transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:-translate-y-1"
+      className="group relative hover:shadow-md transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:-translate-y-1"
       onClick={handleClick}
     >
       {/* Dismiss button */}
       <Button
         variant="ghost"
         size="icon"
-        className="absolute top-2 right-2 h-8 w-8 rounded-full hover:bg-destructive/10 transition-all duration-200 hover:scale-110 opacity-0 group-hover:opacity-100"
+        className="absolute top-2 right-2 h-8 w-8 rounded-full hover:bg-destructive/10 transition-all duration-300 hover:scale-[1.05] opacity-0 group-hover:opacity-100"
         onClick={handleDismiss}
         aria-label="忽略推薦"
       >
-        <X className="h-4 w-4 transition-transform duration-200 hover:rotate-90" />
+        <X className="h-4 w-4 transition-transform duration-300 hover:rotate-90" />
       </Button>
 
       <CardHeader className="pb-3">
@@ -86,7 +86,7 @@ export function RecommendationCard({
               <span className="text-muted-foreground">•</span>
               <Badge
                 variant="secondary"
-                className="text-xs transition-all duration-200 hover:scale-105"
+                className="text-xs transition-all duration-300 hover:scale-[1.02]"
               >
                 {article.category}
               </Badge>
@@ -121,7 +121,7 @@ export function RecommendationCard({
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star
                   key={i}
-                  className={`h-3 w-3 transition-all duration-200 hover:scale-125 ${
+                  className={`h-3 w-3 transition-all duration-300 hover:scale-125 ${
                     i < confidenceStars ? 'fill-primary text-primary' : 'text-muted-foreground/30'
                   }`}
                   style={{ animationDelay: `${i * 50}ms` }}
@@ -143,7 +143,7 @@ export function RecommendationCard({
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star
                   key={i}
-                  className={`h-3 w-3 transition-all duration-200 hover:scale-125 ${
+                  className={`h-3 w-3 transition-all duration-300 hover:scale-125 ${
                     i < article.tinkeringIndex
                       ? 'fill-yellow-500 text-yellow-500'
                       : 'text-muted-foreground/30'
@@ -158,10 +158,10 @@ export function RecommendationCard({
             variant="outline"
             size="sm"
             onClick={handleOpenArticle}
-            className="gap-2 transition-all duration-200 hover:scale-105 hover:shadow-md"
+            className="gap-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
           >
             閱讀文章
-            <ExternalLink className="h-3 w-3 transition-transform duration-200 hover:scale-110" />
+            <ExternalLink className="h-3 w-3 transition-transform duration-300 hover:scale-[1.05]" />
           </Button>
         </div>
       </CardContent>

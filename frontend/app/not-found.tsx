@@ -72,7 +72,7 @@ export default function NotFound() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-300">
             <Link
               href="/"
-              className="group inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-medium text-primary-foreground bg-primary rounded-lg hover:bg-primary/90 transition-all duration-200 hover:scale-105 hover:shadow-lg hover:shadow-primary/25"
+              className="group inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-medium text-primary-foreground bg-primary rounded-lg hover:bg-primary/90 transition-all duration-300 hover:scale-[1.02] hover:shadow-md hover:shadow-primary/25"
             >
               <Home className="h-5 w-5 transition-transform group-hover:-translate-y-0.5" />
               {t('pages-404.back-to-home')}
@@ -80,7 +80,7 @@ export default function NotFound() {
 
             <Link
               href="/app/articles"
-              className="group inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-medium border border-input bg-background/50 backdrop-blur-sm rounded-lg hover:bg-accent transition-all duration-200 hover:scale-105 hover:shadow-lg"
+              className="group inline-flex items-center justify-center gap-2 px-8 py-4 text-base font-medium border border-input bg-background/50 backdrop-blur-sm rounded-lg hover:bg-accent transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
             >
               <Search className="h-5 w-5 transition-transform group-hover:rotate-12" />
               {t('pages-404.explore-news')}

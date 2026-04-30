@@ -29,7 +29,7 @@ export function EmptyState({
         </div>
         <Button
           asChild
-          className="animate-in slide-in-from-bottom-2 duration-500 delay-500 transition-all hover:scale-105 hover:shadow-md"
+          className="animate-in slide-in-from-bottom-2 duration-500 delay-500 transition-all hover:scale-[1.02] hover:shadow-md"
         >
           <Link href="/app/subscriptions">Browse feeds</Link>
         </Button>
@@ -53,7 +53,7 @@ export function EmptyState({
         <Button
           variant="outline"
           onClick={onClearSearch}
-          className="animate-in slide-in-from-bottom-2 duration-500 delay-400 transition-all hover:scale-105 hover:shadow-sm"
+          className="animate-in slide-in-from-bottom-2 duration-500 delay-400 transition-all hover:scale-[1.02] hover:shadow-sm"
         >
           Clear search
         </Button>

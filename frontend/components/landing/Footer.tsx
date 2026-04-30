@@ -52,7 +52,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand Column */}
           <div className="lg:col-span-2 space-y-4 animate-in fade-in slide-in-from-left-4 duration-1000">
-            <div className="hover:scale-105 transition-transform duration-300">
+            <div className="hover:scale-[1.02] transition-transform duration-300">
               <Logo size={32} showText />
             </div>
             <p className="text-sm text-muted-foreground max-w-xs leading-relaxed animate-in fade-in slide-in-from-left-4 duration-1000 delay-200">
@@ -70,11 +70,11 @@ export function Footer() {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center h-9 w-9 rounded-md border bg-background hover:bg-accent hover:text-accent-foreground transition-all duration-300 hover:scale-110 hover:shadow-md animate-in zoom-in-50 duration-500"
+                    className="inline-flex items-center justify-center h-9 w-9 rounded-md border bg-background hover:bg-accent hover:text-accent-foreground transition-all duration-300 hover:scale-[1.05] hover:shadow-md animate-in zoom-in-50 duration-500"
                     style={{ animationDelay: `${400 + index * 100}ms` }}
                     aria-label={social.label}
                   >
-                    <Icon className="h-4 w-4 transition-transform duration-300 hover:scale-110" />
+                    <Icon className="h-4 w-4 transition-transform duration-300 hover:scale-[1.05]" />
                   </a>
                 );
               })}
@@ -161,7 +161,7 @@ export function Footer() {
               © {currentYear} Tech News Agent. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
-              <div className="hover:scale-105 transition-transform duration-300">
+              <div className="hover:scale-[1.02] transition-transform duration-300">
                 <LanguageSwitcher variant="compact" />
               </div>
               <p className="text-sm text-muted-foreground hidden sm:block">

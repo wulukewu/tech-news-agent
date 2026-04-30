@@ -252,13 +252,13 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
               <Button
                 variant="outline"
                 onClick={handleSkip}
-                className="w-full sm:w-auto transition-all duration-300 hover:scale-105"
+                className="w-full sm:w-auto transition-all duration-300 hover:scale-[1.02]"
               >
                 {t('onboarding.skip')}
               </Button>
               <Button
                 onClick={handleStart}
-                className="w-full sm:w-auto transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                className="w-full sm:w-auto transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
               >
                 {t('onboarding.get-started')}
               </Button>
@@ -294,7 +294,7 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
                           id={feed.id}
                           checked={state.selectedFeeds.includes(feed.id)}
                           onCheckedChange={() => handleFeedSelection(feed.id)}
-                          className="mt-1 transition-transform duration-200 hover:scale-110"
+                          className="mt-1 transition-transform duration-300 hover:scale-[1.05]"
                         />
                         <div className="flex-1 space-y-1">
                           <Label
@@ -317,14 +317,14 @@ export function OnboardingModal({ isOpen, onClose, onComplete }: OnboardingModal
               <Button
                 variant="outline"
                 onClick={handleSkip}
-                className="w-full sm:w-auto transition-all duration-300 hover:scale-105"
+                className="w-full sm:w-auto transition-all duration-300 hover:scale-[1.02]"
               >
                 {t('onboarding.skip')}
               </Button>
               <Button
                 onClick={handleComplete}
                 disabled={state.isLoading || state.selectedFeeds.length === 0}
-                className="w-full sm:w-auto transition-all duration-300 hover:scale-105 hover:shadow-lg disabled:hover:scale-100"
+                className="w-full sm:w-auto transition-all duration-300 hover:scale-[1.02] hover:shadow-md disabled:hover:scale-100"
               >
                 {state.isLoading ? (
                   <>

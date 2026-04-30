@@ -71,13 +71,13 @@ export function AnalysisTrigger({
         size={size}
         onClick={handleClick}
         disabled={disabled || isLoading}
-        className={`${className} transition-all duration-200 hover:scale-105 animate-in fade-in zoom-in-50 duration-300`}
+        className={`${className} transition-all duration-300 hover:scale-[1.02] animate-in fade-in zoom-in-50 duration-300`}
         data-testid="analysis-button"
       >
         {isLoading ? (
           <Loader2 className="h-4 w-4 animate-spin" />
         ) : (
-          <Brain className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
+          <Brain className="h-4 w-4 transition-transform duration-300 hover:scale-[1.05]" />
         )}
 
         {showText && (

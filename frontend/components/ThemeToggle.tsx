@@ -80,7 +80,7 @@ export function ThemeToggle({
             variant="ghost"
             size="icon"
             aria-label={t('theme.toggle')}
-            className="transition-all duration-200 hover:scale-105"
+            className="transition-all duration-300 hover:scale-[1.02]"
           >
             {currentTheme === 'dark' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
           </Button>
@@ -142,7 +142,7 @@ export function ThemeToggle({
         size="icon"
         onClick={cycleTheme}
         aria-label={t('theme.toggle')}
-        className="transition-all duration-200 hover:scale-105"
+        className="transition-all duration-300 hover:scale-[1.02]"
       >
         {getIconForTheme()}
       </Button>
@@ -156,7 +156,7 @@ export function ThemeToggle({
         variant="ghost"
         onClick={() => setTheme(currentTheme === 'dark' ? 'light' : 'dark')}
         aria-label={t('theme.switch-to', { mode: targetMode })}
-        className="transition-all duration-200 hover:scale-105 gap-2"
+        className="transition-all duration-300 hover:scale-[1.02] gap-2"
         size={size}
       >
         <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
@@ -173,7 +173,7 @@ export function ThemeToggle({
       size="icon"
       onClick={() => setTheme(currentTheme === 'dark' ? 'light' : 'dark')}
       aria-label={t('theme.switch-to', { mode: targetMode })}
-      className="transition-all duration-200 hover:scale-105"
+      className="transition-all duration-300 hover:scale-[1.02]"
     >
       <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
       <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />

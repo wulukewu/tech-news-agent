@@ -55,10 +55,10 @@ export default function ProfilePage() {
       </div>
 
       {/* Profile Card */}
-      <Card className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-100 hover:shadow-lg transition-all">
+      <Card className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-100 hover:shadow-md transition-all">
         <CardContent className="pt-6">
           <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16 transition-all duration-300 hover:scale-110 hover:shadow-lg">
+            <Avatar className="h-16 w-16 transition-all duration-300 hover:scale-[1.05] hover:shadow-md">
               {user.avatar && <AvatarImage src={user.avatar} alt={displayName} />}
               <AvatarFallback className="text-xl transition-colors duration-200 hover:bg-primary hover:text-primary-foreground">
                 {displayName?.[0]?.toUpperCase()}
@@ -69,7 +69,7 @@ export default function ProfilePage() {
               <div className="flex items-center gap-2 mt-1">
                 <Badge
                   variant="secondary"
-                  className="text-xs transition-all duration-200 hover:scale-105"
+                  className="text-xs transition-all duration-300 hover:scale-[1.02]"
                 >
                   Discord
                 </Badge>
@@ -80,10 +80,10 @@ export default function ProfilePage() {
               variant="outline"
               size="sm"
               asChild
-              className="transition-all duration-200 hover:scale-105 hover:shadow-md"
+              className="transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
             >
               <a href="https://discord.com/channels/@me" target="_blank" rel="noopener noreferrer">
-                <ExternalLink className="h-3.5 w-3.5 mr-1.5 transition-transform duration-200 hover:scale-110" />
+                <ExternalLink className="h-3.5 w-3.5 mr-1.5 transition-transform duration-300 hover:scale-[1.05]" />
                 Discord
               </a>
             </Button>
@@ -93,7 +93,7 @@ export default function ProfilePage() {
       </Card>
 
       {/* Stats */}
-      <Card className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-200 hover:shadow-lg transition-all">
+      <Card className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-200 hover:shadow-md transition-all">
         <CardHeader>
           <CardTitle className="text-base">{t('pages.profile.account-statistics')}</CardTitle>
           <CardDescription className="text-sm">
@@ -124,17 +124,17 @@ export default function ProfilePage() {
             ].map(({ icon: Icon, label, value, href }, index) => (
               <Link key={label} href={href}>
                 <div
-                  className="group flex flex-col items-center gap-2 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-all duration-300 cursor-pointer text-center hover:scale-105 hover:shadow-md animate-in zoom-in-50"
+                  className="group flex flex-col items-center gap-2 p-4 rounded-lg bg-muted/50 hover:bg-muted transition-all duration-300 cursor-pointer text-center hover:scale-[1.02] hover:shadow-md animate-in zoom-in-50"
                   style={{ animationDelay: `${300 + index * 100}ms` }}
                 >
-                  <div className="p-2 rounded-full bg-primary/10 transition-all duration-200 group-hover:bg-primary/20 group-hover:scale-110">
-                    <Icon className="h-4 w-4 text-primary transition-transform duration-200 group-hover:scale-110" />
+                  <div className="p-2 rounded-full bg-primary/10 transition-all duration-200 group-hover:bg-primary/20 group-hover:scale-[1.05]">
+                    <Icon className="h-4 w-4 text-primary transition-transform duration-200 group-hover:scale-[1.05]" />
                   </div>
                   <p className="text-xs text-muted-foreground">{label}</p>
                   {statsLoading ? (
                     <Skeleton className="h-7 w-8" />
                   ) : (
-                    <p className="text-2xl font-bold transition-transform duration-200 group-hover:scale-110">
+                    <p className="text-2xl font-bold transition-transform duration-200 group-hover:scale-[1.05]">
                       {value ?? 0}
                     </p>
                   )}
@@ -146,7 +146,7 @@ export default function ProfilePage() {
       </Card>
 
       {/* Quick Links */}
-      <Card className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-300 hover:shadow-lg transition-all">
+      <Card className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-300 hover:shadow-md transition-all">
         <CardHeader>
           <CardTitle className="text-base">{t('pages.profile.quick-links')}</CardTitle>
         </CardHeader>
@@ -163,10 +163,10 @@ export default function ProfilePage() {
             <Link key={href} href={href}>
               <Button
                 variant="ghost"
-                className="w-full justify-start gap-2 transition-all duration-200 hover:scale-[1.02] hover:shadow-sm animate-in slide-in-from-left-2"
+                className="w-full justify-start gap-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-sm animate-in slide-in-from-left-2"
                 style={{ animationDelay: `${400 + index * 100}ms` }}
               >
-                <Icon className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
+                <Icon className="h-4 w-4 transition-transform duration-300 hover:scale-[1.05]" />
                 {label}
               </Button>
             </Link>

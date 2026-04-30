@@ -106,7 +106,7 @@ export default function ModernLandingPage() {
             </div>
             <div className="space-y-4">
               {mockArticles.map((article) => (
-                <Card key={article.id} className="hover:shadow-lg transition-shadow">
+                <Card key={article.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">

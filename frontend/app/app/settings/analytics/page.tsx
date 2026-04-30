@@ -54,7 +54,7 @@ export default function AnalyticsSettingsPage() {
           size="sm"
           onClick={loadStats}
           disabled={loading}
-          className="transition-all duration-200 hover:scale-105 hover:shadow-md animate-in slide-in-from-right-4 duration-500 delay-200"
+          className="transition-all duration-300 hover:scale-[1.02] hover:shadow-md animate-in slide-in-from-right-4 duration-500 delay-200"
         >
           <RefreshCw
             className={`h-4 w-4 mr-2 transition-transform duration-200 ${loading ? 'animate-spin' : 'hover:rotate-180'}`}
@@ -114,12 +114,12 @@ export default function AnalyticsSettingsPage() {
               return (
                 <Card
                   key={index}
-                  className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-lg hover:-translate-y-1 transition-all group"
+                  className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-md hover:-translate-y-1 transition-all group"
                   style={{ animationDelay: `${300 + index * 150}ms` }}
                 >
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{metric.title}</CardTitle>
-                    <div className="p-1 rounded-lg bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-200">
+                    <div className="p-1 rounded-lg bg-primary/10 text-primary group-hover:scale-[1.05] transition-transform duration-200">
                       <Icon className="h-4 w-4 animate-pulse" />
                     </div>
                   </CardHeader>
@@ -136,10 +136,10 @@ export default function AnalyticsSettingsPage() {
 
           {/* Reading Insights */}
           <div className="grid gap-4 md:grid-cols-2">
-            <Card className="animate-in fade-in slide-in-from-left-4 duration-500 delay-700 hover:shadow-lg transition-all">
+            <Card className="animate-in fade-in slide-in-from-left-4 duration-500 delay-700 hover:shadow-md transition-all">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-800 hover:scale-110 transition-transform">
+                  <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-800 hover:scale-[1.05] transition-transform">
                     <Target className="h-5 w-5" />
                   </div>
                   {t('pages.analytics.reading-goals')}
@@ -174,10 +174,10 @@ export default function AnalyticsSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="animate-in fade-in slide-in-from-right-4 duration-500 delay-800 hover:shadow-lg transition-all">
+            <Card className="animate-in fade-in slide-in-from-right-4 duration-500 delay-800 hover:shadow-md transition-all">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-900 hover:scale-110 transition-transform">
+                  <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-900 hover:scale-[1.05] transition-transform">
                     <Calendar className="h-5 w-5" />
                   </div>
                   {t('pages.analytics.activity-summary')}
@@ -225,7 +225,7 @@ export default function AnalyticsSettingsPage() {
           </div>
 
           {/* Future Features */}
-          <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-1000 hover:shadow-lg transition-all">
+          <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-1000 hover:shadow-md transition-all">
             <CardHeader>
               <CardTitle>{t('pages.analytics.advanced-features')}</CardTitle>
               <CardDescription>{t('pages.analytics.coming-soon-features')}</CardDescription>

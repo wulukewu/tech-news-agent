@@ -105,7 +105,7 @@ function FeedStatusItem({
         >
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <Rss className="h-4 w-4 text-muted-foreground flex-shrink-0 transition-transform duration-200 hover:scale-110" />
+              <Rss className="h-4 w-4 text-muted-foreground flex-shrink-0 transition-transform duration-300 hover:scale-[1.05]" />
               <h4 className="font-medium text-sm truncate transition-colors duration-200 hover:text-primary">
                 {feed.name}
               </h4>
@@ -114,10 +114,10 @@ function FeedStatusItem({
               href={feed.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 truncate transition-all duration-200 hover:scale-105"
+              className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 truncate transition-all duration-300 hover:scale-[1.02]"
             >
               <span className="truncate">{feed.url}</span>
-              <ExternalLink className="h-3 w-3 flex-shrink-0 transition-transform duration-200 hover:scale-110" />
+              <ExternalLink className="h-3 w-3 flex-shrink-0 transition-transform duration-300 hover:scale-[1.05]" />
             </a>
           </div>
           <Badge
@@ -139,7 +139,7 @@ function FeedStatusItem({
             style={{ animationDelay: `${index * 100 + 400}ms` }}
           >
             <div className="text-muted-foreground">{t('ui.last-fetch')}</div>
-            <div className="font-medium transition-all duration-200 hover:scale-110">
+            <div className="font-medium transition-all duration-300 hover:scale-[1.05]">
               {feed.lastFetch
                 ? formatDistanceToNow(feed.lastFetch, { addSuffix: true, locale })
                 : t('ui.never')}
@@ -150,8 +150,8 @@ function FeedStatusItem({
             style={{ animationDelay: `${index * 100 + 500}ms` }}
           >
             <div className="text-muted-foreground">{t('ui.articles-processed')}</div>
-            <div className="font-medium flex items-center gap-1 transition-all duration-200 hover:scale-110">
-              <FileText className="h-3 w-3 transition-transform duration-200 hover:scale-110" />
+            <div className="font-medium flex items-center gap-1 transition-all duration-300 hover:scale-[1.05]">
+              <FileText className="h-3 w-3 transition-transform duration-300 hover:scale-[1.05]" />
               {feed.articlesProcessed}
             </div>
           </div>
@@ -161,7 +161,7 @@ function FeedStatusItem({
           >
             <div className="text-muted-foreground">{t('ui.processing-time')}</div>
             <div
-              className={`font-medium font-mono ${processingTime.color} transition-all duration-200 hover:scale-110`}
+              className={`font-medium font-mono ${processingTime.color} transition-all duration-300 hover:scale-[1.05]`}
             >
               {processingTime.value}
             </div>
@@ -174,7 +174,7 @@ function FeedStatusItem({
             className="flex items-center gap-2 text-xs text-muted-foreground animate-in slide-in-from-left-2 duration-300"
             style={{ animationDelay: `${index * 100 + 700}ms` }}
           >
-            <Clock className="h-3 w-3 transition-transform duration-200 hover:scale-110" />
+            <Clock className="h-3 w-3 transition-transform duration-300 hover:scale-[1.05]" />
             <span className="transition-colors duration-200 hover:text-foreground">
               {t('ui.next-fetch')}:{' '}
               {formatDistanceToNow(feed.nextFetch, { addSuffix: true, locale })}
@@ -219,12 +219,12 @@ export function FeedStatusCard({ feeds }: FeedStatusCardProps) {
   );
 
   return (
-    <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-lg transition-all">
+    <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-md transition-all">
       <CardHeader>
         <div className="flex items-center justify-between animate-in slide-in-from-left-4 duration-500 delay-200">
           <div>
             <CardTitle className="text-xl flex items-center gap-2">
-              <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-300 hover:scale-110 transition-transform">
+              <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-300 hover:scale-[1.05] transition-transform">
                 <Rss className="h-5 w-5 animate-pulse" />
               </div>
               {t('ui.feed-status')}
@@ -236,14 +236,14 @@ export function FeedStatusCard({ feeds }: FeedStatusCardProps) {
           <div className="flex items-center gap-2">
             <Badge
               variant="default"
-              className="bg-green-500 hover:bg-green-600 animate-in zoom-in-50 duration-300 delay-500 transition-all hover:scale-105"
+              className="bg-green-500 hover:bg-green-600 animate-in zoom-in-50 duration-300 delay-500 transition-all hover:scale-[1.02]"
             >
               {statusCounts.healthy} {t('ui.healthy')}
             </Badge>
             {statusCounts.warning > 0 && (
               <Badge
                 variant="secondary"
-                className="animate-in zoom-in-50 duration-300 delay-600 transition-all hover:scale-105"
+                className="animate-in zoom-in-50 duration-300 delay-600 transition-all hover:scale-[1.02]"
               >
                 {statusCounts.warning} {t('ui.warning')}
               </Badge>
@@ -251,7 +251,7 @@ export function FeedStatusCard({ feeds }: FeedStatusCardProps) {
             {statusCounts.error > 0 && (
               <Badge
                 variant="destructive"
-                className="animate-in zoom-in-50 duration-300 delay-700 animate-pulse transition-all hover:scale-105"
+                className="animate-in zoom-in-50 duration-300 delay-700 animate-pulse transition-all hover:scale-[1.02]"
               >
                 {statusCounts.error} {t('ui.error')}
               </Badge>

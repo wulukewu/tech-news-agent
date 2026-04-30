@@ -59,7 +59,7 @@ export function StatusFilterTabs({
                 'relative px-4 py-3 text-sm font-medium transition-all duration-200',
                 'whitespace-nowrap flex-shrink-0', // Prevent text wrapping and shrinking
                 'focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-t',
-                'hover:text-foreground hover:scale-105',
+                'hover:text-foreground hover:scale-[1.02]',
                 'data-[state=active]:text-primary',
                 'data-[state=inactive]:text-muted-foreground',
                 'after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5',
@@ -73,7 +73,7 @@ export function StatusFilterTabs({
               )}
               aria-selected={currentValue === tab.value}
             >
-              <span className="flex items-center gap-2 transition-transform duration-200 hover:scale-105">
+              <span className="flex items-center gap-2 transition-transform duration-300 hover:scale-[1.02]">
                 {tab.label}
                 {tab.count !== undefined && (
                   <span
@@ -84,7 +84,7 @@ export function StatusFilterTabs({
                       'animate-in zoom-in-50',
                       currentValue === tab.value
                         ? 'bg-primary/10 text-primary scale-110'
-                        : 'bg-muted text-muted-foreground hover:scale-105'
+                        : 'bg-muted text-muted-foreground hover:scale-[1.02]'
                     )}
                   >
                     {tab.count}

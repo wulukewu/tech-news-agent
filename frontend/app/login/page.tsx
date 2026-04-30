@@ -94,7 +94,7 @@ function LoginPageInner() {
                 <div className="flex justify-center mb-6 animate-in zoom-in-50 duration-1000 delay-500">
                   <div className="relative group">
                     <div className="absolute inset-0 blur-2xl bg-primary/20 rounded-full animate-pulse group-hover:bg-primary/30 transition-colors duration-500" />
-                    <div className="relative transform transition-transform duration-300 hover:scale-110">
+                    <div className="relative transform transition-transform duration-300 hover:scale-[1.05]">
                       <Logo size={80} />
                     </div>
                   </div>
@@ -111,10 +111,10 @@ function LoginPageInner() {
               <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-1000">
                 <Button
                   onClick={handleLogin}
-                  className="w-full h-12 text-base font-semibold bg-[#5865F2] hover:bg-[#4752C4] text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105 group"
+                  className="w-full h-12 text-base font-semibold bg-[#5865F2] hover:bg-[#4752C4] text-white transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] group"
                   size="lg"
                 >
-                  <DiscordIcon className="mr-3 h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
+                  <DiscordIcon className="mr-3 h-5 w-5 transition-transform duration-300 group-hover:scale-[1.05]" />
                   Continue with Discord
                 </Button>
               </div>

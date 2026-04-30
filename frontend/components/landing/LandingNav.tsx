@@ -53,7 +53,7 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
             href="/"
             className="flex-shrink-0 animate-in fade-in slide-in-from-left-4 duration-500"
           >
-            <div className="hover:scale-105 transition-transform duration-300">
+            <div className="hover:scale-[1.02] transition-transform duration-300">
               <Logo size={32} showText textClassName="hidden sm:inline" />
             </div>
           </Link>
@@ -65,13 +65,13 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
                 key={link.href}
                 href={link.href}
                 onClick={(e) => scrollToSection(e, link.href)}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-300 cursor-pointer hover:scale-105 animate-in slide-in-from-top-2 duration-500"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-300 cursor-pointer hover:scale-[1.02] animate-in slide-in-from-top-2 duration-500"
                 style={{ animationDelay: `${200 + index * 100}ms` }}
               >
                 {link.label}
               </a>
             ))}
-            <div className="animate-in zoom-in-50 duration-500 delay-400 hover:scale-105 transition-transform duration-300">
+            <div className="animate-in zoom-in-50 duration-500 delay-400 hover:scale-[1.02] transition-transform duration-300">
               <LanguageSwitcher variant="icon" />
             </div>
             {isAuthenticated ? (
@@ -79,7 +79,7 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
                 href="/app/articles"
                 className="animate-in slide-in-from-right-4 duration-500 delay-500"
               >
-                <Button className="transition-all duration-300 hover:scale-105 hover:shadow-md">
+                <Button className="transition-all duration-300 hover:scale-[1.02] hover:shadow-md">
                   {t('buttons.enter-app')}
                 </Button>
               </Link>
@@ -88,7 +88,7 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
                 href="/login"
                 className="animate-in slide-in-from-right-4 duration-500 delay-500"
               >
-                <Button className="transition-all duration-300 hover:scale-105 hover:shadow-md">
+                <Button className="transition-all duration-300 hover:scale-[1.02] hover:shadow-md">
                   {t('buttons.login')}
                 </Button>
               </Link>
@@ -99,7 +99,7 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden transition-all duration-300 hover:scale-110 animate-in zoom-in-50 duration-500 delay-300"
+            className="md:hidden transition-all duration-300 hover:scale-[1.05] animate-in zoom-in-50 duration-500 delay-300"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle menu"
           >
@@ -119,7 +119,7 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
           />
           <nav className="absolute left-0 top-0 bottom-0 w-64 bg-background border-r p-6 space-y-6 animate-in slide-in-from-left-4 duration-300">
             <div className="flex items-center justify-between">
-              <div className="hover:scale-105 transition-transform duration-300">
+              <div className="hover:scale-[1.02] transition-transform duration-300">
                 <Logo size={28} showText />
               </div>
               <Button
@@ -127,7 +127,7 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
                 size="icon"
                 onClick={() => setIsMenuOpen(false)}
                 aria-label="Close menu"
-                className="transition-all duration-300 hover:scale-110 hover:rotate-90"
+                className="transition-all duration-300 hover:scale-[1.05] hover:rotate-90"
               >
                 <X className="h-5 w-5" />
               </Button>
@@ -148,18 +148,18 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
             </div>
 
             <div className="pt-4 border-t space-y-3 animate-in fade-in duration-500 delay-300">
-              <div className="hover:scale-105 transition-transform duration-300">
+              <div className="hover:scale-[1.02] transition-transform duration-300">
                 <LanguageSwitcher variant="compact" />
               </div>
               {isAuthenticated ? (
                 <Link href="/app/articles" className="block">
-                  <Button className="w-full transition-all duration-300 hover:scale-105 hover:shadow-md">
+                  <Button className="w-full transition-all duration-300 hover:scale-[1.02] hover:shadow-md">
                     {t('buttons.enter-app')}
                   </Button>
                 </Link>
               ) : (
                 <Link href="/login" className="block">
-                  <Button className="w-full transition-all duration-300 hover:scale-105 hover:shadow-md">
+                  <Button className="w-full transition-all duration-300 hover:scale-[1.02] hover:shadow-md">
                     {t('buttons.login')}
                   </Button>
                 </Link>

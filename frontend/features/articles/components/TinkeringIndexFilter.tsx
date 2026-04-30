@@ -77,7 +77,7 @@ export function TinkeringIndexFilter({
         {hasFilters && (
           <button
             onClick={handleClearAll}
-            className="text-xs text-muted-foreground hover:text-foreground transition-all duration-200 hover:scale-105 animate-in zoom-in-50 duration-300 delay-300"
+            className="text-xs text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-[1.02] animate-in zoom-in-50 duration-300 delay-300"
             disabled={disabled}
           >
             {t('forms.messages.clear-filters')}

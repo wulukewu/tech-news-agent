@@ -41,7 +41,7 @@ export function ThemeCycleToggle({ size = 'default', className = '' }: ThemeCycl
       size="icon"
       onClick={cycleTheme}
       aria-label={t('theme.toggle')}
-      className={`transition-all duration-200 hover:scale-105 ${className}`}
+      className={`transition-all duration-300 hover:scale-[1.02] ${className}`}
     >
       <Sun
         className={`h-5 w-5 transition-all duration-300 ${

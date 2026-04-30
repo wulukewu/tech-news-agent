@@ -31,7 +31,7 @@ function ShimmerSkeleton({ className, ...props }: React.HTMLAttributes<HTMLDivEl
 export function ArticleCardSkeletonMobile() {
   return (
     <article>
-      <Card className="overflow-hidden animate-in fade-in-50 slide-in-from-bottom-4 duration-500 hover:shadow-lg transition-all">
+      <Card className="overflow-hidden animate-in fade-in-50 slide-in-from-bottom-4 duration-500 hover:shadow-md transition-all">
         <CardContent className="p-0">
           <div className="flex flex-col gap-3">
             {/* Image skeleton - full width, aspect-video */}

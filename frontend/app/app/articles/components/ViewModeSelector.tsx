@@ -27,7 +27,7 @@ export function ViewModeSelector({ value, onChange }: ViewModeSelectorProps) {
           size="sm"
           onClick={() => onChange(mode.value)}
           className={cn(
-            'h-8 px-2 transition-all duration-200 hover:scale-105 active:scale-95',
+            'h-8 px-2 transition-all duration-300 hover:scale-[1.02] active:scale-95',
             'animate-in slide-in-from-top-1 duration-300',
             value === mode.value && 'bg-primary text-primary-foreground shadow-sm scale-105'
           )}
@@ -38,7 +38,7 @@ export function ViewModeSelector({ value, onChange }: ViewModeSelectorProps) {
           <span
             className={cn(
               'transition-all duration-200',
-              value === mode.value ? 'scale-110' : 'hover:scale-110'
+              value === mode.value ? 'scale-110' : 'hover:scale-[1.05]'
             )}
           >
             {mode.icon}

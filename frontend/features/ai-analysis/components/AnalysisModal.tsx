@@ -84,13 +84,13 @@ export function AnalysisModal({
             <div className="flex flex-col gap-2 text-sm text-muted-foreground animate-in slide-in-from-left-4 duration-500 delay-400">
               <div className="flex items-center gap-4 flex-wrap">
                 <div className="flex items-center gap-1 transition-colors duration-200 hover:text-foreground">
-                  <ExternalLink className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
+                  <ExternalLink className="h-4 w-4 transition-transform duration-300 hover:scale-[1.05]" />
                   <span>{articleSource}</span>
                 </div>
 
                 {articlePublishedAt && (
                   <div className="flex items-center gap-1 transition-colors duration-200 hover:text-foreground">
-                    <Calendar className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
+                    <Calendar className="h-4 w-4 transition-transform duration-300 hover:scale-[1.05]" />
                     <span>
                       {new Date(articlePublishedAt).toLocaleDateString('zh-TW', {
                         year: 'numeric',
@@ -145,7 +145,7 @@ export function AnalysisModal({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="ml-2 transition-all duration-200 hover:scale-105"
+                  className="ml-2 transition-all duration-300 hover:scale-[1.02]"
                   onClick={() => window.location.reload()}
                 >
                   重試
@@ -166,7 +166,7 @@ export function AnalysisModal({
                   </span>
                   <Badge
                     variant="secondary"
-                    className="text-xs animate-in zoom-in-50 duration-300 delay-800 transition-all hover:scale-105"
+                    className="text-xs animate-in zoom-in-50 duration-300 delay-800 transition-all hover:scale-[1.02]"
                   >
                     {analysis.model}
                   </Badge>
@@ -179,9 +179,9 @@ export function AnalysisModal({
                     size="sm"
                     onClick={handleCopyAnalysis}
                     data-testid="copy-analysis"
-                    className="transition-all duration-200 hover:scale-105"
+                    className="transition-all duration-300 hover:scale-[1.02]"
                   >
-                    <Copy className="h-4 w-4 mr-1 transition-transform duration-200 hover:scale-110" />
+                    <Copy className="h-4 w-4 mr-1 transition-transform duration-300 hover:scale-[1.05]" />
                     複製分析
                   </Button>
 
@@ -190,9 +190,9 @@ export function AnalysisModal({
                     size="sm"
                     onClick={handleShareAnalysis}
                     data-testid="share-analysis"
-                    className="transition-all duration-200 hover:scale-105"
+                    className="transition-all duration-300 hover:scale-[1.02]"
                   >
-                    <Share2 className="h-4 w-4 mr-1 transition-transform duration-200 hover:scale-110" />
+                    <Share2 className="h-4 w-4 mr-1 transition-transform duration-300 hover:scale-[1.05]" />
                     分享分析
                   </Button>
                 </div>
@@ -263,7 +263,7 @@ function AnalysisSection({ title, items, icon, variant = 'default' }: AnalysisSe
       className={`rounded-lg border p-4 ${borderColor} ${bgColor} hover:shadow-md transition-all duration-200`}
     >
       <h3 className="flex items-center gap-2 font-semibold mb-3 animate-in slide-in-from-left-2 duration-300">
-        <span className="text-lg transition-transform duration-200 hover:scale-110">{icon}</span>
+        <span className="text-lg transition-transform duration-300 hover:scale-[1.05]">{icon}</span>
         {title}
       </h3>
 
