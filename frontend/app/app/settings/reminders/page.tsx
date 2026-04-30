@@ -6,13 +6,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { BookmarkPlus, Star, Clock, Zap } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { BookmarkPlus, Star, Clock, Zap, Send, History } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { useI18n } from '@/contexts/I18nContext';
 import {
   getReminderSettings,
   updateReminderSettings,
+  getReminderStats,
+  testReminder,
   type ReminderSettings,
+  type ReminderStats,
 } from '@/lib/api/reminders';
 
 export default function RemindersSettingsPage() {
@@ -22,10 +26,17 @@ export default function RemindersSettingsPage() {
   // Local state for sliders to provide smooth UX
   const [localCooldown, setLocalCooldown] = useState<number | null>(null);
   const [localSimilarity, setLocalSimilarity] = useState<number | null>(null);
+  const [isTestingReminder, setIsTestingReminder] = useState(false);
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ['reminder-settings'],
     queryFn: getReminderSettings,
+  });
+
+  const { data: stats } = useQuery({
+    queryKey: ['reminder-stats'],
+    queryFn: getReminderStats,
+    enabled: !!settings?.reminder_enabled,
   });
 
   const mutation = useMutation({
@@ -50,6 +61,18 @@ export default function RemindersSettingsPage() {
     mutation.mutate({ ...settings, ...patch });
   };
 
+  const handleTestReminder = async () => {
+    setIsTestingReminder(true);
+    try {
+      const result = await testReminder();
+      toast.success(result.message);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.detail || 'Failed to send test reminder');
+    } finally {
+      setIsTestingReminder(false);
+    }
+  };
+
   if (isLoading || !settings) {
     return (
       <div className="h-40 flex items-center justify-center text-muted-foreground">Loading...</div>
@@ -65,6 +88,54 @@ export default function RemindersSettingsPage() {
         <h2 className="text-lg font-semibold">{t('pages.reminders.title')}</h2>
         <p className="text-sm text-muted-foreground mt-1">{t('pages.reminders.description')}</p>
       </div>
+
+      {/* Statistics Card */}
+      {settings?.reminder_enabled && stats && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">本週統計</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-muted-foreground">發送次數</p>
+                <p className="text-lg font-semibold">{stats.week_sent_count}</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">點擊率</p>
+                <p className="text-lg font-semibold">{stats.click_rate}%</p>
+              </div>
+            </div>
+            {stats.last_reminder_at && (
+              <p className="text-xs text-muted-foreground mt-3">
+                最近提醒：{new Date(stats.last_reminder_at).toLocaleString('zh-TW')}
+                {stats.last_reminder_type === 'add' ? '（加入文章）' : '（評分觸發）'}
+              </p>
+            )}
+            <div className="mt-4 flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleTestReminder}
+                disabled={isTestingReminder}
+                className="flex-1"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                {isTestingReminder ? '發送中...' : '測試提醒'}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => (window.location.href = '/app/settings/reminders/history')}
+                className="flex-1"
+              >
+                <History className="w-4 h-4 mr-2" />
+                查看歷史
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Master toggle */}
       <Card>
