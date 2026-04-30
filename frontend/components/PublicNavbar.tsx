@@ -7,6 +7,7 @@ import { ThemeCycleToggle } from '@/components/ThemeCycleToggle';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface PublicNavbarProps {
   showBackButton?: boolean;
@@ -20,6 +21,7 @@ export function PublicNavbar({
   backText = 'Back to Home',
 }: PublicNavbarProps) {
   const { isAuthenticated, loading } = useAuth();
+  const { locale } = useI18n();
 
   return (
     <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
@@ -48,8 +50,14 @@ export function PublicNavbar({
 
           {!loading && (
             <Button asChild>
-              <Link href={isAuthenticated ? '/app' : '/app'}>
-                {isAuthenticated ? 'Dashboard' : 'Get Started'}
+              <Link href="/app">
+                {isAuthenticated
+                  ? locale === 'zh-TW'
+                    ? '開啟 App'
+                    : 'Open App'
+                  : locale === 'zh-TW'
+                    ? '立即開始'
+                    : 'Get Started'}
               </Link>
             </Button>
           )}

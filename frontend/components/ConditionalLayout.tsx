@@ -43,7 +43,7 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
 
   // Routes that should NOT have navigation/layout/auth
   const publicRoutes = ['/', '/login', '/auth/callback'];
-  const isPublicRoute = publicRoutes.includes(pathname);
+  const isPublicRoute = !pathname || publicRoutes.includes(pathname);
 
   // Check if this is a protected route (app, recommendations, etc.)
   // Note: 404 pages should not be treated as protected routes

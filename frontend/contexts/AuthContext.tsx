@@ -159,7 +159,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleUnauthorized = () => {
       setIsAuthenticated(false);
-      router.push('/login');
+      const publicPaths = ['/', '/login', '/auth/callback'];
+      if (!publicPaths.includes(window.location.pathname)) {
+        router.push('/login');
+      }
     };
 
     window.addEventListener('unauthorized', handleUnauthorized);
