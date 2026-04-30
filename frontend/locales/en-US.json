@@ -7,6 +7,8 @@
   },
   "nav": {
     "articles": "Articles",
+    "open-app": "Open App",
+    "get-started": "Get Started",
     "chat": "Q&A",
     "reading-list": "Reading",
     "subscriptions": "Feeds",

@@ -7,6 +7,8 @@
   },
   "nav": {
     "articles": "文章",
+    "open-app": "開啟 App",
+    "get-started": "立即開始",
     "chat": "智能問答",
     "reading-list": "閱讀清單",
     "subscriptions": "訂閱",

@@ -21,7 +21,7 @@ export function PublicNavbar({
   backText = 'Back to Home',
 }: PublicNavbarProps) {
   const { isAuthenticated, loading } = useAuth();
-  const { locale } = useI18n();
+  const { t } = useI18n();
 
   return (
     <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
@@ -50,15 +50,7 @@ export function PublicNavbar({
 
           {!loading && (
             <Button asChild>
-              <Link href="/app">
-                {isAuthenticated
-                  ? locale === 'zh-TW'
-                    ? '開啟 App'
-                    : 'Open App'
-                  : locale === 'zh-TW'
-                    ? '立即開始'
-                    : 'Get Started'}
-              </Link>
+              <Link href="/app">{isAuthenticated ? t('nav.open-app') : t('nav.get-started')}</Link>
             </Button>
           )}
         </div>
