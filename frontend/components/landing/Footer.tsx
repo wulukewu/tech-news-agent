@@ -51,16 +51,18 @@ export function Footer() {
       <div className="container mx-auto px-4 py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Brand Column */}
-          <div className="lg:col-span-2 space-y-4">
-            <Logo size={32} showText />
-            <p className="text-sm text-muted-foreground max-w-xs leading-relaxed">
+          <div className="lg:col-span-2 space-y-4 animate-in fade-in slide-in-from-left-4 duration-1000">
+            <div className="hover:scale-105 transition-transform duration-300">
+              <Logo size={32} showText />
+            </div>
+            <p className="text-sm text-muted-foreground max-w-xs leading-relaxed animate-in fade-in slide-in-from-left-4 duration-1000 delay-200">
               Your personalized tech news platform. Aggregate, discover, and read tech content from
               multiple sources in one place.
             </p>
 
             {/* Social Links */}
             <div className="flex gap-3 pt-2">
-              {socialLinks.map((social) => {
+              {socialLinks.map((social, index) => {
                 const Icon = social.icon;
                 return (
                   <a
@@ -68,10 +70,11 @@ export function Footer() {
                     href={social.href}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center h-9 w-9 rounded-md border bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+                    className="inline-flex items-center justify-center h-9 w-9 rounded-md border bg-background hover:bg-accent hover:text-accent-foreground transition-all duration-300 hover:scale-110 hover:shadow-md animate-in zoom-in-50 duration-500"
+                    style={{ animationDelay: `${400 + index * 100}ms` }}
                     aria-label={social.label}
                   >
-                    <Icon className="h-4 w-4" />
+                    <Icon className="h-4 w-4 transition-transform duration-300 hover:scale-110" />
                   </a>
                 );
               })}
@@ -79,14 +82,18 @@ export function Footer() {
           </div>
 
           {/* Product Links */}
-          <div>
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-300">
             <h3 className="font-semibold mb-4">Product</h3>
             <ul className="space-y-3">
-              {footerLinks.product.map((link) => (
-                <li key={link.label}>
+              {footerLinks.product.map((link, index) => (
+                <li
+                  key={link.label}
+                  className="animate-in slide-in-from-bottom-2 duration-500"
+                  style={{ animationDelay: `${500 + index * 100}ms` }}
+                >
                   <a
                     href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 cursor-pointer hover:translate-x-1"
                     onClick={(e) => {
                       if (link.href.startsWith('#')) {
                         e.preventDefault();
@@ -105,14 +112,18 @@ export function Footer() {
           </div>
 
           {/* Resources Links */}
-          <div>
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-400">
             <h3 className="font-semibold mb-4">Resources</h3>
             <ul className="space-y-3">
-              {footerLinks.resources.map((link) => (
-                <li key={link.label}>
+              {footerLinks.resources.map((link, index) => (
+                <li
+                  key={link.label}
+                  className="animate-in slide-in-from-bottom-2 duration-500"
+                  style={{ animationDelay: `${600 + index * 100}ms` }}
+                >
                   <a
                     href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:translate-x-1"
                   >
                     {link.label}
                   </a>
@@ -122,14 +133,18 @@ export function Footer() {
           </div>
 
           {/* Legal Links */}
-          <div>
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500">
             <h3 className="font-semibold mb-4">Legal</h3>
             <ul className="space-y-3">
-              {footerLinks.legal.map((link) => (
-                <li key={link.label}>
+              {footerLinks.legal.map((link, index) => (
+                <li
+                  key={link.label}
+                  className="animate-in slide-in-from-bottom-2 duration-500"
+                  style={{ animationDelay: `${700 + index * 100}ms` }}
+                >
                   <a
                     href={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:translate-x-1"
                   >
                     {link.label}
                   </a>
@@ -140,13 +155,15 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-12 pt-8 border-t">
+        <div className="mt-12 pt-8 border-t animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-800">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
               © {currentYear} Tech News Agent. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
-              <LanguageSwitcher variant="compact" />
+              <div className="hover:scale-105 transition-transform duration-300">
+                <LanguageSwitcher variant="compact" />
+              </div>
               <p className="text-sm text-muted-foreground hidden sm:block">
                 Built with Next.js, TypeScript, and Tailwind CSS
               </p>

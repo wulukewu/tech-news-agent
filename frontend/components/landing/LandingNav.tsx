@@ -45,34 +45,52 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 animate-in slide-in-from-top-4 duration-500">
       <nav className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0">
-            <Logo size={32} showText textClassName="hidden sm:inline" />
+          <Link
+            href="/"
+            className="flex-shrink-0 animate-in fade-in slide-in-from-left-4 duration-500"
+          >
+            <div className="hover:scale-105 transition-transform duration-300">
+              <Logo size={32} showText textClassName="hidden sm:inline" />
+            </div>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-4">
-            {navLinks.map((link) => (
+            {navLinks.map((link, index) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={(e) => scrollToSection(e, link.href)}
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-300 cursor-pointer hover:scale-105 animate-in slide-in-from-top-2 duration-500"
+                style={{ animationDelay: `${200 + index * 100}ms` }}
               >
                 {link.label}
               </a>
             ))}
-            <LanguageSwitcher variant="icon" />
+            <div className="animate-in zoom-in-50 duration-500 delay-400 hover:scale-105 transition-transform duration-300">
+              <LanguageSwitcher variant="icon" />
+            </div>
             {isAuthenticated ? (
-              <Link href="/app/articles">
-                <Button>{t('buttons.enter-app')}</Button>
+              <Link
+                href="/app/articles"
+                className="animate-in slide-in-from-right-4 duration-500 delay-500"
+              >
+                <Button className="transition-all duration-300 hover:scale-105 hover:shadow-md">
+                  {t('buttons.enter-app')}
+                </Button>
               </Link>
             ) : (
-              <Link href="/login">
-                <Button>{t('buttons.login')}</Button>
+              <Link
+                href="/login"
+                className="animate-in slide-in-from-right-4 duration-500 delay-500"
+              >
+                <Button className="transition-all duration-300 hover:scale-105 hover:shadow-md">
+                  {t('buttons.login')}
+                </Button>
               </Link>
             )}
           </div>
@@ -81,54 +99,69 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden"
+            className="md:hidden transition-all duration-300 hover:scale-110 animate-in zoom-in-50 duration-500 delay-300"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle menu"
           >
-            {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            <div className="transition-transform duration-300">
+              {isMenuOpen ? <X className="h-5 w-5 rotate-90" /> : <Menu className="h-5 w-5" />}
+            </div>
           </Button>
         </div>
       </nav>
 
       {/* Mobile Drawer */}
       {isMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setIsMenuOpen(false)} />
-          <nav className="absolute left-0 top-0 bottom-0 w-64 bg-background border-r p-6 space-y-6">
+        <div className="fixed inset-0 z-50 md:hidden animate-in fade-in duration-300">
+          <div
+            className="absolute inset-0 bg-black/50 animate-in fade-in duration-300"
+            onClick={() => setIsMenuOpen(false)}
+          />
+          <nav className="absolute left-0 top-0 bottom-0 w-64 bg-background border-r p-6 space-y-6 animate-in slide-in-from-left-4 duration-300">
             <div className="flex items-center justify-between">
-              <Logo size={28} showText />
+              <div className="hover:scale-105 transition-transform duration-300">
+                <Logo size={28} showText />
+              </div>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => setIsMenuOpen(false)}
                 aria-label="Close menu"
+                className="transition-all duration-300 hover:scale-110 hover:rotate-90"
               >
                 <X className="h-5 w-5" />
               </Button>
             </div>
 
             <div className="space-y-4">
-              {navLinks.map((link) => (
+              {navLinks.map((link, index) => (
                 <a
                   key={link.href}
                   href={link.href}
                   onClick={(e) => scrollToSection(e, link.href)}
-                  className="block text-base font-medium hover:text-primary transition-colors cursor-pointer"
+                  className="block text-base font-medium hover:text-primary transition-all duration-300 cursor-pointer hover:translate-x-2 animate-in slide-in-from-left-2 duration-500"
+                  style={{ animationDelay: `${100 + index * 100}ms` }}
                 >
                   {link.label}
                 </a>
               ))}
             </div>
 
-            <div className="pt-4 border-t space-y-3">
-              <LanguageSwitcher variant="compact" />
+            <div className="pt-4 border-t space-y-3 animate-in fade-in duration-500 delay-300">
+              <div className="hover:scale-105 transition-transform duration-300">
+                <LanguageSwitcher variant="compact" />
+              </div>
               {isAuthenticated ? (
                 <Link href="/app/articles" className="block">
-                  <Button className="w-full">{t('buttons.enter-app')}</Button>
+                  <Button className="w-full transition-all duration-300 hover:scale-105 hover:shadow-md">
+                    {t('buttons.enter-app')}
+                  </Button>
                 </Link>
               ) : (
                 <Link href="/login" className="block">
-                  <Button className="w-full">{t('buttons.login')}</Button>
+                  <Button className="w-full transition-all duration-300 hover:scale-105 hover:shadow-md">
+                    {t('buttons.login')}
+                  </Button>
                 </Link>
               )}
             </div>
