@@ -165,14 +165,8 @@ const config: Config = {
           to: { transform: 'scale(1)', opacity: '1' },
         },
         shimmer: {
-          '0%': {
-            backgroundPosition: '-1000px 0',
-            transform: 'translateX(-100%)',
-          },
-          '100%': {
-            backgroundPosition: '1000px 0',
-            transform: 'translateX(100%)',
-          },
+          '0%': { backgroundPosition: '-200% 0' },
+          '100%': { backgroundPosition: '200% 0' },
         },
       },
       animation: {
@@ -186,7 +180,7 @@ const config: Config = {
         'slide-in-from-bottom': 'slide-in-from-bottom 0.3s ease-out',
         'slide-out-to-bottom': 'slide-out-to-bottom 0.3s ease-out',
         'scale-up': 'scale-up 0.2s ease-out',
-        shimmer: 'shimmer 2s infinite linear',
+        shimmer: 'shimmer 3s infinite linear',
       },
     },
   },

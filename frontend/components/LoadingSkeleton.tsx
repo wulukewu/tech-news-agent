@@ -1,6 +1,7 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/contexts/I18nContext';
 
 /**
  * Enhanced Skeleton with Shimmer Animation
@@ -11,11 +12,9 @@ function ShimmerSkeleton({ className, ...props }: React.HTMLAttributes<HTMLDivEl
   return (
     <div
       className={cn(
-        'relative overflow-hidden rounded-md bg-muted',
-        'before:absolute before:inset-0',
-        'before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent',
-        'before:animate-shimmer before:bg-[length:200%_100%]',
-        'animate-in fade-in-50 duration-500',
+        'rounded-md bg-muted',
+        'bg-gradient-to-r from-muted via-muted-foreground/10 to-muted',
+        'bg-[length:200%_100%] animate-shimmer',
         className
       )}
       {...props}
@@ -31,48 +30,32 @@ function ShimmerSkeleton({ className, ...props }: React.HTMLAttributes<HTMLDivEl
 export function ArticleCardSkeletonMobile() {
   return (
     <article>
-      <Card className="overflow-hidden animate-in fade-in-50 slide-in-from-bottom-4 duration-500 hover:shadow-md transition-all">
+      <Card className="overflow-hidden animate-in fade-in-50 duration-700">
         <CardContent className="p-0">
           <div className="flex flex-col gap-3">
-            {/* Image skeleton - full width, aspect-video */}
-            <ShimmerSkeleton className="w-full aspect-video rounded-t-lg animate-pulse" />
-
-            {/* Content container with padding */}
+            <ShimmerSkeleton className="w-full aspect-video rounded-t-lg" />
             <div className="px-4 pb-4 flex flex-col gap-3">
-              {/* Title skeleton - 2 lines */}
               <div className="space-y-2">
-                <ShimmerSkeleton className="h-6 w-full animate-in slide-in-from-left-2 duration-500 delay-100" />
-                <ShimmerSkeleton className="h-6 w-3/4 animate-in slide-in-from-left-2 duration-500 delay-200" />
+                <ShimmerSkeleton className="h-6 w-full" />
+                <ShimmerSkeleton className="h-6 w-3/4" />
               </div>
-
-              {/* Metadata row skeleton */}
-              <div className="flex items-center gap-2 animate-in fade-in-50 duration-500 delay-300">
+              <div className="flex items-center gap-2">
                 <ShimmerSkeleton className="h-4 w-20" />
-                <ShimmerSkeleton className="h-5 w-16 rounded-full" /> {/* Badge */}
+                <ShimmerSkeleton className="h-5 w-16 rounded-full" />
                 <ShimmerSkeleton className="h-4 w-24" />
               </div>
-
-              {/* Tinkering index stars skeleton */}
               <div className="flex items-center gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <ShimmerSkeleton
-                    key={i}
-                    className="h-5 w-5 rounded-sm animate-in zoom-in-50 duration-300"
-                    style={{ animationDelay: `${400 + i * 100}ms` }}
-                  />
+                  <ShimmerSkeleton key={i} className="h-5 w-5 rounded-sm" />
                 ))}
               </div>
-
-              {/* Summary skeleton - 2 lines */}
               <div className="space-y-2">
-                <ShimmerSkeleton className="h-4 w-full animate-in slide-in-from-right-2 duration-500 delay-500" />
-                <ShimmerSkeleton className="h-4 w-2/3 animate-in slide-in-from-right-2 duration-500 delay-600" />
+                <ShimmerSkeleton className="h-4 w-full" />
+                <ShimmerSkeleton className="h-4 w-2/3" />
               </div>
-
-              {/* Action buttons skeleton */}
               <div className="flex gap-2">
-                <ShimmerSkeleton className="h-11 flex-1 rounded-md animate-in zoom-in-50 duration-300 delay-700" />
-                <ShimmerSkeleton className="h-11 flex-1 rounded-md animate-in zoom-in-50 duration-300 delay-800" />
+                <ShimmerSkeleton className="h-11 flex-1 rounded-md" />
+                <ShimmerSkeleton className="h-11 flex-1 rounded-md" />
               </div>
             </div>
           </div>
@@ -319,6 +302,7 @@ export function ReadingListSkeleton({ count = 5 }: { count?: number }) {
 }
 
 export function LoadingScreen() {
+  const { t } = useI18n();
   return (
     <div className="flex min-h-screen items-center justify-center animate-in fade-in-50 duration-500">
       <div className="flex flex-col items-center gap-4">
@@ -327,10 +311,8 @@ export function LoadingScreen() {
           <div className="absolute inset-0 h-12 w-12 animate-ping rounded-full border-2 border-primary/20" />
         </div>
         <div className="text-center space-y-2 animate-in slide-in-from-bottom-2 duration-500 delay-300">
-          <p className="text-lg font-medium">Loading...</p>
-          <p className="text-sm text-muted-foreground animate-pulse">
-            Please wait while we prepare your content
-          </p>
+          <p className="text-lg font-medium">{t('ui.loading')}</p>
+          <p className="text-sm text-muted-foreground animate-pulse">{t('ui.loading-preparing')}</p>
         </div>
       </div>
     </div>
