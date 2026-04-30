@@ -50,15 +50,19 @@ export function SystemResourcesCard({ resources }: SystemResourcesCardProps) {
 
   if (!resources) {
     return (
-      <Card>
+      <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Cpu className="h-5 w-5" />
+          <CardTitle className="flex items-center gap-2 animate-in slide-in-from-left-4 duration-500 delay-200">
+            <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-300 hover:scale-110 transition-transform">
+              <Cpu className="h-5 w-5 animate-pulse" />
+            </div>
             {t('system.resource-usage')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">{t('system.resource-unavailable')}</p>
+          <p className="text-sm text-muted-foreground animate-in fade-in duration-500 delay-400">
+            {t('system.resource-unavailable')}
+          </p>
         </CardContent>
       </Card>
     );
@@ -67,33 +71,41 @@ export function SystemResourcesCard({ resources }: SystemResourcesCardProps) {
   const { cpu, memory, disk } = resources;
 
   return (
-    <Card>
+    <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-lg transition-all">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Cpu className="h-5 w-5" />
+        <CardTitle className="flex items-center gap-2 animate-in slide-in-from-left-4 duration-500 delay-200">
+          <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-300 hover:scale-110 transition-transform">
+            <Cpu className="h-5 w-5 animate-pulse" />
+          </div>
           {t('system.resource-usage')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* CPU Usage */}
-        <div className="space-y-2">
+        <div className="space-y-2 animate-in slide-in-from-left-4 duration-500 delay-400">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Cpu className="h-4 w-4 text-muted-foreground" />
+              <Cpu className="h-4 w-4 text-muted-foreground transition-transform duration-200 hover:scale-110" />
               <span className="text-sm font-medium">{t('system.cpu-usage')}</span>
             </div>
-            <span className={`text-sm font-semibold ${getUsageColor(cpu.usage)}`}>
+            <span
+              className={`text-sm font-semibold ${getUsageColor(cpu.usage)} transition-all duration-200 hover:scale-110`}
+            >
               {cpu.usage.toFixed(1)}%
             </span>
           </div>
-          <Progress
-            value={cpu.usage}
-            className="h-2"
-            indicatorClassName={getProgressColor(cpu.usage)}
-          />
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{t('system.cores', { count: cpu.cores })}</span>
-            <span>
+          <div className="animate-in slide-in-from-left-full duration-1000 delay-500">
+            <Progress
+              value={cpu.usage}
+              className="h-2"
+              indicatorClassName={getProgressColor(cpu.usage)}
+            />
+          </div>
+          <div className="flex items-center justify-between text-xs text-muted-foreground animate-in fade-in duration-300 delay-600">
+            <span className="transition-colors duration-200 hover:text-foreground">
+              {t('system.cores', { count: cpu.cores })}
+            </span>
+            <span className="transition-colors duration-200 hover:text-foreground">
               {t('system.load-average', {
                 values: cpu.loadAverage.map((load) => load.toFixed(2)).join(', '),
               })}
@@ -102,52 +114,68 @@ export function SystemResourcesCard({ resources }: SystemResourcesCardProps) {
         </div>
 
         {/* Memory Usage */}
-        <div className="space-y-2">
+        <div className="space-y-2 animate-in slide-in-from-right-4 duration-500 delay-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <MemoryStick className="h-4 w-4 text-muted-foreground" />
+              <MemoryStick className="h-4 w-4 text-muted-foreground transition-transform duration-200 hover:scale-110" />
               <span className="text-sm font-medium">{t('system.memory-usage')}</span>
             </div>
-            <span className={`text-sm font-semibold ${getUsageColor(memory.usagePercentage)}`}>
+            <span
+              className={`text-sm font-semibold ${getUsageColor(memory.usagePercentage)} transition-all duration-200 hover:scale-110`}
+            >
               {memory.usagePercentage.toFixed(1)}%
             </span>
           </div>
-          <Progress
-            value={memory.usagePercentage}
-            className="h-2"
-            indicatorClassName={getProgressColor(memory.usagePercentage)}
-          />
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{t('system.used', { amount: formatBytes(memory.used) })}</span>
-            <span>{t('system.total', { amount: formatBytes(memory.total) })}</span>
+          <div className="animate-in slide-in-from-left-full duration-1000 delay-800">
+            <Progress
+              value={memory.usagePercentage}
+              className="h-2"
+              indicatorClassName={getProgressColor(memory.usagePercentage)}
+            />
+          </div>
+          <div className="flex items-center justify-between text-xs text-muted-foreground animate-in fade-in duration-300 delay-900">
+            <span className="transition-colors duration-200 hover:text-foreground">
+              {t('system.used', { amount: formatBytes(memory.used) })}
+            </span>
+            <span className="transition-colors duration-200 hover:text-foreground">
+              {t('system.total', { amount: formatBytes(memory.total) })}
+            </span>
           </div>
         </div>
 
         {/* Disk Usage */}
-        <div className="space-y-2">
+        <div className="space-y-2 animate-in slide-in-from-left-4 duration-500 delay-1000">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <HardDrive className="h-4 w-4 text-muted-foreground" />
+              <HardDrive className="h-4 w-4 text-muted-foreground transition-transform duration-200 hover:scale-110" />
               <span className="text-sm font-medium">{t('system.disk-usage')}</span>
             </div>
-            <span className={`text-sm font-semibold ${getUsageColor(disk.usagePercentage)}`}>
+            <span
+              className={`text-sm font-semibold ${getUsageColor(disk.usagePercentage)} transition-all duration-200 hover:scale-110`}
+            >
               {disk.usagePercentage.toFixed(1)}%
             </span>
           </div>
-          <Progress
-            value={disk.usagePercentage}
-            className="h-2"
-            indicatorClassName={getProgressColor(disk.usagePercentage)}
-          />
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{t('system.used', { amount: formatBytes(disk.used) })}</span>
-            <span>{t('system.total', { amount: formatBytes(disk.total) })}</span>
+          <div className="animate-in slide-in-from-left-full duration-1000 delay-1100">
+            <Progress
+              value={disk.usagePercentage}
+              className="h-2"
+              indicatorClassName={getProgressColor(disk.usagePercentage)}
+            />
+          </div>
+          <div className="flex items-center justify-between text-xs text-muted-foreground animate-in fade-in duration-300 delay-1200">
+            <span className="transition-colors duration-200 hover:text-foreground">
+              {t('system.used', { amount: formatBytes(disk.used) })}
+            </span>
+            <span className="transition-colors duration-200 hover:text-foreground">
+              {t('system.total', { amount: formatBytes(disk.total) })}
+            </span>
           </div>
         </div>
 
         {/* Last Updated */}
-        <div className="pt-2 border-t">
-          <p className="text-xs text-muted-foreground">
+        <div className="pt-2 border-t animate-in fade-in duration-500 delay-1300">
+          <p className="text-xs text-muted-foreground transition-colors duration-200 hover:text-foreground">
             {t('system.last-updated', {
               time: new Date(resources.lastUpdated).toLocaleString('zh-TW'),
             })}

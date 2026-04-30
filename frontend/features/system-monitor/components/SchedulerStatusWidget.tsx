@@ -66,15 +66,22 @@ export function SchedulerStatusWidget({
   const StatusIcon = statusBadge.icon;
 
   return (
-    <Card>
+    <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-lg transition-all">
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between animate-in slide-in-from-left-4 duration-500 delay-200">
           <div className="space-y-1">
             <CardTitle className="text-xl">{t('scheduler.status')}</CardTitle>
-            <CardDescription>{t('scheduler.description')}</CardDescription>
+            <CardDescription className="animate-in fade-in duration-500 delay-300">
+              {t('scheduler.description')}
+            </CardDescription>
           </div>
-          <Badge variant={statusBadge.variant} className="gap-1.5">
-            <StatusIcon className={`h-3.5 w-3.5 ${status.isRunning ? 'animate-spin' : ''}`} />
+          <Badge
+            variant={statusBadge.variant}
+            className="gap-1.5 animate-in zoom-in-50 duration-300 delay-400"
+          >
+            <StatusIcon
+              className={`h-3.5 w-3.5 ${status.isRunning ? 'animate-spin' : 'animate-pulse'}`}
+            />
             {statusBadge.text}
           </Badge>
         </div>
@@ -82,19 +89,19 @@ export function SchedulerStatusWidget({
 
       <CardContent className="space-y-4">
         {/* Execution Information */}
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 animate-in slide-in-from-bottom-4 duration-500 delay-500">
           {/* Last Execution */}
-          <div className="space-y-1">
+          <div className="space-y-1 animate-in slide-in-from-left-4 duration-300 delay-600">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <CheckCircle className="h-4 w-4" />
+              <CheckCircle className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
               <span>{t('scheduler.last-execution')}</span>
             </div>
-            <div className="text-sm font-medium">
+            <div className="text-sm font-medium transition-all duration-200 hover:text-primary">
               {status.lastExecutionTime ? (
                 <>
                   {formatRelativeTime(status.lastExecutionTime)}
                   {status.articlesProcessed > 0 && (
-                    <span className="ml-2 text-muted-foreground">
+                    <span className="ml-2 text-muted-foreground animate-in fade-in duration-300 delay-700">
                       ({t('scheduler.articles-processed', { count: status.articlesProcessed })})
                     </span>
                   )}
@@ -106,12 +113,12 @@ export function SchedulerStatusWidget({
           </div>
 
           {/* Next Execution */}
-          <div className="space-y-1">
+          <div className="space-y-1 animate-in slide-in-from-right-4 duration-300 delay-700">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Clock className="h-4 w-4" />
+              <Clock className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
               <span>{t('scheduler.next-scheduled')}</span>
             </div>
-            <div className="text-sm font-medium">
+            <div className="text-sm font-medium transition-all duration-200 hover:text-primary">
               {status.nextExecutionTime ? (
                 formatRelativeTime(status.nextExecutionTime)
               ) : (
@@ -123,22 +130,26 @@ export function SchedulerStatusWidget({
 
         {/* Execution Statistics */}
         {status.totalOperations > 0 && (
-          <div className="rounded-lg bg-muted/50 p-3 space-y-2">
-            <div className="text-sm font-medium">{t('scheduler.execution-stats')}</div>
+          <div className="rounded-lg bg-muted/50 p-3 space-y-2 animate-in slide-in-from-bottom-4 duration-500 delay-800 hover:bg-muted/70 transition-colors">
+            <div className="text-sm font-medium animate-in fade-in duration-300 delay-900">
+              {t('scheduler.execution-stats')}
+            </div>
             <div className="grid grid-cols-3 gap-4 text-sm">
-              <div>
+              <div className="animate-in slide-in-from-left-2 duration-300 delay-1000">
                 <div className="text-muted-foreground">{t('scheduler.total-operations')}</div>
-                <div className="font-medium">{status.totalOperations}</div>
+                <div className="font-medium transition-all duration-200 hover:scale-110">
+                  {status.totalOperations}
+                </div>
               </div>
-              <div>
+              <div className="animate-in slide-in-from-bottom-2 duration-300 delay-1100">
                 <div className="text-muted-foreground">{t('scheduler.success')}</div>
-                <div className="font-medium text-green-600 dark:text-green-400">
+                <div className="font-medium text-green-600 dark:text-green-400 transition-all duration-200 hover:scale-110">
                   {status.totalOperations - status.failedOperations}
                 </div>
               </div>
-              <div>
+              <div className="animate-in slide-in-from-right-2 duration-300 delay-1200">
                 <div className="text-muted-foreground">{t('scheduler.failed')}</div>
-                <div className="font-medium text-red-600 dark:text-red-400">
+                <div className="font-medium text-red-600 dark:text-red-400 transition-all duration-200 hover:scale-110">
                   {status.failedOperations}
                 </div>
               </div>
@@ -148,14 +159,18 @@ export function SchedulerStatusWidget({
 
         {/* Health Issues */}
         {status.issues && status.issues.length > 0 && (
-          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 space-y-2">
-            <div className="flex items-center gap-2 text-sm font-medium text-destructive">
-              <AlertCircle className="h-4 w-4" />
+          <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 space-y-2 animate-in slide-in-from-bottom-4 duration-500 delay-1000">
+            <div className="flex items-center gap-2 text-sm font-medium text-destructive animate-in slide-in-from-left-2 duration-300 delay-1100">
+              <AlertCircle className="h-4 w-4 animate-pulse" />
               <span>{t('scheduler.health-issues')}</span>
             </div>
             <ul className="space-y-1 text-sm text-muted-foreground">
               {status.issues.map((issue, index) => (
-                <li key={index} className="flex items-start gap-2">
+                <li
+                  key={index}
+                  className="flex items-start gap-2 animate-in slide-in-from-left-2 duration-300"
+                  style={{ animationDelay: `${1200 + index * 100}ms` }}
+                >
                   <span className="mt-1">•</span>
                   <span>{issue}</span>
                 </li>
@@ -169,7 +184,7 @@ export function SchedulerStatusWidget({
           <Button
             onClick={onTrigger}
             disabled={status.isRunning || isTriggering}
-            className="w-full gap-2"
+            className="w-full gap-2 animate-in slide-in-from-bottom-4 duration-500 delay-1300 transition-all hover:scale-105"
             variant="outline"
           >
             {isTriggering ? (
@@ -179,7 +194,7 @@ export function SchedulerStatusWidget({
               </>
             ) : (
               <>
-                <PlayCircle className="h-4 w-4" />
+                <PlayCircle className="h-4 w-4 transition-transform duration-200 hover:scale-110" />
                 {t('scheduler.manual-trigger')}
               </>
             )}
