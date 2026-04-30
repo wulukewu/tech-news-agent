@@ -84,22 +84,25 @@ export default function NotificationSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-start justify-between gap-4 animate-in fade-in-50 slide-in-from-top-2 duration-500">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t('settings.notifications.title')}</h1>
           <p className="text-muted-foreground mt-1">{t('settings.notifications.description')}</p>
         </div>
-        <div className="flex-shrink-0 mt-1">
+        <div className="flex-shrink-0 mt-1 animate-in zoom-in-50 duration-500 delay-200">
           {status && typeof status === 'object' && 'scheduled' in status && status.scheduled ? (
             <Badge
               variant="outline"
-              className="text-green-600 border-green-300 dark:border-green-700 gap-1.5"
+              className="text-green-600 border-green-300 dark:border-green-700 gap-1.5 hover:scale-105 transition-transform duration-200"
             >
-              <CheckCircle className="h-3.5 w-3.5" />
+              <CheckCircle className="h-3.5 w-3.5 animate-pulse" />
               {t('settings.notifications.status-active')}
             </Badge>
           ) : status !== undefined ? (
-            <Badge variant="outline" className="text-muted-foreground gap-1.5">
+            <Badge
+              variant="outline"
+              className="text-muted-foreground gap-1.5 hover:scale-105 transition-transform duration-200"
+            >
               <AlertCircle className="h-3.5 w-3.5" />
               {t('settings.notifications.status-inactive')}
             </Badge>
@@ -107,46 +110,47 @@ export default function NotificationSettingsPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="schedule" className="space-y-4">
+      <Tabs
+        defaultValue="schedule"
+        className="space-y-4 animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-300"
+      >
         <TabsList className="grid w-full grid-cols-4 h-auto">
-          <TabsTrigger
-            value="schedule"
-            className="flex items-center gap-1.5 py-2 text-xs sm:text-sm"
-          >
-            <Bell className="h-3.5 w-3.5 flex-shrink-0" />
-            <span className="hidden sm:inline">{t('settings.notifications.tab-schedule')}</span>
-            <span className="sm:hidden">{t('settings.notifications.tab-schedule')}</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="quiet-hours"
-            className="flex items-center gap-1.5 py-2 text-xs sm:text-sm"
-          >
-            <Moon className="h-3.5 w-3.5 flex-shrink-0" />
-            <span className="hidden sm:inline">{t('settings.notifications.tab-quiet-hours')}</span>
-            <span className="sm:hidden">{t('settings.notifications.tab-quiet-hours')}</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="filters"
-            className="flex items-center gap-1.5 py-2 text-xs sm:text-sm"
-          >
-            <Brain className="h-3.5 w-3.5 flex-shrink-0" />
-            <span className="hidden sm:inline">{t('settings.notifications.tab-filters')}</span>
-            <span className="sm:hidden">{t('settings.notifications.tab-filters')}</span>
-          </TabsTrigger>
-          <TabsTrigger value="feeds" className="flex items-center gap-1.5 py-2 text-xs sm:text-sm">
-            <Rss className="h-3.5 w-3.5 flex-shrink-0" />
-            <span className="hidden sm:inline">{t('settings.notifications.tab-feeds')}</span>
-            <span className="sm:hidden">{t('settings.notifications.tab-feeds')}</span>
-          </TabsTrigger>
+          {[
+            { value: 'schedule', icon: Bell, label: t('settings.notifications.tab-schedule') },
+            {
+              value: 'quiet-hours',
+              icon: Moon,
+              label: t('settings.notifications.tab-quiet-hours'),
+            },
+            { value: 'filters', icon: Brain, label: t('settings.notifications.tab-filters') },
+            { value: 'feeds', icon: Rss, label: t('settings.notifications.tab-feeds') },
+          ].map((tab, index) => (
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="flex items-center gap-1.5 py-2 text-xs sm:text-sm transition-all duration-200 hover:scale-105 animate-in slide-in-from-top-2"
+              style={{ animationDelay: `${400 + index * 100}ms` }}
+            >
+              <tab.icon className="h-3.5 w-3.5 flex-shrink-0 transition-transform duration-200 hover:scale-110" />
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.label}</span>
+            </TabsTrigger>
+          ))}
         </TabsList>
 
-        <TabsContent value="schedule" className="space-y-4">
+        <TabsContent
+          value="schedule"
+          className="space-y-4 animate-in fade-in-50 slide-in-from-right-4 duration-500"
+        >
           <PersonalizedNotificationSettings />
           <ProactiveFrequencySettings />
           {settings && <NotificationPreview settings={settings} />}
         </TabsContent>
 
-        <TabsContent value="quiet-hours">
+        <TabsContent
+          value="quiet-hours"
+          className="animate-in fade-in-50 slide-in-from-right-4 duration-500"
+        >
           <QuietHoursSettings
             quietHours={
               settings && typeof settings === 'object' && 'quietHours' in settings
@@ -158,7 +162,10 @@ export default function NotificationSettingsPage() {
           />
         </TabsContent>
 
-        <TabsContent value="filters">
+        <TabsContent
+          value="filters"
+          className="animate-in fade-in-50 slide-in-from-right-4 duration-500"
+        >
           <TinkeringIndexThreshold
             threshold={
               settings && typeof settings === 'object' && 'minTinkeringIndex' in settings
@@ -170,7 +177,10 @@ export default function NotificationSettingsPage() {
           />
         </TabsContent>
 
-        <TabsContent value="feeds">
+        <TabsContent
+          value="feeds"
+          className="animate-in fade-in-50 slide-in-from-right-4 duration-500"
+        >
           <FeedNotificationSettings
             feedSettings={
               settings && typeof settings === 'object' && 'feedSettings' in settings
