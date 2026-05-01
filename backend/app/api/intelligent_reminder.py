@@ -84,7 +84,7 @@ async def get_pending_reminders(
 
         supabase_service = SupabaseService()
 
-        user_id = current_user["id"]
+        user_id = current_user["user_id"]
 
         # Get pending reminders from database
         result = (
@@ -137,7 +137,7 @@ async def dismiss_reminder(
 
         supabase_service = SupabaseService()
 
-        user_id = current_user["id"]
+        user_id = current_user["user_id"]
 
         # Update reminder status
         supabase_service.client.table("reminder_log").update({"status": "dismissed"}).eq(
@@ -164,7 +164,7 @@ async def mark_reminder_read(
 
         supabase_service = SupabaseService()
 
-        user_id = current_user["id"]
+        user_id = current_user["user_id"]
 
         # Update reminder status
         supabase_service.client.table("reminder_log").update({"status": "read"}).eq(
@@ -190,7 +190,7 @@ async def get_reminder_settings(
 
         supabase_service = SupabaseService()
 
-        user_id = current_user["id"]
+        user_id = current_user["user_id"]
 
         # Get settings from database (get the most recent one)
         result = (
@@ -239,7 +239,7 @@ async def update_reminder_settings(
 
         supabase_service = SupabaseService()
 
-        user_id = current_user["id"]
+        user_id = current_user["user_id"]
 
         # Build update data (without user_id for update operation)
         update_data = {}
@@ -306,7 +306,7 @@ async def get_reminder_stats(
 
         supabase_service = SupabaseService()
 
-        user_id = current_user["id"]
+        user_id = current_user["user_id"]
 
         # Get basic stats from reminder_log
         result = (
