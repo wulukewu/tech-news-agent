@@ -29,7 +29,7 @@ function StarRating({ rating }: { rating: number }) {
           key={i}
           className={`w-3 h-3 transition-all duration-300 hover:scale-[1.05] ${
             i < Math.floor(rating)
-              ? 'fill-yellow-400 text-yellow-400 animate-pulse'
+              ? 'fill-yellow-400 text-yellow-400 hover:animate-pulse'
               : i < rating
                 ? 'fill-yellow-200 text-yellow-400'
                 : 'text-gray-300 dark:text-gray-600'
@@ -91,7 +91,7 @@ export function FeedStatistics({
                 style={{ animationDelay: `${index * 150 + 200}ms` }}
               >
                 <Icon
-                  className={`w-4 h-4 ${stat.color} transition-transform duration-300 hover:scale-[1.05] animate-pulse`}
+                  className={`w-4 h-4 ${stat.color} transition-transform duration-300 hover:scale-[1.05] hover:animate-pulse`}
                 />
                 <div className="flex-1 min-w-0">
                   <div className="text-xs text-muted-foreground truncate transition-colors duration-200 hover:text-foreground">
