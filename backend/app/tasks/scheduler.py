@@ -410,9 +410,17 @@ async def get_scheduler_health() -> dict:
     else:
         # Check if scheduler has run recently (within last 12 hours)
         if last_execution is None:
-            is_healthy = False
-            status_code = 503
-            issues.append("Scheduler has never executed")
+            # If scheduler is running and has a next execution time, it's just waiting
+            if is_running and next_execution_time:
+                is_healthy = True
+                status_code = 200
+                issues.append(
+                    f"Scheduler is active and waiting for first execution at {next_execution_time}"
+                )
+            else:
+                is_healthy = False
+                status_code = 503
+                issues.append("Scheduler has never executed")
         else:
             time_since_last_run = datetime.now(UTC) - last_execution
             if time_since_last_run > timedelta(hours=12):
