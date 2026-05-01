@@ -91,11 +91,15 @@ export default function RemindersPage() {
 
   const toggleSettings = async (key: keyof IntelligentReminderSettings, value: any) => {
     try {
+      console.log(`Updating setting ${key} to:`, value);
       const updatedSettings = { ...settings, [key]: value };
       setSettings(updatedSettings);
-      await updateIntelligentReminderSettings({ [key]: value });
+
+      const result = await updateIntelligentReminderSettings({ [key]: value });
+      console.log('Settings update result:', result);
     } catch (error) {
       console.error('Failed to update settings:', error);
+      console.error('Error details:', error);
       // Revert on error
       setSettings(settings);
     }

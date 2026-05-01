@@ -192,11 +192,13 @@ async def get_reminder_settings(
 
         user_id = current_user["id"]
 
-        # Get settings from database
+        # Get settings from database (get the most recent one)
         result = (
             supabase_service.client.table("reminder_settings")
             .select("*")
             .eq("user_id", user_id)
+            .order("created_at", desc=True)
+            .limit(1)
             .execute()
         )
 
@@ -267,8 +269,22 @@ async def update_reminder_settings(
         if settings_request.reminder_frequency is not None:
             update_data["reminder_frequency"] = settings_request.reminder_frequency
 
-        # Upsert settings
-        supabase_service.client.table("reminder_settings").upsert(update_data).execute()
+        # Check if settings exist
+        existing = (
+            supabase_service.client.table("reminder_settings")
+            .select("*")
+            .eq("user_id", user_id)
+            .execute()
+        )
+
+        if existing.data:
+            # Update existing settings
+            supabase_service.client.table("reminder_settings").update(update_data).eq(
+                "user_id", user_id
+            ).execute()
+        else:
+            # Create new settings
+            supabase_service.client.table("reminder_settings").insert(update_data).execute()
 
         return {"message": "Settings updated successfully"}
 
