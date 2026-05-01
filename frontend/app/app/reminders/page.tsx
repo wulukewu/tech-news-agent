@@ -2,27 +2,50 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useI18n } from '@/contexts/I18nContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bell, BellOff, Clock, CheckCircle, X } from 'lucide-react';
+import {
+  Bell,
+  BellOff,
+  Clock,
+  CheckCircle,
+  X,
+  Filter,
+  ArrowUpDown,
+  CheckSquare,
+} from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   getPendingReminders,
   getIntelligentReminderSettings,
+  getIntelligentReminderStats,
   updateIntelligentReminderSettings,
   markReminderAsRead,
   dismissReminder,
+  batchOperation,
   type IntelligentReminder,
   type IntelligentReminderSettings,
+  type IntelligentReminderStats,
 } from '@/lib/api/reminders';
 
 export default function RemindersPage() {
   const { isAuthenticated } = useAuth();
-  const { t } = useI18n();
   const [reminders, setReminders] = useState<IntelligentReminder[]>([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<IntelligentReminderStats | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sortBy, setSortBy] = useState<string>('sent_at');
+  const [sortOrder, setSortOrder] = useState<string>('desc');
   const [settings, setSettings] = useState<IntelligentReminderSettings>({
     enabled: true,
     max_daily_reminders: 5,
@@ -33,50 +56,34 @@ export default function RemindersPage() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      loadReminders();
-      loadSettings();
+      loadData();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, statusFilter, sortBy, sortOrder]);
 
-  const loadReminders = async () => {
+  const loadData = async () => {
+    setLoading(true);
     try {
-      console.log('Loading reminders...');
-      const data = await getPendingReminders();
-      console.log('Reminders loaded:', data);
+      const [remindersData, settingsData, statsData] = await Promise.all([
+        getPendingReminders(statusFilter, sortBy, sortOrder),
+        getIntelligentReminderSettings(),
+        getIntelligentReminderStats(),
+      ]);
 
-      // 去重：根據文章標題去重
       const seen = new Set<string>();
-      const uniqueReminders = data.filter((reminder) => {
+      const uniqueReminders = remindersData.filter((reminder) => {
         const title = reminder.reminder_context.title;
         if (seen.has(title)) return false;
         seen.add(title);
         return true;
       });
 
-      // 限制顯示最多 10 個
-      setReminders(uniqueReminders.slice(0, 10));
+      setReminders(uniqueReminders);
+      setSettings(settingsData);
+      setStats(statsData);
     } catch (error) {
-      console.error('Failed to load reminders:', error);
-      // Show user-friendly error
-      if (error instanceof Error) {
-        console.error('Error details:', error.message);
-      }
+      console.error('Failed to load data:', error);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadSettings = async () => {
-    try {
-      console.log('Loading settings...');
-      const data = await getIntelligentReminderSettings();
-      console.log('Settings loaded:', data);
-      setSettings(data);
-    } catch (error) {
-      console.error('Failed to load settings:', error);
-      if (error instanceof Error) {
-        console.error('Settings error details:', error.message);
-      }
     }
   };
 
@@ -100,25 +107,53 @@ export default function RemindersPage() {
     }
   };
 
+  const handleBatchOperation = async (action: 'read' | 'dismiss') => {
+    if (selectedIds.size === 0) return;
+
+    try {
+      await batchOperation(Array.from(selectedIds), action);
+      const newStatus = action === 'read' ? 'read' : 'dismissed';
+      setReminders((prev) =>
+        prev.map((r) => (selectedIds.has(r.id) ? { ...r, status: newStatus } : r))
+      );
+      setSelectedIds(new Set());
+    } catch (error) {
+      console.error(`Failed to ${action} reminders:`, error);
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === reminders.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(reminders.map((r) => r.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
   const toggleSettings = async (key: keyof IntelligentReminderSettings, value: any) => {
     try {
-      console.log(`Updating setting ${key} to:`, value);
       const updatedSettings = { ...settings, [key]: value };
       setSettings(updatedSettings);
-
-      const result = await updateIntelligentReminderSettings({ [key]: value });
-      console.log('Settings update result:', result);
+      await updateIntelligentReminderSettings({ [key]: value });
     } catch (error) {
       console.error('Failed to update settings:', error);
-      console.error('Error details:', error);
-      // Revert on error
       setSettings(settings);
     }
   };
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto py-6 space-y-6">
+      <div className="max-w-6xl mx-auto py-6 space-y-6">
         <Skeleton className="h-8 w-64" />
         <div className="grid gap-4">
           {[1, 2, 3].map((i) => (
@@ -155,28 +190,56 @@ export default function RemindersPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto py-6 space-y-6">
+    <div className="max-w-6xl mx-auto py-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">{t('pages.reminders.page.title')}</h1>
-        <p className="text-muted-foreground">{t('pages.reminders.page.description')}</p>
+        <h1 className="text-3xl font-bold">智能提醒</h1>
+        <p className="text-muted-foreground">管理您的個性化文章推薦提醒</p>
       </div>
+
+      {/* Stats Dashboard */}
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>本週提醒</CardDescription>
+              <CardTitle className="text-3xl">{stats.this_week_count}</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>已讀率</CardDescription>
+              <CardTitle className="text-3xl">{Math.round(stats.read_rate * 100)}%</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>平均優先級</CardDescription>
+              <CardTitle className="text-3xl">{Math.round(stats.avg_priority * 100)}%</CardTitle>
+            </CardHeader>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardDescription>待處理</CardDescription>
+              <CardTitle className="text-3xl">{stats.total_pending}</CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+      )}
 
       {/* Settings Card */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bell className="w-5 h-5" />
-            {t('pages.reminders.settings.title')}
+            提醒設定
           </CardTitle>
-          <CardDescription>{t('pages.reminders.settings.description')}</CardDescription>
+          <CardDescription>管理您的提醒偏好設定</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">{t('pages.reminders.settings.enable')}</p>
-              <p className="text-sm text-muted-foreground">
-                {t('pages.reminders.settings.enable-desc')}
-              </p>
+              <p className="font-medium">啟用提醒</p>
+              <p className="text-sm text-muted-foreground">接收個性化文章推薦</p>
             </div>
             <Button
               variant={settings.enabled ? 'default' : 'outline'}
@@ -184,44 +247,36 @@ export default function RemindersPage() {
               onClick={() => toggleSettings('enabled', !settings.enabled)}
             >
               {settings.enabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
-              {settings.enabled ? t('common.enabled') : t('common.disabled')}
+              {settings.enabled ? '已啟用' : '已停用'}
             </Button>
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">{t('pages.reminders.settings.daily-limit')}</p>
-              <p className="text-sm text-muted-foreground">
-                {t('pages.reminders.settings.daily-limit-desc')}
-              </p>
+              <p className="font-medium">每日上限</p>
+              <p className="text-sm text-muted-foreground">每天最多接收的提醒數量</p>
+            </div>
+            <Badge variant="outline">每天 {settings.max_daily_reminders} 個</Badge>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">提醒頻率</p>
+              <p className="text-sm text-muted-foreground">提醒發送的頻率</p>
             </div>
             <Badge variant="outline">
-              {t('pages.reminders.settings.daily-limit-value', {
-                count: settings.max_daily_reminders,
-              })}
+              {settings.reminder_frequency === 'smart' && '智能'}
+              {settings.reminder_frequency === 'daily' && '每日'}
+              {settings.reminder_frequency === 'weekly' && '每週'}
             </Badge>
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">{t('pages.reminders.settings.frequency')}</p>
-              <p className="text-sm text-muted-foreground">
-                {t('pages.reminders.settings.frequency-desc')}
-              </p>
+              <p className="font-medium">通知渠道</p>
+              <p className="text-sm text-muted-foreground">接收提醒的渠道</p>
             </div>
-            <Badge variant="outline">
-              {t(`pages.reminders.frequency.${settings.reminder_frequency}` as any)}
-            </Badge>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">{t('pages.reminders.settings.channels')}</p>
-              <p className="text-sm text-muted-foreground">
-                {t('pages.reminders.settings.channels-desc')}
-              </p>
-            </div>
-            <div className="flex gap-1">
+            <div className="flex gap-2">
               {settings.preferred_channels.map((channel) => (
                 <Badge key={channel} variant="secondary">
                   {channel}
@@ -233,178 +288,189 @@ export default function RemindersPage() {
       </Card>
 
       {/* Reminders List */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-semibold">{t('pages.reminders.list.title')}</h2>
-
-        {reminders.length === 0 ? (
-          <Card>
-            <CardContent className="py-8 text-center">
-              <Bell className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">{t('pages.reminders.list.empty')}</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                {t('pages.reminders.list.empty-desc')}
-              </p>
-
-              {/* Usage Guide */}
-              <div className="mt-6 p-4 bg-muted/50 rounded-lg text-left">
-                <h3 className="font-semibold mb-3">{t('pages.reminders.usage-guide.title')}</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-start gap-2">
-                    <span className="text-primary">1.</span>
-                    <span>{t('pages.reminders.usage-guide.step-1')}</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-primary">2.</span>
-                    <span>{t('pages.reminders.usage-guide.step-2')}</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-primary">3.</span>
-                    <span>{t('pages.reminders.usage-guide.step-3')}</span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-primary">4.</span>
-                    <span>{t('pages.reminders.usage-guide.step-4')}</span>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          reminders.map((reminder) => (
-            <Card key={reminder.id} className="transition-all hover:shadow-md">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      {getStatusIcon(reminder.status)}
-                      <Badge variant="outline">{getTypeLabel(reminder.reminder_type)}</Badge>
-                      <Badge variant="secondary">{reminder.channel}</Badge>
-                      {reminder.reminder_context.priority_score !== undefined && (
-                        <Badge
-                          variant={
-                            reminder.reminder_context.priority_score >= 0.8
-                              ? 'default'
-                              : reminder.reminder_context.priority_score >= 0.6
-                                ? 'secondary'
-                                : 'outline'
-                          }
-                        >
-                          優先級 {Math.round(reminder.reminder_context.priority_score * 100)}%
-                        </Badge>
-                      )}
-                    </div>
-                    {reminder.reminder_context.action_url ? (
-                      <a
-                        href={reminder.reminder_context.action_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:underline"
-                      >
-                        <CardTitle className="text-lg text-primary">
-                          {reminder.reminder_context.title}
-                        </CardTitle>
-                      </a>
-                    ) : (
-                      <CardTitle className="text-lg">{reminder.reminder_context.title}</CardTitle>
-                    )}
-                    <CardDescription className="mt-2">
-                      {reminder.reminder_context.description}
-                    </CardDescription>
-                    {reminder.reminder_context.reading_time_estimate && (
-                      <p className="text-xs text-muted-foreground mt-2">
-                        預估閱讀時間: ~{reminder.reminder_context.reading_time_estimate} 分鐘
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => markAsRead(reminder.id)}>
-                      標記已讀
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => dismissReminderAction(reminder.id)}
-                    >
-                      忽略
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-
-              {reminder.reminder_context.action_url && (
-                <CardContent className="pt-0">
-                  <Button variant="default" size="sm" asChild>
-                    <a
-                      href={reminder.reminder_context.action_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      閱讀完整文章
-                    </a>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <CardTitle>提醒列表</CardTitle>
+              <CardDescription>查看和管理您的提醒</CardDescription>
+            </div>
+            <div className="flex gap-2">
+              {selectedIds.size > 0 && (
+                <>
+                  <Button size="sm" variant="outline" onClick={() => handleBatchOperation('read')}>
+                    <CheckCircle className="w-4 h-4 mr-1" />
+                    標記已讀 ({selectedIds.size})
                   </Button>
-                </CardContent>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleBatchOperation('dismiss')}
+                  >
+                    <X className="w-4 h-4 mr-1" />
+                    忽略 ({selectedIds.size})
+                  </Button>
+                </>
               )}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Filters */}
+          <div className="flex gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4" />
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">全部</SelectItem>
+                  <SelectItem value="pending">待處理</SelectItem>
+                  <SelectItem value="sent">已發送</SelectItem>
+                  <SelectItem value="read">已讀</SelectItem>
+                  <SelectItem value="dismissed">已忽略</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-              {reminder.reminder_context.related_articles &&
-                reminder.reminder_context.related_articles.length > 0 && (
-                  <CardContent>
-                    <div className="space-y-2">
-                      <p className="font-medium text-sm">相關文章:</p>
-                      {reminder.reminder_context.related_articles.map((article, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <span className="text-sm">•</span>
-                          <a
-                            href={article.url || '#'}
-                            className="text-sm text-blue-600 hover:underline"
-                          >
-                            {article.title}
-                          </a>
-                          {article.confidence && (
-                            <Badge variant="outline" className="text-xs">
-                              {t('pages.reminders.match-percentage', {
-                                percentage: Math.round(article.confidence * 100),
-                              })}
+            <div className="flex items-center gap-2">
+              <ArrowUpDown className="w-4 h-4" />
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sent_at">時間</SelectItem>
+                  <SelectItem value="priority_score">優先級</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Select value={sortOrder} onValueChange={setSortOrder}>
+              <SelectTrigger className="w-[120px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="desc">降序</SelectItem>
+                <SelectItem value="asc">升序</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {reminders.length > 0 && (
+              <Button size="sm" variant="outline" onClick={toggleSelectAll}>
+                <CheckSquare className="w-4 h-4 mr-1" />
+                {selectedIds.size === reminders.length ? '取消全選' : '全選'}
+              </Button>
+            )}
+          </div>
+
+          {/* Reminders */}
+          {reminders.length === 0 ? (
+            <Card className="border-dashed">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <Bell className="w-12 h-12 text-muted-foreground mb-4" />
+                <p className="text-lg font-medium mb-2">沒有提醒</p>
+                <p className="text-sm text-muted-foreground text-center max-w-md">
+                  當系統為您找到相關文章時，會在這裡顯示提醒。
+                  <br />
+                  繼續閱讀和評分文章，幫助我們了解您的偏好！
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {reminders.map((reminder) => (
+                <Card
+                  key={reminder.id}
+                  className={`transition-all hover:shadow-md ${selectedIds.has(reminder.id) ? 'ring-2 ring-primary' : ''}`}
+                >
+                  <CardHeader>
+                    <div className="flex items-start gap-4">
+                      <Checkbox
+                        checked={selectedIds.has(reminder.id)}
+                        onCheckedChange={() => toggleSelect(reminder.id)}
+                        className="mt-1"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          {getStatusIcon(reminder.status)}
+                          <Badge variant="outline">{getTypeLabel(reminder.reminder_type)}</Badge>
+                          <Badge variant="secondary">{reminder.channel}</Badge>
+                          {reminder.reminder_context.priority_score !== undefined && (
+                            <Badge
+                              variant={
+                                reminder.reminder_context.priority_score >= 0.8
+                                  ? 'default'
+                                  : reminder.reminder_context.priority_score >= 0.6
+                                    ? 'secondary'
+                                    : 'outline'
+                              }
+                            >
+                              優先級 {Math.round(reminder.reminder_context.priority_score * 100)}%
                             </Badge>
                           )}
                         </div>
-                      ))}
-                      {reminder.reminder_context.reading_time_estimate && (
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {t('pages.reminders.reading-time', {
-                            minutes: reminder.reminder_context.reading_time_estimate,
-                          })}
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                )}
+                        {reminder.reminder_context.action_url ? (
+                          <a
+                            href={reminder.reminder_context.action_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="hover:underline"
+                          >
+                            <CardTitle className="text-lg text-primary">
+                              {reminder.reminder_context.title}
+                            </CardTitle>
+                          </a>
+                        ) : (
+                          <CardTitle className="text-lg">
+                            {reminder.reminder_context.title}
+                          </CardTitle>
+                        )}
+                        <CardDescription className="mt-2">
+                          {reminder.reminder_context.description}
+                        </CardDescription>
+                        {reminder.reminder_context.reading_time_estimate && (
+                          <p className="text-xs text-muted-foreground mt-2">
+                            預估閱讀時間: ~{reminder.reminder_context.reading_time_estimate} 分鐘
+                          </p>
+                        )}
+                      </div>
 
-              {reminder.reminder_context.version_info && (
-                <CardContent>
-                  <div className="space-y-2">
-                    <p className="font-medium text-sm">{t('pages.reminders.version-update')}:</p>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">
-                        {reminder.reminder_context.version_info.technology}
-                      </Badge>
-                      <span className="text-sm">
-                        {reminder.reminder_context.version_info.old_version} →{' '}
-                        {reminder.reminder_context.version_info.new_version}
-                      </span>
-                      {reminder.reminder_context.version_info.breaking_changes && (
-                        <Badge variant="destructive" className="text-xs">
-                          {t('pages.reminders.breaking-changes')}
-                        </Badge>
-                      )}
+                      <div className="flex gap-2">
+                        <Button size="sm" variant="outline" onClick={() => markAsRead(reminder.id)}>
+                          標記已讀
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => dismissReminderAction(reminder.id)}
+                        >
+                          忽略
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              )}
-            </Card>
-          ))
-        )}
-      </div>
+                  </CardHeader>
+
+                  {reminder.reminder_context.action_url && (
+                    <CardContent className="pt-0">
+                      <Button variant="default" size="sm" asChild>
+                        <a
+                          href={reminder.reminder_context.action_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          閱讀完整文章
+                        </a>
+                      </Button>
+                    </CardContent>
+                  )}
+                </Card>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

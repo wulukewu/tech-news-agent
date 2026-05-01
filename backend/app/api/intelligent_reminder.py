@@ -76,9 +76,18 @@ def get_supabase_service():
 
 @router.get("/pending")
 async def get_pending_reminders(
+    status: Optional[str] = None,
+    sort_by: Optional[str] = "sent_at",
+    sort_order: Optional[str] = "desc",
     current_user: Dict[str, Any] = Depends(get_current_user),
 ):
-    """Get pending reminders for the current user"""
+    """Get pending reminders for the current user with filtering and sorting
+
+    Args:
+        status: Filter by status (pending, sent, read, dismissed, all)
+        sort_by: Sort field (sent_at, priority_score)
+        sort_order: Sort order (asc, desc)
+    """
     try:
         from ..services.supabase_service import SupabaseService
 
@@ -86,19 +95,36 @@ async def get_pending_reminders(
 
         user_id = str(current_user["user_id"])
 
-        # Get pending reminders from database
-        result = (
-            supabase_service.client.table("reminder_log")
-            .select("*")
-            .eq("user_id", user_id)
-            .in_("status", ["pending", "sent", "delivered"])
-            .order("sent_at", desc=True)
-            .limit(20)
-            .execute()
-        )
+        # Build query
+        query = supabase_service.client.table("reminder_log").select("*").eq("user_id", user_id)
+
+        # Apply status filter
+        if status and status != "all":
+            query = query.eq("status", status)
+        else:
+            # Default: show all except dismissed
+            query = query.in_("status", ["pending", "sent", "delivered", "read"])
+
+        # Apply sorting
+        if sort_by == "priority_score":
+            # For priority_score, we need to sort by the JSONB field
+            # This is a workaround - fetch all and sort in Python
+            result = query.execute()
+            reminders_data = result.data or []
+
+            # Sort by priority_score in reminder_context
+            reminders_data.sort(
+                key=lambda x: x.get("reminder_context", {}).get("priority_score", 0),
+                reverse=(sort_order == "desc"),
+            )
+        else:
+            # Default: sort by sent_at
+            query = query.order("sent_at", desc=(sort_order == "desc"))
+            result = query.limit(50).execute()
+            reminders_data = result.data or []
 
         reminders = []
-        for reminder_data in result.data or []:
+        for reminder_data in reminders_data:
             context = reminder_data.get("reminder_context", {})
 
             reminders.append(
@@ -300,15 +326,17 @@ async def update_reminder_settings(
 async def get_reminder_stats(
     current_user: Dict[str, Any] = Depends(get_current_user),
 ):
-    """Get reminder effectiveness statistics for the current user"""
+    """Get reminder statistics for the current user"""
     try:
+        from collections import Counter
+
         from ..services.supabase_service import SupabaseService
 
         supabase_service = SupabaseService()
 
         user_id = str(current_user["user_id"])
 
-        # Get basic stats from reminder_log
+        # Get all reminders for stats
         result = (
             supabase_service.client.table("reminder_log")
             .select("*")
@@ -317,29 +345,112 @@ async def get_reminder_stats(
         )
 
         reminders = result.data or []
-        total_sent = len(reminders)
-        total_clicked = len([r for r in reminders if r.get("status") == "clicked"])
-        total_read = len([r for r in reminders if r.get("status") == "read"])
-        total_dismissed = len([r for r in reminders if r.get("status") == "dismissed"])
+
+        # Calculate stats
+        total_sent = len([r for r in reminders if r["status"] in ["sent", "delivered", "read"]])
+        total_clicked = len([r for r in reminders if r["status"] == "read"])
+        total_read = total_clicked  # Same as clicked for now
+        total_dismissed = len([r for r in reminders if r["status"] == "dismissed"])
+        total_pending = len([r for r in reminders if r["status"] == "pending"])
 
         click_rate = total_clicked / total_sent if total_sent > 0 else 0
         read_rate = total_read / total_sent if total_sent > 0 else 0
+
+        # Calculate category distribution
+        categories = []
+        for r in reminders:
+            context = r.get("reminder_context", {})
+            if "category" in context:
+                categories.append(context["category"])
+
+        category_counts = Counter(categories)
+        top_categories = [
+            {"name": cat, "count": count} for cat, count in category_counts.most_common(5)
+        ]
+
+        # Calculate average priority
+        priorities = [r.get("reminder_context", {}).get("priority_score", 0) for r in reminders]
+        avg_priority = sum(priorities) / len(priorities) if priorities else 0
+
+        # This week stats (last 7 days)
+        from datetime import datetime, timedelta, timezone
+
+        week_ago = datetime.now(timezone.utc) - timedelta(days=7)
+        this_week = [
+            r
+            for r in reminders
+            if r.get("sent_at")
+            and datetime.fromisoformat(r["sent_at"].replace("Z", "+00:00")) > week_ago
+        ]
 
         return {
             "total_sent": total_sent,
             "total_clicked": total_clicked,
             "total_read": total_read,
             "total_dismissed": total_dismissed,
-            "click_rate": click_rate,
-            "read_rate": read_rate,
+            "total_pending": total_pending,
+            "click_rate": round(click_rate, 2),
+            "read_rate": round(read_rate, 2),
+            "avg_priority": round(avg_priority, 2),
+            "this_week_count": len(this_week),
+            "top_categories": top_categories,
             "most_effective_channel": "discord",
             "most_effective_time": 10,
-            "recommendations": ["Try reading more articles to improve recommendations"],
+            "recommendations": [
+                "持續閱讀文章以改善推薦品質" if total_read < 5 else "推薦系統運作良好",
+                f"本週收到 {len(this_week)} 個提醒" if this_week else "本週尚未收到提醒",
+            ],
         }
 
     except Exception as e:
         logger.error(f"Error getting reminder stats: {e}")
         raise HTTPException(status_code=500, detail="Failed to get reminder statistics")
+
+
+class BatchOperationRequest(BaseModel):
+    reminder_ids: List[str]
+    action: str  # "read", "dismiss"
+
+
+@router.post("/batch")
+async def batch_operation(
+    request: BatchOperationRequest,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Perform batch operations on reminders"""
+    try:
+        from ..services.supabase_service import SupabaseService
+
+        supabase_service = SupabaseService()
+
+        user_id = str(current_user["user_id"])
+
+        if not request.reminder_ids:
+            raise HTTPException(status_code=400, detail="No reminder IDs provided")
+
+        if request.action not in ["read", "dismiss"]:
+            raise HTTPException(
+                status_code=400, detail="Invalid action. Must be 'read' or 'dismiss'"
+            )
+
+        # Update status for all reminders
+        status = "read" if request.action == "read" else "dismissed"
+
+        for reminder_id in request.reminder_ids:
+            supabase_service.client.table("reminder_log").update({"status": status}).eq(
+                "id", reminder_id
+            ).eq("user_id", user_id).execute()
+
+        return {
+            "message": f"Successfully {request.action} {len(request.reminder_ids)} reminders",
+            "count": len(request.reminder_ids),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error performing batch operation: {e}")
+        raise HTTPException(status_code=500, detail="Failed to perform batch operation")
 
 
 @router.post("/generate")
