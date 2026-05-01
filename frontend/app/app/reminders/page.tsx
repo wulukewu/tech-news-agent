@@ -40,10 +40,16 @@ export default function RemindersPage() {
 
   const loadReminders = async () => {
     try {
+      console.log('Loading reminders...');
       const data = await getPendingReminders();
+      console.log('Reminders loaded:', data);
       setReminders(data);
     } catch (error) {
       console.error('Failed to load reminders:', error);
+      // Show user-friendly error
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -51,10 +57,15 @@ export default function RemindersPage() {
 
   const loadSettings = async () => {
     try {
+      console.log('Loading settings...');
       const data = await getIntelligentReminderSettings();
+      console.log('Settings loaded:', data);
       setSettings(data);
     } catch (error) {
       console.error('Failed to load settings:', error);
+      if (error instanceof Error) {
+        console.error('Settings error details:', error.message);
+      }
     }
   };
 
@@ -117,11 +128,11 @@ export default function RemindersPage() {
   const getTypeLabel = (type: string) => {
     switch (type) {
       case 'article_relation':
-        return t('reminders.types.article-relation' as any);
+        return t('pages.reminders.types.article-relation');
       case 'version_update':
-        return t('reminders.types.version-update' as any);
+        return t('pages.reminders.types.version-update');
       case 'learning_path':
-        return t('reminders.types.learning-path' as any);
+        return t('pages.reminders.types.learning-path');
       default:
         return type;
     }
@@ -260,14 +271,14 @@ export default function RemindersPage() {
                   {reminder.status === 'sent' && (
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" onClick={() => markAsRead(reminder.id)}>
-                        {t('reminders.actions.mark-read' as any)}
+                        {t('pages.reminders.actions.mark-read')}
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => dismissReminderAction(reminder.id)}
                       >
-                        {t('reminders.actions.dismiss' as any)}
+                        {t('pages.reminders.actions.dismiss')}
                       </Button>
                     </div>
                   )}
@@ -277,7 +288,7 @@ export default function RemindersPage() {
               {reminder.reminder_context.related_articles && (
                 <CardContent>
                   <div className="space-y-2">
-                    <p className="font-medium text-sm">{t('reminders.related-articles' as any)}:</p>
+                    <p className="font-medium text-sm">{t('pages.reminders.related-articles')}:</p>
                     {reminder.reminder_context.related_articles.map((article, idx) => (
                       <div key={idx} className="flex items-center gap-2">
                         <span className="text-sm">•</span>
@@ -289,14 +300,16 @@ export default function RemindersPage() {
                         </a>
                         {article.confidence && (
                           <Badge variant="outline" className="text-xs">
-                            {Math.round(article.confidence * 100)}% match
+                            {t('pages.reminders.match-percentage', {
+                              percentage: Math.round(article.confidence * 100),
+                            })}
                           </Badge>
                         )}
                       </div>
                     ))}
                     {reminder.reminder_context.reading_time_estimate && (
                       <p className="text-xs text-muted-foreground mt-2">
-                        {t('reminders.reading-time' as any, {
+                        {t('pages.reminders.reading-time', {
                           minutes: reminder.reminder_context.reading_time_estimate,
                         })}
                       </p>
@@ -308,7 +321,7 @@ export default function RemindersPage() {
               {reminder.reminder_context.version_info && (
                 <CardContent>
                   <div className="space-y-2">
-                    <p className="font-medium text-sm">Version Update:</p>
+                    <p className="font-medium text-sm">{t('pages.reminders.version-update')}:</p>
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">
                         {reminder.reminder_context.version_info.technology}
@@ -319,7 +332,7 @@ export default function RemindersPage() {
                       </span>
                       {reminder.reminder_context.version_info.breaking_changes && (
                         <Badge variant="destructive" className="text-xs">
-                          Breaking Changes
+                          {t('pages.reminders.breaking-changes')}
                         </Badge>
                       )}
                     </div>

@@ -18,7 +18,7 @@ from ..services.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/reminders", tags=["intelligent-reminders"])
+router = APIRouter(prefix="/api/intelligent-reminders", tags=["intelligent-reminders"])
 
 
 # Request/Response Models
@@ -115,7 +115,7 @@ async def get_pending_reminders(
                 )
             )
 
-        return reminders
+        return {"reminders": reminders}
 
     except Exception as e:
         logger.error(f"Error getting pending reminders: {e}")
