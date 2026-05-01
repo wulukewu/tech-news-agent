@@ -27,9 +27,9 @@ import {
 } from '@/features/system-monitor/hooks/useSystemStatus';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { RefreshButton } from '@/components/ui/refresh-button';
 import { AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
 import { useI18n } from '@/contexts/I18nContext';
 
 /**
@@ -100,12 +100,9 @@ function SystemStatusPageContent() {
               )}
             </p>
           </div>
-          <Button variant="outline" size="sm" onClick={handleManualRefresh} disabled={isLoading}>
-            <RefreshCw
-              className={`h-4 w-4 mr-2 ${isLoading ? 'animate-[spin_3s_linear_infinite]' : 'transition-transform duration-200 hover:rotate-180'}`}
-            />
+          <RefreshButton isLoading={isLoading} onClick={handleManualRefresh}>
             {t('buttons.reload-page')}
-          </Button>
+          </RefreshButton>
         </div>
 
         {/* Main Content */}

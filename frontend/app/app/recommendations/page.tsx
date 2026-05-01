@@ -10,6 +10,7 @@
 
 import React, { useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { RefreshButton } from '@/components/ui/refresh-button';
 import { RefreshCw, Sparkles } from 'lucide-react';
 import { RecommendationCard } from '@/features/recommendations/components/RecommendationCard';
 import { InsufficientDataMessage } from '@/features/recommendations/components/InsufficientDataMessage';
@@ -189,16 +190,9 @@ export default function RecommendationsPage() {
             <h1 className="text-3xl font-bold tracking-tight">{t('recommendations.title')}</h1>
             <p className="text-muted-foreground">{t('recommendations.description')}</p>
           </div>
-          <Button
-            onClick={handleRefresh}
-            disabled={refreshMutation.isPending}
-            className="gap-2 transition-all duration-200 hover:scale-[1.02]"
-          >
-            <RefreshCw
-              className={`h-4 w-4 transition-transform duration-200 ${refreshMutation.isPending ? 'animate-[spin_3s_linear_infinite]' : 'hover:rotate-180'}`}
-            />
+          <RefreshButton isLoading={refreshMutation.isPending} onClick={handleRefresh}>
             {t('recommendations.refresh')}
-          </Button>
+          </RefreshButton>
         </div>
         <div className="rounded-lg border bg-card p-6 text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-200 hover:shadow-md transition-all">
           <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
@@ -222,16 +216,9 @@ export default function RecommendationsPage() {
             {t('recommendations.description-with-count', { count: data.totalCount })}
           </p>
         </div>
-        <Button
-          onClick={handleRefresh}
-          disabled={refreshMutation.isPending}
-          className="gap-2 transition-all duration-200 hover:scale-[1.02]"
-        >
-          <RefreshCw
-            className={`h-4 w-4 transition-transform duration-200 ${refreshMutation.isPending ? 'animate-[spin_3s_linear_infinite]' : 'hover:rotate-180'}`}
-          />
+        <RefreshButton isLoading={refreshMutation.isPending} onClick={handleRefresh}>
           {t('recommendations.refresh-recommendations')}
-        </Button>
+        </RefreshButton>
       </div>
 
       {/* Recommendations Grid */}
