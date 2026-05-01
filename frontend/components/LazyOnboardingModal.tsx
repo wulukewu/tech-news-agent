@@ -2,6 +2,7 @@
 
 import { lazy, Suspense } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import type { OnboardingModalProps } from './OnboardingModal';
 
 // Lazy load the OnboardingModal component
 const OnboardingModal = lazy(() =>
@@ -37,7 +38,7 @@ function OnboardingModalSkeleton() {
  *
  * Requirements: 15.1, 15.4
  */
-export function LazyOnboardingModal(props: any) {
+export function LazyOnboardingModal(props: OnboardingModalProps) {
   return (
     <Suspense fallback={<OnboardingModalSkeleton />}>
       <OnboardingModal {...props} />

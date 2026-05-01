@@ -50,7 +50,7 @@ export function Logo({
           rx="0.75"
           fill={`url(#accentGradient-${size})`}
           opacity="0.8"
-          className="transition-all duration-300 group-hover:opacity-100 animate-pulse"
+          className="transition-all duration-300 group-hover:opacity-100 group-hover:animate-pulse"
           style={{ animationDelay: '0ms' }}
         />
         <rect
@@ -61,7 +61,7 @@ export function Logo({
           rx="0.75"
           fill={`url(#accentGradient-${size})`}
           opacity="0.6"
-          className="transition-all duration-300 group-hover:opacity-90 animate-pulse"
+          className="transition-all duration-300 group-hover:opacity-90 group-hover:animate-pulse"
           style={{ animationDelay: '200ms' }}
         />
         <rect
@@ -72,7 +72,7 @@ export function Logo({
           rx="0.75"
           fill={`url(#accentGradient-${size})`}
           opacity="0.4"
-          className="transition-all duration-300 group-hover:opacity-80 animate-pulse"
+          className="transition-all duration-300 group-hover:opacity-80 group-hover:animate-pulse"
           style={{ animationDelay: '400ms' }}
         />
 
@@ -82,7 +82,7 @@ export function Logo({
           cy="16"
           r="1.5"
           fill={`url(#primaryGradient-${size})`}
-          className="transition-all duration-300 group-hover:r-2 animate-pulse"
+          className="transition-all duration-300 group-hover:animate-pulse"
           style={{ animationDelay: '100ms' }}
         />
         <circle
@@ -91,7 +91,7 @@ export function Logo({
           r="1"
           fill={`url(#primaryGradient-${size})`}
           opacity="0.7"
-          className="transition-all duration-300 group-hover:opacity-100 animate-pulse"
+          className="transition-all duration-300 group-hover:opacity-100 group-hover:animate-pulse"
           style={{ animationDelay: '300ms' }}
         />
         <circle
@@ -100,7 +100,7 @@ export function Logo({
           r="0.5"
           fill={`url(#primaryGradient-${size})`}
           opacity="0.5"
-          className="transition-all duration-300 group-hover:opacity-80 animate-pulse"
+          className="transition-all duration-300 group-hover:opacity-80 group-hover:animate-pulse"
           style={{ animationDelay: '500ms' }}
         />
       </svg>

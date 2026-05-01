@@ -36,7 +36,7 @@ export async function getNotificationSettings(): Promise<NotificationSettings> {
  */
 export async function updateNotificationSettings(
   settings: Partial<NotificationSettings>,
-  context?: any
+  context?: unknown
 ): Promise<NotificationSettings> {
   const response = await apiClient.patch<NotificationSettings>(
     '/api/notifications/settings',
@@ -197,7 +197,7 @@ export async function previewNotificationTime(
   notificationDayOfWeek?: number,
   notificationDayOfMonth?: number
 ): Promise<NotificationPreviewResponse> {
-  const params: any = {
+  const params: Record<string, unknown> = {
     frequency,
     notification_time: notificationTime,
     timezone,
@@ -522,7 +522,7 @@ export async function getNotificationHistoryPaginated(
   status?: string,
   daysBack?: number
 ): Promise<NotificationHistoryResponse> {
-  const params: any = { page, page_size: pageSize };
+  const params: Record<string, unknown> = { page, page_size: pageSize };
   if (channel) params.channel = channel;
   if (status) params.status = status;
   if (daysBack) params.days_back = daysBack;

@@ -48,6 +48,15 @@ export async function testReminder(): Promise<{ message: string }> {
   return r.data;
 }
 
+export async function getPendingRemindersCount(): Promise<number> {
+  try {
+    const r = await apiClient.get<{ reminders: unknown[] }>('/api/intelligent-reminders/pending');
+    return r.data.reminders?.length ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
 export async function submitFeedback(
   articleId: string,
   feedback: 'accurate' | 'inaccurate' | 'not_interested'

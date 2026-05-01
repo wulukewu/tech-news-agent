@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import { Search, Bell, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import {
 import { useUser } from '@/contexts/UserContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useI18n } from '@/contexts/I18nContext';
+import { getPendingRemindersCount } from '@/lib/api/reminders';
 
 interface HeaderProps {
   className?: string;
@@ -45,6 +47,13 @@ export function Header({
   const { logout } = useAuth();
   const { t } = useI18n();
   const [searchQuery, setSearchQuery] = React.useState('');
+
+  const { data: pendingCount = 0 } = useQuery({
+    queryKey: ['reminders', 'pending-count'],
+    queryFn: getPendingRemindersCount,
+    refetchInterval: 5 * 60 * 1000, // refresh every 5 minutes
+    enabled: showNotifications && !!user,
+  });
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -101,8 +110,16 @@ export function Header({
             size="icon"
             className="relative"
             aria-label={t('ui.notifications')}
+            asChild
           >
-            <Bell className="h-5 w-5" />
+            <Link href="/app/reminders">
+              <Bell className="h-5 w-5" />
+              {pendingCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                  {pendingCount > 9 ? '9+' : pendingCount}
+                </span>
+              )}
+            </Link>
           </Button>
         )}
 

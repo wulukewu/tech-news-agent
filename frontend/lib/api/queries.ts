@@ -18,7 +18,7 @@ export const queryKeys = {
   articles: {
     all: ['articles'] as const,
     lists: () => [...queryKeys.articles.all, 'list'] as const,
-    list: (filters: any) => [...queryKeys.articles.lists(), filters] as const,
+    list: (filters: Record<string, unknown>) => [...queryKeys.articles.lists(), filters] as const,
     details: () => [...queryKeys.articles.all, 'detail'] as const,
     detail: (id: string) => [...queryKeys.articles.details(), id] as const,
     analysis: (id: string) => [...queryKeys.articles.detail(id), 'analysis'] as const,
@@ -73,7 +73,7 @@ export const queryKeys = {
  * Example: Article List Query Hook with Optimized Caching
  * Uses 5-minute stale time for article lists
  */
-export function useArticles(filters: any) {
+export function useArticles(filters: Record<string, string>) {
   return useQuery({
     queryKey: queryKeys.articles.list(filters),
     queryFn: async () => {

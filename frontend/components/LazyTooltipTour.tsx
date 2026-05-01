@@ -1,6 +1,7 @@
 'use client';
 
 import { lazy, Suspense } from 'react';
+import type { TooltipTourProps } from './TooltipTour';
 
 // Lazy load the TooltipTour component
 const TooltipTour = lazy(() =>
@@ -12,7 +13,7 @@ const TooltipTour = lazy(() =>
  *
  * Requirements: 15.1, 15.4
  */
-export function LazyTooltipTour(props: any) {
+export function LazyTooltipTour(props: TooltipTourProps) {
   return (
     <Suspense fallback={null}>
       <TooltipTour {...props} />
