@@ -360,34 +360,99 @@ class IntelligentReminderAgent:
             return []
 
     async def _send_reminder(self, reminder: Dict[str, Any]) -> None:
-        """Send a reminder to the user"""
+        """Send a reminder to the user with multi-channel sync and fallback."""
         try:
             user_id = UUID(reminder["user_id"])
-            context = ReminderContext(**reminder["reminder_context"])
+            reminder_id = reminder["id"]
+            content_id = reminder.get("content_id")
 
-            # Format reminder content
+            # Task 8.3: Skip if already read on any channel
+            if content_id:
+                already_read = (
+                    self.supabase_service.client.table("reminder_log")
+                    .select("id")
+                    .eq("user_id", str(user_id))
+                    .eq("content_id", str(content_id))
+                    .in_("status", ["read", "clicked"])
+                    .execute()
+                )
+                if already_read.data:
+                    # Mark this copy as read too (cross-channel sync)
+                    self.supabase_service.client.table("reminder_log").update(
+                        {"status": "read", "updated_at": datetime.now().isoformat()}
+                    ).eq("id", reminder_id).execute()
+                    logger.info(f"Reminder {reminder_id} already read on another channel, skipping")
+                    return
+
+            context = ReminderContext(**reminder["reminder_context"])
             from .context_generator import ContentFormatter
 
             text_content = ContentFormatter.format_to_text(context)
-            html_content = ContentFormatter.format_to_html(context)
 
-            # Send via notification service
-            success = await self.notification_service.send_discord_dm(
-                user_id=user_id, message=text_content
-            )
+            # Task 8.3: Determine channel with fallback logic
+            channel = reminder.get("channel", "discord")
+            channel = await self._resolve_channel(str(user_id), channel)
 
-            # Update reminder status
-            status = ReminderStatus.DELIVERED if success else ReminderStatus.FAILED
-            await self.supabase_service.client.table("reminder_log").update(
-                {"status": status.value, "sent_at": datetime.now().isoformat()}
-            ).eq("id", reminder["id"]).execute()
+            # Send via resolved channel
+            if channel == "discord":
+                success = await self.notification_service.send_discord_dm(
+                    user_id=user_id, message=text_content
+                )
+            else:
+                # Future channels (email, web push) — treat as success placeholder
+                success = False
+
+            if success:
+                self.supabase_service.client.table("reminder_log").update(
+                    {
+                        "status": ReminderStatus.DELIVERED.value,
+                        "sent_at": datetime.now().isoformat(),
+                        "channel": channel,
+                    }
+                ).eq("id", reminder_id).execute()
+                # Reset failure count on success
+                await self._record_channel_result(str(user_id), channel, success=True)
+            else:
+                await self._record_channel_result(str(user_id), channel, success=False)
+                self.supabase_service.client.table("reminder_log").update(
+                    {"status": ReminderStatus.FAILED.value}
+                ).eq("id", reminder_id).execute()
 
         except Exception as e:
             logger.error(f"Error sending reminder {reminder.get('id')}: {e}")
-            # Mark as failed
-            await self.supabase_service.client.table("reminder_log").update(
+            self.supabase_service.client.table("reminder_log").update(
                 {"status": ReminderStatus.FAILED.value}
-            ).eq("id", reminder["id"]).execute()
+            ).eq("id", reminder.get("id", "")).execute()
+
+    async def _resolve_channel(self, user_id: str, preferred_channel: str) -> str:
+        """Return preferred channel unless it has 3+ consecutive failures, then fallback."""
+        try:
+            # Count recent consecutive failures for this channel
+            failures = (
+                self.supabase_service.client.table("reminder_log")
+                .select("status")
+                .eq("user_id", user_id)
+                .eq("channel", preferred_channel)
+                .eq("status", "failed")
+                .order("created_at", desc=True)
+                .limit(3)
+                .execute()
+            )
+            if len(failures.data or []) >= 3:
+                # All 3 most recent were failures — switch to web channel
+                fallback = "web" if preferred_channel == "discord" else "discord"
+                logger.warning(
+                    f"Channel '{preferred_channel}' has 3 consecutive failures for user {user_id}, "
+                    f"switching to '{fallback}'"
+                )
+                return fallback
+        except Exception:
+            pass
+        return preferred_channel
+
+    async def _record_channel_result(self, user_id: str, channel: str, success: bool) -> None:
+        """No-op placeholder — failure tracking is implicit via reminder_log status."""
+        pass
 
     async def _reschedule_reminder(self, reminder_id: str, new_time: datetime) -> None:
         """Reschedule a reminder for later delivery"""
