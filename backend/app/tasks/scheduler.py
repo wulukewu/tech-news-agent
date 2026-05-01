@@ -299,6 +299,18 @@ def setup_scheduler():
         f"Intelligent reminder job registered: Runs daily at 08:00 in timezone '{scheduler_tz}'"
     )
 
+    # Register reminder notification delivery job (every hour)
+    _scheduler.add_job(
+        send_reminder_notifications_job,
+        trigger=CronTrigger(hour="*", timezone=scheduler_tz),
+        id="reminder_notifications",
+        name="Reminder Notification Delivery",
+        replace_existing=True,
+    )
+    logger.info(
+        f"Reminder notification job registered: Runs every hour in timezone '{scheduler_tz}'"
+    )
+
     # Register learning stagnation check job (daily at 10:00)
     from app.tasks.learning_stagnation import learning_stagnation_check_job
 
@@ -467,3 +479,53 @@ async def intelligent_reminder_job():
 
     except Exception as exc:
         logger.error(f"Intelligent reminder job failed: {exc}", exc_info=True)
+
+
+async def send_reminder_notifications_job():
+    """
+    Scheduled job: Send pending reminders to users via Discord DM.
+    Runs every hour to deliver generated reminders.
+    """
+    logger.info("Starting reminder notification delivery job...")
+    try:
+        from app.services.reminder_notification_service import ReminderNotificationService
+        from app.services.supabase_service import SupabaseService
+
+        supabase = SupabaseService()
+        notification_service = ReminderNotificationService()
+
+        # Get all users with pending reminders
+        pending_result = (
+            supabase.client.table("reminder_log")
+            .select("user_id")
+            .eq("status", "pending")
+            .execute()
+        )
+
+        if not pending_result.data:
+            logger.info("No pending reminders to send")
+            return
+
+        # Get unique user IDs
+        user_ids = list(set(row["user_id"] for row in pending_result.data))
+
+        total_sent = 0
+        successful_users = 0
+        failed_users = 0
+
+        for user_id in user_ids:
+            try:
+                sent_count = await notification_service.send_pending_reminders(user_id)
+                if sent_count > 0:
+                    total_sent += sent_count
+                    successful_users += 1
+            except Exception as e:
+                failed_users += 1
+                logger.error(f"Failed to send reminders to user {user_id}: {e}")
+
+        logger.info(
+            f"Reminder notification job complete: {total_sent} reminders sent to {successful_users} users ({failed_users} failed)"
+        )
+
+    except Exception as exc:
+        logger.error(f"Reminder notification job failed: {exc}", exc_info=True)
