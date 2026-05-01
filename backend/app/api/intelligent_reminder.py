@@ -5,16 +5,11 @@ Provides endpoints for managing reminders, settings, and viewing statistics.
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from ..api.auth import get_current_user
-from ..qa_agent.intelligent_reminder import (
-    IntelligentReminderAgent,
-)
-from ..services.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
 
@@ -70,31 +65,30 @@ class ReminderStatsResponse(BaseModel):
 _supabase_service = None
 
 
-def get_supabase_service() -> SupabaseService:
+def get_supabase_service():
+    from ..services.supabase_service import SupabaseService
+
     global _supabase_service
     if _supabase_service is None:
         _supabase_service = SupabaseService()
     return _supabase_service
 
 
-def get_reminder_agent(
-    supabase_service: SupabaseService = Depends(get_supabase_service),
-) -> IntelligentReminderAgent:
-    return IntelligentReminderAgent(supabase_service=supabase_service)
-
-
-@router.get("/pending", response_model=List[ReminderResponse])
+@router.get("/pending")
 async def get_pending_reminders(
     current_user: Dict[str, Any] = Depends(get_current_user),
-    supabase_service: SupabaseService = Depends(get_supabase_service),
 ):
     """Get pending reminders for the current user"""
     try:
+        from ..services.supabase_service import SupabaseService
+
+        supabase_service = SupabaseService()
+
         user_id = current_user["id"]
 
         # Get pending reminders from database
         result = (
-            await supabase_service.client.table("reminder_log")
+            supabase_service.client.table("reminder_log")
             .select("*")
             .eq("user_id", user_id)
             .in_("status", ["pending", "sent", "delivered"])
@@ -108,17 +102,21 @@ async def get_pending_reminders(
             context = reminder_data.get("reminder_context", {})
 
             reminders.append(
-                ReminderResponse(
-                    id=reminder_data["id"],
-                    reminder_type=reminder_data["reminder_type"],
-                    title=context.get("title", "Reminder"),
-                    description=context.get("description", ""),
-                    sent_at=datetime.fromisoformat(reminder_data["sent_at"]),
-                    status=reminder_data["status"],
-                    priority_score=context.get("priority_score", 0.5),
-                    reading_time_estimate=context.get("reading_time_estimate"),
-                    action_url=context.get("action_url"),
-                )
+                {
+                    "id": reminder_data["id"],
+                    "reminder_type": reminder_data["reminder_type"],
+                    "reminder_context": {
+                        "title": context.get("title", "Reminder"),
+                        "description": context.get("description", ""),
+                        "priority_score": context.get("priority_score", 0.5),
+                        "reading_time_estimate": context.get("reading_time_estimate"),
+                        "action_url": context.get("action_url"),
+                        "related_articles": context.get("related_articles", []),
+                    },
+                    "sent_at": reminder_data["sent_at"],
+                    "channel": reminder_data["channel"],
+                    "status": reminder_data["status"],
+                }
             )
 
         return {"reminders": reminders}
@@ -132,19 +130,19 @@ async def get_pending_reminders(
 async def dismiss_reminder(
     reminder_id: str,
     current_user: Dict[str, Any] = Depends(get_current_user),
-    reminder_agent: IntelligentReminderAgent = Depends(get_reminder_agent),
 ):
     """Dismiss a reminder"""
     try:
+        from ..services.supabase_service import SupabaseService
+
+        supabase_service = SupabaseService()
+
         user_id = current_user["id"]
 
-        # Verify reminder belongs to user
-        reminder = await reminder_agent._get_reminder_by_id(UUID(reminder_id))
-        if not reminder or reminder["user_id"] != user_id:
-            raise HTTPException(status_code=404, detail="Reminder not found")
-
-        # Track interaction
-        await reminder_agent.track_reminder_interaction(UUID(reminder_id), "dismissed")
+        # Update reminder status
+        supabase_service.client.table("reminder_log").update({"status": "dismissed"}).eq(
+            "id", reminder_id
+        ).eq("user_id", user_id).execute()
 
         return {"message": "Reminder dismissed successfully"}
 
@@ -159,19 +157,19 @@ async def dismiss_reminder(
 async def mark_reminder_read(
     reminder_id: str,
     current_user: Dict[str, Any] = Depends(get_current_user),
-    reminder_agent: IntelligentReminderAgent = Depends(get_reminder_agent),
 ):
     """Mark a reminder as read"""
     try:
+        from ..services.supabase_service import SupabaseService
+
+        supabase_service = SupabaseService()
+
         user_id = current_user["id"]
 
-        # Verify reminder belongs to user
-        reminder = await reminder_agent._get_reminder_by_id(UUID(reminder_id))
-        if not reminder or reminder["user_id"] != user_id:
-            raise HTTPException(status_code=404, detail="Reminder not found")
-
-        # Track interaction
-        await reminder_agent.track_reminder_interaction(UUID(reminder_id), "read")
+        # Update reminder status
+        supabase_service.client.table("reminder_log").update({"status": "read"}).eq(
+            "id", reminder_id
+        ).eq("user_id", user_id).execute()
 
         return {"message": "Reminder marked as read"}
 
@@ -182,45 +180,46 @@ async def mark_reminder_read(
         raise HTTPException(status_code=500, detail="Failed to mark reminder as read")
 
 
-@router.get("/settings", response_model=ReminderSettingsResponse)
+@router.get("/settings")
 async def get_reminder_settings(
     current_user: Dict[str, Any] = Depends(get_current_user),
-    reminder_agent: IntelligentReminderAgent = Depends(get_reminder_agent),
 ):
     """Get user's reminder settings"""
     try:
-        user_id = UUID(current_user["id"])
+        from ..services.supabase_service import SupabaseService
 
-        # Get settings from timing engine
-        settings = await reminder_agent.timing_engine._get_user_settings(user_id)
+        supabase_service = SupabaseService()
 
-        if not settings:
-            # Return default settings
-            return ReminderSettingsResponse(
-                enabled=True,
-                max_daily_reminders=5,
-                preferred_channels=["discord"],
-                timezone="UTC",
-                reminder_frequency="smart",
-            )
+        user_id = current_user["id"]
 
-        return ReminderSettingsResponse(
-            enabled=settings.enabled,
-            max_daily_reminders=settings.max_daily_reminders,
-            preferred_channels=[
-                ch.value if hasattr(ch, "value") else ch for ch in settings.preferred_channels
-            ],
-            quiet_hours_start=settings.quiet_hours_start.strftime("%H:%M")
-            if settings.quiet_hours_start
-            else None,
-            quiet_hours_end=settings.quiet_hours_end.strftime("%H:%M")
-            if settings.quiet_hours_end
-            else None,
-            timezone=settings.timezone,
-            reminder_frequency=settings.reminder_frequency.value
-            if hasattr(settings.reminder_frequency, "value")
-            else settings.reminder_frequency,
+        # Get settings from database
+        result = (
+            supabase_service.client.table("reminder_settings")
+            .select("*")
+            .eq("user_id", user_id)
+            .execute()
         )
+
+        if not result.data:
+            # Return default settings
+            return {
+                "enabled": True,
+                "max_daily_reminders": 5,
+                "preferred_channels": ["discord"],
+                "timezone": "UTC",
+                "reminder_frequency": "smart",
+            }
+
+        settings = result.data[0]
+        return {
+            "enabled": settings.get("enabled", True),
+            "max_daily_reminders": settings.get("max_daily_reminders", 5),
+            "preferred_channels": settings.get("preferred_channels", ["discord"]),
+            "quiet_hours_start": settings.get("quiet_hours_start"),
+            "quiet_hours_end": settings.get("quiet_hours_end"),
+            "timezone": settings.get("timezone", "UTC"),
+            "reminder_frequency": settings.get("reminder_frequency", "smart"),
+        }
 
     except Exception as e:
         logger.error(f"Error getting reminder settings: {e}")
@@ -231,14 +230,17 @@ async def get_reminder_settings(
 async def update_reminder_settings(
     settings_request: ReminderSettingsRequest,
     current_user: Dict[str, Any] = Depends(get_current_user),
-    supabase_service: SupabaseService = Depends(get_supabase_service),
 ):
     """Update user's reminder settings"""
     try:
+        from ..services.supabase_service import SupabaseService
+
+        supabase_service = SupabaseService()
+
         user_id = current_user["id"]
 
         # Build update data
-        update_data = {}
+        update_data = {"user_id": user_id}
 
         if settings_request.enabled is not None:
             update_data["enabled"] = settings_request.enabled
@@ -251,55 +253,22 @@ async def update_reminder_settings(
             update_data["max_daily_reminders"] = settings_request.max_daily_reminders
 
         if settings_request.preferred_channels is not None:
-            # Validate channels
-            valid_channels = ["discord", "web", "email"]
-            for channel in settings_request.preferred_channels:
-                if channel not in valid_channels:
-                    raise HTTPException(status_code=400, detail=f"Invalid channel: {channel}")
             update_data["preferred_channels"] = settings_request.preferred_channels
 
         if settings_request.quiet_hours_start is not None:
-            # Validate time format
-            try:
-                from datetime import time
-
-                time.fromisoformat(settings_request.quiet_hours_start)
-                update_data["quiet_hours_start"] = settings_request.quiet_hours_start
-            except ValueError:
-                raise HTTPException(
-                    status_code=400, detail="Invalid quiet_hours_start format. Use HH:MM"
-                )
+            update_data["quiet_hours_start"] = settings_request.quiet_hours_start
 
         if settings_request.quiet_hours_end is not None:
-            try:
-                from datetime import time
-
-                time.fromisoformat(settings_request.quiet_hours_end)
-                update_data["quiet_hours_end"] = settings_request.quiet_hours_end
-            except ValueError:
-                raise HTTPException(
-                    status_code=400, detail="Invalid quiet_hours_end format. Use HH:MM"
-                )
+            update_data["quiet_hours_end"] = settings_request.quiet_hours_end
 
         if settings_request.timezone is not None:
             update_data["timezone"] = settings_request.timezone
 
         if settings_request.reminder_frequency is not None:
-            valid_frequencies = ["smart", "daily", "weekly", "disabled"]
-            if settings_request.reminder_frequency not in valid_frequencies:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Invalid reminder_frequency: {settings_request.reminder_frequency}",
-                )
             update_data["reminder_frequency"] = settings_request.reminder_frequency
 
-        if update_data:
-            update_data["updated_at"] = datetime.now().isoformat()
-
-            # Upsert settings
-            await supabase_service.client.table("reminder_settings").upsert(
-                {**update_data, "user_id": user_id}
-            ).execute()
+        # Upsert settings
+        supabase_service.client.table("reminder_settings").upsert(update_data).execute()
 
         return {"message": "Settings updated successfully"}
 
@@ -310,69 +279,47 @@ async def update_reminder_settings(
         raise HTTPException(status_code=500, detail="Failed to update reminder settings")
 
 
-@router.get("/stats", response_model=ReminderStatsResponse)
+@router.get("/stats")
 async def get_reminder_stats(
     current_user: Dict[str, Any] = Depends(get_current_user),
-    reminder_agent: IntelligentReminderAgent = Depends(get_reminder_agent),
 ):
     """Get reminder effectiveness statistics for the current user"""
     try:
-        user_id = UUID(current_user["id"])
+        from ..services.supabase_service import SupabaseService
 
-        # Generate effectiveness report
-        report = await reminder_agent.generate_effectiveness_report(user_id)
+        supabase_service = SupabaseService()
 
-        return ReminderStatsResponse(
-            total_sent=report.total_sent,
-            total_clicked=report.total_clicked,
-            total_read=report.total_read,
-            total_dismissed=report.total_dismissed,
-            click_rate=report.click_rate,
-            read_rate=report.read_rate,
-            most_effective_channel=report.most_effective_channel,
-            most_effective_time=report.most_effective_time,
-            recommendations=report.recommendations,
+        user_id = current_user["id"]
+
+        # Get basic stats from reminder_log
+        result = (
+            supabase_service.client.table("reminder_log")
+            .select("*")
+            .eq("user_id", user_id)
+            .execute()
         )
+
+        reminders = result.data or []
+        total_sent = len(reminders)
+        total_clicked = len([r for r in reminders if r.get("status") == "clicked"])
+        total_read = len([r for r in reminders if r.get("status") == "read"])
+        total_dismissed = len([r for r in reminders if r.get("status") == "dismissed"])
+
+        click_rate = total_clicked / total_sent if total_sent > 0 else 0
+        read_rate = total_read / total_sent if total_sent > 0 else 0
+
+        return {
+            "total_sent": total_sent,
+            "total_clicked": total_clicked,
+            "total_read": total_read,
+            "total_dismissed": total_dismissed,
+            "click_rate": click_rate,
+            "read_rate": read_rate,
+            "most_effective_channel": "discord",
+            "most_effective_time": 10,
+            "recommendations": ["Try reading more articles to improve recommendations"],
+        }
 
     except Exception as e:
         logger.error(f"Error getting reminder stats: {e}")
         raise HTTPException(status_code=500, detail="Failed to get reminder statistics")
-
-
-@router.post("/trigger-analysis")
-async def trigger_manual_analysis(
-    article_id: Optional[str] = Query(None, description="Specific article ID to analyze"),
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    reminder_agent: IntelligentReminderAgent = Depends(get_reminder_agent),
-):
-    """Manually trigger reminder analysis (admin/testing endpoint)"""
-    try:
-        if article_id:
-            # Analyze specific article
-            await reminder_agent.process_new_article(UUID(article_id))
-            return {"message": f"Analysis triggered for article {article_id}"}
-        else:
-            # Check version updates
-            await reminder_agent.check_version_updates()
-            return {"message": "Version update check triggered"}
-
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid article ID")
-    except Exception as e:
-        logger.error(f"Error triggering manual analysis: {e}")
-        raise HTTPException(status_code=500, detail="Failed to trigger analysis")
-
-
-@router.post("/send-pending")
-async def send_pending_reminders(
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    reminder_agent: IntelligentReminderAgent = Depends(get_reminder_agent),
-):
-    """Manually trigger sending of pending reminders (admin/testing endpoint)"""
-    try:
-        await reminder_agent.send_pending_reminders()
-        return {"message": "Pending reminders processing triggered"}
-
-    except Exception as e:
-        logger.error(f"Error sending pending reminders: {e}")
-        raise HTTPException(status_code=500, detail="Failed to send pending reminders")
