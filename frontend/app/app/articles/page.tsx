@@ -133,8 +133,10 @@ function DashboardContent() {
     if (sortOption === 'popular') {
       // Sort by a combination of tinkering index and recency
       result = [...result].sort((a, b) => {
-        const scoreA = (a.tinkeringIndex || 0) * 10 + new Date(b.publishedAt).getTime() / 1000000;
-        const scoreB = (b.tinkeringIndex || 0) * 10 + new Date(a.publishedAt).getTime() / 1000000;
+        const timeA = a.publishedAt ? new Date(a.publishedAt).getTime() : 0;
+        const timeB = b.publishedAt ? new Date(b.publishedAt).getTime() : 0;
+        const scoreA = (a.tinkeringIndex || 0) * 10 + timeB / 1000000;
+        const scoreB = (b.tinkeringIndex || 0) * 10 + timeA / 1000000;
         return scoreB - scoreA;
       });
     } else if (sortOption === 'tinkering') {

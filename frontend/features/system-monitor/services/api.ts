@@ -94,14 +94,32 @@ export async function getSystemHealth(): Promise<SystemHealth> {
  * Get feed status information
  *
  * Requirements: 5.6
- *
- * Note: This is a placeholder implementation. The backend endpoint
- * needs to be implemented to provide real feed status.
  */
 export async function getFeedStatus(): Promise<FeedStatus[]> {
-  // TODO: Implement backend endpoint for feed status
-  // For now, return empty array
-  return [];
+  try {
+    // Get feeds from the feeds API
+    const response = await apiClient.get<{ success: boolean; data: any[] }>('/api/feeds');
+    const feeds = response.data.data || [];
+
+    // Transform to FeedStatus format
+    return feeds.map((feed: any) => ({
+      id: feed.id,
+      name: feed.name,
+      url: feed.url,
+      category: feed.category || 'Uncategorized',
+      isActive: feed.is_active !== false,
+      lastFetchTime:
+        feed.last_fetched_at && feed.last_fetched_at !== null
+          ? new Date(feed.last_fetched_at)
+          : undefined,
+      lastFetchStatus: feed.last_fetched_at ? 'success' : 'pending',
+      articlesCount: 0, // Would need separate query to count
+      errorMessage: undefined,
+    }));
+  } catch (error) {
+    console.error('Failed to fetch feed status:', error);
+    return [];
+  }
 }
 
 /**
@@ -127,18 +145,18 @@ export async function getFetchStatistics(): Promise<FetchStatistics> {
  *
  * Requirements: 5.8
  *
- * Note: This is a placeholder implementation. The backend endpoint
- * needs to be implemented to provide real resource metrics.
+ * Note: System resource monitoring requires additional infrastructure.
+ * Returns null to indicate resources are not available in current setup.
  */
 export async function getSystemResources(): Promise<SystemResources | null> {
-  try {
-    // TODO: Implement backend endpoint for system resources
-    // For now, return null to indicate resources are not available
-    return null;
-  } catch (error) {
-    console.error('Failed to fetch system resources:', error);
-    return null;
-  }
+  // System resource monitoring (CPU, memory, disk) requires:
+  // - Container metrics API (Docker stats)
+  // - System monitoring agent (Prometheus, etc.)
+  // - Cloud provider metrics (if deployed)
+  //
+  // This is intentionally not implemented as it requires infrastructure
+  // that may not be available in all deployment scenarios.
+  return null;
 }
 
 /**
