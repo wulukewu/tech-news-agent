@@ -66,9 +66,15 @@ class ReminderStatsResponse(BaseModel):
     recommendations: List[str]
 
 
-# Dependency injection
+# Dependency injection - use singleton pattern to avoid thread issues
+_supabase_service = None
+
+
 def get_supabase_service() -> SupabaseService:
-    return SupabaseService()
+    global _supabase_service
+    if _supabase_service is None:
+        _supabase_service = SupabaseService()
+    return _supabase_service
 
 
 def get_reminder_agent(
