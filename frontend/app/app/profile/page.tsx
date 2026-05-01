@@ -55,14 +55,12 @@ export default function ProfilePage() {
       </div>
 
       {/* Profile Card */}
-      <Card className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-100 hover:shadow-md transition-all">
+      <Card className="transition-all duration-200 hover:shadow-md">
         <CardContent className="pt-6">
           <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16 transition-all duration-300 hover:scale-[1.05] hover:shadow-md">
+            <Avatar className="h-16 w-16">
               {user.avatar && <AvatarImage src={user.avatar} alt={displayName} />}
-              <AvatarFallback className="text-xl transition-colors duration-200 hover:bg-primary hover:text-primary-foreground">
-                {displayName?.[0]?.toUpperCase()}
-              </AvatarFallback>
+              <AvatarFallback className="text-xl">{displayName?.[0]?.toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <h2 className="text-lg font-semibold truncate">{displayName}</h2>

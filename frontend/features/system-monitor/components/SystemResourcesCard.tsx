@@ -50,19 +50,17 @@ export function SystemResourcesCard({ resources }: SystemResourcesCardProps) {
 
   if (!resources) {
     return (
-      <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 animate-in slide-in-from-left-4 duration-500 delay-200">
-            <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-300 hover:scale-[1.05] transition-transform">
-              <Cpu className="h-5 w-5 animate-pulse" />
+          <CardTitle className="flex items-center gap-2">
+            <div className="p-1 rounded-lg bg-primary/10 text-primary">
+              <Cpu className="h-5 w-5" />
             </div>
             {t('system.resource-usage')}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground animate-in fade-in duration-500 delay-400">
-            {t('system.resource-unavailable')}
-          </p>
+          <p className="text-sm text-muted-foreground">{t('system.resource-unavailable')}</p>
         </CardContent>
       </Card>
     );
@@ -71,21 +69,21 @@ export function SystemResourcesCard({ resources }: SystemResourcesCardProps) {
   const { cpu, memory, disk } = resources;
 
   return (
-    <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-md transition-all">
+    <Card className="transition-all duration-200 hover:shadow-md">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 animate-in slide-in-from-left-4 duration-500 delay-200">
-          <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-300 hover:scale-[1.05] transition-transform">
-            <Cpu className="h-5 w-5 animate-pulse" />
+        <CardTitle className="flex items-center gap-2">
+          <div className="p-1 rounded-lg bg-primary/10 text-primary">
+            <Cpu className="h-5 w-5" />
           </div>
           {t('system.resource-usage')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* CPU Usage */}
-        <div className="space-y-2 animate-in slide-in-from-left-4 duration-500 delay-400">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Cpu className="h-4 w-4 text-muted-foreground transition-transform duration-300 hover:scale-[1.05]" />
+              <Cpu className="h-4 w-4 text-muted-foreground transition-colors duration-150" />
               <span className="text-sm font-medium">{t('system.cpu-usage')}</span>
             </div>
             <span

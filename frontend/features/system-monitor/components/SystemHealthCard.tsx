@@ -56,17 +56,15 @@ export function SystemHealthCard({ health }: SystemHealthCardProps) {
   const errorRate = formatErrorRate(health.errors.rate);
 
   return (
-    <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-md transition-all">
+    <Card className="transition-all duration-200 hover:shadow-md">
       <CardHeader>
-        <CardTitle className="text-xl flex items-center gap-2 animate-in slide-in-from-left-4 duration-500 delay-200">
-          <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-300 hover:scale-[1.05] transition-transform">
-            <Activity className="h-5 w-5 animate-pulse" />
+        <CardTitle className="text-xl flex items-center gap-2">
+          <div className="p-1 rounded-lg bg-primary/10 text-primary">
+            <Activity className="h-5 w-5" />
           </div>
           {t('system.system-health')}
         </CardTitle>
-        <CardDescription className="animate-in fade-in duration-500 delay-400">
-          {t('system.system-health-desc')}
-        </CardDescription>
+        <CardDescription>{t('system.system-health-desc')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
@@ -74,22 +72,16 @@ export function SystemHealthCard({ health }: SystemHealthCardProps) {
           <div className="space-y-2 animate-in slide-in-from-left-4 duration-500 delay-500">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Database className="h-4 w-4 text-muted-foreground transition-transform duration-300 hover:scale-[1.05]" />
+                <Database className="h-4 w-4 text-muted-foreground transition-colors duration-150" />
                 <span className="text-sm font-medium">{t('system.database-connection')}</span>
               </div>
               {health.database.connected ? (
-                <Badge
-                  variant="default"
-                  className="bg-green-500 hover:bg-green-600 transition-all duration-300 hover:scale-[1.02] animate-pulse"
-                >
+                <Badge variant="default" className="bg-green-500 hover:bg-green-600">
                   <CheckCircle2 className="h-3 w-3 mr-1" />
                   {t('ui.connected')}
                 </Badge>
               ) : (
-                <Badge
-                  variant="destructive"
-                  className="transition-all duration-300 hover:scale-[1.02] animate-pulse"
-                >
+                <Badge variant="destructive">
                   <XCircle className="h-3 w-3 mr-1" />
                   {t('ui.disconnected')}
                 </Badge>
