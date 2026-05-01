@@ -31,6 +31,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { checkAuthStatus, logout as logoutApi } from '@/lib/api/auth';
+import { getRuntimeConfig } from '@/lib/config';
 
 /**
  * Authentication Context Type
@@ -97,8 +98,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    *
    * @param redirectPath - Optional path to redirect to after successful login
    */
-  const login = useCallback((redirectPath?: string) => {
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const login = useCallback(async (redirectPath?: string) => {
+    const { apiBaseUrl } = await getRuntimeConfig();
 
     // Store redirect path in sessionStorage so callback page can retrieve it
     if (redirectPath) {

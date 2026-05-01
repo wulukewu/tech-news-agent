@@ -1,18 +1,24 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import { logger } from '@/lib/utils/logger';
+import { getRuntimeConfig } from '@/lib/config';
 
-// Create axios instance with base configuration
+// Create axios instance - baseURL will be set lazily on first request
 export const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000',
   timeout: 30000, // 30 seconds timeout
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor for adding auth tokens
+// Request interceptor: set baseURL lazily + add auth tokens
 apiClient.interceptors.request.use(
-  (config) => {
+  async (config) => {
+    // Set baseURL from runtime config on first request
+    if (!config.baseURL) {
+      const runtimeConfig = await getRuntimeConfig();
+      config.baseURL = runtimeConfig.apiBaseUrl;
+    }
+
     // Add auth token if available
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('auth_token');
