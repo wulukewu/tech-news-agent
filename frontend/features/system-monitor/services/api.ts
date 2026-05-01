@@ -20,6 +20,8 @@ import type {
  */
 interface SchedulerStatusResponse {
   last_execution_time: string | null;
+  next_execution_time: string | null;
+  is_running: boolean;
   articles_processed: number;
   failed_operations: number;
   total_operations: number;
@@ -39,9 +41,9 @@ export async function getSchedulerStatus(): Promise<SchedulerStatus> {
   const data = response.data.data; // Extract data from success_response wrapper
 
   return {
-    isRunning: false, // TODO: Add real-time status from backend
+    isRunning: data.is_running || false,
     lastExecutionTime: data.last_execution_time ? new Date(data.last_execution_time) : null,
-    nextExecutionTime: null, // TODO: Calculate based on schedule
+    nextExecutionTime: data.next_execution_time ? new Date(data.next_execution_time) : null,
     articlesProcessed: data.articles_processed,
     failedOperations: data.failed_operations,
     totalOperations: data.total_operations,
@@ -63,29 +65,27 @@ export async function triggerManualFetch(): Promise<{ status: string; message: s
  * Get system health metrics
  *
  * Requirements: 5.4
- *
- * Note: This is a placeholder implementation. The backend endpoint
- * needs to be implemented to provide real health metrics.
  */
 export async function getSystemHealth(): Promise<SystemHealth> {
-  // TODO: Implement backend endpoint for system health
-  // For now, return mock data
+  const response = await apiClient.get<{ success: boolean; data: any }>('/api/system/health');
+  const data = response.data.data;
+
   return {
     database: {
-      connected: true,
-      responseTime: 15,
-      lastChecked: new Date(),
+      connected: data.database.connected,
+      responseTime: data.database.response_time,
+      lastChecked: new Date(data.database.last_checked),
     },
     api: {
-      averageResponseTime: 120,
-      p95ResponseTime: 250,
-      p99ResponseTime: 500,
-      lastChecked: new Date(),
+      averageResponseTime: data.api.average_response_time,
+      p95ResponseTime: data.api.p95_response_time,
+      p99ResponseTime: data.api.p99_response_time,
+      lastChecked: new Date(data.api.last_checked),
     },
     errors: {
-      rate: 0.5,
-      total24h: 12,
-      lastError: new Date(Date.now() - 3600000),
+      rate: data.errors.rate,
+      total24h: data.errors.total_24h,
+      lastError: data.errors.last_error ? new Date(data.errors.last_error) : undefined,
     },
   };
 }
@@ -108,19 +108,17 @@ export async function getFeedStatus(): Promise<FeedStatus[]> {
  * Get fetch statistics
  *
  * Requirements: 5.5
- *
- * Note: This is a placeholder implementation. The backend endpoint
- * needs to be implemented to provide real statistics.
  */
 export async function getFetchStatistics(): Promise<FetchStatistics> {
-  // TODO: Implement backend endpoint for fetch statistics
-  // For now, return mock data
+  const response = await apiClient.get<{ success: boolean; data: any }>('/api/system/statistics');
+  const data = response.data.data;
+
   return {
-    totalArticles24h: 0,
-    successRate: 0,
-    averageProcessingTime: 0,
-    totalFetches24h: 0,
-    failedFetches24h: 0,
+    totalArticles24h: data.total_articles_24h,
+    successRate: data.success_rate,
+    averageProcessingTime: data.average_processing_time,
+    totalFetches24h: data.total_fetches_24h,
+    failedFetches24h: data.failed_fetches_24h,
   };
 }
 

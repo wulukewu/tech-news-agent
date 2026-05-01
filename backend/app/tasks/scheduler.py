@@ -365,6 +365,8 @@ async def get_scheduler_health() -> dict:
     - status_code: HTTP status code (200 for healthy, 503 for unhealthy)
     - is_healthy: Boolean indicating overall health
     - is_enabled: Boolean indicating if scheduler is enabled
+    - is_running: Boolean indicating if scheduler is currently running
+    - next_execution_time: ISO timestamp of next scheduled execution (or None)
     - issues: List of health issues detected
 
     Health criteria:
@@ -384,6 +386,16 @@ async def get_scheduler_health() -> dict:
 
     # Check if scheduler is enabled
     is_enabled = settings.enable_scheduler
+
+    # Check if scheduler is running
+    is_running = _scheduler is not None and _scheduler.running
+
+    # Get next execution time
+    next_execution_time = None
+    if _scheduler and is_running:
+        job = _scheduler.get_job("background_fetch")
+        if job and job.next_run_time:
+            next_execution_time = job.next_run_time.isoformat()
 
     # Determine health status
     is_healthy = True
@@ -416,7 +428,9 @@ async def get_scheduler_health() -> dict:
             if failure_rate > 0.5:
                 is_healthy = False
                 status_code = 503
-            issues.append(f"Last execution had {failure_rate:.1%} failure rate (threshold: 50%)")
+                issues.append(
+                    f"Last execution had {failure_rate:.1%} failure rate (threshold: 50%)"
+                )
 
     return {
         "last_execution_time": last_execution.isoformat() if last_execution else None,
@@ -426,6 +440,8 @@ async def get_scheduler_health() -> dict:
         "status_code": status_code,
         "is_healthy": is_healthy,
         "is_enabled": is_enabled,
+        "is_running": is_running,
+        "next_execution_time": next_execution_time,
         "issues": issues,
     }
 
