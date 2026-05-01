@@ -41,7 +41,6 @@ function DashboardContent() {
     setSelectedCategories,
     searchQuery,
     toggleCategory,
-    selectAllCategories,
     deselectAllCategories,
     handleSearch,
   } = useDashboardFilters({ categories });
@@ -121,13 +120,23 @@ function DashboardContent() {
     }
 
     // Filter by tab
-    // TODO: Implement actual filtering based on tab (recommended, subscribed, saved)
-    // For now, all tabs show the same articles
+    if (currentTab === 'saved') {
+      // Show saved articles from reading list
+      result = savedArticles;
+    } else if (currentTab === 'recommended') {
+      // Show articles with high tinkering index (>= 7)
+      result = result.filter((article) => (article.tinkeringIndex || 0) >= 7);
+    }
+    // 'all' and 'subscribed' tabs show everything (no additional filtering)
 
     // Sort articles
     if (sortOption === 'popular') {
-      // TODO: Implement popularity sorting when available
-      result = [...result];
+      // Sort by a combination of tinkering index and recency
+      result = [...result].sort((a, b) => {
+        const scoreA = (a.tinkeringIndex || 0) * 10 + new Date(b.publishedAt).getTime() / 1000000;
+        const scoreB = (b.tinkeringIndex || 0) * 10 + new Date(a.publishedAt).getTime() / 1000000;
+        return scoreB - scoreA;
+      });
     } else if (sortOption === 'tinkering') {
       result = [...result].sort((a, b) => (b.tinkeringIndex || 0) - (a.tinkeringIndex || 0));
     } else {
@@ -136,7 +145,7 @@ function DashboardContent() {
     }
 
     return result;
-  }, [articles, searchQuery, currentTab, sortOption]);
+  }, [articles, savedArticles, searchQuery, currentTab, sortOption]);
 
   const sentinelRef = useInfiniteScroll({
     onLoadMore: handleLoadMore,
