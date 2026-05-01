@@ -10,7 +10,7 @@ echo "🚀 Starting Tech News Agent Backend..."
 # Set default values if not provided
 export PORT=${PORT:-8000}
 export WORKERS=${WORKERS:-1}
-export LOG_LEVEL=${LOG_LEVEL:-INFO}
+export LOG_LEVEL=${LOG_LEVEL:-info}
 export TIMEOUT_KEEP_ALIVE=${TIMEOUT_KEEP_ALIVE:-65}
 export TIMEOUT_GRACEFUL_SHUTDOWN=${TIMEOUT_GRACEFUL_SHUTDOWN:-30}
 

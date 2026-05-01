@@ -15,7 +15,7 @@ services:
       - key: WORKERS
         value: 1
       - key: LOG_LEVEL
-        value: INFO
+        value: info
       - key: TIMEOUT_KEEP_ALIVE
         value: 65
       - key: TIMEOUT_GRACEFUL_SHUTDOWN
