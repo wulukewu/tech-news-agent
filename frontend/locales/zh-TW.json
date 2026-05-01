@@ -84,7 +84,9 @@
         "daily-limit-desc": "每天最多提醒次數",
         "daily-limit-value": "每天 {count} 次",
         "frequency": "頻率",
-        "frequency-desc": "發送提醒的頻率"
+        "frequency-desc": "發送提醒的頻率",
+        "channels": "偏好渠道",
+        "channels-desc": "發送提醒的位置"
       },
       "frequency": {
         "smart": "智能",

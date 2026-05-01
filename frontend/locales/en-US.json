@@ -84,7 +84,9 @@
         "daily-limit-desc": "Maximum reminders per day",
         "daily-limit-value": "{count} per day",
         "frequency": "Frequency",
-        "frequency-desc": "How often to send reminders"
+        "frequency-desc": "How often to send reminders",
+        "channels": "Preferred Channels",
+        "channels-desc": "Where to send reminders"
       },
       "frequency": {
         "smart": "Smart",

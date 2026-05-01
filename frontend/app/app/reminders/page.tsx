@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useI18n } from '@/contexts/I18nContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +20,7 @@ import {
 
 export default function RemindersPage() {
   const { isAuthenticated } = useAuth();
+  const { t } = useI18n();
   const [reminders, setReminders] = useState<IntelligentReminder[]>([]);
   const [loading, setLoading] = useState(true);
   const [settings, setSettings] = useState<IntelligentReminderSettings>({
@@ -115,11 +117,11 @@ export default function RemindersPage() {
   const getTypeLabel = (type: string) => {
     switch (type) {
       case 'article_relation':
-        return 'Related Article';
+        return t('reminders.types.article-relation' as any);
       case 'version_update':
-        return 'Version Update';
+        return t('reminders.types.version-update' as any);
       case 'learning_path':
-        return 'Learning Path';
+        return t('reminders.types.learning-path' as any);
       default:
         return type;
     }
@@ -207,6 +209,29 @@ export default function RemindersPage() {
               <p className="text-sm text-muted-foreground mt-2">
                 Start reading articles and rating them to receive intelligent suggestions
               </p>
+
+              {/* Usage Guide */}
+              <div className="mt-6 p-4 bg-muted/50 rounded-lg text-left">
+                <h3 className="font-semibold mb-3">如何使用智能提醒</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary">1.</span>
+                    <span>前往「文章」或「閱讀清單」頁面</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary">2.</span>
+                    <span>閱讀文章並給予 4-5 星評分</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary">3.</span>
+                    <span>系統會分析你的偏好並找出相關文章</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-primary">4.</span>
+                    <span>智能提醒會透過 Discord DM 或網頁通知發送</span>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
         ) : (
@@ -227,14 +252,14 @@ export default function RemindersPage() {
                   {reminder.status === 'sent' && (
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" onClick={() => markAsRead(reminder.id)}>
-                        Mark Read
+                        {t('reminders.actions.mark-read' as any)}
                       </Button>
                       <Button
                         size="sm"
                         variant="ghost"
                         onClick={() => dismissReminderAction(reminder.id)}
                       >
-                        Dismiss
+                        {t('reminders.actions.dismiss' as any)}
                       </Button>
                     </div>
                   )}
@@ -244,7 +269,7 @@ export default function RemindersPage() {
               {reminder.reminder_context.related_articles && (
                 <CardContent>
                   <div className="space-y-2">
-                    <p className="font-medium text-sm">Related Articles:</p>
+                    <p className="font-medium text-sm">{t('reminders.related-articles' as any)}:</p>
                     {reminder.reminder_context.related_articles.map((article, idx) => (
                       <div key={idx} className="flex items-center gap-2">
                         <span className="text-sm">•</span>
@@ -263,8 +288,9 @@ export default function RemindersPage() {
                     ))}
                     {reminder.reminder_context.reading_time_estimate && (
                       <p className="text-xs text-muted-foreground mt-2">
-                        Estimated reading time: {reminder.reminder_context.reading_time_estimate}{' '}
-                        minutes
+                        {t('reminders.reading-time' as any, {
+                          minutes: reminder.reminder_context.reading_time_estimate,
+                        })}
                       </p>
                     )}
                   </div>
