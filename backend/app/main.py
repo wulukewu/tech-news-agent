@@ -408,7 +408,16 @@ async def root():
 @app.get("/health")
 async def health_check():
     """
-    Health check endpoint useful for Docker/Render deployments.
+    Lightweight health check endpoint for Render deployments.
+    Returns 200 OK if the service is running.
+    """
+    return {"status": "ok", "timestamp": asyncio.get_event_loop().time()}
+
+
+@app.get("/health/detailed")
+async def detailed_health_check():
+    """
+    Detailed health check endpoint with full service validation.
     Includes OAuth2 and JWT configuration validation.
 
     Validates: Requirements 20.1, 20.2, 20.3, 20.4, 20.5, 20.6, 20.7
