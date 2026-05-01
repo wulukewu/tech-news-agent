@@ -384,6 +384,27 @@ async def get_scheduler_health() -> dict:
     failed_operations = _scheduler_health["last_failed_operations"]
     total_operations = _scheduler_health["last_total_operations"]
 
+    # If no in-memory record, check database for recent articles
+    if last_execution is None:
+        try:
+            from app.services.supabase_service import SupabaseService
+
+            supabase = SupabaseService()
+            result = (
+                supabase.client.table("articles")
+                .select("created_at")
+                .order("created_at", desc=True)
+                .limit(1)
+                .execute()
+            )
+            if result.data and len(result.data) > 0:
+                last_article_time = datetime.fromisoformat(
+                    result.data[0]["created_at"].replace("Z", "+00:00")
+                )
+                last_execution = last_article_time
+        except Exception as e:
+            logger.warning(f"Failed to check database for last execution: {e}")
+
     # Check if scheduler is enabled
     is_enabled = settings.enable_scheduler
 
@@ -414,9 +435,7 @@ async def get_scheduler_health() -> dict:
             if is_running and next_execution_time:
                 is_healthy = True
                 status_code = 200
-                issues.append(
-                    f"Scheduler is active and waiting for first execution at {next_execution_time}"
-                )
+                issues.append("Scheduler is active and waiting for first execution")
             else:
                 is_healthy = False
                 status_code = 503
