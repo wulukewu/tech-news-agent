@@ -85,7 +85,7 @@ export async function getSystemHealth(): Promise<SystemHealth> {
     errors: {
       rate: data.errors.rate,
       total24h: data.errors.total_24h,
-      lastError: data.errors.last_error ? new Date(data.errors.last_error) : undefined,
+      lastError: data.errors.last_error ? new Date(data.errors.last_error) : null,
     },
   };
 }
@@ -106,15 +106,12 @@ export async function getFeedStatus(): Promise<FeedStatus[]> {
       id: feed.id,
       name: feed.name,
       url: feed.url,
-      category: feed.category || 'Uncategorized',
-      isActive: feed.is_active !== false,
-      lastFetchTime:
-        feed.last_fetched_at && feed.last_fetched_at !== null
-          ? new Date(feed.last_fetched_at)
-          : undefined,
-      lastFetchStatus: feed.last_fetched_at ? 'success' : 'pending',
-      articlesCount: 0, // Would need separate query to count
+      lastFetch: feed.last_fetched_at ? new Date(feed.last_fetched_at) : null,
+      nextFetch: null,
+      status: (feed.is_active !== false ? 'healthy' : 'warning') as 'healthy' | 'warning' | 'error',
       errorMessage: undefined,
+      articlesProcessed: 0,
+      processingTime: 0,
     }));
   } catch (error) {
     console.error('Failed to fetch feed status:', error);
