@@ -340,3 +340,32 @@ async def get_reminder_stats(
     except Exception as e:
         logger.error(f"Error getting reminder stats: {e}")
         raise HTTPException(status_code=500, detail="Failed to get reminder statistics")
+
+
+@router.post("/generate")
+async def trigger_reminder_generation(current_user: dict = Depends(get_current_user)) -> dict:
+    """Manually trigger reminder generation for current user"""
+    try:
+        from ..services.intelligent_reminder_generator import IntelligentReminderGenerator
+
+        user_id = str(current_user["user_id"])
+        generator = IntelligentReminderGenerator()
+
+        reminders = await generator.generate_reminders_for_user(user_id)
+
+        return {
+            "message": "Reminders generated successfully",
+            "count": len(reminders),
+            "reminders": [
+                {
+                    "id": r["id"],
+                    "title": r["reminder_context"]["title"],
+                    "priority_score": r["reminder_context"]["priority_score"],
+                }
+                for r in reminders
+            ],
+        }
+
+    except Exception as e:
+        logger.error(f"Error generating reminders: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate reminders")

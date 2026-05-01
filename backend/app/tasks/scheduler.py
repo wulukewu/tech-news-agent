@@ -287,6 +287,18 @@ def setup_scheduler():
         f"Proactive learning job registered: Runs daily at 10:00 in timezone '{scheduler_tz}'"
     )
 
+    # Register intelligent reminder generation job (daily at 08:00)
+    _scheduler.add_job(
+        intelligent_reminder_job,
+        trigger=CronTrigger(hour=8, minute=0, timezone=scheduler_tz),
+        id="intelligent_reminders",
+        name="Intelligent Reminder Generation",
+        replace_existing=True,
+    )
+    logger.info(
+        f"Intelligent reminder job registered: Runs daily at 08:00 in timezone '{scheduler_tz}'"
+    )
+
     # Register learning stagnation check job (daily at 10:00)
     from app.tasks.learning_stagnation import learning_stagnation_check_job
 
@@ -404,3 +416,54 @@ async def get_scheduler_health() -> dict:
         "is_enabled": is_enabled,
         "issues": issues,
     }
+
+
+async def intelligent_reminder_job():
+    """
+    Scheduled job: Generate intelligent reminders for all active users.
+    Runs daily to analyze reading habits and create personalized reminders.
+    """
+    logger.info("Starting intelligent reminder generation job...")
+    try:
+        from app.services.intelligent_reminder_generator import IntelligentReminderGenerator
+        from app.services.supabase_service import SupabaseService
+
+        supabase = SupabaseService()
+        generator = IntelligentReminderGenerator()
+
+        # Get all users with reminders enabled
+        settings_result = (
+            supabase.client.table("reminder_settings")
+            .select("user_id, enabled")
+            .eq("enabled", True)
+            .execute()
+        )
+
+        # If no settings exist, get all users (default enabled)
+        if not settings_result.data:
+            users_result = supabase.client.table("users").select("id").execute()
+            user_ids = [str(user["id"]) for user in users_result.data]
+        else:
+            user_ids = [row["user_id"] for row in settings_result.data]
+
+        total_reminders = 0
+        successful_users = 0
+        failed_users = 0
+
+        for user_id in user_ids:
+            try:
+                reminders = await generator.generate_reminders_for_user(user_id)
+                if reminders:
+                    total_reminders += len(reminders)
+                    successful_users += 1
+                    logger.info(f"Generated {len(reminders)} reminders for user {user_id}")
+            except Exception as e:
+                failed_users += 1
+                logger.error(f"Failed to generate reminders for user {user_id}: {e}")
+
+        logger.info(
+            f"Intelligent reminder job complete: {total_reminders} reminders for {successful_users} users ({failed_users} failed)"
+        )
+
+    except Exception as exc:
+        logger.error(f"Intelligent reminder job failed: {exc}", exc_info=True)
