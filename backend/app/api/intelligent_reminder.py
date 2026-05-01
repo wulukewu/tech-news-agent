@@ -241,8 +241,8 @@ async def update_reminder_settings(
 
         user_id = current_user["id"]
 
-        # Build update data
-        update_data = {"user_id": user_id}
+        # Build update data (without user_id for update operation)
+        update_data = {}
 
         if settings_request.enabled is not None:
             update_data["enabled"] = settings_request.enabled
@@ -283,8 +283,9 @@ async def update_reminder_settings(
                 "user_id", user_id
             ).execute()
         else:
-            # Create new settings
-            supabase_service.client.table("reminder_settings").insert(update_data).execute()
+            # Create new settings (include user_id for insert)
+            insert_data = {**update_data, "user_id": user_id}
+            supabase_service.client.table("reminder_settings").insert(insert_data).execute()
 
         return {"message": "Settings updated successfully"}
 
