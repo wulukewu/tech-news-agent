@@ -16,6 +16,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 import type { SchedulerStatus } from '../types';
 import { useI18n } from '@/contexts/I18nContext';
+import { formatSchedulerIssue } from '@/lib/i18n-utils';
 
 export interface SchedulerStatusWidgetProps {
   /** Scheduler status data */
@@ -32,48 +33,6 @@ export function SchedulerStatusWidget({
   onTrigger,
 }: SchedulerStatusWidgetProps) {
   const { t } = useI18n();
-
-  // Helper to bypass TypeScript strict checking for dynamic translation keys
-  const tr = (key: string, params?: Record<string, any>) => t(key as any, params);
-
-  /**
-   * Format issue message based on type and parameters
-   */
-  function formatIssue(issue: any): string {
-    // Always return a string, never an object
-    if (typeof issue === 'string') return issue;
-    if (!issue || typeof issue !== 'object') return String(issue);
-
-    let result: string;
-    switch (issue.type) {
-      case 'disabled':
-        result = tr('pages.system-status.scheduler-disabled-desc');
-        break;
-      case 'waiting':
-        result = tr('pages.system-status.scheduler-waiting');
-        break;
-      case 'never_executed':
-        result = tr('pages.system-status.scheduler-never-executed');
-        break;
-      case 'stale':
-        result = tr('pages.system-status.scheduler-stale', {
-          hours: issue.hours,
-          threshold: issue.threshold,
-        });
-        break;
-      case 'high_failure_rate':
-        result = tr('pages.system-status.scheduler-high-failure', {
-          rate: issue.rate,
-          threshold: issue.threshold,
-        });
-        break;
-      default:
-        result = issue.message || JSON.stringify(issue);
-    }
-
-    // Ensure we always return a string
-    return typeof result === 'string' ? result : String(result);
-  }
 
   /**
    * Format date to relative time string in Chinese
@@ -214,7 +173,7 @@ export function SchedulerStatusWidget({
                   style={{ animationDelay: `${1200 + index * 100}ms` }}
                 >
                   <span className="mt-1">•</span>
-                  <span>{formatIssue(issue)}</span>
+                  <span>{formatSchedulerIssue(t, issue)}</span>
                 </li>
               ))}
             </ul>

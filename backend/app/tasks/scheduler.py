@@ -453,9 +453,9 @@ async def get_scheduler_health() -> dict:
                 issues.append(
                     {
                         "type": "stale",
-                        "hours": round(hours_since, 1),
+                        "hours": int(hours_since),
                         "threshold": 12,
-                        "message": f"Scheduler has not run in {hours_since:.1f} hours (threshold: 12 hours)",
+                        "message": f"Scheduler has not run in {int(hours_since)} hours (threshold: 12 hours)",
                     }
                 )
 
@@ -467,9 +467,9 @@ async def get_scheduler_health() -> dict:
                 issues.append(
                     {
                         "type": "high_failure_rate",
-                        "rate": round(failure_rate * 100, 1),
+                        "rate": int(failure_rate * 100),
                         "threshold": 50,
-                        "message": f"Last execution had {failure_rate:.1%} failure rate (threshold: 50%)",
+                        "message": f"Last execution had {int(failure_rate * 100)}% failure rate (threshold: 50%)",
                     }
                 )
 
