@@ -87,16 +87,16 @@ export default function SystemStatusSettingsPage() {
       </div>
 
       {isLoading ? (
-        <Card className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
+        <Card>
           <CardContent className="pt-6">
-            <Skeleton className="h-20 w-full animate-pulse" />
+            <Skeleton className="h-20 w-full" />
           </CardContent>
         </Card>
       ) : error ? (
-        <Card className="border-destructive animate-in fade-in-50 slide-in-from-bottom-4 duration-500 shake">
+        <Card className="border-destructive">
           <CardContent className="pt-6">
             <div className="flex items-center gap-2 text-destructive">
-              <AlertCircle className="h-5 w-5 animate-pulse" />
+              <AlertCircle className="h-5 w-5" />
               <p>{t('pages.system-status.load-error')}</p>
             </div>
           </CardContent>

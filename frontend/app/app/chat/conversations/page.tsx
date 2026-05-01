@@ -77,7 +77,7 @@ function EmptyState({
 
 function ConversationCardSkeleton() {
   return (
-    <div className="rounded-lg border bg-card p-4 space-y-3 animate-pulse">
+    <div className="rounded-lg border bg-card p-4 space-y-3 animate-[pulse_3s_ease-in-out_infinite]">
       <div className="flex items-start justify-between gap-2">
         <div className="h-4 bg-muted rounded w-3/4" />
         <div className="h-5 bg-muted rounded w-14" />

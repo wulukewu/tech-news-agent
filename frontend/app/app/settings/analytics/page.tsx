@@ -72,7 +72,7 @@ export default function AnalyticsSettingsPage() {
               style={{ animationDelay: `${i * 100}ms` }}
             >
               <CardContent className="pt-6">
-                <Skeleton className="h-16 w-full animate-pulse" />
+                <Skeleton className="h-16 w-full" />
               </CardContent>
             </Card>
           ))}

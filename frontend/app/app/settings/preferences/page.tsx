@@ -237,7 +237,7 @@ export default function PreferencesPage() {
           {[1, 2].map((i) => (
             <div
               key={i}
-              className="h-24 rounded-xl bg-muted animate-pulse"
+              className="h-24 rounded-xl bg-muted animate-[pulse_3s_ease-in-out_infinite]"
               style={{ animationDelay: `${i * 200}ms` }}
             />
           ))}

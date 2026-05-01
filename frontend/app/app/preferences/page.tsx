@@ -314,7 +314,10 @@ export default function PreferencesPage() {
       {loading ? (
         <div className="space-y-4">
           {[1, 2].map((i) => (
-            <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />
+            <div
+              key={i}
+              className="h-24 rounded-xl bg-muted animate-[pulse_3s_ease-in-out_infinite]"
+            />
           ))}
         </div>
       ) : (
