@@ -315,6 +315,7 @@ async def background_fetch_job():
                             "ai_summary": article.ai_summary,
                             "embedding": article.embedding,
                             "category": article.category,
+                            "content_type": article.content_type,
                         }
                     )
 
@@ -358,6 +359,68 @@ async def background_fetch_job():
                 total_inserted += batch_result.inserted_count
                 total_updated += batch_result.updated_count
                 total_failed += batch_result.failed_count
+
+                # Stage 4.5: Write article_classifications for newly inserted articles
+                # (background, failure does not affect main pipeline)
+                try:
+                    _LEARNING_VALUE = {
+                        "tutorial": 0.85,
+                        "guide": 0.75,
+                        "project": 0.80,
+                        "reference": 0.60,
+                        "opinion": 0.40,
+                        "news": 0.25,
+                    }
+
+                    def _to_difficulty(ti: int) -> int:
+                        if ti <= 1:
+                            return 1
+                        if ti <= 2:
+                            return 2
+                        if ti <= 4:
+                            return 3
+                        return 4
+
+                    inserted_urls = [a["url"] for a in articles_to_insert if a.get("content_type")]
+                    if inserted_urls:
+                        id_resp = (
+                            supabase.client.table("articles")
+                            .select("id, url, content_type, tinkering_index")
+                            .in_("url", inserted_urls)
+                            .execute()
+                        )
+                        for row in id_resp.data or []:
+                            ct = row.get("content_type")
+                            ti = row.get("tinkering_index") or 3
+                            if not ct:
+                                continue
+                            try:
+                                supabase.client.table("article_classifications").insert(
+                                    {
+                                        "article_id": row["id"],
+                                        "content_type": ct,
+                                        "difficulty_level": _to_difficulty(ti),
+                                        "learning_value_score": _LEARNING_VALUE.get(ct, 0.5),
+                                        "confidence_score": 0.8,
+                                        "educational_features": {
+                                            "has_code_examples": ct in ("tutorial", "project"),
+                                            "has_step_by_step": ct == "tutorial",
+                                            "has_practical_exercises": ct
+                                            in ("tutorial", "project"),
+                                            "has_visual_aids": False,
+                                            "estimated_reading_time": 10,
+                                            "prerequisite_skills": [],
+                                        },
+                                        "estimated_reading_time": 10,
+                                        "prerequisite_skills": [],
+                                    }
+                                ).execute()
+                            except Exception:
+                                pass  # Ignore duplicates
+                except Exception as cls_exc:
+                    logger.warning(
+                        "article_classifications write failed (non-critical): %s", cls_exc
+                    )
 
                 # Log batch processing time (Requirement 12.6)
                 batch_end_time = datetime.now(UTC)

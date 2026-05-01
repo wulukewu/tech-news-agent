@@ -148,7 +148,8 @@ Analyze this article and return JSON with:
     def _fallback_classification(self, article: ArticleSchema) -> ArticleClassification:
         """Fallback classification based on simple heuristics."""
         title_lower = article.title.lower()
-        content_lower = article.content.lower()
+        summary_lower = (article.ai_summary or "").lower()
+        combined = title_lower + " " + summary_lower
 
         # Determine content type
         if any(word in title_lower for word in ["tutorial", "how to", "step by step"]):
@@ -175,13 +176,13 @@ Analyze this article and return JSON with:
         else:
             difficulty = DifficultyLevel.INTERMEDIATE
 
-        # Educational features
+        # Educational features (inferred from title/summary, no full content needed)
         features = EducationalFeatures(
-            has_code_examples="code" in content_lower or "```" in article.content,
-            has_step_by_step="step" in content_lower,
-            has_practical_exercises="exercise" in content_lower or "practice" in content_lower,
-            has_visual_aids=False,  # Can't detect from text
-            estimated_reading_time=max(5, len(article.content.split()) // 200),
+            has_code_examples="code" in combined or "```" in combined,
+            has_step_by_step="step" in combined,
+            has_practical_exercises="exercise" in combined or "practice" in combined,
+            has_visual_aids=False,
+            estimated_reading_time=5,
             prerequisite_skills=[],
         )
 

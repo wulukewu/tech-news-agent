@@ -110,14 +110,22 @@ class LLMService:
             "   - 2分：簡單，有 Docker Compose 或清晰指南\n"
             "   - 3分：中等，需要一些配置和調試\n"
             "   - 4分：困難，需要手動編譯或複雜配置\n"
-            "   - 5分：非常困難，需要深入理解和大量調試\n\n"
+            "   - 5分：非常困難，需要深入理解和大量調試\n"
+            "4. 內容類型 (content_type)：\n"
+            "   - tutorial：有步驟的教學，帶著讀者完成某件事\n"
+            "   - guide：概念說明或最佳實踐指南\n"
+            "   - reference：API 文件、規格、速查表\n"
+            "   - project：開源專案介紹或 case study\n"
+            "   - news：產品發布、版本更新、業界新聞\n"
+            "   - opinion：觀點文章、評論、分析\n\n"
             "⚠️ 重要：tinkering_index 必須是 1 到 5 之間的整數，不能是 0 或其他值。\n\n"
             "⚠️ 絕對要求：你必須只回傳一個合法的 JSON，不要加上 Markdown 標記，例如 ```json。結構必須完全符合：\n"
             "{\n"
             '  "is_hardcore": boolean,\n'
             '  "reason": "一句話說明為什麼推薦或淘汰",\n'
             '  "actionable_takeaway": "提煉出的行動價值 (淘汰可留空)",\n'
-            '  "tinkering_index": number (必須是 1-5 之間的整數)\n'
+            '  "tinkering_index": number (必須是 1-5 之間的整數),\n'
+            '  "content_type": "tutorial|guide|reference|project|news|opinion"\n'
             "}"
         )
 
@@ -268,6 +276,9 @@ class LLMService:
                             ti = article.ai_analysis.tinkering_index
                             if isinstance(ti, int) and 1 <= ti <= 5:
                                 article.tinkering_index = ti
+                                # Also extract content_type if present
+                                if article.ai_analysis.content_type:
+                                    article.content_type = article.ai_analysis.content_type
                                 tinkering_success_count += 1
                             else:
                                 logger.warning(

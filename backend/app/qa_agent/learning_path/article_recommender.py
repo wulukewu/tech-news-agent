@@ -76,7 +76,7 @@ class ArticleRecommender:
             candidate_ids = {str(a.id) for a in candidate_articles}
             missing_ids = read_articles - candidate_ids
             if missing_ids:
-                select_fields = "id, feed_id, title, url, published_at, tinkering_index, ai_summary, created_at, category"
+                select_fields = "id, feed_id, title, url, published_at, tinkering_index, ai_summary, created_at, category, content_type"
                 for aid in missing_ids:
                     resp = (
                         self.supabase.client.table("articles")
@@ -157,7 +157,7 @@ class ArticleRecommender:
     async def _find_fallback_articles(self, exclude_ids: set) -> list:
         """Return top articles by tinkering_index, excluding already completed ones."""
         try:
-            select_fields = "id, feed_id, title, url, published_at, tinkering_index, ai_summary, created_at, category"
+            select_fields = "id, feed_id, title, url, published_at, tinkering_index, ai_summary, created_at, category, content_type"
             resp = (
                 self.supabase.client.table("articles")
                 .select(select_fields)
@@ -217,9 +217,7 @@ class ArticleRecommender:
                         except Exception:
                             pass
 
-            select_fields = "id, feed_id, title, url, published_at, tinkering_index, ai_summary, created_at, category"
-
-            # 1. Search by skill names in title and ai_summary
+            select_fields = "id, feed_id, title, url, published_at, tinkering_index, ai_summary, created_at, category, content_type"
             skill_names = [skill.name.replace("-", " ") for skill in stage.skills]
             for skill_name in skill_names:
                 for field in ("title", "ai_summary"):
@@ -299,6 +297,20 @@ class ArticleRecommender:
             # Base relevance score
             relevance_score = 0.0
 
+            # Educational content type boost
+            # tutorial/guide/project are most valuable for learning paths
+            CONTENT_TYPE_BOOST = {
+                "tutorial": 0.4,
+                "guide": 0.3,
+                "project": 0.3,
+                "reference": 0.1,
+                "opinion": 0.0,
+                "news": -0.1,  # slight penalty — news rarely helps structured learning
+            }
+            content_type = getattr(article, "content_type", None)
+            if content_type:
+                relevance_score += CONTENT_TYPE_BOOST.get(content_type, 0.0)
+
             # Check title relevance to stage skills
             title_lower = article.title.lower()
             skill_matches = 0
@@ -365,7 +377,17 @@ class ArticleRecommender:
         self, article: ArticleSchema, stage: LearningStage, skill_matches: int
     ) -> str:
         """Generate human-readable recommendation reason"""
-        if skill_matches > 0:
+        content_type = getattr(article, "content_type", None)
+        type_label = {
+            "tutorial": "教學文章",
+            "guide": "指南",
+            "project": "實作專案",
+            "reference": "參考文件",
+        }.get(content_type or "", "")
+
+        if skill_matches > 0 and type_label:
+            return f"這篇{type_label}涵蓋了你在{stage.stage_name}階段需要學習的技能"
+        elif skill_matches > 0:
             return f"這篇文章涵蓋了你在{stage.stage_name}階段需要學習的技能"
         elif article.category and any(
             skill.category in article.category.lower() for skill in stage.skills

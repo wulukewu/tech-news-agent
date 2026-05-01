@@ -24,6 +24,10 @@ class AIAnalysis(BaseModel):
     tinkering_index: int = Field(
         ge=1, le=5, description="Tinkering index (1-5) indicating technical complexity"
     )
+    content_type: str | None = Field(
+        default=None,
+        description="Content type: tutorial, guide, news, reference, project, opinion",
+    )
 
 
 class ArticleSchema(BaseModel):
@@ -48,6 +52,7 @@ class ArticleSchema(BaseModel):
     tinkering_index: int | None = Field(None, ge=1, le=5)  # 移至頂層
     ai_summary: str | None = Field(None, max_length=5000)  # 新增：AI 摘要
     ai_analysis: AIAnalysis | None = None  # 保留：完整 AI 分析
+    content_type: str | None = None  # 內容類型：tutorial/guide/news/reference/project/opinion
 
     # 向量嵌入
     embedding: list[float] | None = None  # 新增：用於語義搜尋

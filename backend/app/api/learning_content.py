@@ -342,3 +342,132 @@ async def get_low_performing_sources(
     except Exception as e:
         logger.error(f"Failed to get low performing sources: {e}")
         raise HTTPException(status_code=500, detail="Failed to get low performing sources")
+
+
+# Task 2.5: Manual classification override
+class ClassificationOverrideRequest(BaseModel):
+    content_type: str
+    difficulty_level: Optional[int] = None
+    learning_value_score: Optional[float] = None
+
+
+@router.patch("/articles/{article_id}/classification")
+async def override_article_classification(
+    article_id: str,
+    override: ClassificationOverrideRequest,
+    current_user: dict = Depends(get_current_user),
+):
+    """Manually override article classification (corrects heuristic errors)."""
+    valid_types = {"tutorial", "guide", "news", "reference", "project", "opinion"}
+    if override.content_type not in valid_types:
+        raise HTTPException(status_code=400, detail=f"content_type must be one of {valid_types}")
+
+    supabase = SupabaseService()
+    try:
+        update_data: dict = {
+            "content_type": override.content_type,
+            "confidence_score": 1.0,  # Human override = full confidence
+        }
+        if override.difficulty_level is not None:
+            if not 1 <= override.difficulty_level <= 4:
+                raise HTTPException(status_code=400, detail="difficulty_level must be 1-4")
+            update_data["difficulty_level"] = override.difficulty_level
+        if override.learning_value_score is not None:
+            update_data["learning_value_score"] = override.learning_value_score
+
+        # Update article_classifications table
+        supabase.client.table("article_classifications").update(update_data).eq(
+            "article_id", article_id
+        ).execute()
+
+        # Also update articles.content_type for consistency
+        supabase.client.table("articles").update({"content_type": override.content_type}).eq(
+            "id", article_id
+        ).execute()
+
+        return {"message": "Classification updated", "article_id": article_id, **update_data}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to override classification for {article_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update classification")
+
+
+# Task 3.4: Infer learning style from completion patterns
+@router.post("/preferences/infer-learning-style")
+async def infer_learning_style(
+    current_user: dict = Depends(get_current_user),
+):
+    """Infer user's learning style from their reading completion patterns."""
+    user_id = str(current_user["user_id"])
+    supabase = SupabaseService()
+
+    try:
+        # Get completed articles with their classifications
+        completed = (
+            supabase.client.table("reading_list")
+            .select("article_id")
+            .eq("user_id", user_id)
+            .eq("status", "Read")
+            .execute()
+        )
+        if not completed.data:
+            return {"learning_style": "balanced", "confidence": 0.0, "reason": "No data yet"}
+
+        article_ids = [r["article_id"] for r in completed.data]
+        cls_resp = (
+            supabase.client.table("article_classifications")
+            .select("content_type, educational_features")
+            .in_("article_id", article_ids)
+            .execute()
+        )
+        rows = cls_resp.data or []
+        if not rows:
+            return {"learning_style": "balanced", "confidence": 0.0, "reason": "No classifications"}
+
+        # Count signals
+        has_code = sum(
+            1 for r in rows if r.get("educational_features", {}).get("has_code_examples")
+        )
+        has_steps = sum(
+            1 for r in rows if r.get("educational_features", {}).get("has_step_by_step")
+        )
+        tutorials = sum(1 for r in rows if r.get("content_type") == "tutorial")
+        guides = sum(1 for r in rows if r.get("content_type") == "guide")
+        total = len(rows)
+
+        hands_on_score = (has_code + tutorials) / (total * 2)
+        theoretical_score = guides / total
+        visual_score = (
+            sum(1 for r in rows if r.get("educational_features", {}).get("has_visual_aids")) / total
+        )
+
+        scores = {
+            "hands-on": hands_on_score,
+            "theoretical": theoretical_score,
+            "visual": visual_score,
+        }
+        best_style = max(scores, key=scores.__getitem__)
+        best_score = scores[best_style]
+
+        # Only update if signal is strong enough
+        if best_score < 0.4:
+            style = "balanced"
+        else:
+            style = best_style
+
+        # Persist to user_learning_preferences
+        supabase.client.table("user_learning_preferences").upsert(
+            {"user_id": user_id, "learning_style": style},
+            on_conflict="user_id",
+        ).execute()
+
+        return {
+            "learning_style": style,
+            "confidence": round(best_score, 2),
+            "signals": {k: round(v, 2) for k, v in scores.items()},
+            "based_on": total,
+        }
+    except Exception as e:
+        logger.error(f"Failed to infer learning style for {user_id}: {e}")
+        raise HTTPException(status_code=500, detail="Failed to infer learning style")

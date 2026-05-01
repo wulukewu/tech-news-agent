@@ -183,6 +183,25 @@ class EnhancedRecommendationEngine:
         self, candidates: List[Dict], preferences: LearningPreferences, user_id: str
     ) -> List[ScoredArticle]:
         """Score articles based on learning value and user preferences."""
+        # Fetch quality metrics for all candidate articles in one query
+        article_ids = [c["article_id"] for c in candidates if c.get("article_id")]
+        quality_map: Dict[str, float] = {}
+        if article_ids:
+            try:
+                qm_resp = (
+                    self.supabase.client.table("content_quality_metrics")
+                    .select("article_id, average_rating, completion_rate")
+                    .in_("article_id", article_ids)
+                    .execute()
+                )
+                for row in qm_resp.data or []:
+                    # Combine average_rating (1-5 → 0-1) and completion_rate into a quality multiplier
+                    rating_score = (row.get("average_rating") or 3.0) / 5.0
+                    completion = row.get("completion_rate") or 0.5
+                    quality_map[row["article_id"]] = rating_score * 0.6 + completion * 0.4
+            except Exception as e:
+                logger.warning(f"Failed to fetch quality metrics: {e}")
+
         scored_articles = []
 
         for candidate in candidates:
@@ -222,6 +241,11 @@ class EnhancedRecommendationEngine:
                 if features.get("has_practical_exercises", False):
                     feature_bonus += 0.15
 
+                # Task 4.2: User feedback quality adjustment
+                # Articles with high ratings get a boost; low ratings get penalised
+                quality_score = quality_map.get(candidate.get("article_id", ""), 0.5)
+                quality_adjustment = (quality_score - 0.5) * 0.3  # range: -0.15 to +0.15
+
                 # Calculate final score
                 final_score = (
                     base_score * 0.4
@@ -229,6 +253,7 @@ class EnhancedRecommendationEngine:
                     + difficulty_score * 0.2
                     + time_score * 0.1
                     + feature_bonus
+                    + quality_adjustment
                 )
 
                 # Create article schema
@@ -238,12 +263,18 @@ class EnhancedRecommendationEngine:
                     url=article_data["url"],
                     published_at=article_data["published_at"],
                     feed_id=article_data["feed_id"],
+                    feed_name="",
+                    category="",
                     tinkering_index=article_data.get("tinkering_index", 0),
                     ai_summary=article_data.get("ai_summary", ""),
-                    content="",  # Not needed for recommendations
                 )
 
-                reasoning = f"Learning value: {base_score:.2f}, Content match: {content_type_bonus:.2f}, Features: {feature_bonus:.2f}"
+                reasoning = (
+                    f"Learning value: {base_score:.2f}, "
+                    f"Content match: {content_type_bonus:.2f}, "
+                    f"Features: {feature_bonus:.2f}, "
+                    f"Quality: {quality_adjustment:+.2f}"
+                )
 
                 scored_articles.append(
                     ScoredArticle(article=article, score=final_score, reasoning=reasoning)
