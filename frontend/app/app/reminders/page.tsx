@@ -43,7 +43,7 @@ export default function RemindersPage() {
   const { isAuthenticated } = useAuth();
   const { t } = useI18n();
   // Helper to bypass TypeScript strict checking for dynamic translation keys
-  const tr = (key: string) => t(key as any);
+  const tr = (key: string, params?: Record<string, any>) => t(key as any, params);
   const [reminders, setReminders] = useState<IntelligentReminder[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<IntelligentReminderStats | null>(null);

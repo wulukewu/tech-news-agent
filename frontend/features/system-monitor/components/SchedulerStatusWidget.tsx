@@ -40,33 +40,39 @@ export function SchedulerStatusWidget({
    * Format issue message based on type and parameters
    */
   function formatIssue(issue: any): string {
+    // Always return a string, never an object
     if (typeof issue === 'string') return issue;
     if (!issue || typeof issue !== 'object') return String(issue);
 
+    let result: string;
     switch (issue.type) {
       case 'disabled':
-        return String(tr('pages.system-status.scheduler-disabled-desc'));
+        result = tr('pages.system-status.scheduler-disabled-desc');
+        break;
       case 'waiting':
-        return String(tr('pages.system-status.scheduler-waiting'));
+        result = tr('pages.system-status.scheduler-waiting');
+        break;
       case 'never_executed':
-        return String(tr('pages.system-status.scheduler-never-executed'));
+        result = tr('pages.system-status.scheduler-never-executed');
+        break;
       case 'stale':
-        return String(
-          tr('pages.system-status.scheduler-stale', {
-            hours: issue.hours,
-            threshold: issue.threshold,
-          })
-        );
+        result = tr('pages.system-status.scheduler-stale', {
+          hours: issue.hours,
+          threshold: issue.threshold,
+        });
+        break;
       case 'high_failure_rate':
-        return String(
-          tr('pages.system-status.scheduler-high-failure', {
-            rate: issue.rate,
-            threshold: issue.threshold,
-          })
-        );
+        result = tr('pages.system-status.scheduler-high-failure', {
+          rate: issue.rate,
+          threshold: issue.threshold,
+        });
+        break;
       default:
-        return issue.message || JSON.stringify(issue);
+        result = issue.message || JSON.stringify(issue);
     }
+
+    // Ensure we always return a string
+    return typeof result === 'string' ? result : String(result);
   }
 
   /**

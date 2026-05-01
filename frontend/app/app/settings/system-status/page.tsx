@@ -10,6 +10,14 @@ import { apiClient } from '@/lib/api/client';
 import { toast } from '@/lib/toast';
 import { useI18n } from '@/contexts/I18nContext';
 
+interface SchedulerIssue {
+  type: string;
+  message: string;
+  hours?: number;
+  threshold?: number;
+  rate?: number;
+}
+
 interface SchedulerStatusResponse {
   last_execution_time: string | null;
   articles_processed: number;
@@ -17,7 +25,7 @@ interface SchedulerStatusResponse {
   total_operations: number;
   is_healthy: boolean;
   is_enabled: boolean;
-  issues: string[];
+  issues: (string | SchedulerIssue)[];
 }
 
 async function getSchedulerStatus(): Promise<SchedulerStatusResponse> {
@@ -39,6 +47,46 @@ export default function SystemStatusSettingsPage() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const [showConfirm, setShowConfirm] = useState(false);
+
+  // Helper to bypass TypeScript strict checking for dynamic translation keys
+  const tr = (key: string, params?: Record<string, any>) => t(key as any, params);
+
+  /**
+   * Format issue message based on type and parameters
+   */
+  function formatIssue(issue: string | SchedulerIssue): string {
+    if (typeof issue === 'string') return issue;
+    if (!issue || typeof issue !== 'object') return String(issue);
+
+    let result: string;
+    switch (issue.type) {
+      case 'disabled':
+        result = tr('pages.system-status.scheduler-disabled-desc');
+        break;
+      case 'waiting':
+        result = tr('pages.system-status.scheduler-waiting');
+        break;
+      case 'never_executed':
+        result = tr('pages.system-status.scheduler-never-executed');
+        break;
+      case 'stale':
+        result = tr('pages.system-status.scheduler-stale', {
+          hours: issue.hours,
+          threshold: issue.threshold,
+        });
+        break;
+      case 'high_failure_rate':
+        result = tr('pages.system-status.scheduler-high-failure', {
+          rate: issue.rate,
+          threshold: issue.threshold,
+        });
+        break;
+      default:
+        result = issue.message || JSON.stringify(issue);
+    }
+
+    return typeof result === 'string' ? result : String(result);
+  }
 
   const {
     data: status,
@@ -173,7 +221,7 @@ export default function SystemStatusSettingsPage() {
                       className="text-xs text-muted-foreground animate-in slide-in-from-left-1 duration-300"
                       style={{ animationDelay: `${900 + i * 100}ms` }}
                     >
-                      • {issue}
+                      • {formatIssue(issue)}
                     </p>
                   ))}
                 </div>
