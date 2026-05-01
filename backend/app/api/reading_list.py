@@ -37,9 +37,35 @@ router = APIRouter()
 async def _fire_reminder(discord_id: str, article_id: UUID, trigger: str) -> None:
     """背景觸發智能提醒，失敗不影響主流程"""
     try:
-        from app.services.reminder_service import send_similar_articles_reminder
+        from app.services.intelligent_reminder_generator import IntelligentReminderGenerator
+        from app.services.supabase_service import SupabaseService
 
-        await send_similar_articles_reminder(discord_id, article_id, trigger)
+        supabase = SupabaseService()
+        generator = IntelligentReminderGenerator()
+
+        # 獲取用戶 ID
+        user_uuid = await supabase.get_or_create_user(discord_id)
+        user_id = str(user_uuid)
+
+        # 檢查用戶是否啟用提醒
+        settings_result = (
+            supabase.client.table("reminder_settings")
+            .select("enabled")
+            .eq("user_id", user_id)
+            .execute()
+        )
+
+        if settings_result.data and not settings_result.data[0].get("enabled", True):
+            logger.debug(f"Reminders disabled for user {user_id}")
+            return
+
+        # 生成提醒
+        reminders = await generator.generate_reminders_for_user(user_id)
+        if reminders:
+            logger.info(
+                f"Generated {len(reminders)} reminders for user {user_id} (trigger: {trigger})"
+            )
+
     except Exception as e:
         logger.warning(f"Reminder task failed silently: {e}")
 
