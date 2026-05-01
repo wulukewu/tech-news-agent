@@ -1,6 +1,8 @@
 {
   "common": {
-    "coming-soon": "Coming Soon"
+    "coming-soon": "Coming Soon",
+    "enabled": "Enabled",
+    "disabled": "Disabled"
   },
   "auth": {
     "verifying": "Verifying identity..."
@@ -69,6 +71,43 @@
     "reminders": {
       "title": "Smart Reminders",
       "description": "When you save or rate an article, the system finds similar articles and sends them via Discord DM.",
+      "page": {
+        "title": "Smart Reminders",
+        "description": "Intelligent notifications based on your reading patterns and interests"
+      },
+      "settings": {
+        "title": "Reminder Settings",
+        "description": "Configure how and when you receive intelligent reminders",
+        "enable": "Enable Reminders",
+        "enable-desc": "Receive intelligent article suggestions and updates",
+        "daily-limit": "Daily Limit",
+        "daily-limit-desc": "Maximum reminders per day",
+        "daily-limit-value": "{count} per day",
+        "frequency": "Frequency",
+        "frequency-desc": "How often to send reminders"
+      },
+      "frequency": {
+        "smart": "Smart",
+        "daily": "Daily",
+        "weekly": "Weekly",
+        "disabled": "Disabled"
+      },
+      "types": {
+        "article-relation": "Related Article",
+        "version-update": "Version Update",
+        "learning-path": "Learning Path"
+      },
+      "list": {
+        "title": "Recent Reminders",
+        "empty": "No reminders yet",
+        "empty-desc": "Start reading articles and rating them to receive intelligent suggestions"
+      },
+      "actions": {
+        "mark-read": "Mark Read",
+        "dismiss": "Dismiss"
+      },
+      "related-articles": "Related Articles",
+      "reading-time": "Estimated reading time: {minutes} minutes",
       "enable": "Enable Smart Reminders",
       "enable-desc": "Turn off to stop all reminder notifications",
       "triggers": "Triggers",

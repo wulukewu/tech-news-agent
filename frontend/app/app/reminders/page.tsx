@@ -7,31 +7,25 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Bell, BellOff, Clock, CheckCircle, X } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-
-interface Reminder {
-  id: string;
-  reminder_type: string;
-  reminder_context: {
-    title: string;
-    description: string;
-    related_articles?: Array<{
-      title: string;
-      url?: string;
-    }>;
-    reading_time_estimate?: number;
-  };
-  sent_at: string;
-  channel: string;
-  status: string;
-}
+import {
+  getPendingReminders,
+  getIntelligentReminderSettings,
+  updateIntelligentReminderSettings,
+  markReminderAsRead,
+  dismissReminder,
+  type IntelligentReminder,
+  type IntelligentReminderSettings,
+} from '@/lib/api/reminders';
 
 export default function RemindersPage() {
   const { isAuthenticated } = useAuth();
-  const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [reminders, setReminders] = useState<IntelligentReminder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [settings, setSettings] = useState({
+  const [settings, setSettings] = useState<IntelligentReminderSettings>({
     enabled: true,
     max_daily_reminders: 5,
+    preferred_channels: ['discord'],
+    timezone: 'UTC',
     reminder_frequency: 'smart',
   });
 
@@ -44,38 +38,8 @@ export default function RemindersPage() {
 
   const loadReminders = async () => {
     try {
-      // Mock data for now since API might not be fully connected
-      const mockReminders: Reminder[] = [
-        {
-          id: '1',
-          reminder_type: 'article_relation',
-          reminder_context: {
-            title: 'Follow-up Reading Suggestion',
-            description: 'Based on your recent reading, you might find this article interesting.',
-            related_articles: [
-              { title: 'Advanced React Patterns', url: '/articles/react-patterns' },
-            ],
-            reading_time_estimate: 8,
-          },
-          sent_at: new Date().toISOString(),
-          channel: 'discord',
-          status: 'sent',
-        },
-        {
-          id: '2',
-          reminder_type: 'version_update',
-          reminder_context: {
-            title: 'React 19 Released',
-            description: 'A new major version with breaking changes affecting your recent reading.',
-            reading_time_estimate: 12,
-          },
-          sent_at: new Date(Date.now() - 86400000).toISOString(),
-          channel: 'web',
-          status: 'read',
-        },
-      ];
-
-      setReminders(mockReminders);
+      const data = await getPendingReminders();
+      setReminders(data);
     } catch (error) {
       console.error('Failed to load reminders:', error);
     } finally {
@@ -84,26 +48,44 @@ export default function RemindersPage() {
   };
 
   const loadSettings = async () => {
-    // Mock settings for now
-    setSettings({
-      enabled: true,
-      max_daily_reminders: 5,
-      reminder_frequency: 'smart',
-    });
+    try {
+      const data = await getIntelligentReminderSettings();
+      setSettings(data);
+    } catch (error) {
+      console.error('Failed to load settings:', error);
+    }
   };
 
   const markAsRead = async (reminderId: string) => {
-    setReminders((prev) => prev.map((r) => (r.id === reminderId ? { ...r, status: 'read' } : r)));
+    try {
+      await markReminderAsRead(reminderId);
+      setReminders((prev) => prev.map((r) => (r.id === reminderId ? { ...r, status: 'read' } : r)));
+    } catch (error) {
+      console.error('Failed to mark as read:', error);
+    }
   };
 
-  const dismissReminder = async (reminderId: string) => {
-    setReminders((prev) =>
-      prev.map((r) => (r.id === reminderId ? { ...r, status: 'dismissed' } : r))
-    );
+  const dismissReminderAction = async (reminderId: string) => {
+    try {
+      await dismissReminder(reminderId);
+      setReminders((prev) =>
+        prev.map((r) => (r.id === reminderId ? { ...r, status: 'dismissed' } : r))
+      );
+    } catch (error) {
+      console.error('Failed to dismiss reminder:', error);
+    }
   };
 
-  const toggleSettings = async (key: string, value: boolean | number | string) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
+  const toggleSettings = async (key: keyof IntelligentReminderSettings, value: any) => {
+    try {
+      const updatedSettings = { ...settings, [key]: value };
+      setSettings(updatedSettings);
+      await updateIntelligentReminderSettings({ [key]: value });
+    } catch (error) {
+      console.error('Failed to update settings:', error);
+      // Revert on error
+      setSettings(settings);
+    }
   };
 
   if (loading) {
@@ -196,6 +178,20 @@ export default function RemindersPage() {
             </div>
             <Badge variant="outline">{settings.reminder_frequency}</Badge>
           </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Preferred Channels</p>
+              <p className="text-sm text-muted-foreground">Where to send reminders</p>
+            </div>
+            <div className="flex gap-1">
+              {settings.preferred_channels.map((channel) => (
+                <Badge key={channel} variant="secondary">
+                  {channel}
+                </Badge>
+              ))}
+            </div>
+          </div>
         </CardContent>
       </Card>
 
@@ -236,7 +232,7 @@ export default function RemindersPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        onClick={() => dismissReminder(reminder.id)}
+                        onClick={() => dismissReminderAction(reminder.id)}
                       >
                         Dismiss
                       </Button>
@@ -258,6 +254,11 @@ export default function RemindersPage() {
                         >
                           {article.title}
                         </a>
+                        {article.confidence && (
+                          <Badge variant="outline" className="text-xs">
+                            {Math.round(article.confidence * 100)}% match
+                          </Badge>
+                        )}
                       </div>
                     ))}
                     {reminder.reminder_context.reading_time_estimate && (
@@ -266,6 +267,28 @@ export default function RemindersPage() {
                         minutes
                       </p>
                     )}
+                  </div>
+                </CardContent>
+              )}
+
+              {reminder.reminder_context.version_info && (
+                <CardContent>
+                  <div className="space-y-2">
+                    <p className="font-medium text-sm">Version Update:</p>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline">
+                        {reminder.reminder_context.version_info.technology}
+                      </Badge>
+                      <span className="text-sm">
+                        {reminder.reminder_context.version_info.old_version} →{' '}
+                        {reminder.reminder_context.version_info.new_version}
+                      </span>
+                      {reminder.reminder_context.version_info.breaking_changes && (
+                        <Badge variant="destructive" className="text-xs">
+                          Breaking Changes
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </CardContent>
               )}

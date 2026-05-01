@@ -1,6 +1,8 @@
 {
   "common": {
-    "coming-soon": "即將推出"
+    "coming-soon": "即將推出",
+    "enabled": "已啟用",
+    "disabled": "已停用"
   },
   "auth": {
     "verifying": "正在驗證身份..."
@@ -69,6 +71,43 @@
     "reminders": {
       "title": "智能提醒",
       "description": "當你儲存或評分文章時，系統會找出相似文章並透過 Discord DM 通知你。",
+      "page": {
+        "title": "智能提醒",
+        "description": "基於你的閱讀模式和興趣的智能通知"
+      },
+      "settings": {
+        "title": "提醒設定",
+        "description": "配置如何以及何時接收智能提醒",
+        "enable": "啟用智能提醒",
+        "enable-desc": "接收智能文章建議和更新",
+        "daily-limit": "每日限制",
+        "daily-limit-desc": "每天最多提醒次數",
+        "daily-limit-value": "每天 {count} 次",
+        "frequency": "頻率",
+        "frequency-desc": "發送提醒的頻率"
+      },
+      "frequency": {
+        "smart": "智能",
+        "daily": "每日",
+        "weekly": "每週",
+        "disabled": "已停用"
+      },
+      "types": {
+        "article-relation": "相關文章",
+        "version-update": "版本更新",
+        "learning-path": "學習路徑"
+      },
+      "list": {
+        "title": "最近提醒",
+        "empty": "尚無提醒",
+        "empty-desc": "開始閱讀文章並評分以接收智能建議"
+      },
+      "actions": {
+        "mark-read": "標記已讀",
+        "dismiss": "忽略"
+      },
+      "related-articles": "相關文章",
+      "reading-time": "預估閱讀時間：{minutes} 分鐘",
       "enable": "啟用智能提醒",
       "enable-desc": "關閉後所有提醒都不會發送",
       "triggers": "觸發條件",
