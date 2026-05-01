@@ -80,14 +80,12 @@ function ConversationCard({
   };
 
   return (
-    <div className="rounded-xl border bg-card p-5 shadow-sm space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-md transition-all group">
+    <div className="rounded-xl border bg-card p-5 shadow-sm space-y-4 transition-all duration-200 hover:shadow-md group">
       <div className="flex items-start gap-3">
-        <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-200 group-hover:scale-[1.05] transition-transform">
-          <Brain className="h-5 w-5 animate-pulse" aria-hidden="true" />
+        <div className="p-1 rounded-lg bg-primary/10 text-primary transition-transform duration-200 group-hover:scale-[1.01]">
+          <Brain className="h-5 w-5" aria-hidden="true" />
         </div>
-        <p className="text-sm font-medium leading-relaxed animate-in slide-in-from-right-2 duration-500 delay-100">
-          {conv.question}
-        </p>
+        <p className="text-sm font-medium leading-relaxed">{conv.question}</p>
       </div>
 
       {conv.options ? (
@@ -222,11 +220,11 @@ export default function PreferencesPage() {
             size="sm"
             onClick={handleTrigger}
             disabled={triggering || settings?.learning_enabled === false}
-            className="cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-md animate-in slide-in-from-right-4 duration-500 delay-200"
+            className="transition-all duration-200 hover:scale-[1.02]"
             aria-label={t('preferences.analyse-now')}
           >
             <RefreshCw
-              className={`h-4 w-4 mr-1.5 transition-transform duration-200 ${triggering ? 'animate-spin' : 'hover:rotate-180'}`}
+              className={`h-4 w-4 mr-1.5 transition-transform duration-200 ${triggering ? 'animate-[spin_3s_linear_infinite]' : 'hover:rotate-180'}`}
               aria-hidden="true"
             />
             {t('preferences.analyse-now')}

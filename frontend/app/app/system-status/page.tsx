@@ -101,7 +101,9 @@ function SystemStatusPageContent() {
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={handleManualRefresh} disabled={isLoading}>
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${isLoading ? 'animate-[spin_3s_linear_infinite]' : 'transition-transform duration-200 hover:rotate-180'}`}
+            />
             {t('buttons.reload-page')}
           </Button>
         </div>

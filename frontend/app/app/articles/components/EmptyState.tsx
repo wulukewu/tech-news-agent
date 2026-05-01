@@ -17,11 +17,11 @@ export function EmptyState({
 }: EmptyStateProps) {
   if (hasNoSubscriptions) {
     return (
-      <section className="flex flex-col items-center justify-center min-h-[50vh] text-center gap-4 animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
-        <div className="rounded-full bg-muted p-4 animate-in zoom-in-50 duration-700 delay-200">
-          <Rss className="h-8 w-8 text-muted-foreground animate-pulse" />
+      <section className="flex flex-col items-center justify-center min-h-[50vh] text-center gap-4">
+        <div className="rounded-full bg-muted p-4">
+          <Rss className="h-8 w-8 text-muted-foreground" />
         </div>
-        <div className="animate-in slide-in-from-bottom-2 duration-500 delay-300">
+        <div>
           <h2 className="text-xl font-semibold mb-1">No articles yet</h2>
           <p className="text-muted-foreground">
             Subscribe to some feeds to start seeing articles here.
@@ -29,7 +29,7 @@ export function EmptyState({
         </div>
         <Button
           asChild
-          className="animate-in slide-in-from-bottom-2 duration-500 delay-500 transition-all hover:scale-[1.02] hover:shadow-md"
+          className="transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
         >
           <Link href="/app/subscriptions">Browse feeds</Link>
         </Button>
@@ -44,8 +44,8 @@ export function EmptyState({
   };
 
   return (
-    <section className="flex flex-col items-center justify-center min-h-[40vh] text-center gap-4 animate-in fade-in-50 slide-in-from-bottom-4 duration-500">
-      <div className="animate-in slide-in-from-bottom-2 duration-500 delay-200">
+    <section className="flex flex-col items-center justify-center min-h-[40vh] text-center gap-4">
+      <div>
         <h2 className="text-xl font-semibold">No articles found</h2>
         <p className="text-muted-foreground">{getMessage()}</p>
       </div>
@@ -53,7 +53,7 @@ export function EmptyState({
         <Button
           variant="outline"
           onClick={onClearSearch}
-          className="animate-in slide-in-from-bottom-2 duration-500 delay-400 transition-all hover:scale-[1.02] hover:shadow-sm"
+          className="transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
         >
           Clear search
         </Button>

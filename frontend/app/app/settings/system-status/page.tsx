@@ -77,10 +77,10 @@ export default function SystemStatusSettingsPage() {
           size="sm"
           onClick={() => refetch()}
           disabled={isLoading}
-          className="transition-all duration-300 hover:scale-[1.02] hover:shadow-sm animate-in zoom-in-50 duration-500 delay-200"
+          className="transition-all duration-200 hover:scale-[1.02] animate-in zoom-in-50 duration-500 delay-200"
         >
           <RefreshCw
-            className={`h-4 w-4 mr-2 transition-transform duration-200 ${isLoading ? 'animate-spin' : 'hover:rotate-180'}`}
+            className={`h-4 w-4 mr-2 transition-transform duration-200 ${isLoading ? 'animate-[spin_3s_linear_infinite]' : 'hover:rotate-180'}`}
           />
           {t('pages.system-status.refresh')}
         </Button>
@@ -104,22 +104,22 @@ export default function SystemStatusSettingsPage() {
       ) : status ? (
         <div className="grid gap-4 md:grid-cols-2">
           {/* Scheduler Status */}
-          <Card className="animate-in fade-in-50 slide-in-from-left-4 duration-500 delay-300 hover:shadow-md transition-all">
+          <Card className="transition-all duration-200 hover:shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 {!status.is_enabled ? (
                   <>
-                    <AlertCircle className="h-5 w-5 text-yellow-500 animate-pulse" />
+                    <AlertCircle className="h-5 w-5 text-yellow-500" />
                     {t('pages.system-status.scheduler-disabled')}
                   </>
                 ) : status.is_healthy ? (
                   <>
-                    <CheckCircle className="h-5 w-5 text-green-500 animate-pulse" />
+                    <CheckCircle className="h-5 w-5 text-green-500" />
                     {t('pages.system-status.scheduler-status')}
                   </>
                 ) : (
                   <>
-                    <XCircle className="h-5 w-5 text-red-500 animate-pulse" />
+                    <XCircle className="h-5 w-5 text-red-500" />
                     {t('pages.system-status.scheduler-status')}
                   </>
                 )}

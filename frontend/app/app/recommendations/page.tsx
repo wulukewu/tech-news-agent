@@ -192,22 +192,19 @@ export default function RecommendationsPage() {
           <Button
             onClick={handleRefresh}
             disabled={refreshMutation.isPending}
-            className="gap-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
+            className="gap-2 transition-all duration-200 hover:scale-[1.02]"
           >
             <RefreshCw
-              className={`h-4 w-4 transition-transform duration-200 ${refreshMutation.isPending ? 'animate-spin' : 'hover:rotate-180'}`}
+              className={`h-4 w-4 transition-transform duration-200 ${refreshMutation.isPending ? 'animate-[spin_3s_linear_infinite]' : 'hover:rotate-180'}`}
             />
             {t('recommendations.refresh')}
           </Button>
         </div>
         <div className="rounded-lg border bg-card p-6 text-center animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-200 hover:shadow-md transition-all">
-          <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground animate-pulse" />
+          <Sparkles className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
           <h3 className="text-lg font-semibold mb-2">{t('recommendations.no-recommendations')}</h3>
           <p className="text-muted-foreground mb-4">{t('recommendations.rate-more-articles')}</p>
-          <Button
-            asChild
-            className="transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
-          >
+          <Button asChild className="transition-all duration-200 hover:scale-[1.02]">
             <a href="/articles">{t('recommendations.go-to-articles')}</a>
           </Button>
         </div>
@@ -228,10 +225,10 @@ export default function RecommendationsPage() {
         <Button
           onClick={handleRefresh}
           disabled={refreshMutation.isPending}
-          className="gap-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
+          className="gap-2 transition-all duration-200 hover:scale-[1.02]"
         >
           <RefreshCw
-            className={`h-4 w-4 transition-transform duration-200 ${refreshMutation.isPending ? 'animate-spin' : 'hover:rotate-180'}`}
+            className={`h-4 w-4 transition-transform duration-200 ${refreshMutation.isPending ? 'animate-[spin_3s_linear_infinite]' : 'hover:rotate-180'}`}
           />
           {t('recommendations.refresh-recommendations')}
         </Button>

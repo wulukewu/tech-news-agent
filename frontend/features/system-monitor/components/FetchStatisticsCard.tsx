@@ -47,17 +47,15 @@ export function FetchStatisticsCard({ statistics }: FetchStatisticsCardProps) {
   const processingTime = formatProcessingTime(statistics.averageProcessingTime);
 
   return (
-    <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-md transition-all">
+    <Card className="transition-all duration-200 hover:shadow-md">
       <CardHeader>
-        <CardTitle className="text-xl flex items-center gap-2 animate-in slide-in-from-left-4 duration-500 delay-200">
-          <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-300 hover:scale-[1.05] transition-transform">
-            <TrendingUp className="h-5 w-5 animate-pulse" />
+        <CardTitle className="text-xl flex items-center gap-2">
+          <div className="p-1 rounded-lg bg-primary/10 text-primary">
+            <TrendingUp className="h-5 w-5" />
           </div>
           抓取統計
         </CardTitle>
-        <CardDescription className="animate-in fade-in duration-500 delay-400">
-          最近 24 小時的文章抓取統計資料
-        </CardDescription>
+        <CardDescription>最近 24 小時的文章抓取統計資料</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">

@@ -84,7 +84,7 @@ export function SchedulerStatusIndicator({
             {/* Running indicator */}
             {isRunning && (
               <div className="flex items-center gap-2 text-sm text-primary">
-                <RefreshCw className="w-4 h-4 animate-spin" />
+                <RefreshCw className="w-4 h-4 animate-[spin_3s_linear_infinite]" />
                 <span className="font-medium">{t('time.scheduler-running')}</span>
               </div>
             )}

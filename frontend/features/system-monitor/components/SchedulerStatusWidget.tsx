@@ -81,7 +81,7 @@ export function SchedulerStatusWidget({
             className="gap-1.5 animate-in zoom-in-50 duration-300 delay-400"
           >
             <StatusIcon
-              className={`h-3.5 w-3.5 ${status.isRunning ? 'animate-spin' : 'animate-pulse'}`}
+              className={`h-3.5 w-3.5 ${status.isRunning ? 'animate-[spin_3s_linear_infinite]' : ''}`}
             />
             {statusBadge.text}
           </Badge>
@@ -185,17 +185,17 @@ export function SchedulerStatusWidget({
           <Button
             onClick={onTrigger}
             disabled={status.isRunning || isTriggering}
-            className="w-full gap-2 animate-in slide-in-from-bottom-4 duration-500 delay-1300 transition-all hover:scale-[1.02]"
+            className="w-full gap-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
             variant="outline"
           >
             {isTriggering ? (
               <>
-                <RefreshCw className="h-4 w-4 animate-spin" />
+                <RefreshCw className="h-4 w-4 animate-[spin_3s_linear_infinite]" />
                 {t('scheduler.triggering')}
               </>
             ) : (
               <>
-                <PlayCircle className="h-4 w-4 transition-transform duration-300 hover:scale-[1.05]" />
+                <PlayCircle className="h-4 w-4 transition-colors duration-150" />
                 {t('scheduler.manual-trigger')}
               </>
             )}

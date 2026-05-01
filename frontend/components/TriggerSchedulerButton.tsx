@@ -26,8 +26,15 @@ export function TriggerSchedulerButton() {
   };
 
   return (
-    <Button variant="outline" onClick={handleTrigger} disabled={isTriggering} className="gap-2">
-      <RefreshCw className={`h-4 w-4 ${isTriggering ? 'animate-spin' : ''}`} />
+    <Button
+      variant="outline"
+      onClick={handleTrigger}
+      disabled={isTriggering}
+      className="gap-2 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+    >
+      <RefreshCw
+        className={`h-4 w-4 transition-transform duration-200 ${isTriggering ? 'animate-[spin_3s_linear_infinite]' : 'hover:rotate-180'}`}
+      />
       {isTriggering ? t('time.scheduler-running') : t('time.manual-trigger')}
     </Button>
   );

@@ -283,9 +283,13 @@ export default function InsightsPage() {
           <h1 className="text-2xl font-bold">{t('insights.title')}</h1>
           <p className="text-sm text-muted-foreground mt-1">{t('insights.description')}</p>
         </div>
-        <Button onClick={handleGenerate} disabled={generating} className="cursor-pointer">
+        <Button
+          onClick={handleGenerate}
+          disabled={generating}
+          className="transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+        >
           <RefreshCw
-            className={`h-4 w-4 mr-2 ${generating ? 'animate-spin' : ''}`}
+            className={`h-4 w-4 mr-2 transition-transform duration-200 ${generating ? 'animate-[spin_3s_linear_infinite]' : 'hover:rotate-180'}`}
             aria-hidden="true"
           />
           {generating ? t('insights.generating') : t('insights.generate')}
@@ -349,9 +353,13 @@ export default function InsightsPage() {
         <div className="text-center py-16 text-muted-foreground">
           <p className="text-lg mb-2">{t('insights.no-report')}</p>
           <p className="text-sm mb-6">{t('insights.no-report-description')}</p>
-          <Button onClick={handleGenerate} disabled={generating} className="cursor-pointer">
+          <Button
+            onClick={handleGenerate}
+            disabled={generating}
+            className="transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          >
             <RefreshCw
-              className={`h-4 w-4 mr-2 ${generating ? 'animate-spin' : ''}`}
+              className={`h-4 w-4 mr-2 transition-transform duration-200 ${generating ? 'animate-[spin_3s_linear_infinite]' : 'hover:rotate-180'}`}
               aria-hidden="true"
             />
             {generating ? t('insights.generating') : t('insights.generate-first')}

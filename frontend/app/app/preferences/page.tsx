@@ -115,10 +115,13 @@ function OnboardingCard({
       <Button
         onClick={handleSubmit}
         disabled={submitting || selected.size === 0}
-        className="cursor-pointer w-full sm:w-auto"
+        className="w-full sm:w-auto transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
       >
         {submitting ? (
-          <RefreshCw className="h-4 w-4 mr-2 animate-spin" aria-hidden="true" />
+          <RefreshCw
+            className="h-4 w-4 mr-2 animate-[spin_1.5s_linear_infinite]"
+            aria-hidden="true"
+          />
         ) : (
           <Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
         )}
@@ -297,10 +300,10 @@ export default function PreferencesPage() {
             size="sm"
             onClick={handleTrigger}
             disabled={triggering || settings?.learning_enabled === false}
-            className="cursor-pointer"
+            className="transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
           >
             <RefreshCw
-              className={`h-4 w-4 mr-1.5 ${triggering ? 'animate-spin' : ''}`}
+              className={`h-4 w-4 mr-1.5 transition-transform duration-200 ${triggering ? 'animate-[spin_3s_linear_infinite]' : 'hover:rotate-180'}`}
               aria-hidden="true"
             />
             {t('preferences.analyse-now')}

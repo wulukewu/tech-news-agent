@@ -54,10 +54,10 @@ export default function AnalyticsSettingsPage() {
           size="sm"
           onClick={loadStats}
           disabled={loading}
-          className="transition-all duration-300 hover:scale-[1.02] hover:shadow-md animate-in slide-in-from-right-4 duration-500 delay-200"
+          className="transition-all duration-200 hover:scale-[1.02] animate-in slide-in-from-right-4 duration-500 delay-200"
         >
           <RefreshCw
-            className={`h-4 w-4 mr-2 transition-transform duration-200 ${loading ? 'animate-spin' : 'hover:rotate-180'}`}
+            className={`h-4 w-4 mr-2 transition-transform duration-200 ${loading ? 'animate-[spin_3s_linear_infinite]' : 'hover:rotate-180'}`}
           />
           {t('pages.analytics.refresh')}
         </Button>

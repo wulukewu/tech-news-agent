@@ -89,20 +89,17 @@ export default function NotificationSettingsPage() {
           <h1 className="text-2xl font-bold tracking-tight">{t('settings.notifications.title')}</h1>
           <p className="text-muted-foreground mt-1">{t('settings.notifications.description')}</p>
         </div>
-        <div className="flex-shrink-0 mt-1 animate-in zoom-in-50 duration-500 delay-200">
+        <div className="flex-shrink-0 mt-1">
           {status && typeof status === 'object' && 'scheduled' in status && status.scheduled ? (
             <Badge
               variant="outline"
-              className="text-green-600 border-green-300 dark:border-green-700 gap-1.5 hover:scale-[1.02] transition-transform duration-200"
+              className="text-green-600 border-green-300 dark:border-green-700 gap-1.5"
             >
-              <CheckCircle className="h-3.5 w-3.5 animate-pulse" />
+              <CheckCircle className="h-3.5 w-3.5" />
               {t('settings.notifications.status-active')}
             </Badge>
           ) : status !== undefined ? (
-            <Badge
-              variant="outline"
-              className="text-muted-foreground gap-1.5 hover:scale-[1.02] transition-transform duration-200"
-            >
+            <Badge variant="outline" className="text-muted-foreground gap-1.5">
               <AlertCircle className="h-3.5 w-3.5" />
               {t('settings.notifications.status-inactive')}
             </Badge>
