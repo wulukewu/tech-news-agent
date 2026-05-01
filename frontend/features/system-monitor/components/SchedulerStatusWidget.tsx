@@ -41,26 +41,31 @@ export function SchedulerStatusWidget({
    */
   function formatIssue(issue: any): string {
     if (typeof issue === 'string') return issue;
+    if (!issue || typeof issue !== 'object') return String(issue);
 
     switch (issue.type) {
       case 'disabled':
-        return tr('pages.system-status.scheduler-disabled-desc');
+        return String(tr('pages.system-status.scheduler-disabled-desc'));
       case 'waiting':
-        return tr('pages.system-status.scheduler-waiting');
+        return String(tr('pages.system-status.scheduler-waiting'));
       case 'never_executed':
-        return tr('pages.system-status.scheduler-never-executed');
+        return String(tr('pages.system-status.scheduler-never-executed'));
       case 'stale':
-        return tr('pages.system-status.scheduler-stale', {
-          hours: issue.hours,
-          threshold: issue.threshold,
-        });
+        return String(
+          tr('pages.system-status.scheduler-stale', {
+            hours: issue.hours,
+            threshold: issue.threshold,
+          })
+        );
       case 'high_failure_rate':
-        return tr('pages.system-status.scheduler-high-failure', {
-          rate: issue.rate,
-          threshold: issue.threshold,
-        });
+        return String(
+          tr('pages.system-status.scheduler-high-failure', {
+            rate: issue.rate,
+            threshold: issue.threshold,
+          })
+        );
       default:
-        return issue.message || String(issue);
+        return issue.message || JSON.stringify(issue);
     }
   }
 
