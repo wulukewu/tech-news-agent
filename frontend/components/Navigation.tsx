@@ -7,7 +7,6 @@ import {
   Home,
   Rss,
   BookMarked,
-  BookOpen,
   LogOut,
   Menu,
   X,
@@ -18,6 +17,7 @@ import {
   MessageSquare,
   Lightbulb,
   Brain,
+  Bell,
 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useUser } from '@/contexts/UserContext';
@@ -43,6 +43,7 @@ const mainNavItems: NavItem[] = [
   { href: '/app/articles', labelKey: 'nav.articles', icon: Home },
   { href: '/app/reading-list', labelKey: 'nav.reading-list', icon: BookMarked },
   { href: '/app/subscriptions', labelKey: 'nav.subscriptions', icon: Rss },
+  { href: '/app/reminders', labelKey: 'nav.reminders', icon: Bell },
   { href: '/app/learning', labelKey: 'nav.learning-path', icon: Brain },
   { href: '/app/chat', labelKey: 'nav.chat', icon: MessageSquare },
   { href: '/app/insights', labelKey: 'nav.insights', icon: Lightbulb },

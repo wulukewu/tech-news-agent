@@ -130,10 +130,8 @@ export default function RemindersPage() {
   return (
     <div className="max-w-4xl mx-auto py-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Smart Reminders</h1>
-        <p className="text-muted-foreground">
-          Intelligent notifications based on your reading patterns and interests
-        </p>
+        <h1 className="text-3xl font-bold">{t('pages.reminders.page.title')}</h1>
+        <p className="text-muted-foreground">{t('pages.reminders.page.description')}</p>
       </div>
 
       {/* Settings Card */}
@@ -141,18 +139,16 @@ export default function RemindersPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bell className="w-5 h-5" />
-            Reminder Settings
+            {t('pages.reminders.settings.title')}
           </CardTitle>
-          <CardDescription>
-            Configure how and when you receive intelligent reminders
-          </CardDescription>
+          <CardDescription>{t('pages.reminders.settings.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Enable Reminders</p>
+              <p className="font-medium">{t('pages.reminders.settings.enable')}</p>
               <p className="text-sm text-muted-foreground">
-                Receive intelligent article suggestions and updates
+                {t('pages.reminders.settings.enable-desc')}
               </p>
             </div>
             <Button
@@ -161,30 +157,42 @@ export default function RemindersPage() {
               onClick={() => toggleSettings('enabled', !settings.enabled)}
             >
               {settings.enabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
-              {settings.enabled ? 'Enabled' : 'Disabled'}
+              {settings.enabled ? t('common.enabled') : t('common.disabled')}
             </Button>
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Daily Limit</p>
-              <p className="text-sm text-muted-foreground">Maximum reminders per day</p>
+              <p className="font-medium">{t('pages.reminders.settings.daily-limit')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t('pages.reminders.settings.daily-limit-desc')}
+              </p>
             </div>
-            <Badge variant="outline">{settings.max_daily_reminders} per day</Badge>
+            <Badge variant="outline">
+              {t('pages.reminders.settings.daily-limit-value', {
+                count: settings.max_daily_reminders,
+              })}
+            </Badge>
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Frequency</p>
-              <p className="text-sm text-muted-foreground">How often to send reminders</p>
+              <p className="font-medium">{t('pages.reminders.settings.frequency')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t('pages.reminders.settings.frequency-desc')}
+              </p>
             </div>
-            <Badge variant="outline">{settings.reminder_frequency}</Badge>
+            <Badge variant="outline">
+              {t(`pages.reminders.frequency.${settings.reminder_frequency}` as any)}
+            </Badge>
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">Preferred Channels</p>
-              <p className="text-sm text-muted-foreground">Where to send reminders</p>
+              <p className="font-medium">{t('pages.reminders.settings.channels')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t('pages.reminders.settings.channels-desc')}
+              </p>
             </div>
             <div className="flex gap-1">
               {settings.preferred_channels.map((channel) => (
@@ -199,36 +207,36 @@ export default function RemindersPage() {
 
       {/* Reminders List */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold">Recent Reminders</h2>
+        <h2 className="text-xl font-semibold">{t('pages.reminders.list.title')}</h2>
 
         {reminders.length === 0 ? (
           <Card>
             <CardContent className="py-8 text-center">
               <Bell className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">No reminders yet</p>
+              <p className="text-muted-foreground">{t('pages.reminders.list.empty')}</p>
               <p className="text-sm text-muted-foreground mt-2">
-                Start reading articles and rating them to receive intelligent suggestions
+                {t('pages.reminders.list.empty-desc')}
               </p>
 
               {/* Usage Guide */}
               <div className="mt-6 p-4 bg-muted/50 rounded-lg text-left">
-                <h3 className="font-semibold mb-3">如何使用智能提醒</h3>
+                <h3 className="font-semibold mb-3">{t('pages.reminders.usage-guide.title')}</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-start gap-2">
                     <span className="text-primary">1.</span>
-                    <span>前往「文章」或「閱讀清單」頁面</span>
+                    <span>{t('pages.reminders.usage-guide.step-1')}</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-primary">2.</span>
-                    <span>閱讀文章並給予 4-5 星評分</span>
+                    <span>{t('pages.reminders.usage-guide.step-2')}</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-primary">3.</span>
-                    <span>系統會分析你的偏好並找出相關文章</span>
+                    <span>{t('pages.reminders.usage-guide.step-3')}</span>
                   </div>
                   <div className="flex items-start gap-2">
                     <span className="text-primary">4.</span>
-                    <span>智能提醒會透過 Discord DM 或網頁通知發送</span>
+                    <span>{t('pages.reminders.usage-guide.step-4')}</span>
                   </div>
                 </div>
               </div>
