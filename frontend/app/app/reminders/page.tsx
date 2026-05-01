@@ -289,11 +289,7 @@ export default function RemindersPage() {
                                 : 'outline'
                           }
                         >
-                          {reminder.reminder_context.priority_score >= 0.8 && '🔥 '}
-                          {reminder.reminder_context.priority_score >= 0.6 &&
-                            reminder.reminder_context.priority_score < 0.8 &&
-                            '⭐ '}
-                          {Math.round(reminder.reminder_context.priority_score * 100)}%
+                          優先級 {Math.round(reminder.reminder_context.priority_score * 100)}%
                         </Badge>
                       )}
                     </div>
@@ -316,7 +312,7 @@ export default function RemindersPage() {
                     </CardDescription>
                     {reminder.reminder_context.reading_time_estimate && (
                       <p className="text-xs text-muted-foreground mt-2">
-                        ⏱️ 預估閱讀時間: ~{reminder.reminder_context.reading_time_estimate} 分鐘
+                        預估閱讀時間: ~{reminder.reminder_context.reading_time_estimate} 分鐘
                       </p>
                     )}
                   </div>
@@ -344,7 +340,7 @@ export default function RemindersPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      🔗 閱讀完整文章
+                      閱讀完整文章
                     </a>
                   </Button>
                 </CardContent>
