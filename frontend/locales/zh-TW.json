@@ -141,6 +141,9 @@
         "step-3": "系統會分析你的偏好並找出相關文章",
         "step-4": "智能提醒會透過 Discord DM 或網頁通知發送"
       },
+      "estimated-reading-time": "預估閱讀時間",
+      "minutes": "分鐘",
+      "read-article": "閱讀文章",
       "version-update": "版本更新",
       "breaking-changes": "重大變更",
       "match-percentage": "{percentage}% 匹配"

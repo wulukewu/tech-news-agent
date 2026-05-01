@@ -141,6 +141,9 @@
         "step-3": "System analyzes your preferences and finds related articles",
         "step-4": "Smart reminders will be sent via Discord DM or web notifications"
       },
+      "estimated-reading-time": "Estimated reading time",
+      "minutes": "minutes",
+      "read-article": "Read Article",
       "version-update": "Version Update",
       "breaking-changes": "Breaking Changes",
       "match-percentage": "{percentage}% match"
