@@ -70,23 +70,29 @@
     },
     "reminders": {
       "title": "智能提醒",
-      "description": "當你儲存或評分文章時，系統會找出相似文章並透過 Discord DM 通知你。",
+      "description": "管理您的個性化文章推薦提醒",
       "page": {
         "title": "智能提醒",
         "description": "基於你的閱讀模式和興趣的智能通知"
       },
+      "stats": {
+        "this-week": "本週提醒",
+        "read-rate": "已讀率",
+        "avg-priority": "平均優先級",
+        "pending": "待處理"
+      },
       "settings": {
         "title": "提醒設定",
-        "description": "配置如何以及何時接收智能提醒",
-        "enable": "啟用智能提醒",
-        "enable-desc": "接收智能文章建議和更新",
-        "daily-limit": "每日限制",
-        "daily-limit-desc": "每天最多提醒次數",
-        "daily-limit-value": "每天 {count} 次",
-        "frequency": "頻率",
-        "frequency-desc": "發送提醒的頻率",
-        "channels": "偏好渠道",
-        "channels-desc": "發送提醒的位置"
+        "description": "管理您的提醒偏好設定",
+        "enable": "啟用提醒",
+        "enable-desc": "接收個性化文章推薦",
+        "daily-limit": "每日上限",
+        "daily-limit-desc": "每天最多接收的提醒數量",
+        "daily-limit-value": "每天 {count} 個",
+        "frequency": "提醒頻率",
+        "frequency-desc": "提醒發送的頻率",
+        "channels": "通知渠道",
+        "channels-desc": "接收提醒的渠道"
       },
       "frequency": {
         "smart": "智能",
@@ -96,54 +102,43 @@
       },
       "types": {
         "article-relation": "相關文章",
+        "personalized-article": "個性化推薦",
         "version-update": "版本更新",
         "learning-path": "學習路徑"
       },
       "list": {
-        "title": "最近提醒",
-        "empty": "尚無提醒",
-        "empty-desc": "開始閱讀文章並評分以接收智能建議"
+        "title": "提醒列表",
+        "description": "查看和管理您的提醒"
+      },
+      "filters": {
+        "all": "全部",
+        "pending": "待處理",
+        "sent": "已發送",
+        "read": "已讀",
+        "dismissed": "已忽略"
+      },
+      "sort": {
+        "time": "時間",
+        "priority": "優先級",
+        "desc": "降序",
+        "asc": "升序"
       },
       "actions": {
         "mark-read": "標記已讀",
-        "dismiss": "忽略"
+        "mark-unread": "標記未讀",
+        "dismiss": "忽略",
+        "batch-read": "標記已讀 ({count})",
+        "batch-dismiss": "忽略 ({count})",
+        "select-all": "全選",
+        "deselect-all": "取消全選"
       },
-      "guide": {
-        "title": "如何使用智能提醒",
-        "step1": "前往「文章」或「閱讀清單」頁面",
-        "step2": "閱讀文章並給予 4-5 星評分",
-        "step3": "系統會分析你的偏好並找出相關文章",
-        "step4": "智能提醒會透過 Discord DM 或網頁通知發送"
+      "empty": {
+        "title": "沒有提醒",
+        "description": "當系統為您找到相關文章時，會在這裡顯示提醒。繼續閱讀和評分文章，幫助我們了解您的偏好！"
       },
+      "priority-label": "優先級",
+      "reading-time": "預估閱讀時間: ~{minutes} 分鐘",
       "related-articles": "相關文章",
-      "reading-time": "預估閱讀時間：{minutes} 分鐘",
-      "enable": "啟用智能提醒",
-      "enable-desc": "關閉後所有提醒都不會發送",
-      "triggers": "觸發條件",
-      "triggers-desc": "選擇哪些操作會觸發提醒",
-      "on-add": "加入閱讀清單時",
-      "on-add-desc": "每次儲存文章後推薦相似內容",
-      "on-rate": "評 4-5 星時",
-      "on-rate-desc": "根據高評分文章推薦更多同類內容",
-      "advanced": "進階設定",
-      "cooldown": "提醒間隔",
-      "cooldown-desc": "兩次提醒之間的最短間隔，避免頻繁打擾",
-      "cooldown-value": "{hours} 小時",
-      "cooldown-value-none": "無間隔",
-      "similarity": "相似度門檻",
-      "similarity-desc": "越高代表推薦越精準但數量較少；越低則推薦更多但可能較不精準",
-      "dm-note": "提醒透過 Discord DM 發送，請確認已在 {link} 中開啟 DM 通知。",
-      "dm-note-link": "通知設定",
-      "usage-guide": {
-        "title": "如何使用智能提醒",
-        "step-1": "前往「文章」或「閱讀清單」頁面",
-        "step-2": "閱讀文章並給予 4-5 星評分",
-        "step-3": "系統會分析你的偏好並找出相關文章",
-        "step-4": "智能提醒會透過 Discord DM 或網頁通知發送"
-      },
-      "estimated-reading-time": "預估閱讀時間",
-      "minutes": "分鐘",
-      "read-article": "閱讀文章",
       "version-update": "版本更新",
       "breaking-changes": "重大變更",
       "match-percentage": "{percentage}% 匹配"

@@ -70,23 +70,29 @@
     },
     "reminders": {
       "title": "Smart Reminders",
-      "description": "When you save or rate an article, the system finds similar articles and sends them via Discord DM.",
+      "description": "Manage your personalized article recommendation reminders",
       "page": {
         "title": "Smart Reminders",
         "description": "Intelligent notifications based on your reading patterns and interests"
       },
+      "stats": {
+        "this-week": "This Week",
+        "read-rate": "Read Rate",
+        "avg-priority": "Avg Priority",
+        "pending": "Pending"
+      },
       "settings": {
         "title": "Reminder Settings",
-        "description": "Configure how and when you receive intelligent reminders",
+        "description": "Manage your reminder preferences",
         "enable": "Enable Reminders",
-        "enable-desc": "Receive intelligent article suggestions and updates",
+        "enable-desc": "Receive personalized article recommendations",
         "daily-limit": "Daily Limit",
         "daily-limit-desc": "Maximum reminders per day",
         "daily-limit-value": "{count} per day",
         "frequency": "Frequency",
         "frequency-desc": "How often to send reminders",
-        "channels": "Preferred Channels",
-        "channels-desc": "Where to send reminders"
+        "channels": "Channels",
+        "channels-desc": "Where to receive reminders"
       },
       "frequency": {
         "smart": "Smart",
@@ -96,54 +102,43 @@
       },
       "types": {
         "article-relation": "Related Article",
+        "personalized-article": "Personalized",
         "version-update": "Version Update",
         "learning-path": "Learning Path"
       },
       "list": {
-        "title": "Recent Reminders",
-        "empty": "No reminders yet",
-        "empty-desc": "Start reading articles and rating them to receive intelligent suggestions"
+        "title": "Reminder List",
+        "description": "View and manage your reminders"
+      },
+      "filters": {
+        "all": "All",
+        "pending": "Pending",
+        "sent": "Sent",
+        "read": "Read",
+        "dismissed": "Dismissed"
+      },
+      "sort": {
+        "time": "Time",
+        "priority": "Priority",
+        "desc": "Descending",
+        "asc": "Ascending"
       },
       "actions": {
         "mark-read": "Mark Read",
-        "dismiss": "Dismiss"
+        "mark-unread": "Mark Unread",
+        "dismiss": "Dismiss",
+        "batch-read": "Mark Read ({count})",
+        "batch-dismiss": "Dismiss ({count})",
+        "select-all": "Select All",
+        "deselect-all": "Deselect All"
       },
-      "guide": {
-        "title": "How to Use Smart Reminders",
-        "step1": "Go to 'Articles' or 'Reading List' page",
-        "step2": "Read articles and rate them 4-5 stars",
-        "step3": "System analyzes your preferences and finds related articles",
-        "step4": "Smart reminders will be sent via Discord DM or web notifications"
+      "empty": {
+        "title": "No Reminders",
+        "description": "When the system finds relevant articles for you, reminders will appear here. Keep reading and rating articles to help us understand your preferences!"
       },
+      "priority-label": "Priority",
+      "reading-time": "Est. reading time: ~{minutes} min",
       "related-articles": "Related Articles",
-      "reading-time": "Estimated reading time: {minutes} minutes",
-      "enable": "Enable Smart Reminders",
-      "enable-desc": "Turn off to stop all reminder notifications",
-      "triggers": "Triggers",
-      "triggers-desc": "Choose which actions send a reminder",
-      "on-add": "When saving to reading list",
-      "on-add-desc": "Recommend similar articles after each save",
-      "on-rate": "When rating 4–5 stars",
-      "on-rate-desc": "Find more content like your highly-rated articles",
-      "advanced": "Advanced",
-      "cooldown": "Cooldown period",
-      "cooldown-desc": "Minimum time between reminders to avoid being spammed",
-      "cooldown-value": "{hours}h",
-      "cooldown-value-none": "No cooldown",
-      "similarity": "Similarity threshold",
-      "similarity-desc": "Higher = more precise matches, fewer suggestions. Lower = more suggestions, less precise.",
-      "dm-note": "Reminders are sent via Discord DM. Make sure DM notifications are enabled in {link}.",
-      "dm-note-link": "Notifications",
-      "usage-guide": {
-        "title": "How to Use Smart Reminders",
-        "step-1": "Go to 'Articles' or 'Reading List' page",
-        "step-2": "Read articles and rate them 4-5 stars",
-        "step-3": "System analyzes your preferences and finds related articles",
-        "step-4": "Smart reminders will be sent via Discord DM or web notifications"
-      },
-      "estimated-reading-time": "Estimated reading time",
-      "minutes": "minutes",
-      "read-article": "Read Article",
       "version-update": "Version Update",
       "breaking-changes": "Breaking Changes",
       "match-percentage": "{percentage}% match"

@@ -40,6 +40,7 @@ import {
 
 export default function RemindersPage() {
   const { isAuthenticated } = useAuth();
+  const { t } = useI18n();
   const [reminders, setReminders] = useState<IntelligentReminder[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<IntelligentReminderStats | null>(null);
@@ -195,51 +196,59 @@ export default function RemindersPage() {
   };
 
   const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'article_relation':
-      case 'personalized_article':
-        return '相關文章';
-      case 'version_update':
-        return '版本更新';
-      case 'learning_path':
-        return '學習路徑';
-      default:
-        return type;
-    }
+    const typeMap: Record<string, string> = {
+      article_relation: t('pages.reminders.types.article-relation'),
+      personalized_article: t('pages.reminders.types.personalized-article'),
+      version_update: t('pages.reminders.types.version-update'),
+      learning_path: t('pages.reminders.types.learning-path'),
+    };
+    return typeMap[type] || type;
   };
 
   return (
     <div className="max-w-6xl mx-auto py-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">智能提醒</h1>
-        <p className="text-muted-foreground">管理您的個性化文章推薦提醒</p>
+        <h1 className="text-3xl font-bold">{t('pages.reminders.title')}</h1>
+        <p className="text-muted-foreground">{t('pages.reminders.description')}</p>
       </div>
 
       {/* Stats Dashboard */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>本週提醒</CardDescription>
-              <CardTitle className="text-3xl">{stats.this_week_count}</CardTitle>
+            <CardHeader className="pb-3">
+              <CardDescription className="text-sm">
+                {t('pages.reminders.stats.this-week')}
+              </CardDescription>
+              <CardTitle className="text-3xl font-bold">{stats.this_week_count}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>已讀率</CardDescription>
-              <CardTitle className="text-3xl">{Math.round(stats.read_rate * 100)}%</CardTitle>
+            <CardHeader className="pb-3">
+              <CardDescription className="text-sm">
+                {t('pages.reminders.stats.read-rate')}
+              </CardDescription>
+              <CardTitle className="text-3xl font-bold">
+                {Math.round(stats.read_rate * 100)}%
+              </CardTitle>
             </CardHeader>
           </Card>
           <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>平均優先級</CardDescription>
-              <CardTitle className="text-3xl">{Math.round(stats.avg_priority * 100)}%</CardTitle>
+            <CardHeader className="pb-3">
+              <CardDescription className="text-sm">
+                {t('pages.reminders.stats.avg-priority')}
+              </CardDescription>
+              <CardTitle className="text-3xl font-bold">
+                {Math.round(stats.avg_priority * 100)}%
+              </CardTitle>
             </CardHeader>
           </Card>
           <Card>
-            <CardHeader className="pb-2">
-              <CardDescription>待處理</CardDescription>
-              <CardTitle className="text-3xl">{stats.total_pending}</CardTitle>
+            <CardHeader className="pb-3">
+              <CardDescription className="text-sm">
+                {t('pages.reminders.stats.pending')}
+              </CardDescription>
+              <CardTitle className="text-3xl font-bold">{stats.total_pending}</CardTitle>
             </CardHeader>
           </Card>
         </div>
@@ -250,15 +259,17 @@ export default function RemindersPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Bell className="w-5 h-5" />
-            提醒設定
+            {t('pages.reminders.settings.title')}
           </CardTitle>
-          <CardDescription>管理您的提醒偏好設定</CardDescription>
+          <CardDescription>{t('pages.reminders.settings.description')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">啟用提醒</p>
-              <p className="text-sm text-muted-foreground">接收個性化文章推薦</p>
+              <p className="font-medium">{t('pages.reminders.settings.enable')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t('pages.reminders.settings.enable-desc')}
+              </p>
             </div>
             <Button
               variant={settings.enabled ? 'default' : 'outline'}
@@ -266,34 +277,42 @@ export default function RemindersPage() {
               onClick={() => toggleSettings('enabled', !settings.enabled)}
             >
               {settings.enabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
-              {settings.enabled ? '已啟用' : '已停用'}
+              {settings.enabled ? t('common.enabled') : t('common.disabled')}
             </Button>
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">每日上限</p>
-              <p className="text-sm text-muted-foreground">每天最多接收的提醒數量</p>
-            </div>
-            <Badge variant="outline">每天 {settings.max_daily_reminders} 個</Badge>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-medium">提醒頻率</p>
-              <p className="text-sm text-muted-foreground">提醒發送的頻率</p>
+              <p className="font-medium">{t('pages.reminders.settings.daily-limit')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t('pages.reminders.settings.daily-limit-desc')}
+              </p>
             </div>
             <Badge variant="outline">
-              {settings.reminder_frequency === 'smart' && '智能'}
-              {settings.reminder_frequency === 'daily' && '每日'}
-              {settings.reminder_frequency === 'weekly' && '每週'}
+              {t('pages.reminders.settings.daily-limit-value', {
+                count: settings.max_daily_reminders,
+              })}
             </Badge>
           </div>
 
           <div className="flex items-center justify-between">
             <div>
-              <p className="font-medium">通知渠道</p>
-              <p className="text-sm text-muted-foreground">接收提醒的渠道</p>
+              <p className="font-medium">{t('pages.reminders.settings.frequency')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t('pages.reminders.settings.frequency-desc')}
+              </p>
+            </div>
+            <Badge variant="outline">
+              {t(`pages.reminders.frequency.${settings.reminder_frequency}` as any)}
+            </Badge>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">{t('pages.reminders.settings.channels')}</p>
+              <p className="text-sm text-muted-foreground">
+                {t('pages.reminders.settings.channels-desc')}
+              </p>
             </div>
             <div className="flex gap-2">
               {settings.preferred_channels.map((channel) => (
@@ -311,15 +330,15 @@ export default function RemindersPage() {
         <CardHeader>
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <CardTitle>提醒列表</CardTitle>
-              <CardDescription>查看和管理您的提醒</CardDescription>
+              <CardTitle>{t('pages.reminders.list.title')}</CardTitle>
+              <CardDescription>{t('pages.reminders.list.description')}</CardDescription>
             </div>
             <div className="flex gap-2">
               {selectedIds.size > 0 && (
                 <>
                   <Button size="sm" variant="outline" onClick={() => handleBatchOperation('read')}>
                     <CheckCircle className="w-4 h-4 mr-1" />
-                    標記已讀 ({selectedIds.size})
+                    {t('pages.reminders.actions.batch-read', { count: selectedIds.size })}
                   </Button>
                   <Button
                     size="sm"
@@ -327,7 +346,7 @@ export default function RemindersPage() {
                     onClick={() => handleBatchOperation('dismiss')}
                   >
                     <X className="w-4 h-4 mr-1" />
-                    忽略 ({selectedIds.size})
+                    {t('pages.reminders.actions.batch-dismiss', { count: selectedIds.size })}
                   </Button>
                 </>
               )}
@@ -344,11 +363,13 @@ export default function RemindersPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全部</SelectItem>
-                  <SelectItem value="pending">待處理</SelectItem>
-                  <SelectItem value="sent">已發送</SelectItem>
-                  <SelectItem value="read">已讀</SelectItem>
-                  <SelectItem value="dismissed">已忽略</SelectItem>
+                  <SelectItem value="all">{t('pages.reminders.filters.all')}</SelectItem>
+                  <SelectItem value="pending">{t('pages.reminders.filters.pending')}</SelectItem>
+                  <SelectItem value="sent">{t('pages.reminders.filters.sent')}</SelectItem>
+                  <SelectItem value="read">{t('pages.reminders.filters.read')}</SelectItem>
+                  <SelectItem value="dismissed">
+                    {t('pages.reminders.filters.dismissed')}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -360,8 +381,10 @@ export default function RemindersPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="sent_at">時間</SelectItem>
-                  <SelectItem value="priority_score">優先級</SelectItem>
+                  <SelectItem value="sent_at">{t('pages.reminders.sort.time')}</SelectItem>
+                  <SelectItem value="priority_score">
+                    {t('pages.reminders.sort.priority')}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -371,15 +394,17 @@ export default function RemindersPage() {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="desc">降序</SelectItem>
-                <SelectItem value="asc">升序</SelectItem>
+                <SelectItem value="desc">{t('pages.reminders.sort.desc')}</SelectItem>
+                <SelectItem value="asc">{t('pages.reminders.sort.asc')}</SelectItem>
               </SelectContent>
             </Select>
 
             {reminders.length > 0 && (
               <Button size="sm" variant="outline" onClick={toggleSelectAll}>
                 <CheckSquare className="w-4 h-4 mr-1" />
-                {selectedIds.size === reminders.length ? '取消全選' : '全選'}
+                {selectedIds.size === reminders.length
+                  ? t('pages.reminders.actions.deselect-all')
+                  : t('pages.reminders.actions.select-all')}
               </Button>
             )}
           </div>
@@ -389,11 +414,9 @@ export default function RemindersPage() {
             <Card className="border-dashed">
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <Bell className="w-12 h-12 text-muted-foreground mb-4" />
-                <p className="text-lg font-medium mb-2">沒有提醒</p>
+                <p className="text-lg font-medium mb-2">{t('pages.reminders.empty.title')}</p>
                 <p className="text-sm text-muted-foreground text-center max-w-md">
-                  當系統為您找到相關文章時，會在這裡顯示提醒。
-                  <br />
-                  繼續閱讀和評分文章，幫助我們了解您的偏好！
+                  {t('pages.reminders.empty.description')}
                 </p>
               </CardContent>
             </Card>
@@ -426,7 +449,8 @@ export default function RemindersPage() {
                                     : 'outline'
                               }
                             >
-                              優先級 {Math.round(reminder.reminder_context.priority_score * 100)}%
+                              {t('pages.reminders.priority-label')}{' '}
+                              {Math.round(reminder.reminder_context.priority_score * 100)}%
                             </Badge>
                           )}
                         </div>
@@ -451,7 +475,9 @@ export default function RemindersPage() {
                         </CardDescription>
                         {reminder.reminder_context.reading_time_estimate && (
                           <p className="text-xs text-muted-foreground mt-2">
-                            預估閱讀時間: ~{reminder.reminder_context.reading_time_estimate} 分鐘
+                            {t('pages.reminders.reading-time', {
+                              minutes: reminder.reminder_context.reading_time_estimate,
+                            })}
                           </p>
                         )}
                       </div>
@@ -463,7 +489,7 @@ export default function RemindersPage() {
                             variant="outline"
                             onClick={() => markAsUnread(reminder.id)}
                           >
-                            標記未讀
+                            {t('pages.reminders.actions.mark-unread')}
                           </Button>
                         ) : (
                           <Button
@@ -471,7 +497,7 @@ export default function RemindersPage() {
                             variant="outline"
                             onClick={() => markAsRead(reminder.id)}
                           >
-                            標記已讀
+                            {t('pages.reminders.actions.mark-read')}
                           </Button>
                         )}
                         <Button
@@ -479,7 +505,7 @@ export default function RemindersPage() {
                           variant="ghost"
                           onClick={() => dismissReminderAction(reminder.id)}
                         >
-                          忽略
+                          {t('pages.reminders.actions.dismiss')}
                         </Button>
                       </div>
                     </div>
