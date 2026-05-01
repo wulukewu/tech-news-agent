@@ -57,10 +57,10 @@ def _get_repos(svc: SupabaseService = Depends(_get_supabase)):
     client = svc.client
     return ConversationRepository(client), MessageRepository(client)
 
-    # ---------------------------------------------------------------------------
-    # GET /api/conversations/insights
-    # ---------------------------------------------------------------------------
 
+class CreateConversationRequest(BaseModel):
+    title: Optional[str] = Field(None, description="Conversation title (auto-generated if omitted)")
+    platform: str = Field("web", description="Source platform: 'web' or 'discord'")
     tags: list[str] = Field(default_factory=list, description="Initial tags")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Arbitrary metadata")
 

@@ -455,10 +455,6 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
 
     Validates: Requirements 4.2, 4.4
     """
-    import traceback
-
-    tb = traceback.format_exc()
-
     # Log unexpected error with full traceback
     logger.critical(
         f"Unexpected error: {exc!s}",
@@ -467,13 +463,6 @@ async def generic_exception_handler(request: Request, exc: Exception) -> JSONRes
         method=request.method,
         exception_type=type(exc).__name__,
     )
-
-    # Expose error details for /openapi.json to help debug schema issues
-    if request.url.path in ("/openapi.json", "/docs", "/redoc"):
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"error": str(exc), "type": type(exc).__name__, "traceback": tb},
-        )
 
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
