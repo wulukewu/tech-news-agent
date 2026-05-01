@@ -30,6 +30,7 @@ import {
   getIntelligentReminderStats,
   updateIntelligentReminderSettings,
   markReminderAsRead,
+  markReminderAsUnread,
   dismissReminder,
   batchOperation,
   type IntelligentReminder,
@@ -90,9 +91,27 @@ export default function RemindersPage() {
   const markAsRead = async (reminderId: string) => {
     try {
       await markReminderAsRead(reminderId);
-      setReminders((prev) => prev.map((r) => (r.id === reminderId ? { ...r, status: 'read' } : r)));
+      // Auto-hide after marking as read
+      if (statusFilter === 'all' || statusFilter === 'sent' || statusFilter === 'pending') {
+        // Remove from list if not viewing "read" filter
+        setReminders((prev) => prev.filter((r) => r.id !== reminderId));
+      } else {
+        // Update status if viewing "read" filter
+        setReminders((prev) =>
+          prev.map((r) => (r.id === reminderId ? { ...r, status: 'read' } : r))
+        );
+      }
     } catch (error) {
       console.error('Failed to mark as read:', error);
+    }
+  };
+
+  const markAsUnread = async (reminderId: string) => {
+    try {
+      await markReminderAsUnread(reminderId);
+      setReminders((prev) => prev.map((r) => (r.id === reminderId ? { ...r, status: 'sent' } : r)));
+    } catch (error) {
+      console.error('Failed to mark as unread:', error);
     }
   };
 
@@ -438,9 +457,23 @@ export default function RemindersPage() {
                       </div>
 
                       <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => markAsRead(reminder.id)}>
-                          標記已讀
-                        </Button>
+                        {reminder.status === 'read' ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => markAsUnread(reminder.id)}
+                          >
+                            標記未讀
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => markAsRead(reminder.id)}
+                          >
+                            標記已讀
+                          </Button>
+                        )}
                         <Button
                           size="sm"
                           variant="ghost"
@@ -451,20 +484,6 @@ export default function RemindersPage() {
                       </div>
                     </div>
                   </CardHeader>
-
-                  {reminder.reminder_context.action_url && (
-                    <CardContent className="pt-0">
-                      <Button variant="default" size="sm" asChild>
-                        <a
-                          href={reminder.reminder_context.action_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          閱讀完整文章
-                        </a>
-                      </Button>
-                    </CardContent>
-                  )}
                 </Card>
               ))}
             </div>

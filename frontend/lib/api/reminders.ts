@@ -113,6 +113,10 @@ export async function markReminderAsRead(reminderId: string): Promise<void> {
   await apiClient.post(`/api/intelligent-reminders/${reminderId}/read`);
 }
 
+export async function markReminderAsUnread(reminderId: string): Promise<void> {
+  await apiClient.post(`/api/intelligent-reminders/${reminderId}/unread`);
+}
+
 export async function dismissReminder(reminderId: string): Promise<void> {
   await apiClient.post(`/api/intelligent-reminders/${reminderId}/dismiss`);
 }

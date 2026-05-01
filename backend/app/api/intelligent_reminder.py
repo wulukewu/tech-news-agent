@@ -206,6 +206,33 @@ async def mark_reminder_read(
         raise HTTPException(status_code=500, detail="Failed to mark reminder as read")
 
 
+@router.post("/{reminder_id}/unread")
+async def mark_reminder_unread(
+    reminder_id: str,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+):
+    """Mark a reminder as unread (sent)"""
+    try:
+        from ..services.supabase_service import SupabaseService
+
+        supabase_service = SupabaseService()
+
+        user_id = str(current_user["user_id"])
+
+        # Update reminder status back to sent
+        supabase_service.client.table("reminder_log").update({"status": "sent"}).eq(
+            "id", reminder_id
+        ).eq("user_id", user_id).execute()
+
+        return {"message": "Reminder marked as unread"}
+
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid reminder ID")
+    except Exception as e:
+        logger.error(f"Error marking reminder {reminder_id} as read: {e}")
+        raise HTTPException(status_code=500, detail="Failed to mark reminder as read")
+
+
 @router.get("/settings")
 async def get_reminder_settings(
     current_user: Dict[str, Any] = Depends(get_current_user),
