@@ -43,7 +43,18 @@ export default function RemindersPage() {
       console.log('Loading reminders...');
       const data = await getPendingReminders();
       console.log('Reminders loaded:', data);
-      setReminders(data);
+
+      // 去重：根據文章標題去重
+      const seen = new Set<string>();
+      const uniqueReminders = data.filter((reminder) => {
+        const title = reminder.reminder_context.title;
+        if (seen.has(title)) return false;
+        seen.add(title);
+        return true;
+      });
+
+      // 限制顯示最多 10 個
+      setReminders(uniqueReminders.slice(0, 10));
     } catch (error) {
       console.error('Failed to load reminders:', error);
       // Show user-friendly error
@@ -132,11 +143,12 @@ export default function RemindersPage() {
   const getTypeLabel = (type: string) => {
     switch (type) {
       case 'article_relation':
-        return t('pages.reminders.types.article-relation');
+      case 'personalized_article':
+        return '相關文章';
       case 'version_update':
-        return t('pages.reminders.types.version-update');
+        return '版本更新';
       case 'learning_path':
-        return t('pages.reminders.types.learning-path');
+        return '學習路徑';
       default:
         return type;
     }
