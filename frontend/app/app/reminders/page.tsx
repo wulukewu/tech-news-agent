@@ -280,7 +280,7 @@ export default function RemindersPage() {
               onClick={() => toggleSettings('enabled', !settings.enabled)}
             >
               {settings.enabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
-              {settings.enabled ? t('common.enabled') : t('common.disabled')}
+              {settings.enabled ? tr('common.enabled') : tr('common.disabled')}
             </Button>
           </div>
 

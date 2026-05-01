@@ -33,6 +33,37 @@ export function SchedulerStatusWidget({
 }: SchedulerStatusWidgetProps) {
   const { t } = useI18n();
 
+  // Helper to bypass TypeScript strict checking for dynamic translation keys
+  const tr = (key: string, params?: Record<string, any>) => t(key as any, params);
+
+  /**
+   * Format issue message based on type and parameters
+   */
+  function formatIssue(issue: any): string {
+    if (typeof issue === 'string') return issue;
+
+    switch (issue.type) {
+      case 'disabled':
+        return tr('pages.system-status.scheduler-disabled-desc');
+      case 'waiting':
+        return tr('pages.system-status.scheduler-waiting');
+      case 'never_executed':
+        return tr('pages.system-status.scheduler-never-executed');
+      case 'stale':
+        return tr('pages.system-status.scheduler-stale', {
+          hours: issue.hours,
+          threshold: issue.threshold,
+        });
+      case 'high_failure_rate':
+        return tr('pages.system-status.scheduler-high-failure', {
+          rate: issue.rate,
+          threshold: issue.threshold,
+        });
+      default:
+        return issue.message || String(issue);
+    }
+  }
+
   /**
    * Format date to relative time string in Chinese
    */
@@ -172,7 +203,7 @@ export function SchedulerStatusWidget({
                   style={{ animationDelay: `${1200 + index * 100}ms` }}
                 >
                   <span className="mt-1">•</span>
-                  <span>{issue}</span>
+                  <span>{formatIssue(issue)}</span>
                 </li>
               ))}
             </ul>

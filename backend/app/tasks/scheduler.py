@@ -424,39 +424,53 @@ async def get_scheduler_health() -> dict:
     status_code = 200
 
     if not is_enabled:
-        # Scheduler is disabled - this is not an error in dev environment
-        is_healthy = True  # Not unhealthy, just disabled
+        is_healthy = True
         status_code = 200
-        issues.append("Scheduler is disabled (ENABLE_SCHEDULER=false)")
+        issues.append(
+            {"type": "disabled", "message": "Scheduler is disabled (ENABLE_SCHEDULER=false)"}
+        )
     else:
-        # Check if scheduler has run recently (within last 12 hours)
         if last_execution is None:
-            # If scheduler is running and has a next execution time, it's just waiting
             if is_running and next_execution_time:
                 is_healthy = True
                 status_code = 200
-                issues.append("Scheduler is active and waiting for first execution")
+                issues.append(
+                    {
+                        "type": "waiting",
+                        "message": "Scheduler is active and waiting for first execution",
+                    }
+                )
             else:
                 is_healthy = False
                 status_code = 503
-                issues.append("Scheduler has never executed")
+                issues.append({"type": "never_executed", "message": "Scheduler has never executed"})
         else:
             time_since_last_run = datetime.now(UTC) - last_execution
             if time_since_last_run > timedelta(hours=12):
                 is_healthy = False
                 status_code = 503
+                hours_since = time_since_last_run.total_seconds() / 3600
                 issues.append(
-                    f"Scheduler has not run in {time_since_last_run.total_seconds() / 3600:.1f} hours (threshold: 12 hours)"
+                    {
+                        "type": "stale",
+                        "hours": round(hours_since, 1),
+                        "threshold": 12,
+                        "message": f"Scheduler has not run in {hours_since:.1f} hours (threshold: 12 hours)",
+                    }
                 )
 
-        # Check failure rate (only if there were operations)
         if total_operations > 0:
             failure_rate = failed_operations / total_operations
             if failure_rate > 0.5:
                 is_healthy = False
                 status_code = 503
                 issues.append(
-                    f"Last execution had {failure_rate:.1%} failure rate (threshold: 50%)"
+                    {
+                        "type": "high_failure_rate",
+                        "rate": round(failure_rate * 100, 1),
+                        "threshold": 50,
+                        "message": f"Last execution had {failure_rate:.1%} failure rate (threshold: 50%)",
+                    }
                 )
 
     return {
