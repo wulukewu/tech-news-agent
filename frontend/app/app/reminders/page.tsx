@@ -279,60 +279,110 @@ export default function RemindersPage() {
                       {getStatusIcon(reminder.status)}
                       <Badge variant="outline">{getTypeLabel(reminder.reminder_type)}</Badge>
                       <Badge variant="secondary">{reminder.channel}</Badge>
-                    </div>
-                    <CardTitle className="text-lg">{reminder.reminder_context.title}</CardTitle>
-                    <CardDescription>{reminder.reminder_context.description}</CardDescription>
-                  </div>
-
-                  {reminder.status === 'sent' && (
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => markAsRead(reminder.id)}>
-                        {t('pages.reminders.actions.mark-read')}
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => dismissReminderAction(reminder.id)}
-                      >
-                        {t('pages.reminders.actions.dismiss')}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </CardHeader>
-
-              {reminder.reminder_context.related_articles && (
-                <CardContent>
-                  <div className="space-y-2">
-                    <p className="font-medium text-sm">{t('pages.reminders.related-articles')}:</p>
-                    {reminder.reminder_context.related_articles.map((article, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <span className="text-sm">•</span>
-                        <a
-                          href={article.url || '#'}
-                          className="text-sm text-blue-600 hover:underline"
+                      {reminder.reminder_context.priority_score !== undefined && (
+                        <Badge
+                          variant={
+                            reminder.reminder_context.priority_score >= 0.8
+                              ? 'default'
+                              : reminder.reminder_context.priority_score >= 0.6
+                                ? 'secondary'
+                                : 'outline'
+                          }
                         >
-                          {article.title}
-                        </a>
-                        {article.confidence && (
-                          <Badge variant="outline" className="text-xs">
-                            {t('pages.reminders.match-percentage', {
-                              percentage: Math.round(article.confidence * 100),
-                            })}
-                          </Badge>
-                        )}
-                      </div>
-                    ))}
+                          {reminder.reminder_context.priority_score >= 0.8 && '🔥 '}
+                          {reminder.reminder_context.priority_score >= 0.6 &&
+                            reminder.reminder_context.priority_score < 0.8 &&
+                            '⭐ '}
+                          {Math.round(reminder.reminder_context.priority_score * 100)}%
+                        </Badge>
+                      )}
+                    </div>
+                    {reminder.reminder_context.action_url ? (
+                      <a
+                        href={reminder.reminder_context.action_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline"
+                      >
+                        <CardTitle className="text-lg text-primary">
+                          {reminder.reminder_context.title}
+                        </CardTitle>
+                      </a>
+                    ) : (
+                      <CardTitle className="text-lg">{reminder.reminder_context.title}</CardTitle>
+                    )}
+                    <CardDescription className="mt-2">
+                      {reminder.reminder_context.description}
+                    </CardDescription>
                     {reminder.reminder_context.reading_time_estimate && (
                       <p className="text-xs text-muted-foreground mt-2">
-                        {t('pages.reminders.reading-time', {
-                          minutes: reminder.reminder_context.reading_time_estimate,
-                        })}
+                        ⏱️ 預估閱讀時間: ~{reminder.reminder_context.reading_time_estimate} 分鐘
                       </p>
                     )}
                   </div>
+
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => markAsRead(reminder.id)}>
+                      標記已讀
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => dismissReminderAction(reminder.id)}
+                    >
+                      忽略
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+
+              {reminder.reminder_context.action_url && (
+                <CardContent className="pt-0">
+                  <Button variant="default" size="sm" asChild>
+                    <a
+                      href={reminder.reminder_context.action_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      🔗 閱讀完整文章
+                    </a>
+                  </Button>
                 </CardContent>
               )}
+
+              {reminder.reminder_context.related_articles &&
+                reminder.reminder_context.related_articles.length > 0 && (
+                  <CardContent>
+                    <div className="space-y-2">
+                      <p className="font-medium text-sm">相關文章:</p>
+                      {reminder.reminder_context.related_articles.map((article, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <span className="text-sm">•</span>
+                          <a
+                            href={article.url || '#'}
+                            className="text-sm text-blue-600 hover:underline"
+                          >
+                            {article.title}
+                          </a>
+                          {article.confidence && (
+                            <Badge variant="outline" className="text-xs">
+                              {t('pages.reminders.match-percentage', {
+                                percentage: Math.round(article.confidence * 100),
+                              })}
+                            </Badge>
+                          )}
+                        </div>
+                      ))}
+                      {reminder.reminder_context.reading_time_estimate && (
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {t('pages.reminders.reading-time', {
+                            minutes: reminder.reminder_context.reading_time_estimate,
+                          })}
+                        </p>
+                      )}
+                    </div>
+                  </CardContent>
+                )}
 
               {reminder.reminder_context.version_info && (
                 <CardContent>
