@@ -1,0 +1,278 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Bell, BellOff, Clock, CheckCircle, X } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+
+interface Reminder {
+  id: string;
+  reminder_type: string;
+  reminder_context: {
+    title: string;
+    description: string;
+    related_articles?: Array<{
+      title: string;
+      url?: string;
+    }>;
+    reading_time_estimate?: number;
+  };
+  sent_at: string;
+  channel: string;
+  status: string;
+}
+
+export default function RemindersPage() {
+  const { isAuthenticated } = useAuth();
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [settings, setSettings] = useState({
+    enabled: true,
+    max_daily_reminders: 5,
+    reminder_frequency: 'smart',
+  });
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadReminders();
+      loadSettings();
+    }
+  }, [isAuthenticated]);
+
+  const loadReminders = async () => {
+    try {
+      // Mock data for now since API might not be fully connected
+      const mockReminders: Reminder[] = [
+        {
+          id: '1',
+          reminder_type: 'article_relation',
+          reminder_context: {
+            title: 'Follow-up Reading Suggestion',
+            description: 'Based on your recent reading, you might find this article interesting.',
+            related_articles: [
+              { title: 'Advanced React Patterns', url: '/articles/react-patterns' },
+            ],
+            reading_time_estimate: 8,
+          },
+          sent_at: new Date().toISOString(),
+          channel: 'discord',
+          status: 'sent',
+        },
+        {
+          id: '2',
+          reminder_type: 'version_update',
+          reminder_context: {
+            title: 'React 19 Released',
+            description: 'A new major version with breaking changes affecting your recent reading.',
+            reading_time_estimate: 12,
+          },
+          sent_at: new Date(Date.now() - 86400000).toISOString(),
+          channel: 'web',
+          status: 'read',
+        },
+      ];
+
+      setReminders(mockReminders);
+    } catch (error) {
+      console.error('Failed to load reminders:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadSettings = async () => {
+    // Mock settings for now
+    setSettings({
+      enabled: true,
+      max_daily_reminders: 5,
+      reminder_frequency: 'smart',
+    });
+  };
+
+  const markAsRead = async (reminderId: string) => {
+    setReminders((prev) => prev.map((r) => (r.id === reminderId ? { ...r, status: 'read' } : r)));
+  };
+
+  const dismissReminder = async (reminderId: string) => {
+    setReminders((prev) =>
+      prev.map((r) => (r.id === reminderId ? { ...r, status: 'dismissed' } : r))
+    );
+  };
+
+  const toggleSettings = async (key: string, value: boolean | number | string) => {
+    setSettings((prev) => ({ ...prev, [key]: value }));
+  };
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto py-6 space-y-6">
+        <Skeleton className="h-8 w-64" />
+        <div className="grid gap-4">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'read':
+        return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'dismissed':
+        return <X className="w-4 h-4 text-gray-500" />;
+      default:
+        return <Clock className="w-4 h-4 text-blue-500" />;
+    }
+  };
+
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'article_relation':
+        return 'Related Article';
+      case 'version_update':
+        return 'Version Update';
+      case 'learning_path':
+        return 'Learning Path';
+      default:
+        return type;
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto py-6 space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Smart Reminders</h1>
+        <p className="text-muted-foreground">
+          Intelligent notifications based on your reading patterns and interests
+        </p>
+      </div>
+
+      {/* Settings Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="w-5 h-5" />
+            Reminder Settings
+          </CardTitle>
+          <CardDescription>
+            Configure how and when you receive intelligent reminders
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Enable Reminders</p>
+              <p className="text-sm text-muted-foreground">
+                Receive intelligent article suggestions and updates
+              </p>
+            </div>
+            <Button
+              variant={settings.enabled ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => toggleSettings('enabled', !settings.enabled)}
+            >
+              {settings.enabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
+              {settings.enabled ? 'Enabled' : 'Disabled'}
+            </Button>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Daily Limit</p>
+              <p className="text-sm text-muted-foreground">Maximum reminders per day</p>
+            </div>
+            <Badge variant="outline">{settings.max_daily_reminders} per day</Badge>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-medium">Frequency</p>
+              <p className="text-sm text-muted-foreground">How often to send reminders</p>
+            </div>
+            <Badge variant="outline">{settings.reminder_frequency}</Badge>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Reminders List */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-semibold">Recent Reminders</h2>
+
+        {reminders.length === 0 ? (
+          <Card>
+            <CardContent className="py-8 text-center">
+              <Bell className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">No reminders yet</p>
+              <p className="text-sm text-muted-foreground mt-2">
+                Start reading articles and rating them to receive intelligent suggestions
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          reminders.map((reminder) => (
+            <Card key={reminder.id} className="transition-all hover:shadow-md">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      {getStatusIcon(reminder.status)}
+                      <Badge variant="outline">{getTypeLabel(reminder.reminder_type)}</Badge>
+                      <Badge variant="secondary">{reminder.channel}</Badge>
+                    </div>
+                    <CardTitle className="text-lg">{reminder.reminder_context.title}</CardTitle>
+                    <CardDescription>{reminder.reminder_context.description}</CardDescription>
+                  </div>
+
+                  {reminder.status === 'sent' && (
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => markAsRead(reminder.id)}>
+                        Mark Read
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => dismissReminder(reminder.id)}
+                      >
+                        Dismiss
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </CardHeader>
+
+              {reminder.reminder_context.related_articles && (
+                <CardContent>
+                  <div className="space-y-2">
+                    <p className="font-medium text-sm">Related Articles:</p>
+                    {reminder.reminder_context.related_articles.map((article, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <span className="text-sm">•</span>
+                        <a
+                          href={article.url || '#'}
+                          className="text-sm text-blue-600 hover:underline"
+                        >
+                          {article.title}
+                        </a>
+                      </div>
+                    ))}
+                    {reminder.reminder_context.reading_time_estimate && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Estimated reading time: {reminder.reminder_context.reading_time_estimate}{' '}
+                        minutes
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              )}
+            </Card>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
