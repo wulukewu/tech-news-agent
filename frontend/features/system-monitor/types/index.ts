@@ -6,6 +6,20 @@
  */
 
 /**
+ * Scheduler issue object
+ */
+export interface SchedulerIssue {
+  /** Issue type for translation */
+  type: string;
+  /** Fallback English message */
+  message: string;
+  /** Additional parameters for translation */
+  hours?: number;
+  threshold?: number;
+  rate?: number;
+}
+
+/**
  * Scheduler execution status
  */
 export interface SchedulerStatus {
@@ -23,8 +37,8 @@ export interface SchedulerStatus {
   totalOperations: number;
   /** Whether the scheduler is healthy */
   isHealthy: boolean;
-  /** List of health issues (optional, defaults to empty array) */
-  issues?: string[];
+  /** List of health issues (can be string or object) */
+  issues?: (string | SchedulerIssue)[];
 }
 
 /**
