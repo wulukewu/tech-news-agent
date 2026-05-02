@@ -400,11 +400,17 @@ class NotificationMonitoringService(BaseService):
 
             # Log the alert
             if severity == "critical":
-                self.logger.critical("ALERT: " + message, **alert_data)
+                self.logger.critical(
+                    "ALERT: " + message, **{k: v for k, v in alert_data.items() if k != "message"}
+                )
             elif severity == "warning":
-                self.logger.warning("ALERT: " + message, **alert_data)
+                self.logger.warning(
+                    "ALERT: " + message, **{k: v for k, v in alert_data.items() if k != "message"}
+                )
             else:
-                self.logger.info("ALERT: " + message, **alert_data)
+                self.logger.info(
+                    "ALERT: " + message, **{k: v for k, v in alert_data.items() if k != "message"}
+                )
 
             # In a production system, you would also:
             # - Send alerts to external monitoring systems (e.g., PagerDuty, Slack)

@@ -56,9 +56,9 @@ async def list_domains(
     current_user: Dict[str, Any] = Depends(get_current_user),
     db: GraphDatabase = Depends(_get_db),
 ) -> List[Dict]:
-    """List all available technical domains."""
-    domains = await db.get_all_domains()
+    """List built-in domains + user's own custom domains."""
     user_id = UUID(current_user["id"])
+    domains = await db.get_all_domains(user_id)
 
     result = []
     for domain in domains:
@@ -105,7 +105,7 @@ async def get_domain_progress(
 ) -> Dict:
     """Get user's learning progress for a domain."""
     user_id = UUID(current_user["id"])
-    domain = await db.get_domain_by_name(domain_name)
+    domain = await db.get_domain_by_name(domain_name, user_id)
     if not domain:
         raise HTTPException(status_code=404, detail=f"Domain '{domain_name}' not found")
 
@@ -145,7 +145,7 @@ async def get_recommendations(
 ) -> List[Dict]:
     """Get personalized learning recommendations for a domain."""
     user_id = UUID(current_user["id"])
-    domain = await db.get_domain_by_name(domain_name)
+    domain = await db.get_domain_by_name(domain_name, user_id)
     if not domain:
         raise HTTPException(status_code=404, detail=f"Domain '{domain_name}' not found")
 
@@ -178,7 +178,8 @@ async def rebuild_domain(
     builder: KnowledgeGraphBuilder = Depends(_get_builder),
 ) -> Dict:
     """Force rebuild a domain's graph via LLM (incremental)."""
-    domain = await builder.rebuild_domain(domain_name)
+    user_id = UUID(current_user["id"])
+    domain = await builder.rebuild_domain(domain_name, user_id)
     return domain.to_dict()
 
 

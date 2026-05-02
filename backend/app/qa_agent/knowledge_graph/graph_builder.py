@@ -29,7 +29,7 @@ class KnowledgeGraphBuilder:
         self, domain_name: str, user_id: Optional[UUID] = None
     ) -> TechnicalDomain:
         """Return existing domain or build it from scratch via LLM."""
-        domain = await self.db.get_domain_by_name(domain_name)
+        domain = await self.db.get_domain_by_name(domain_name, user_id)
         if domain:
             return domain
 
@@ -108,11 +108,13 @@ class KnowledgeGraphBuilder:
             user_progress_pct=progress_pct,
         )
 
-    async def rebuild_domain(self, domain_name: str) -> TechnicalDomain:
+    async def rebuild_domain(
+        self, domain_name: str, user_id: Optional[UUID] = None
+    ) -> TechnicalDomain:
         """Force rebuild a domain's graph via LLM (incremental: only adds new nodes)."""
-        domain = await self.db.get_domain_by_name(domain_name)
+        domain = await self.db.get_domain_by_name(domain_name, user_id)
         if not domain:
-            return await self.get_or_build_domain(domain_name)
+            return await self.get_or_build_domain(domain_name, user_id)
 
         display_name = domain.display_name
         nodes_data, edges_data = await self.extractor.extract_domain_graph(display_name)

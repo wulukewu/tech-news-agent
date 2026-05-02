@@ -25,14 +25,52 @@ class GraphDatabase:
 
     # ── Domains ──────────────────────────────────────────────────────────────
 
-    async def get_all_domains(self) -> List[TechnicalDomain]:
-        result = self.db.client.table("technical_domains").select("*").execute()
-        return [self._row_to_domain(r) for r in (result.data or [])]
+    async def get_all_domains(self, user_id: Optional[UUID] = None) -> List[TechnicalDomain]:
+        """Return built-in domains + user's own custom domains."""
+        # Built-ins
+        result = (
+            self.db.client.table("technical_domains")
+            .select("*")
+            .is_("created_by", "null")
+            .execute()
+        )
+        domains = [self._row_to_domain(r) for r in (result.data or [])]
+        # User's custom domains
+        if user_id:
+            custom = (
+                self.db.client.table("technical_domains")
+                .select("*")
+                .eq("created_by", str(user_id))
+                .execute()
+            )
+            domains += [self._row_to_domain(r) for r in (custom.data or [])]
+        return domains
 
-    async def get_domain_by_name(self, name: str) -> Optional[TechnicalDomain]:
-        result = self.db.client.table("technical_domains").select("*").eq("name", name).execute()
+    async def get_domain_by_name(
+        self, name: str, user_id: Optional[UUID] = None
+    ) -> Optional[TechnicalDomain]:
+        """Find domain by name. Built-ins are global; custom domains are user-scoped."""
+        # Try built-in first (created_by IS NULL)
+        result = (
+            self.db.client.table("technical_domains")
+            .select("*")
+            .eq("name", name)
+            .is_("created_by", "null")
+            .execute()
+        )
         if result.data:
             return self._row_to_domain(result.data[0])
+        # Try user-owned custom domain
+        if user_id:
+            result = (
+                self.db.client.table("technical_domains")
+                .select("*")
+                .eq("name", name)
+                .eq("created_by", str(user_id))
+                .execute()
+            )
+            if result.data:
+                return self._row_to_domain(result.data[0])
         return None
 
     async def create_domain(
