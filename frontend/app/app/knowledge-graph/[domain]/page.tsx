@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useUser } from '@/contexts/UserContext';
@@ -35,6 +35,7 @@ import {
   getRecommendations,
   updateNodeStatus,
   getNodeArticles,
+  rebuildDomain,
   type KnowledgeNode,
 } from '@/lib/api/knowledge-graph';
 import { GraphVisualization } from '@/components/knowledge-graph/GraphVisualization';
@@ -58,6 +59,8 @@ export default function DomainGraphPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const [headerHeight, setHeaderHeight] = useState(64);
+  const [generateError, setGenerateError] = useState(false);
+  const autoTriggeredRef = useRef(false);
 
   // Measure actual header height for accurate fullscreen positioning
   useEffect(() => {
@@ -103,6 +106,25 @@ export default function DomainGraphPage() {
     enabled: !!user && !!domainName,
   });
 
+  const rebuildMutation = useMutation({
+    mutationFn: () => rebuildDomain(domainName),
+    onSuccess: () => {
+      setGenerateError(false);
+      queryClient.invalidateQueries({ queryKey: ['knowledge-graph', 'graph', domainName] });
+    },
+    onError: () => setGenerateError(true),
+  });
+
+  // Auto-trigger once when graph loads with 0 nodes
+  useEffect(() => {
+    if (!graph || graphLoading || autoTriggeredRef.current) return;
+    if (graph.nodes.length === 0) {
+      autoTriggeredRef.current = true;
+      rebuildMutation.mutate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [graph, graphLoading]);
+
   const updateStatusMutation = useMutation({
     mutationFn: ({ nodeId, status }: { nodeId: string; status: KnowledgeNode['status'] }) =>
       updateNodeStatus(nodeId, status),
@@ -112,15 +134,18 @@ export default function DomainGraphPage() {
         setSelectedNode({ ...selectedNode, status: variables.status });
       }
       // Update graph nodes in-place via queryClient setQueryData to avoid full re-render
-      queryClient.setQueryData(['knowledge-graph', 'graph', domainName], (old: typeof graph) => {
-        if (!old) return old;
-        return {
-          ...old,
-          nodes: old.nodes.map((n) =>
-            n.id === variables.nodeId ? { ...n, status: variables.status } : n
-          ),
-        };
-      });
+      queryClient.setQueryData(
+        ['knowledge-graph', 'graph', domainName],
+        (old: typeof graph | undefined) => {
+          if (!old) return old;
+          return {
+            ...old,
+            nodes: old.nodes.map((n) =>
+              n.id === variables.nodeId ? { ...n, status: variables.status } : n
+            ),
+          };
+        }
+      );
       // Only invalidate progress + recommendations (don't re-fetch graph)
       queryClient.invalidateQueries({ queryKey: ['knowledge-graph', 'progress', domainName] });
       queryClient.invalidateQueries({
@@ -183,23 +208,52 @@ export default function DomainGraphPage() {
             {graphLoading ? (
               <div className="flex items-center justify-center h-full">
                 {/* Distinguish: first load (possibly AI generating) vs refetch */}
-                {graph && graph.nodes.length === 0 ? (
+                {graph !== null &&
+                graph !== undefined &&
+                (graph as { nodes: unknown[] }).nodes.length === 0 ? (
                   <div className="text-center space-y-4 max-w-xs px-4">
-                    <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" />
-                    <div>
-                      <p className="text-sm font-medium">{loadingMessages[loadingMsgIdx]}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        This usually takes 15–30 seconds
-                      </p>
-                    </div>
-                    <div className="flex justify-center gap-1">
-                      {loadingMessages.map((_, i) => (
-                        <div
-                          key={i}
-                          className={`h-1 w-6 rounded-full transition-colors duration-300 ${i === loadingMsgIdx ? 'bg-primary' : 'bg-muted'}`}
-                        />
-                      ))}
-                    </div>
+                    {rebuildMutation.isPending ? (
+                      <>
+                        <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" />
+                        <div>
+                          <p className="text-sm font-medium">{loadingMessages[loadingMsgIdx]}</p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            This usually takes 15–30 seconds
+                          </p>
+                        </div>
+                        <div className="flex justify-center gap-1">
+                          {loadingMessages.map((_, i) => (
+                            <div
+                              key={i}
+                              className={`h-1 w-6 rounded-full transition-colors duration-300 ${i === loadingMsgIdx ? 'bg-primary' : 'bg-muted'}`}
+                            />
+                          ))}
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <Network className="h-10 w-10 mx-auto text-muted-foreground/40" />
+                        <div>
+                          <p className="text-sm font-medium">
+                            {generateError ? 'Generation failed' : 'No nodes yet'}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {generateError
+                              ? 'The AI generation failed. Please try again.'
+                              : 'Click to generate the knowledge graph with AI.'}
+                          </p>
+                        </div>
+                        <Button
+                          size="sm"
+                          onClick={() => {
+                            setGenerateError(false);
+                            rebuildMutation.mutate();
+                          }}
+                        >
+                          Generate Knowledge Graph
+                        </Button>
+                      </>
+                    )}
                   </div>
                 ) : (
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />

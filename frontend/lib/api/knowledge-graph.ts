@@ -98,6 +98,11 @@ export async function getNodeArticles(nodeId: string, limit = 5) {
   }>;
 }
 
+export async function rebuildDomain(domainName: string): Promise<TechnicalDomain> {
+  const res = await apiClient.post(`/api/knowledge-graph/domains/${domainName}/rebuild`);
+  return res.data;
+}
+
 export async function createDomain(data: {
   name: string;
   display_name: string;
