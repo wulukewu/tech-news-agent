@@ -852,6 +852,8 @@
       "tab-history": "通知歷史",
       "status-active": "已排程",
       "status-inactive": "未啟用",
+      "scheduler-active": "排程器運作中",
+      "scheduler-inactive": "排程器未運作（本地開發環境）",
       "reschedule": "重新排程",
       "frequency-title": "通知頻率",
       "frequency-desc": "選擇您希望接收通知的頻率",

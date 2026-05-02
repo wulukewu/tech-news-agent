@@ -396,10 +396,8 @@ app.include_router(intelligent_reminder_api.router, tags=["intelligent-reminders
 from app.api import platforms as platforms_api
 
 app.include_router(platforms_api.router, prefix="/api/user/platforms", tags=["platforms"])
-# Also mount the conversation sync endpoint under /api
-app.include_router(
-    platforms_api.router, prefix="/api", tags=["conversations"], include_in_schema=False
-)
+# NOTE: Conversation sync endpoint is now handled by conversations API
+# Removed duplicate router registration that was causing 405 errors
 
 
 @app.get("/")

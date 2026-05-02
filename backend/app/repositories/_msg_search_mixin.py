@@ -1,9 +1,11 @@
 """Mixin extracted from repository."""
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, Optional
 from uuid import UUID
 
+from app.core.database import ConversationMessage
 from app.core.logger import get_logger
 
 logger = get_logger(__name__)

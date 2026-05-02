@@ -1,9 +1,12 @@
 """Mixin extracted from repository."""
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID
 
+from app.core.database import Conversation
+from app.core.errors import DatabaseError, ErrorCode
 from app.core.logger import get_logger
 
 logger = get_logger(__name__)
@@ -107,18 +110,19 @@ class ConvArchiveMixin:
         )
 
     @staticmethod
-    def _map_to_summary(row: dict[str, Any]) -> ConversationSummary:
-        """Map a raw Supabase row dict to a :class:`ConversationSummary`.
+    def _map_to_summary(row: dict[str, Any]) -> Conversation:
+        """Map a raw Supabase row dict to a :class:`Conversation` (summary view).
 
         Args:
             row: Dictionary returned by the Supabase client (may be a partial
                 select with only summary fields).
 
         Returns:
-            A validated :class:`ConversationSummary` instance.
+            A validated :class:`Conversation` instance.
         """
-        return ConversationSummary(
+        return Conversation(
             id=UUID(row["id"]) if isinstance(row["id"], str) else row["id"],
+            user_id=UUID(row["user_id"]) if isinstance(row["user_id"], str) else row["user_id"],
             title=row.get("title") or "Untitled Conversation",
             summary=row.get("summary"),
             platform=row.get("platform", "web"),

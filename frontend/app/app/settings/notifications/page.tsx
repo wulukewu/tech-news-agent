@@ -16,9 +16,9 @@ import { NotificationSettings } from '@/types/notification';
 import { QuietHoursSettings } from '@/features/notifications/components/QuietHoursSettings';
 import { TinkeringIndexThreshold } from '@/features/notifications/components/TinkeringIndexThreshold';
 import { FeedNotificationSettings } from '@/features/notifications/components/FeedNotificationSettings';
-import { NotificationPreview } from '@/features/notifications/components/NotificationPreview';
 import { PersonalizedNotificationSettings } from '@/features/notifications/components/PersonalizedNotificationSettings';
 import { ProactiveFrequencySettings } from '@/features/notifications/components/ProactiveFrequencySettings';
+import { PersonalizedNotificationPreview } from '@/features/notifications/components/PersonalizedNotificationPreview';
 import { Bell, Moon, Brain, Rss, CheckCircle, AlertCircle } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 
@@ -89,22 +89,27 @@ export default function NotificationSettingsPage() {
           <h1 className="text-2xl font-bold tracking-tight">{t('settings.notifications.title')}</h1>
           <p className="text-muted-foreground mt-1">{t('settings.notifications.description')}</p>
         </div>
-        <div className="flex-shrink-0 mt-1">
-          {status && typeof status === 'object' && 'scheduled' in status && status.scheduled ? (
-            <Badge
-              variant="outline"
-              className="text-green-600 border-green-300 dark:border-green-700 gap-1.5"
-            >
-              <CheckCircle className="h-3.5 w-3.5" />
-              {t('settings.notifications.status-active')}
-            </Badge>
-          ) : status !== undefined ? (
-            <Badge variant="outline" className="text-muted-foreground gap-1.5">
-              <AlertCircle className="h-3.5 w-3.5" />
-              {t('settings.notifications.status-inactive')}
-            </Badge>
-          ) : null}
-        </div>
+        {status && typeof status === 'object' && 'scheduled' in status && (
+          <div className="flex-shrink-0 mt-1">
+            {status.scheduled ? (
+              <Badge
+                variant="outline"
+                className="text-green-600 border-green-300 dark:border-green-700 gap-1.5"
+              >
+                <CheckCircle className="h-3.5 w-3.5" />
+                {t('settings.notifications.scheduler-active')}
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className="text-amber-600 border-amber-300 dark:border-amber-700 gap-1.5"
+              >
+                <AlertCircle className="h-3.5 w-3.5" />
+                {t('settings.notifications.scheduler-inactive')}
+              </Badge>
+            )}
+          </div>
+        )}
       </div>
 
       <Tabs
@@ -141,7 +146,7 @@ export default function NotificationSettingsPage() {
         >
           <PersonalizedNotificationSettings />
           <ProactiveFrequencySettings />
-          {settings && <NotificationPreview settings={settings} />}
+          <PersonalizedNotificationPreview />
         </TabsContent>
 
         <TabsContent

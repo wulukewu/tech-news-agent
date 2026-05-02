@@ -852,6 +852,8 @@
       "tab-history": "History",
       "status-active": "Scheduled",
       "status-inactive": "Inactive",
+      "scheduler-active": "Scheduler Running",
+      "scheduler-inactive": "Scheduler Not Running (Local Dev)",
       "reschedule": "Reschedule",
       "frequency-title": "Notification Frequency",
       "frequency-desc": "Choose how often you want to receive notifications",

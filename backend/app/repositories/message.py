@@ -57,7 +57,7 @@ class MessageStats:
 # ---------------------------------------------------------------------------
 
 
-from app.repositories._msg_search_mixin import MsgSearchMixin
+from app.repositories._msg_search_mixin import MsgSearchMixin, _map_to_message
 
 
 class MessageRepository(MsgSearchMixin):

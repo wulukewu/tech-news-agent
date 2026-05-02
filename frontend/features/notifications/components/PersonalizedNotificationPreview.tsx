@@ -2,19 +2,28 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { NotificationSettings } from '@/types/notification';
-import { Bell, MessageSquare, Mail, Star, Clock } from 'lucide-react';
+import { Bell, MessageSquare, Star, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { zhTW, enUS } from 'date-fns/locale';
 import { useI18n } from '@/contexts/I18nContext';
+import { useQuery } from '@tanstack/react-query';
+import { getNotificationPreferences, getNotificationSettings } from '@/lib/api/notifications';
 
-interface NotificationPreviewProps {
-  settings: NotificationSettings;
-}
-
-export function NotificationPreview({ settings }: NotificationPreviewProps) {
+export function PersonalizedNotificationPreview() {
   const { t, locale } = useI18n();
   const dateLocale = locale === 'zh-TW' ? zhTW : enUS;
+
+  // Fetch both preferences and settings
+  const { data: preferences } = useQuery({
+    queryKey: ['notificationPreferences'],
+    queryFn: getNotificationPreferences,
+  });
+
+  const { data: settings } = useQuery({
+    queryKey: ['notificationSettings'],
+    queryFn: getNotificationSettings,
+  });
+
   // Mock article data for preview - use a high tinkering index to show positive case
   const mockArticle = {
     title: 'Next.js 15 發布：全新的 App Router 功能與效能提升',
@@ -24,27 +33,9 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
     publishedAt: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
   };
 
-  const getChannelIcon = (channel: string) => {
-    switch (channel) {
-      case 'dm':
-        return <MessageSquare className="h-4 w-4" />;
-      case 'email':
-        return <Mail className="h-4 w-4" />;
-      default:
-        return <Bell className="h-4 w-4" />;
-    }
-  };
-
-  const getChannelName = (channel: string) => {
-    switch (channel) {
-      case 'dm':
-        return t('settings.notifications.channel-discord');
-      case 'email':
-        return t('settings.notifications.channel-email');
-      default:
-        return t('settings.notifications.channel-in-app');
-    }
-  };
+  if (!preferences || !settings) {
+    return null;
+  }
 
   const getCategoryColor = (category: string) => {
     switch (category.toLowerCase()) {
@@ -74,14 +65,14 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
 
   // Check if notification would be sent based on settings
   const wouldSendNotification = () => {
-    // First check if any channel is enabled
-    if (!settings.dmEnabled && !settings.emailEnabled) return false;
+    // Check if DM is enabled (from preferences)
+    if (!preferences.dmEnabled && !preferences.emailEnabled) return false;
 
-    // Check tinkering index threshold
+    // Check tinkering index threshold (from settings)
     if (mockArticle.tinkeringIndex < settings.minTinkeringIndex) return false;
 
-    // Check quiet hours (only if DM is enabled, as quiet hours typically apply to DM)
-    if (settings.dmEnabled && settings.quietHours?.enabled) {
+    // Check quiet hours (from settings)
+    if (preferences.dmEnabled && settings.quietHours?.enabled) {
       const now = new Date();
       const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now
         .getMinutes()
@@ -89,7 +80,6 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
         .padStart(2, '0')}`;
       const { start, end } = settings.quietHours;
 
-      // Simple time range check (doesn't handle overnight ranges properly, but good for preview)
       if (start <= end) {
         if (currentTime >= start && currentTime <= end) return false;
       } else {
@@ -102,8 +92,8 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
 
   const shouldSend = wouldSendNotification();
   const activeChannels = [];
-  if (settings.dmEnabled) activeChannels.push('dm');
-  if (settings.emailEnabled) activeChannels.push('email');
+  if (preferences.dmEnabled) activeChannels.push('dm');
+  if (preferences.emailEnabled) activeChannels.push('email');
 
   return (
     <Card>
@@ -143,13 +133,13 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
           <div className="text-sm space-y-2 p-4 rounded-lg bg-muted/50">
             <p className="font-medium">{t('settings.notifications.reason')}</p>
             <ul className="space-y-1.5 ml-2">
-              {!settings.dmEnabled && !settings.emailEnabled && (
+              {!preferences.dmEnabled && !preferences.emailEnabled && (
                 <li className="flex items-start gap-2">
                   <span className="text-muted-foreground mt-0.5">•</span>
                   <span>{t('settings.notifications.global-disabled')}</span>
                 </li>
               )}
-              {(settings.dmEnabled || settings.emailEnabled) &&
+              {(preferences.dmEnabled || preferences.emailEnabled) &&
                 mockArticle.tinkeringIndex < settings.minTinkeringIndex && (
                   <li className="flex items-start gap-2">
                     <span className="text-muted-foreground mt-0.5">•</span>
@@ -159,7 +149,7 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
                     </span>
                   </li>
                 )}
-              {settings.dmEnabled &&
+              {preferences.dmEnabled &&
                 settings.quietHours?.enabled &&
                 mockArticle.tinkeringIndex >= settings.minTinkeringIndex && (
                   <li className="flex items-start gap-2">
@@ -184,8 +174,8 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
                     key={channel}
                     className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 text-primary"
                   >
-                    {getChannelIcon(channel)}
-                    <span className="text-sm">{getChannelName(channel)}</span>
+                    <MessageSquare className="h-4 w-4" />
+                    <span className="text-sm">{t('settings.notifications.channel-discord')}</span>
                   </div>
                 ))}
                 {activeChannels.length === 0 && (
@@ -208,11 +198,11 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
                       {t('settings.notifications.new-article')}
                     </h4>
                     <Badge variant="secondary" className="text-xs">
-                      {settings.frequency === 'immediate'
-                        ? t('settings.notifications.frequency-immediate')
-                        : settings.frequency === 'daily'
-                          ? t('settings.notifications.frequency-daily')
-                          : t('settings.notifications.frequency-weekly')}
+                      {preferences.frequency === 'daily'
+                        ? t('settings.notifications.frequency-daily')
+                        : preferences.frequency === 'weekly'
+                          ? t('settings.notifications.frequency-weekly')
+                          : t('settings.notifications.frequency-monthly')}
                     </Badge>
                   </div>
 
@@ -249,9 +239,9 @@ export function NotificationPreview({ settings }: NotificationPreviewProps) {
             {/* Frequency Info */}
             <div className="text-sm text-muted-foreground">
               <p>
-                {settings.frequency === 'immediate' && t('settings.notifications.immediate-send')}
-                {settings.frequency === 'daily' && t('settings.notifications.daily-digest')}
-                {settings.frequency === 'weekly' && t('settings.notifications.weekly-digest')}
+                {preferences.frequency === 'daily' && t('settings.notifications.daily-digest')}
+                {preferences.frequency === 'weekly' && t('settings.notifications.weekly-digest')}
+                {preferences.frequency === 'monthly' && t('settings.notifications.monthly-digest')}
               </p>
             </div>
           </div>

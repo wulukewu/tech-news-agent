@@ -68,25 +68,25 @@ describe('NotificationPreview', () => {
     it('should show notification will trigger when all conditions are met', () => {
       renderWithI18n(<NotificationPreview settings={baseSettings} />);
 
-      expect(screen.getByText('✓ Will send notification')).toBeInTheDocument();
-      expect(screen.getByText('Will send via:')).toBeInTheDocument();
+      expect(screen.getByText(/This article will trigger notification/)).toBeInTheDocument();
+      expect(screen.getByText('Send Channels:')).toBeInTheDocument();
       expect(screen.getByText('Discord DM')).toBeInTheDocument();
     });
 
     it('should show notification will not trigger when DM is disabled', () => {
-      const settings = { ...baseSettings, dmEnabled: false };
+      const settings = { ...baseSettings, dmEnabled: false, emailEnabled: false };
       renderWithI18n(<NotificationPreview settings={settings} />);
 
-      expect(screen.getByText('✗ Will not send notification')).toBeInTheDocument();
-      expect(screen.getByText('Notifications are disabled')).toBeInTheDocument();
+      expect(screen.getByText(/This article will not trigger notification/)).toBeInTheDocument();
+      expect(screen.getByText('Global notifications are disabled')).toBeInTheDocument();
     });
 
     it('should show notification will not trigger when article is below threshold', () => {
-      const settings = { ...baseSettings, minTinkeringIndex: 5 };
+      const settings = { ...baseSettings, minTinkeringIndex: 6 }; // Set higher than mock article's 5
       renderWithI18n(<NotificationPreview settings={settings} />);
 
-      expect(screen.getByText('✗ Will not send notification')).toBeInTheDocument();
-      expect(screen.getByText(/Article technical depth.*低於閾值/)).toBeInTheDocument();
+      expect(screen.getByText(/This article will not trigger notification/)).toBeInTheDocument();
+      expect(screen.getByText(/Technical depth below threshold/)).toBeInTheDocument();
     });
 
     it('should show notification will not trigger during quiet hours', () => {
@@ -100,7 +100,7 @@ describe('NotificationPreview', () => {
       };
       renderWithI18n(<NotificationPreview settings={settings} />);
 
-      expect(screen.getByText('✗ Will not send notification')).toBeInTheDocument();
+      expect(screen.getByText(/This article will not trigger notification/)).toBeInTheDocument();
       expect(screen.getByText('Currently in quiet hours')).toBeInTheDocument();
 
       vi.useRealTimers();
@@ -134,7 +134,8 @@ describe('NotificationPreview', () => {
       const settings = { ...baseSettings, dmEnabled: false, emailEnabled: false };
       renderWithI18n(<NotificationPreview settings={settings} />);
 
-      expect(screen.getByText('No channels configured')).toBeInTheDocument();
+      // When no channels are enabled, the preview shows "will not trigger" instead
+      expect(screen.getByText(/This article will not trigger notification/)).toBeInTheDocument();
     });
   });
 

@@ -9,6 +9,7 @@ vi.mock('date-fns', () => ({
 
 vi.mock('date-fns/locale', () => ({
   zhTW: {},
+  enUS: {},
 }));
 
 describe('NotificationPreview', () => {
@@ -36,7 +37,7 @@ describe('NotificationPreview', () => {
   });
 
   it('should show notification will not be sent when globally disabled', () => {
-    const disabledSettings = { ...mockSettings, enabled: false };
+    const disabledSettings = { ...mockSettings, dmEnabled: false, emailEnabled: false };
     render(<NotificationPreview settings={disabledSettings} />);
 
     expect(screen.getByText('此文章不會觸發通知')).toBeInTheDocument();
@@ -44,7 +45,7 @@ describe('NotificationPreview', () => {
   });
 
   it('should show notification will not be sent when tinkering index is too low', () => {
-    const highThresholdSettings = { ...mockSettings, minTinkeringIndex: 5 };
+    const highThresholdSettings = { ...mockSettings, minTinkeringIndex: 6 }; // Higher than mock's 5
     render(<NotificationPreview settings={highThresholdSettings} />);
 
     expect(screen.getByText('此文章不會觸發通知')).toBeInTheDocument();

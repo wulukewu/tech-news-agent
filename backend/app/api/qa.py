@@ -127,7 +127,7 @@ class CreateConversationResponse(BaseModel):
     """Response for conversation creation endpoint."""
 
     conversation_id: str
-    query_result: Optional[QAQueryResponse] = None
+    query_result: Optional[dict] = None  # Changed from QAQueryResponse to dict for flexibility
 
 
 # ============================================================================
@@ -243,7 +243,7 @@ async def create_conversation(
         return success_response(
             CreateConversationResponse(
                 conversation_id=conversation_id,
-                query_result=query_result,
+                query_result=query_result.model_dump() if query_result else None,
             )
         )
 

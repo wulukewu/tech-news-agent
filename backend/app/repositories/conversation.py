@@ -278,7 +278,7 @@ class ConversationRepository(ConvArchiveMixin):
             query = (
                 self.client.table(self.TABLE)
                 .select(
-                    "id, title, summary, platform, created_at, last_message_at, "
+                    "id, user_id, title, summary, platform, created_at, last_message_at, "
                     "message_count, tags, is_favorite, is_archived, metadata"
                 )
                 .eq("user_id", str(user_id))
