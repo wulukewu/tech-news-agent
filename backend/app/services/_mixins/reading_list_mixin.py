@@ -433,7 +433,7 @@ class ReadingListMixin:
             query = (
                 self.client.table("reading_list")
                 .select(
-                    "article_id, status, rating, added_at, updated_at, articles(id, title, url, feeds(category))"
+                    "article_id, status, rating, added_at, updated_at, source, articles(id, title, url, feeds(category))"
                 )
                 .eq("user_id", str(user_uuid))
             )
@@ -485,6 +485,7 @@ class ReadingListMixin:
                         updated_at=datetime.fromisoformat(
                             item_data["updated_at"].replace("Z", "+00:00")
                         ),
+                        source=item_data.get("source", "web"),
                     )
                     items.append(reading_list_item)
                 except Exception as e:
@@ -550,7 +551,7 @@ class ReadingListMixin:
             response = (
                 self.client.table("reading_list")
                 .select(
-                    "article_id, status, rating, added_at, updated_at, articles(id, title, url, feeds(category))"
+                    "article_id, status, rating, added_at, updated_at, source, articles(id, title, url, feeds(category))"
                 )
                 .eq("user_id", str(user_uuid))
                 .gte("rating", threshold)
@@ -592,6 +593,7 @@ class ReadingListMixin:
                         updated_at=datetime.fromisoformat(
                             item_data["updated_at"].replace("Z", "+00:00")
                         ),
+                        source=item_data.get("source", "web"),
                     )
                     items.append(reading_list_item)
                 except Exception as e:
