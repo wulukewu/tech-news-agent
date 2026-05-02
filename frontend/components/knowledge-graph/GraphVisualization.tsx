@@ -222,7 +222,14 @@ export function GraphVisualization({
     if (highlightNodeId) {
       simulation.on('end', () => {
         const target = simNodes.find((n) => n.id === highlightNodeId);
-        if (target && target.x !== null && target.y !== null && svgRef.current) {
+        if (
+          target &&
+          target.x !== null &&
+          target.x !== undefined &&
+          target.y !== null &&
+          target.y !== undefined &&
+          svgRef.current
+        ) {
           const w = svgRef.current.clientWidth || 800;
           const h = svgRef.current.clientHeight || 600;
           const scale = 1.5;
