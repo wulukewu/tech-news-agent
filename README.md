@@ -332,6 +332,22 @@ Trigger a personalized article recommendation sent to your DM immediately.
 /recommend_now
 ```
 
+#### `/stats`
+
+View your reading statistics: total saved, read/unread counts, average rating, and top categories.
+
+```
+/stats
+```
+
+#### `/export`
+
+Export your full reading list as a CSV file attachment.
+
+```
+/export
+```
+
 ### Notification Settings
 
 #### `/notifications`
