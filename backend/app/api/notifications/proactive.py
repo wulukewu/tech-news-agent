@@ -11,6 +11,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.auth import get_current_user
+from app.api.notifications.history import PROACTIVE_FREQUENCY_OPTIONS
 from app.schemas.responses import SuccessResponse, success_response
 from app.services.supabase_service import SupabaseService
 

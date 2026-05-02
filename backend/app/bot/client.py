@@ -71,20 +71,23 @@ class TechNewsBot(commands.Bot):
 
             settings = get_settings()
             if settings.dev_guild_id:
-                # Clear global commands so prod bot handles them exclusively
-                await self.tree.clear_commands(guild=None)
-                synced = await self.tree.sync() or []
-                # Guild-specific sync: commands only visible in this guild,
-                # preventing dev bot from competing with prod on global interactions
-                guild = discord.Object(id=settings.dev_guild_id)
+                guild = discord.Object(id=int(settings.dev_guild_id))
                 self.tree.copy_global_to(guild=guild)
-                synced = await self.tree.sync(guild=guild)
-                logger.info(
-                    f"Synced {len(synced)} command(s) to dev guild {settings.dev_guild_id}."
-                )
+                coro = self.tree.sync(guild=guild)
+                if coro is not None:
+                    synced = await coro
+                    logger.info(
+                        f"Synced {len(synced)} command(s) to dev guild {settings.dev_guild_id}."
+                    )
+                else:
+                    logger.warning("tree.sync(guild=...) returned None — skipping guild sync.")
             else:
-                synced = await self.tree.sync()
-                logger.info(f"Successfully synced {len(synced)} slash command(s).")
+                coro = self.tree.sync()
+                if coro is not None:
+                    synced = await coro
+                    logger.info(f"Successfully synced {len(synced)} slash command(s).")
+                else:
+                    logger.warning("tree.sync() returned None — skipping global sync.")
         except Exception as e:
             logger.error(f"Failed to sync slash commands: {e}")
         logger.info("Discord Bot is fully ready and listening.")
