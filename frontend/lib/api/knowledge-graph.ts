@@ -87,6 +87,17 @@ export async function getRecommendations(
   return res.data;
 }
 
+export async function getNodeArticles(nodeId: string, limit = 5) {
+  const res = await apiClient.get(`/api/knowledge-graph/nodes/${nodeId}/articles?limit=${limit}`);
+  return res.data as Array<{
+    id: string;
+    title: string;
+    url: string;
+    published_at: string;
+    reading_status: string | null;
+  }>;
+}
+
 export async function createDomain(data: {
   name: string;
   display_name: string;

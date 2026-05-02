@@ -18,12 +18,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Lightbulb, Trophy, Clock, Loader2, Lock, Network } from 'lucide-react';
+import {
+  ArrowLeft,
+  Lightbulb,
+  Trophy,
+  Clock,
+  Loader2,
+  Lock,
+  Network,
+  ExternalLink,
+} from 'lucide-react';
 import {
   getDomainGraph,
   getDomainProgress,
   getRecommendations,
   updateNodeStatus,
+  getNodeArticles,
   type KnowledgeNode,
 } from '@/lib/api/knowledge-graph';
 import { GraphVisualization } from '@/components/knowledge-graph/GraphVisualization';
@@ -298,6 +308,8 @@ export default function DomainGraphPage() {
                   </div>
                 )}
 
+                <RelatedArticles nodeId={selectedNode.id} />
+
                 {selectedNode.is_unlocked ? (
                   <div className="space-y-2 pt-1">
                     <p className="text-sm font-medium">{t('knowledge-graph.update-status')}</p>
@@ -332,6 +344,46 @@ export default function DomainGraphPage() {
           )}
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function RelatedArticles({ nodeId }: { nodeId: string }) {
+  const { data: articles = [], isLoading } = useQuery({
+    queryKey: ['knowledge-graph', 'node-articles', nodeId],
+    queryFn: () => getNodeArticles(nodeId),
+  });
+
+  if (isLoading) return <div className="h-4 w-24 bg-muted animate-pulse rounded" />;
+  if (articles.length === 0) return null;
+
+  return (
+    <div className="space-y-1.5">
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+        Related Articles ({articles.length})
+      </p>
+      <div className="space-y-1">
+        {articles.map((a) => (
+          <a
+            key={a.id}
+            href={a.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-start gap-2 text-xs p-2 rounded-md hover:bg-muted transition-colors group"
+          >
+            <ExternalLink className="h-3 w-3 mt-0.5 flex-shrink-0 text-muted-foreground group-hover:text-primary" />
+            <span className="line-clamp-2 flex-1">{a.title}</span>
+            {a.reading_status === 'read' && (
+              <Badge
+                variant="outline"
+                className="text-[10px] px-1 py-0 h-4 flex-shrink-0 text-green-600 border-green-200"
+              >
+                Read
+              </Badge>
+            )}
+          </a>
+        ))}
+      </div>
     </div>
   );
 }

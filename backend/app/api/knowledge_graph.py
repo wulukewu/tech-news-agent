@@ -183,6 +183,64 @@ async def rebuild_domain(
     return domain.to_dict()
 
 
+@router.get("/nodes/{node_id}/articles")
+async def get_node_articles(
+    node_id: str,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    limit: int = Query(default=5, ge=1, le=20),
+    db: GraphDatabase = Depends(_get_db),
+) -> List[Dict]:
+    """
+    Get articles related to a knowledge node via keyword matching.
+    TODO: Upgrade to embedding-based semantic search once article embeddings are populated.
+    See docs/improvements/knowledge-graph-article-linking.md
+    """
+    user_id = current_user["user_id"]
+
+    # Get node info
+    result = db.db.client.table("knowledge_nodes").select("*").eq("id", node_id).execute()
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Node not found")
+
+    node = result.data[0]
+    # Build search terms from node name and tags
+    terms = [node["display_name"], node["name"].replace("_", " ")]
+    tags = node.get("tags") or []
+    terms.extend(tags[:3])
+
+    # Keyword search across user's subscribed articles
+    # Use ilike for case-insensitive partial match on title
+    matched_articles = []
+    seen_ids: set = set()
+
+    for term in terms:
+        if len(matched_articles) >= limit:
+            break
+        res = (
+            db.db.client.table("articles")
+            .select("id, title, url, published_at, feed_id")
+            .ilike("title", f"%{term}%")
+            .order("published_at", desc=True)
+            .limit(limit)
+            .execute()
+        )
+        for row in res.data or []:
+            if row["id"] not in seen_ids:
+                seen_ids.add(row["id"])
+                # Check if user has this in reading list
+                rl = (
+                    db.db.client.table("reading_list")
+                    .select("status")
+                    .eq("user_id", str(user_id))
+                    .eq("article_id", row["id"])
+                    .execute()
+                )
+                row["reading_status"] = rl.data[0]["status"] if rl.data else None
+                matched_articles.append(row)
+
+    return matched_articles[:limit]
+
+
 # ── GraphML export helper ─────────────────────────────────────────────────────
 
 
