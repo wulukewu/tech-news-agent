@@ -57,6 +57,13 @@ export default function DomainGraphPage() {
   const [mobileTab, setMobileTab] = useState<'graph' | 'steps' | 'progress'>('graph');
   const [searchQuery, setSearchQuery] = useState('');
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
+  const [headerHeight, setHeaderHeight] = useState(64);
+
+  // Measure actual header height for accurate fullscreen positioning
+  useEffect(() => {
+    const header = document.getElementById('app-header');
+    if (header) setHeaderHeight(header.offsetHeight);
+  }, []);
 
   const STATUS_LABELS: Record<string, string> = {
     not_started: t('knowledge-graph.not-started'),
@@ -128,9 +135,9 @@ export default function DomainGraphPage() {
     <>
       {/* On mobile: fixed overlay to escape AppLayout padding */}
       <style>{`
-        .kg-page { display: flex; flex-direction: column; height: calc(100dvh - 64px); }
+        .kg-page { display: flex; flex-direction: column; height: calc(100dvh - ${headerHeight}px); }
         @media (max-width: 1023px) {
-          .kg-page { position: fixed; inset: 64px 0 0 0; height: auto; z-index: 30; background: var(--background); }
+          .kg-page { position: fixed; inset: ${headerHeight}px 0 0 0; height: auto; z-index: 30; background: var(--background); }
         }
       `}</style>
       <div className="-m-4 lg:-m-6 kg-page">

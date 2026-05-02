@@ -44,7 +44,10 @@ export function AppLayout({
     <div className={cn('min-h-screen flex flex-col bg-background', className)}>
       {/* Header */}
       {header && (
-        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <header
+          id="app-header"
+          className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+        >
           <div className="container mx-auto">{header}</div>
         </header>
       )}
