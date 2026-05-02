@@ -1,17 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-  Brain,
-  RefreshCw,
-  ToggleLeft,
-  ToggleRight,
-  Send,
-  ChevronDown,
-  ChevronUp,
-  Save,
-} from 'lucide-react';
+import { Brain, ToggleLeft, ToggleRight, Send, ChevronDown, ChevronUp, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { RefreshButton } from '@/components/ui/refresh-button';
 import { toast } from '@/lib/toast';
 import {
   getPendingConversations,
@@ -215,20 +207,14 @@ export default function PreferencesPage() {
           <p className="text-sm text-muted-foreground mt-1">{t('preferences.description')}</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
+          <RefreshButton
+            isLoading={triggering}
             onClick={handleTrigger}
-            disabled={triggering || settings?.learning_enabled === false}
-            className="transition-all duration-200 hover:scale-[1.02]"
-            aria-label={t('preferences.analyse-now')}
+            disabled={settings?.learning_enabled === false}
+            size="sm"
           >
-            <RefreshCw
-              className={`h-4 w-4 mr-1.5 transition-transform duration-200 ${triggering ? 'animate-[spin_3s_linear_infinite]' : 'hover:rotate-180'}`}
-              aria-hidden="true"
-            />
             {t('preferences.analyse-now')}
-          </Button>
+          </RefreshButton>
         </div>
       </div>
 

@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { AlertCircle, RefreshCw, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { AlertCircle, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { RefreshButton } from '@/components/ui/refresh-button';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { toast } from '@/lib/toast';
@@ -72,18 +73,9 @@ export default function SystemStatusSettingsPage() {
           <h1 className="text-2xl font-bold">{t('pages.system-status.title')}</h1>
           <p className="text-muted-foreground text-sm">{t('pages.system-status.description')}</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => refetch()}
-          disabled={isLoading}
-          className="transition-all duration-200 hover:scale-[1.02] animate-in zoom-in-50 duration-500 delay-200"
-        >
-          <RefreshCw
-            className={`h-4 w-4 mr-2 transition-transform duration-200 ${isLoading ? 'animate-[spin_3s_linear_infinite]' : 'hover:rotate-180'}`}
-          />
+        <RefreshButton isLoading={isLoading} onClick={() => refetch()}>
           {t('pages.system-status.refresh')}
-        </Button>
+        </RefreshButton>
       </div>
 
       {isLoading ? (
