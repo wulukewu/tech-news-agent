@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import type { KnowledgeNode, GraphEdge } from '@/lib/api/knowledge-graph';
 
@@ -30,8 +30,11 @@ export function GraphVisualization({
   highlightNodeId,
 }: GraphVisualizationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
-  const handleNodeClick = useCallback(onNodeClick, [onNodeClick]);
-  // Store zoom behavior ref so we can programmatically zoom
+  // Use ref so D3 useEffect doesn't re-run when callback identity changes
+  const onNodeClickRef = useRef(onNodeClick);
+  useEffect(() => {
+    onNodeClickRef.current = onNodeClick;
+  }, [onNodeClick]);
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
   const nodeGroupRef = useRef<d3.Selection<SVGGElement, unknown, null, undefined> | null>(null);
 
@@ -127,7 +130,7 @@ export function GraphVisualization({
             d.fy = null;
           }) as any
       )
-      .on('click', (_event, d) => handleNodeClick(d));
+      .on('click', (_event, d) => onNodeClickRef.current(d));
 
     node
       .append('circle')
@@ -247,7 +250,7 @@ export function GraphVisualization({
       simulation.stop();
       tooltip.remove();
     };
-  }, [nodes, edges, handleNodeClick, highlightNodeId]);
+  }, [nodes, edges, highlightNodeId]);
 
   return (
     <svg
