@@ -51,7 +51,7 @@ export function RefreshButton({
           'h-4 w-4',
           children && 'mr-2',
           'transition-transform duration-200',
-          isLoading && '[animation:spin-slow_3s_linear_infinite]'
+          isLoading && '[animation:spin-slow_2s_linear_infinite]'
         )}
       />
       {children}
