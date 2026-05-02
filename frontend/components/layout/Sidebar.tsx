@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Rss, BookMarked, Menu, X, Bell } from 'lucide-react';
+import { Home, Rss, BookMarked, Menu, X, Bell, Network } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { useUser } from '@/contexts/UserContext';
@@ -34,6 +34,7 @@ const defaultNavigation: NavigationItem[] = [
   { href: '/app/articles', labelKey: 'nav.articles', icon: Home, shortcut: 'D' },
   { href: '/app/reading-list', labelKey: 'nav.reading-list', icon: BookMarked, shortcut: 'R' },
   { href: '/app/subscriptions', labelKey: 'nav.subscriptions', icon: Rss, shortcut: 'S' },
+  { href: '/app/knowledge-graph', labelKey: 'nav.knowledge-graph', icon: Network, shortcut: 'K' },
   { href: '/app/settings', labelKey: 'nav.settings', icon: Bell, shortcut: 'N' },
 ];
 

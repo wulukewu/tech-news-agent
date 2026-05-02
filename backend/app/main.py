@@ -392,6 +392,11 @@ from app.api import reminder_settings as reminder_settings_api
 app.include_router(reminder_settings_api.router, tags=["reminders"])
 app.include_router(intelligent_reminder_api.router, tags=["intelligent-reminders"])
 
+# Import and register Knowledge Graph router
+from app.api import knowledge_graph as knowledge_graph_api
+
+app.include_router(knowledge_graph_api.router, tags=["knowledge-graph"])
+
 # Import and register Platforms router (user platform linking + sync)
 from app.api import platforms as platforms_api
 
