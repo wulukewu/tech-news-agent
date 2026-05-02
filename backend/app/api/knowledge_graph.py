@@ -183,6 +183,35 @@ async def rebuild_domain(
     return domain.to_dict()
 
 
+@router.delete("/domains/{domain_name}")
+async def delete_domain(
+    domain_name: str,
+    current_user: Dict[str, Any] = Depends(get_current_user),
+    db: GraphDatabase = Depends(_get_db),
+) -> Dict:
+    """Delete a custom domain (only domains created by the current user)."""
+    user_id = current_user["user_id"]
+    domain = await db.get_domain_by_name(domain_name, user_id)
+
+    if not domain:
+        raise HTTPException(status_code=404, detail=f"Domain '{domain_name}' not found")
+    if domain.is_builtin:
+        raise HTTPException(status_code=403, detail="Built-in domains cannot be deleted")
+
+    # Verify ownership
+    result = (
+        db.db.client.table("technical_domains")
+        .select("created_by")
+        .eq("id", str(domain.id))
+        .execute()
+    )
+    if not result.data or str(result.data[0].get("created_by")) != str(user_id):
+        raise HTTPException(status_code=403, detail="You can only delete your own domains")
+
+    db.db.client.table("technical_domains").delete().eq("id", str(domain.id)).execute()
+    return {"success": True, "deleted": domain_name}
+
+
 @router.get("/nodes/{node_id}/articles")
 async def get_node_articles(
     node_id: str,

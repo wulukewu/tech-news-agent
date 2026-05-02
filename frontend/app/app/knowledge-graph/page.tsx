@@ -20,9 +20,23 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, BookOpen, ChevronRight, Loader2, Network, Sparkles, Box } from 'lucide-react';
+import {
+  Plus,
+  BookOpen,
+  ChevronRight,
+  Loader2,
+  Network,
+  Sparkles,
+  Box,
+  Trash2,
+} from 'lucide-react';
 import { getDomains, createDomain, type TechnicalDomain } from '@/lib/api/knowledge-graph';
 import type { TranslationFunction } from '@/types/i18n';
+
+async function deleteDomain(name: string) {
+  const { apiClient } = await import('@/lib/api/client');
+  await apiClient.delete(`/api/knowledge-graph/domains/${name}`);
+}
 
 export default function KnowledgeGraphPage() {
   const { user } = useUser();
@@ -53,6 +67,11 @@ export default function KnowledgeGraphPage() {
       setNewDomain({ display_name: '', description: '' });
       router.push(`/app/knowledge-graph/${domain.name}`);
     },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteDomain,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['knowledge-graph', 'domains'] }),
   });
 
   const handleCreate = () => {
@@ -175,6 +194,11 @@ export default function KnowledgeGraphPage() {
               key={domain.id}
               domain={domain}
               onClick={() => router.push(`/app/knowledge-graph/${domain.name}`)}
+              onDelete={() => {
+                if (confirm(`Delete "${domain.display_name}"?`)) {
+                  deleteMutation.mutate(domain.name);
+                }
+              }}
               t={t}
             />
           ))}
@@ -187,10 +211,12 @@ export default function KnowledgeGraphPage() {
 function DomainCard({
   domain,
   onClick,
+  onDelete,
   t,
 }: {
   domain: TechnicalDomain;
   onClick: () => void;
+  onDelete: () => void;
   t: TranslationFunction;
 }) {
   const started = domain.user_progress_pct > 0;
@@ -224,7 +250,23 @@ function DomainCard({
               </div>
             </div>
           </div>
-          <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5 group-hover:text-primary transition-colors" />
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {!domain.is_builtin && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDelete();
+                }}
+                aria-label="Delete domain"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </Button>
+            )}
+            <ChevronRight className="h-4 w-4 text-muted-foreground mt-0.5 group-hover:text-primary transition-colors" />
+          </div>
         </div>
       </CardHeader>
       <CardContent className="px-4 pb-4">
