@@ -82,7 +82,7 @@ export default function DomainGraphPage() {
   if (!user) return null;
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="-m-4 lg:-m-6 flex flex-col" style={{ height: 'calc(100vh - 64px)' }}>
       {/* Top bar */}
       <div className="flex items-center gap-4 px-4 py-3 border-b bg-background">
         <Button variant="ghost" size="icon" onClick={() => router.push('/app/knowledge-graph')}>
