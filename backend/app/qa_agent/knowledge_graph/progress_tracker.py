@@ -31,6 +31,48 @@ class ProgressTracker:
         if status == NodeStatus.COMPLETED:
             await self._check_badges(user_id, node_id)
 
+    async def sync_from_reading_list(self, user_id: UUID, article_id: str) -> None:
+        """
+        Auto-update node progress when a user reads an article.
+        Finds nodes whose display_name appears in the article title,
+        marks them as in_progress if currently not_started.
+        TODO: upgrade to embedding similarity once node embeddings are populated.
+        """
+        import logging as _logging
+
+        _log = _logging.getLogger(__name__)
+        try:
+            result = (
+                self.db.db.client.table("articles").select("title").eq("id", article_id).execute()
+            )
+            if not result.data:
+                return
+            title = result.data[0].get("title", "").lower()
+            if not title:
+                return
+
+            nodes_result = (
+                self.db.db.client.table("knowledge_nodes").select("id, display_name").execute()
+            )
+            for node in nodes_result.data or []:
+                node_name = (node.get("display_name") or "").lower()
+                if not node_name or node_name not in title:
+                    continue
+                node_id = UUID(node["id"])
+                cur = (
+                    self.db.db.client.table("user_node_progress")
+                    .select("status")
+                    .eq("user_id", str(user_id))
+                    .eq("node_id", str(node_id))
+                    .execute()
+                )
+                current = NodeStatus(cur.data[0]["status"]) if cur.data else NodeStatus.NOT_STARTED
+                if current == NodeStatus.NOT_STARTED:
+                    await self.mark_node(user_id, node_id, NodeStatus.IN_PROGRESS)
+                    _log.info(f"Auto-marked node {node_id} as in_progress for user {user_id}")
+        except Exception as e:
+            _log.warning(f"sync_from_reading_list failed: {e}")
+
     async def get_domain_progress(
         self, user_id: UUID, domain_id: UUID, domain_name: str
     ) -> DomainProgress:

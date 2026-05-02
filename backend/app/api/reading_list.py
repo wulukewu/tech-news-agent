@@ -456,6 +456,16 @@ async def update_reading_list_status(
             },
         )
 
+        # Auto-sync knowledge graph node progress when article is marked as read
+        if request.status.lower() == "read":
+            try:
+                from app.qa_agent.knowledge_graph.progress_tracker import ProgressTracker
+
+                tracker = ProgressTracker()
+                await tracker.sync_from_reading_list(user_uuid, str(article_id))
+            except Exception as sync_err:
+                logger.warning(f"Knowledge graph sync failed (non-critical): {sync_err}")
+
         return success_response(
             MessageResponse(
                 message="Status updated successfully", article_id=article_id, status=request.status

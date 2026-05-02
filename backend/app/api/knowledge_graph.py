@@ -191,8 +191,9 @@ async def get_node_articles(
     db: GraphDatabase = Depends(_get_db),
 ) -> List[Dict]:
     """
-    Get articles related to a knowledge node via keyword matching.
-    TODO: Upgrade to embedding-based semantic search once article embeddings are populated.
+    Get articles related to a knowledge node.
+    Uses semantic search (pgvector cosine similarity) when node embedding exists,
+    falls back to keyword matching otherwise.
     See docs/improvements/knowledge-graph-article-linking.md
     """
     user_id = current_user["user_id"]
@@ -203,40 +204,56 @@ async def get_node_articles(
         raise HTTPException(status_code=404, detail="Node not found")
 
     node = result.data[0]
-    # Build search terms from node name and tags
-    terms = [node["display_name"], node["name"].replace("_", " ")]
-    tags = node.get("tags") or []
-    terms.extend(tags[:3])
+    node_embedding = node.get("embedding")
 
-    # Keyword search across user's subscribed articles
-    # Use ilike for case-insensitive partial match on title
-    matched_articles = []
-    seen_ids: set = set()
+    matched_articles: List[Dict] = []
 
-    for term in terms:
-        if len(matched_articles) >= limit:
-            break
-        res = (
-            db.db.client.table("articles")
-            .select("id, title, url, published_at, feed_id")
-            .ilike("title", f"%{term}%")
-            .order("published_at", desc=True)
-            .limit(limit)
+    # ── Semantic search (preferred) ───────────────────────────────────────────
+    if node_embedding:
+        try:
+            sem_result = db.db.client.rpc(
+                "match_articles_by_embedding",
+                {
+                    "query_embedding": node_embedding,
+                    "match_threshold": 0.6,
+                    "match_count": limit,
+                },
+            ).execute()
+            matched_articles = sem_result.data or []
+        except Exception:
+            pass  # Fall through to keyword search
+
+    # ── Keyword fallback ──────────────────────────────────────────────────────
+    if not matched_articles:
+        terms = [node["display_name"], node["name"].replace("_", " ")]
+        terms.extend((node.get("tags") or [])[:3])
+        seen_ids: set = set()
+        for term in terms:
+            if len(matched_articles) >= limit:
+                break
+            res = (
+                db.db.client.table("articles")
+                .select("id, title, url, published_at")
+                .ilike("title", f"%{term}%")
+                .order("published_at", desc=True)
+                .limit(limit)
+                .execute()
+            )
+            for row in res.data or []:
+                if row["id"] not in seen_ids:
+                    seen_ids.add(row["id"])
+                    matched_articles.append(row)
+
+    # ── Attach reading status ─────────────────────────────────────────────────
+    for article in matched_articles[:limit]:
+        rl = (
+            db.db.client.table("reading_list")
+            .select("status")
+            .eq("user_id", str(user_id))
+            .eq("article_id", article["id"])
             .execute()
         )
-        for row in res.data or []:
-            if row["id"] not in seen_ids:
-                seen_ids.add(row["id"])
-                # Check if user has this in reading list
-                rl = (
-                    db.db.client.table("reading_list")
-                    .select("status")
-                    .eq("user_id", str(user_id))
-                    .eq("article_id", row["id"])
-                    .execute()
-                )
-                row["reading_status"] = rl.data[0]["status"] if rl.data else None
-                matched_articles.append(row)
+        article["reading_status"] = rl.data[0]["status"] if rl.data else None
 
     return matched_articles[:limit]
 
