@@ -30,7 +30,14 @@ export default function KnowledgeGraphPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [newDomain, setNewDomain] = useState({ name: '', display_name: '', description: '' });
+  const [newDomain, setNewDomain] = useState({ display_name: '', description: '' });
+
+  // Auto-generate slug from display name
+  const autoSlug = newDomain.display_name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 
   const { data: domains = [], isLoading } = useQuery({
     queryKey: ['knowledge-graph', 'domains'],
@@ -43,16 +50,15 @@ export default function KnowledgeGraphPage() {
     onSuccess: (domain) => {
       queryClient.invalidateQueries({ queryKey: ['knowledge-graph', 'domains'] });
       setDialogOpen(false);
-      setNewDomain({ name: '', display_name: '', description: '' });
-      // Navigate directly to the new domain
+      setNewDomain({ display_name: '', description: '' });
       router.push(`/app/knowledge-graph/${domain.name}`);
     },
   });
 
   const handleCreate = () => {
-    if (!newDomain.name || !newDomain.display_name) return;
+    if (!newDomain.display_name || !autoSlug) return;
     createMutation.mutate({
-      name: newDomain.name.toLowerCase().replace(/\s+/g, '-'),
+      name: autoSlug,
       display_name: newDomain.display_name,
       description: newDomain.description,
     });
@@ -88,19 +94,7 @@ export default function KnowledgeGraphPage() {
               <DialogTitle>{t('knowledge-graph.create-domain-title')}</DialogTitle>
               <DialogDescription>{t('knowledge-graph.create-domain-subtitle')}</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 pt-1">
-              <div className="space-y-1.5">
-                <Label htmlFor="domain-name">{t('knowledge-graph.domain-id-label')}</Label>
-                <Input
-                  id="domain-name"
-                  placeholder={t('knowledge-graph.domain-id-placeholder')}
-                  value={newDomain.name}
-                  onChange={(e) => setNewDomain((p) => ({ ...p, name: e.target.value }))}
-                />
-                <p className="text-xs text-muted-foreground">
-                  {t('knowledge-graph.domain-id-hint')}
-                </p>
-              </div>
+            <div className="space-y-4 pt-1 pb-2">
               <div className="space-y-1.5">
                 <Label htmlFor="domain-display">{t('knowledge-graph.display-name-label')}</Label>
                 <Input
@@ -109,6 +103,11 @@ export default function KnowledgeGraphPage() {
                   value={newDomain.display_name}
                   onChange={(e) => setNewDomain((p) => ({ ...p, display_name: e.target.value }))}
                 />
+                {autoSlug && (
+                  <p className="text-xs text-muted-foreground">
+                    ID: <code className="bg-muted px-1 rounded">{autoSlug}</code>
+                  </p>
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="domain-desc">{t('knowledge-graph.description-label')}</Label>
@@ -126,7 +125,7 @@ export default function KnowledgeGraphPage() {
               <Button
                 className="w-full"
                 onClick={handleCreate}
-                disabled={createMutation.isPending || !newDomain.name || !newDomain.display_name}
+                disabled={createMutation.isPending || !newDomain.display_name || !autoSlug}
               >
                 {createMutation.isPending ? (
                   <>
