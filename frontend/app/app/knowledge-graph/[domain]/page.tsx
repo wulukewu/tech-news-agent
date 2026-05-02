@@ -182,23 +182,28 @@ export default function DomainGraphPage() {
           <div className="flex-1 relative bg-muted/20">
             {graphLoading ? (
               <div className="flex items-center justify-center h-full">
-                <div className="text-center space-y-4 max-w-xs px-4">
-                  <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" />
-                  <div>
-                    <p className="text-sm font-medium">{loadingMessages[loadingMsgIdx]}</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      This usually takes 15–30 seconds
-                    </p>
+                {/* Distinguish: first load (possibly AI generating) vs refetch */}
+                {!graph || graph.nodes.length === 0 ? (
+                  <div className="text-center space-y-4 max-w-xs px-4">
+                    <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" />
+                    <div>
+                      <p className="text-sm font-medium">{loadingMessages[loadingMsgIdx]}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        This usually takes 15–30 seconds
+                      </p>
+                    </div>
+                    <div className="flex justify-center gap-1">
+                      {loadingMessages.map((_, i) => (
+                        <div
+                          key={i}
+                          className={`h-1 w-6 rounded-full transition-colors duration-300 ${i === loadingMsgIdx ? 'bg-primary' : 'bg-muted'}`}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex justify-center gap-1">
-                    {loadingMessages.map((_, i) => (
-                      <div
-                        key={i}
-                        className={`h-1 w-6 rounded-full transition-colors duration-300 ${i === loadingMsgIdx ? 'bg-primary' : 'bg-muted'}`}
-                      />
-                    ))}
-                  </div>
-                </div>
+                ) : (
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                )}
               </div>
             ) : graph ? (
               <GraphVisualization
