@@ -104,7 +104,17 @@ export default function DomainGraphPage() {
       if (selectedNode && selectedNode.id === variables.nodeId) {
         setSelectedNode({ ...selectedNode, status: variables.status });
       }
-      queryClient.invalidateQueries({ queryKey: ['knowledge-graph', 'graph', domainName] });
+      // Update graph nodes in-place via queryClient setQueryData to avoid full re-render
+      queryClient.setQueryData(['knowledge-graph', 'graph', domainName], (old: typeof graph) => {
+        if (!old) return old;
+        return {
+          ...old,
+          nodes: old.nodes.map((n) =>
+            n.id === variables.nodeId ? { ...n, status: variables.status } : n
+          ),
+        };
+      });
+      // Only invalidate progress + recommendations (don't re-fetch graph)
       queryClient.invalidateQueries({ queryKey: ['knowledge-graph', 'progress', domainName] });
       queryClient.invalidateQueries({
         queryKey: ['knowledge-graph', 'recommendations', domainName],
@@ -115,7 +125,10 @@ export default function DomainGraphPage() {
   if (!user) return null;
 
   return (
-    <div className="-m-4 lg:-m-6 flex flex-col" style={{ height: 'calc(100vh - 64px)' }}>
+    <div
+      className="-m-4 lg:-m-6 -mb-16 lg:-mb-0 flex flex-col"
+      style={{ height: 'calc(100dvh - 64px)' }}
+    >
       {/* Top bar */}
       <div className="flex items-center gap-4 px-4 py-3 border-b bg-background">
         <Button variant="ghost" size="icon" onClick={() => router.push('/app/knowledge-graph')}>

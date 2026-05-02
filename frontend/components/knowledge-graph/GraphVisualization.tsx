@@ -30,14 +30,33 @@ export function GraphVisualization({
   highlightNodeId,
 }: GraphVisualizationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
-  // Use ref so D3 useEffect doesn't re-run when callback identity changes
+
+  // Keep callback in ref so D3 effect doesn't re-run when it changes
   const onNodeClickRef = useRef(onNodeClick);
   useEffect(() => {
     onNodeClickRef.current = onNodeClick;
   }, [onNodeClick]);
-  const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
-  const nodeGroupRef = useRef<d3.Selection<SVGGElement, unknown, null, undefined> | null>(null);
 
+  // Stable structure key — only rebuild D3 when node IDs or edges change
+  const structureKey =
+    nodes.map((n) => n.id).join(',') + '|' + edges.map((e) => e.source + e.target).join(',');
+
+  // ── Lightweight color update (no simulation restart) ──────────────────────
+  useEffect(() => {
+    if (!svgRef.current) return;
+    const svg = d3.select(svgRef.current);
+    nodes.forEach((node) => {
+      svg
+        .selectAll<SVGCircleElement, unknown>(`circle[data-id="${node.id}"]`)
+        .attr('fill', STATUS_COLORS[node.status])
+        .attr('stroke', node.id === highlightNodeId ? '#6366f1' : STATUS_STROKE[node.status])
+        .attr('stroke-width', node.id === highlightNodeId ? 3 : node.is_unlocked ? 2 : 1)
+        .attr('opacity', node.is_unlocked || node.status !== 'not_started' ? 1 : 0.5);
+    });
+  }, [nodes, highlightNodeId]);
+
+  // ── Full D3 rebuild (only when structure changes) ─────────────────────────
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!svgRef.current || nodes.length === 0) return;
 
@@ -47,17 +66,13 @@ export function GraphVisualization({
     const width = svgRef.current.clientWidth || 800;
     const height = svgRef.current.clientHeight || 600;
 
-    // Zoom container
     const g = svg.append('g');
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.2, 3])
       .on('zoom', (event) => g.attr('transform', event.transform));
     svg.call(zoom);
-    zoomRef.current = zoom;
-    nodeGroupRef.current = g as unknown as d3.Selection<SVGGElement, unknown, null, undefined>;
 
-    // Arrow marker
     svg
       .append('defs')
       .append('marker')
@@ -132,15 +147,17 @@ export function GraphVisualization({
       )
       .on('click', (_event, d) => onNodeClickRef.current(d));
 
+    // Main circle — use data-id for lightweight color updates
     node
       .append('circle')
+      .attr('data-id', (d) => d.id)
       .attr('r', (d) => 14 + d.difficulty * 2)
       .attr('fill', (d) => STATUS_COLORS[d.status])
       .attr('stroke', (d) => (d.id === highlightNodeId ? '#6366f1' : STATUS_STROKE[d.status]))
       .attr('stroke-width', (d) => (d.id === highlightNodeId ? 3 : d.is_unlocked ? 2 : 1))
       .attr('opacity', (d) => (d.is_unlocked || d.status !== 'not_started' ? 1 : 0.5));
 
-    // Highlight ring for recommended node
+    // Highlight ring
     node
       .filter((d) => d.id === highlightNodeId)
       .append('circle')
@@ -151,6 +168,7 @@ export function GraphVisualization({
       .attr('stroke-dasharray', '4,3')
       .attr('opacity', 0.7);
 
+    // Lock indicator
     node
       .filter((d) => !d.is_unlocked && d.status === 'not_started')
       .append('text')
@@ -160,6 +178,7 @@ export function GraphVisualization({
       .attr('fill', '#64748b')
       .text('×');
 
+    // Completed checkmark
     node
       .filter((d) => d.status === 'completed')
       .append('text')
@@ -170,6 +189,7 @@ export function GraphVisualization({
       .attr('font-size', '13px')
       .text('✓');
 
+    // Labels
     node
       .append('text')
       .attr('dy', (d) => 20 + d.difficulty * 2)
@@ -181,10 +201,10 @@ export function GraphVisualization({
         d.display_name.length > 18 ? d.display_name.slice(0, 16) + '…' : d.display_name
       );
 
+    // Tooltip
     const tooltip = d3
       .select('body')
       .append('div')
-      .attr('class', 'kg-tooltip')
       .style('position', 'fixed')
       .style('background', 'rgba(0,0,0,0.85)')
       .style('color', 'white')
@@ -217,11 +237,10 @@ export function GraphVisualization({
         .attr('y1', (d) => (d.source as SimNode).y ?? 0)
         .attr('x2', (d) => (d.target as SimNode).x ?? 0)
         .attr('y2', (d) => (d.target as SimNode).y ?? 0);
-
       node.attr('transform', (d) => `translate(${d.x ?? 0},${d.y ?? 0})`);
     });
 
-    // After simulation settles, zoom to highlighted node
+    // Zoom to highlighted node after simulation settles
     if (highlightNodeId) {
       simulation.on('end', () => {
         const target = simNodes.find((n) => n.id === highlightNodeId);
@@ -236,12 +255,15 @@ export function GraphVisualization({
           const w = svgRef.current.clientWidth || 800;
           const h = svgRef.current.clientHeight || 600;
           const scale = 1.5;
-          const tx = w / 2 - scale * target.x;
-          const ty = h / 2 - scale * target.y;
           svg
             .transition()
             .duration(600)
-            .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+            .call(
+              zoom.transform,
+              d3.zoomIdentity
+                .translate(w / 2 - scale * target.x, h / 2 - scale * target.y)
+                .scale(scale)
+            );
         }
       });
     }
@@ -250,7 +272,9 @@ export function GraphVisualization({
       simulation.stop();
       tooltip.remove();
     };
-  }, [nodes, edges, highlightNodeId]);
+    // structureKey captures node IDs + edge structure; highlightNodeId for zoom
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [structureKey, highlightNodeId]);
 
   return (
     <svg
