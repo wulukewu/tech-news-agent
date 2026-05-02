@@ -137,7 +137,7 @@ export default function DomainGraphPage() {
       <style>{`
         .kg-page { display: flex; flex-direction: column; height: calc(100dvh - ${headerHeight}px); }
         @media (max-width: 1023px) {
-          .kg-page { position: fixed; top: ${headerHeight + 2}px; left: 0; right: 0; bottom: 0; height: auto; z-index: 30; background: var(--background); padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); }
+          .kg-page { position: fixed; top: ${headerHeight + 16}px; left: 0; right: 0; bottom: 0; height: auto; z-index: 30; background: var(--background); padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 20px); }
         }
       `}</style>
       <div className="-m-4 lg:-m-6 kg-page">
