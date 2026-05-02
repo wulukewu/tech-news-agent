@@ -1,4 +1,7 @@
 import logging
+from datetime import UTC
+
+from app.core.exceptions import SupabaseServiceError
 
 logger = logging.getLogger(__name__)
 
