@@ -41,6 +41,7 @@ export default function SystemStatusSettingsPage() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   const [showConfirm, setShowConfirm] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   const {
     data: status,
@@ -73,7 +74,14 @@ export default function SystemStatusSettingsPage() {
           <h1 className="text-2xl font-bold">{t('pages.system-status.title')}</h1>
           <p className="text-muted-foreground text-sm">{t('pages.system-status.description')}</p>
         </div>
-        <RefreshButton isLoading={isLoading} onClick={() => refetch()}>
+        <RefreshButton
+          isLoading={refreshing || isLoading}
+          onClick={async () => {
+            setRefreshing(true);
+            await refetch();
+            setRefreshing(false);
+          }}
+        >
           {t('pages.system-status.refresh')}
         </RefreshButton>
       </div>
