@@ -12,6 +12,106 @@ from app.services.supabase_service import SupabaseService
 
 logger = get_logger(__name__)
 
+_NEWS_PAGE_SIZE = 10  # articles per page in /news_now
+
+
+def _build_news_page(articles, page: int) -> str:
+    """Build message content for a single page of news articles."""
+    total_pages = (len(articles) + _NEWS_PAGE_SIZE - 1) // _NEWS_PAGE_SIZE
+    start = page * _NEWS_PAGE_SIZE
+    page_articles = articles[start : start + _NEWS_PAGE_SIZE]
+
+    lines = [
+        f"📰 **你的個人化技術新聞**（第 {page + 1}/{total_pages} 頁，共 {len(articles)} 篇）\n",
+        "🔥 **推薦文章：**\n",
+    ]
+
+    by_category = defaultdict(list)
+    for article in page_articles:
+        by_category[article.category].append(article)
+
+    for category, cat_articles in sorted(by_category.items()):
+        lines.append(f"**{category}**")
+        for article in cat_articles:
+            tinkering = "🔥" * article.tinkering_index
+            lines.append(f"  {tinkering} {article.title}")
+            lines.append(f"    🔗 {article.url}")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+class NewsPaginationView(discord.ui.View):
+    """Pagination view for /news_now with filter and deep-dive buttons."""
+
+    def __init__(
+        self, articles, page: int, llm_service: LLMService, supabase_service: SupabaseService
+    ):
+        super().__init__(timeout=None)
+        self.articles = articles
+        self.page = page
+        self.llm_service = llm_service
+        self.supabase_service = supabase_service
+        self._build_components()
+
+    def _build_components(self):
+        self.clear_items()
+        total_pages = (len(self.articles) + _NEWS_PAGE_SIZE - 1) // _NEWS_PAGE_SIZE
+        start = self.page * _NEWS_PAGE_SIZE
+        page_articles = self.articles[start : start + _NEWS_PAGE_SIZE]
+
+        # Row 0: filter select
+        from app.bot.cogs.interactions import FilterSelect
+
+        self.add_item(FilterSelect(self.articles))
+
+        # Row 1: prev/next buttons
+        prev_btn = discord.ui.Button(
+            label="◀ 上一頁",
+            style=discord.ButtonStyle.secondary,
+            disabled=self.page == 0,
+            custom_id="news_prev",
+            row=1,
+        )
+        next_btn = discord.ui.Button(
+            label="下一頁 ▶",
+            style=discord.ButtonStyle.secondary,
+            disabled=self.page >= total_pages - 1,
+            custom_id="news_next",
+            row=1,
+        )
+        prev_btn.callback = self._prev_callback
+        next_btn.callback = self._next_callback
+        self.add_item(prev_btn)
+        self.add_item(next_btn)
+
+        # Rows 2-3: deep dive + read later for current page articles
+        from app.bot.cogs.interactions import DeepDiveButton, ReadLaterButton
+
+        for article in page_articles[:5]:
+            btn = DeepDiveButton(article, self.llm_service)
+            btn.row = 2
+            self.add_item(btn)
+        for article in page_articles[:5]:
+            if article.id:
+                btn = ReadLaterButton(article.id, article.title, self.supabase_service)
+                btn.row = 3
+                self.add_item(btn)
+
+    async def _prev_callback(self, interaction: discord.Interaction):
+        self.page -= 1
+        self._build_components()
+        await interaction.response.edit_message(
+            content=_build_news_page(self.articles, self.page), view=self
+        )
+
+    async def _next_callback(self, interaction: discord.Interaction):
+        self.page += 1
+        self._build_components()
+        await interaction.response.edit_message(
+            content=_build_news_page(self.articles, self.page), view=self
+        )
+
 
 class NewsCommands(commands.Cog):
     """News commands cog with service layer dependency injection."""
@@ -224,9 +324,8 @@ class NewsCommands(commands.Cog):
                 return
 
             # 3. Query articles from subscribed feeds via service layer
-            # Use the service layer method instead of direct database access
             articles = await self.supabase_service.get_user_articles(
-                discord_id=str(interaction.user.id), days=7, limit=20
+                discord_id=str(interaction.user.id), days=7, limit=50
             )
 
             if not articles:
@@ -253,72 +352,16 @@ class NewsCommands(commands.Cog):
                 subscription_count=len(subscriptions),
             )
 
-            # 5. Build notification message (with 2000 char limit)
-            lines = [
-                "📰 **你的個人化技術新聞**",
-                f"📊 找到 {len(articles)} 篇精選文章\n",
-                "🔥 **推薦文章：**\n",
-            ]
+            # 5. Build paginated view
+            view = NewsPaginationView(
+                articles=articles,
+                page=0,
+                llm_service=self.llm_service,
+                supabase_service=self.supabase_service,
+            )
+            content = _build_news_page(articles, 0)
 
-            # Group articles by category
-            by_category = defaultdict(list)
-            for article in articles:
-                by_category[article.category].append(article)
-
-            # Format articles by category with character limit check
-            DISCORD_CHAR_LIMIT = 2000
-            RESERVED_CHARS = 100  # Reserve space for truncation message
-
-            for category, cat_articles in sorted(by_category.items()):
-                category_line = f"**{category}**"
-                # Check if adding this would exceed limit
-                test_content = "\n".join(lines + [category_line])
-                if len(test_content) > DISCORD_CHAR_LIMIT - RESERVED_CHARS:
-                    lines.append("\n_...更多文章請使用下方按鈕查看_")
-                    break
-
-                lines.append(category_line)
-
-                for article in cat_articles[:5]:  # Limit to 5 per category
-                    tinkering = "🔥" * article.tinkering_index
-                    article_lines = [f"  {tinkering} {article.title}", f"    🔗 {article.url}"]
-
-                    # Check if adding this article would exceed limit
-                    test_content = "\n".join(lines + article_lines)
-                    if len(test_content) > DISCORD_CHAR_LIMIT - RESERVED_CHARS:
-                        lines.append("\n_...更多文章請使用下方按鈕查看_")
-                        break
-
-                    lines.extend(article_lines)
-                else:
-                    # Only add empty line if we didn't break
-                    lines.append("")
-                    continue
-                # If we broke from inner loop, break from outer loop too
-                break
-
-            notification = "\n".join(lines)
-
-            # 6. Create interactive view with article IDs
-            from app.bot.cogs.interactions import FilterView
-
-            combined_view = FilterView(articles=articles)
-
-            # Add Deep Dive buttons (top 5 articles)
-            for article in articles[:5]:
-                from app.bot.cogs.interactions import DeepDiveButton
-
-                combined_view.add_item(DeepDiveButton(article, self.llm_service))
-
-            # Add Read Later buttons (top 10 articles)
-            for article in articles[:10]:
-                from app.bot.cogs.interactions import ReadLaterButton
-
-                combined_view.add_item(
-                    ReadLaterButton(article.id, article.title, self.supabase_service)
-                )
-
-            await interaction.followup.send(content=notification, view=combined_view)
+            await interaction.followup.send(content=content, view=view)
             logger.info(
                 "Successfully sent news_now response",
                 user_id=str(interaction.user.id),

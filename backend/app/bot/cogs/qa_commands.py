@@ -23,7 +23,7 @@ logger = get_logger(__name__)
 _DISCORD_CHAR_LIMIT = 2000
 
 
-def _format_response(response) -> str:
+def _format_response(response, conversation_id: str | None = None) -> str:
     """Format a StructuredResponse into a Discord message."""
     lines = []
 
@@ -54,6 +54,13 @@ def _format_response(response) -> str:
     if not lines:
         lines.append("🔍 找不到相關文章，請嘗試換個問法或訂閱更多 RSS 來源。")
 
+    # Show conversation ID for follow-up
+    cid = conversation_id or (
+        str(response.conversation_id) if getattr(response, "conversation_id", None) else None
+    )
+    if cid:
+        lines.append(f"\n💬 追問請用：`/ask question:... conversation_id:{cid}`")
+
     content = "\n".join(lines)
     if len(content) > _DISCORD_CHAR_LIMIT:
         content = content[: _DISCORD_CHAR_LIMIT - 3] + "..."
@@ -73,8 +80,13 @@ class QACommands(commands.Cog):
         return self._qa_controller
 
     @app_commands.command(name="ask", description="用自然語言詢問你訂閱文章庫中的問題")
-    @app_commands.describe(question="你想問的問題（支援中文和英文）")
-    async def ask(self, interaction: discord.Interaction, question: str):
+    @app_commands.describe(
+        question="你想問的問題（支援中文和英文）",
+        conversation_id="（選填）對話 ID，填入後可追問上一次的問題",
+    )
+    async def ask(
+        self, interaction: discord.Interaction, question: str, conversation_id: Optional[str] = None
+    ):
         logger.info("Command /ask triggered", user_id=str(interaction.user.id), query=question[:50])
         await interaction.response.defer(thinking=True)
 
@@ -90,8 +102,9 @@ class QACommands(commands.Cog):
             response = await controller.process_query(
                 user_id=str(user_uuid),
                 query=question,
+                conversation_id=conversation_id,
             )
-            content = _format_response(response)
+            content = _format_response(response, conversation_id)
             await interaction.followup.send(content=content)
 
         except Exception as e:
