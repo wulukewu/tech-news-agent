@@ -20,7 +20,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, BookOpen, ChevronRight, Loader2, Network, Sparkles, ArrowRight } from 'lucide-react';
+import { Plus, BookOpen, ChevronRight, Loader2, Network, Sparkles, Box } from 'lucide-react';
 import { getDomains, createDomain, type TechnicalDomain } from '@/lib/api/knowledge-graph';
 import type { TranslationFunction } from '@/types/i18n';
 
@@ -204,7 +204,9 @@ function DomainCard({
       <CardHeader className="pb-2 pt-4 px-4">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2.5 min-w-0">
-            <span className="text-xl flex-shrink-0">{domain.icon}</span>
+            <div className="p-1.5 rounded-md bg-primary/10 flex-shrink-0">
+              <Box className="h-4 w-4 text-primary" />
+            </div>
             <div className="min-w-0">
               <CardTitle className="text-base leading-tight truncate">
                 {domain.display_name}
@@ -230,7 +232,7 @@ function DomainCard({
           <div className="flex items-center justify-between text-xs">
             <span className="text-muted-foreground">
               {completed
-                ? '🏆 Completed'
+                ? t('knowledge-graph.completed')
                 : started
                   ? t('knowledge-graph.continue-learning')
                   : t('knowledge-graph.start-learning')}

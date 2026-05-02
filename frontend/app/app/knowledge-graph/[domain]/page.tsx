@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Lightbulb, Trophy, Clock, Loader2 } from 'lucide-react';
+import { ArrowLeft, Lightbulb, Trophy, Clock, Loader2, Lock, Network } from 'lucide-react';
 import {
   getDomainGraph,
   getDomainProgress,
@@ -90,7 +90,9 @@ export default function DomainGraphPage() {
         </Button>
         {graph ? (
           <>
-            <span className="text-xl">{graph.domain.icon}</span>
+            <div className="p-1.5 rounded-md bg-primary/10">
+              <Network className="h-4 w-4 text-primary" />
+            </div>
             <div>
               <h1 className="font-bold text-lg leading-tight">{graph.domain.display_name}</h1>
               <p className="text-xs text-muted-foreground">
@@ -149,7 +151,7 @@ export default function DomainGraphPage() {
               </div>
             ))}
             <div className="flex items-center gap-2 mt-1">
-              <span className="text-base">🔒</span>
+              <Lock className="h-3 w-3 text-muted-foreground" />
               <span>{t('knowledge-graph.locked-desc')}</span>
             </div>
           </div>
@@ -270,7 +272,10 @@ export default function DomainGraphPage() {
                     {STATUS_LABELS[selectedNode.status]}
                   </Badge>
                   {!selectedNode.is_unlocked && (
-                    <Badge variant="outline">🔒 {t('knowledge-graph.locked')}</Badge>
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      <Lock className="h-3 w-3" />
+                      {t('knowledge-graph.locked')}
+                    </Badge>
                   )}
                   <span className="text-sm text-muted-foreground ml-auto">
                     {'★'.repeat(selectedNode.difficulty)}

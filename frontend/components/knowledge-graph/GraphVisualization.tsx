@@ -138,8 +138,9 @@ export function GraphVisualization({ nodes, edges, onNodeClick }: GraphVisualiza
       .append('text')
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
-      .attr('font-size', '12px')
-      .text('🔒');
+      .attr('font-size', '11px')
+      .attr('fill', '#64748b')
+      .text('×');
 
     // Checkmark for completed
     node
@@ -150,7 +151,8 @@ export function GraphVisualization({ nodes, edges, onNodeClick }: GraphVisualiza
       .attr('font-size', '14px')
       .text('✓')
       .attr('fill', 'white')
-      .attr('font-weight', 'bold');
+      .attr('font-weight', 'bold')
+      .attr('font-size', '13px');
 
     // Labels
     node
@@ -186,7 +188,7 @@ export function GraphVisualization({ nodes, edges, onNodeClick }: GraphVisualiza
           .style('opacity', 1)
           .html(
             `<strong>${d.display_name}</strong><br/>` +
-              `Difficulty: ${'★'.repeat(d.difficulty)}${'☆'.repeat(5 - d.difficulty)}<br/>` +
+              `Difficulty: ${d.difficulty}/5<br/>` +
               `Est. ${d.estimated_hours}h · ${d.status.replace('_', ' ')}`
           );
       })
