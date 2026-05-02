@@ -18,6 +18,7 @@ import {
   Lightbulb,
   Brain,
   Bell,
+  Network,
 } from 'lucide-react';
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useUser } from '@/contexts/UserContext';
@@ -45,6 +46,7 @@ const mainNavItems: NavItem[] = [
   { href: '/app/subscriptions', labelKey: 'nav.subscriptions', icon: Rss },
   { href: '/app/reminders', labelKey: 'nav.reminders', icon: Bell },
   { href: '/app/learning', labelKey: 'nav.learning-path', icon: Brain },
+  { href: '/app/knowledge-graph', labelKey: 'nav.knowledge-graph', icon: Network },
   { href: '/app/chat', labelKey: 'nav.chat', icon: MessageSquare },
   { href: '/app/insights', labelKey: 'nav.insights', icon: Lightbulb },
 ];

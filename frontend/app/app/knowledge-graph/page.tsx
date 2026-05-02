@@ -4,7 +4,8 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useI18n } from '@/contexts/I18nContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -13,24 +14,19 @@ import { Skeleton } from '@/components/ui/skeleton';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, BookOpen, ChevronRight, Loader2 } from 'lucide-react';
+import { Plus, BookOpen, ChevronRight, Loader2, Network, Sparkles, ArrowRight } from 'lucide-react';
 import { getDomains, createDomain, type TechnicalDomain } from '@/lib/api/knowledge-graph';
-
-const DIFFICULTY_COLORS: Record<number, string> = {
-  1: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  2: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-  3: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  4: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
-  5: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-};
+import type { TranslationFunction } from '@/types/i18n';
 
 export default function KnowledgeGraphPage() {
   const { user } = useUser();
+  const { t } = useI18n();
   const router = useRouter();
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -44,10 +40,12 @@ export default function KnowledgeGraphPage() {
 
   const createMutation = useMutation({
     mutationFn: createDomain,
-    onSuccess: () => {
+    onSuccess: (domain) => {
       queryClient.invalidateQueries({ queryKey: ['knowledge-graph', 'domains'] });
       setDialogOpen(false);
       setNewDomain({ name: '', display_name: '', description: '' });
+      // Navigate directly to the new domain
+      router.push(`/app/knowledge-graph/${domain.name}`);
     },
   });
 
@@ -60,66 +58,71 @@ export default function KnowledgeGraphPage() {
     });
   };
 
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Please log in to view knowledge graphs.</p>
-      </div>
-    );
-  }
+  if (!user) return null;
+
+  const hasStarted = domains.some((d) => d.user_progress_pct > 0);
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-3xl font-bold">Knowledge Graph</h1>
-          <p className="text-muted-foreground mt-1">
-            Visualize and track your learning path across technical domains
-          </p>
+      <div className="flex items-start justify-between mb-2">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-xl bg-primary/10">
+            <Network className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold">{t('knowledge-graph.title')}</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">{t('knowledge-graph.subtitle')}</p>
+          </div>
         </div>
+
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              New Domain
+            <Button size="sm">
+              <Plus className="h-4 w-4 mr-1.5" />
+              {t('knowledge-graph.new-domain')}
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle>Create Custom Domain</DialogTitle>
+              <DialogTitle>{t('knowledge-graph.create-domain-title')}</DialogTitle>
+              <DialogDescription>{t('knowledge-graph.create-domain-subtitle')}</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div>
-                <Label htmlFor="domain-name">Domain ID</Label>
+            <div className="space-y-4 pt-1">
+              <div className="space-y-1.5">
+                <Label htmlFor="domain-name">{t('knowledge-graph.domain-id-label')}</Label>
                 <Input
                   id="domain-name"
-                  placeholder="e.g. graphql"
+                  placeholder={t('knowledge-graph.domain-id-placeholder')}
                   value={newDomain.name}
                   onChange={(e) => setNewDomain((p) => ({ ...p, name: e.target.value }))}
                 />
+                <p className="text-xs text-muted-foreground">
+                  {t('knowledge-graph.domain-id-hint')}
+                </p>
               </div>
-              <div>
-                <Label htmlFor="domain-display">Display Name</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="domain-display">{t('knowledge-graph.display-name-label')}</Label>
                 <Input
                   id="domain-display"
-                  placeholder="e.g. GraphQL"
+                  placeholder={t('knowledge-graph.display-name-placeholder')}
                   value={newDomain.display_name}
                   onChange={(e) => setNewDomain((p) => ({ ...p, display_name: e.target.value }))}
                 />
               </div>
-              <div>
-                <Label htmlFor="domain-desc">Description</Label>
+              <div className="space-y-1.5">
+                <Label htmlFor="domain-desc">{t('knowledge-graph.description-label')}</Label>
                 <Input
                   id="domain-desc"
-                  placeholder="Brief description..."
+                  placeholder={t('knowledge-graph.description-placeholder')}
                   value={newDomain.description}
                   onChange={(e) => setNewDomain((p) => ({ ...p, description: e.target.value }))}
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
-                The knowledge graph will be generated automatically using AI.
-              </p>
+              <div className="flex items-start gap-2 rounded-lg bg-muted p-3">
+                <Sparkles className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-muted-foreground">{t('knowledge-graph.ai-notice')}</p>
+              </div>
               <Button
                 className="w-full"
                 onClick={handleCreate}
@@ -128,10 +131,10 @@ export default function KnowledgeGraphPage() {
                 {createMutation.isPending ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Building graph...
+                    {t('knowledge-graph.creating-btn')}
                   </>
                 ) : (
-                  'Create Domain'
+                  t('knowledge-graph.create-btn')
                 )}
               </Button>
             </div>
@@ -139,20 +142,41 @@ export default function KnowledgeGraphPage() {
         </Dialog>
       </div>
 
+      {/* How it works — only show if user hasn't started anything yet */}
+      {!hasStarted && !isLoading && (
+        <div className="mb-6 mt-4 rounded-xl border bg-muted/40 px-4 py-3">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+            {t('knowledge-graph.how-it-works')}
+          </p>
+          <p className="text-sm text-foreground/80">{t('knowledge-graph.how-it-works-desc')}</p>
+        </div>
+      )}
+
+      {/* Section title */}
+      <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 mt-6">
+        {t('knowledge-graph.domains-title')}
+      </h2>
+
       {/* Domain Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-48 rounded-xl" />
+            <Skeleton key={i} className="h-36 rounded-xl" />
           ))}
         </div>
+      ) : domains.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-center">
+          <Network className="h-10 w-10 text-muted-foreground/40 mb-3" />
+          <p className="text-muted-foreground">{t('knowledge-graph.domains-empty')}</p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {domains.map((domain) => (
             <DomainCard
               key={domain.id}
               domain={domain}
               onClick={() => router.push(`/app/knowledge-graph/${domain.name}`)}
+              t={t}
             />
           ))}
         </div>
@@ -161,39 +185,62 @@ export default function KnowledgeGraphPage() {
   );
 }
 
-function DomainCard({ domain, onClick }: { domain: TechnicalDomain; onClick: () => void }) {
+function DomainCard({
+  domain,
+  onClick,
+  t,
+}: {
+  domain: TechnicalDomain;
+  onClick: () => void;
+  t: TranslationFunction;
+}) {
+  const started = domain.user_progress_pct > 0;
+  const completed = domain.user_progress_pct >= 100;
+
   return (
     <Card
-      className="cursor-pointer hover:shadow-md transition-shadow border hover:border-primary/50"
+      className="cursor-pointer group hover:shadow-md hover:border-primary/40 transition-all duration-200"
       onClick={onClick}
     >
-      <CardHeader className="pb-2">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">{domain.icon}</span>
-            <div>
-              <CardTitle className="text-lg">{domain.display_name}</CardTitle>
-              {domain.is_builtin && (
-                <Badge variant="secondary" className="text-xs mt-0.5">
-                  Built-in
+      <CardHeader className="pb-2 pt-4 px-4">
+        <div className="flex items-start justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="text-xl flex-shrink-0">{domain.icon}</span>
+            <div className="min-w-0">
+              <CardTitle className="text-base leading-tight truncate">
+                {domain.display_name}
+              </CardTitle>
+              <div className="flex items-center gap-1 mt-0.5">
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 font-normal">
+                  {domain.is_builtin ? t('knowledge-graph.built-in') : t('knowledge-graph.custom')}
                 </Badge>
-              )}
+                {domain.node_count > 0 && (
+                  <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                    <BookOpen className="h-2.5 w-2.5" />
+                    {domain.node_count}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
-          <ChevronRight className="h-5 w-5 text-muted-foreground mt-1" />
+          <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0 mt-0.5 group-hover:text-primary transition-colors" />
         </div>
-        <CardDescription className="line-clamp-2 mt-1">{domain.description}</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 pb-4">
         <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground flex items-center gap-1">
-              <BookOpen className="h-3.5 w-3.5" />
-              {domain.node_count} nodes
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground">
+              {completed
+                ? '🏆 Completed'
+                : started
+                  ? t('knowledge-graph.continue-learning')
+                  : t('knowledge-graph.start-learning')}
             </span>
-            <span className="font-medium">{Math.round(domain.user_progress_pct)}%</span>
+            <span className="font-semibold tabular-nums">
+              {Math.round(domain.user_progress_pct)}%
+            </span>
           </div>
-          <Progress value={domain.user_progress_pct} className="h-2" />
+          <Progress value={domain.user_progress_pct} className="h-1.5" />
         </div>
       </CardContent>
     </Card>

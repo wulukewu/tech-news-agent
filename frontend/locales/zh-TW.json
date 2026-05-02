@@ -1332,5 +1332,31 @@
     "completed": "已完成",
     "paused": "暫停",
     "cancelled": "已取消"
+  },
+  "knowledge-graph": {
+    "title": "知識圖譜",
+    "subtitle": "視覺化你的學習路徑，追蹤各技術領域的學習進度",
+    "how-it-works": "如何使用",
+    "how-it-works-desc": "選擇領域 → AI 生成技能樹 → 標記學習進度 → 解鎖下一步",
+    "domains-title": "選擇技術領域",
+    "domains-empty": "還沒有任何領域，建立第一個吧！",
+    "new-domain": "新增領域",
+    "create-domain-title": "建立自訂領域",
+    "create-domain-subtitle": "AI 將自動為此領域生成知識圖譜。",
+    "domain-id-label": "領域 ID",
+    "domain-id-placeholder": "例如：graphql",
+    "domain-id-hint": "小寫英文，不含空格（用於網址）",
+    "display-name-label": "顯示名稱",
+    "display-name-placeholder": "例如：GraphQL",
+    "description-label": "描述",
+    "description-placeholder": "簡短描述...",
+    "ai-notice": "知識圖譜將由 AI 自動生成。",
+    "create-btn": "建立領域",
+    "creating-btn": "生成圖譜中...",
+    "nodes-count": "{{count}} 個節點",
+    "built-in": "內建",
+    "custom": "自訂",
+    "start-learning": "開始學習",
+    "continue-learning": "繼續學習"
   }
 }

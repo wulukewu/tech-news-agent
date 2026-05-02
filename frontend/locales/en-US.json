@@ -1332,5 +1332,31 @@
     "completed": "Completed",
     "paused": "Paused",
     "cancelled": "Cancelled"
+  },
+  "knowledge-graph": {
+    "title": "Knowledge Graph",
+    "subtitle": "Visualize your learning path and track progress across technical domains",
+    "how-it-works": "How it works",
+    "how-it-works-desc": "Select a domain → AI generates a skill tree → Mark nodes as you learn → Unlock the next steps",
+    "domains-title": "Choose a Domain",
+    "domains-empty": "No domains yet. Create your first one!",
+    "new-domain": "New Domain",
+    "create-domain-title": "Create Custom Domain",
+    "create-domain-subtitle": "AI will automatically generate a knowledge graph for this domain.",
+    "domain-id-label": "Domain ID",
+    "domain-id-placeholder": "e.g. graphql",
+    "domain-id-hint": "Lowercase, no spaces (used in URL)",
+    "display-name-label": "Display Name",
+    "display-name-placeholder": "e.g. GraphQL",
+    "description-label": "Description",
+    "description-placeholder": "Brief description...",
+    "ai-notice": "The knowledge graph will be generated automatically using AI.",
+    "create-btn": "Create Domain",
+    "creating-btn": "Building graph...",
+    "nodes-count": "{{count}} nodes",
+    "built-in": "Built-in",
+    "custom": "Custom",
+    "start-learning": "Start Learning",
+    "continue-learning": "Continue"
   }
 }
