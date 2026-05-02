@@ -123,7 +123,9 @@ class PersistentReadLaterButton(discord.ui.Button):
             article_id = parse_article_id_from_custom_id(custom_id, "read_later_")
 
             # Save to reading list (database operation) via service layer
-            await self.supabase_service.save_to_reading_list(discord_id, article_id)
+            await self.supabase_service.save_to_reading_list(
+                discord_id, article_id, source="discord"
+            )
 
             # Disable the button (handle message context loss)
             self.disabled = True

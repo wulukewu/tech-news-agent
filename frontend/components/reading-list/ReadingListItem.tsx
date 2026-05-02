@@ -150,6 +150,20 @@ export function ReadingListItem({
           {item.category}
         </span>
 
+        {/* Source badge */}
+        {item.source && (
+          <span
+            className={cn(
+              'inline-flex items-center px-2.5 py-0.5 rounded-full font-medium text-xs',
+              item.source === 'discord'
+                ? 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200'
+                : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+            )}
+          >
+            {item.source === 'discord' ? '💬 Discord' : '🌐 Web'}
+          </span>
+        )}
+
         {/* Status badge */}
         <span
           className={cn(

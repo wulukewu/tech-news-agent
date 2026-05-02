@@ -56,6 +56,7 @@ class ReadingListItemResponse(BaseModel):
     rating: int | None = Field(None, description="評分（1-5）")
     added_at: datetime = Field(..., description="加入時間", alias="addedAt")
     updated_at: datetime = Field(..., description="更新時間", alias="updatedAt")
+    source: str = Field("web", description="來源平台（discord, web）")
 
     class Config:
         populate_by_name = True

@@ -31,6 +31,8 @@ export interface ReadingListItem {
   addedAt: string;
   /** ISO 8601 timestamp of when the item was last updated */
   updatedAt: string;
+  /** Source platform (discord or web) */
+  source?: string;
 }
 
 /**

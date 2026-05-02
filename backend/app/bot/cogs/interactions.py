@@ -35,7 +35,9 @@ class ReadLaterButton(discord.ui.Button):
 
         try:
             discord_id = str(interaction.user.id)
-            await self.supabase_service.save_to_reading_list(discord_id, self.article_id)
+            await self.supabase_service.save_to_reading_list(
+                discord_id, self.article_id, source="discord"
+            )
 
             self.disabled = True
             try:

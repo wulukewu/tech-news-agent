@@ -79,6 +79,7 @@ class ReadingListItem(BaseModel):
     rating: int | None = None  # 評分（1–5，未評分為 None）
     added_at: datetime  # 新增時間
     updated_at: datetime  # 更新時間
+    source: str = "web"  # 來源平台（discord, web）
 
 
 class BatchResult(BaseModel):

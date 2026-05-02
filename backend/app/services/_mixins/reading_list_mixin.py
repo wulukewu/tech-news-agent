@@ -10,7 +10,9 @@ logger = logging.getLogger(__name__)
 class ReadingListMixin:
     """Mixin extracted from SupabaseService — do not instantiate directly."""
 
-    async def save_to_reading_list(self, discord_id: str, article_id: "UUID") -> None:
+    async def save_to_reading_list(
+        self, discord_id: str, article_id: "UUID", source: str = "web"
+    ) -> None:
         """將文章加入使用者的閱讀清單
 
         使用 UPSERT 邏輯處理並發操作，確保在多個請求同時嘗試加入相同文章時不會產生錯誤。
@@ -19,6 +21,7 @@ class ReadingListMixin:
         Args:
             discord_id: Discord 使用者 ID
             article_id: 文章 UUID
+            source: 來源平台 ('discord' 或 'web'，預設為 'web')
 
         Raises:
             SupabaseServiceError: 當資料庫操作失敗時
@@ -59,6 +62,7 @@ class ReadingListMixin:
                 "user_id": str(user_uuid),
                 "article_id": str(article_id),
                 "status": "Unread",
+                "source": source,
                 "updated_at": datetime.utcnow().isoformat(),
             }
 
