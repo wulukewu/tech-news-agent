@@ -266,6 +266,7 @@ class PaginationView(discord.ui.View):
             lines.append(f"**{i}. {item.title}**")
             lines.append(f"🔗 {item.url}")
             lines.append(f"📂 {item.category}　⭐ {rating_str}")
+            lines.append(f"🆔 `{item.article_id}`")
             lines.append("")
         return "\n".join(lines).strip()
 
@@ -335,6 +336,50 @@ class ReadingListGroup(app_commands.Group):
                 "❌ 發生未預期的錯誤，請稍後再試。\n" "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
                 ephemeral=True,
             )
+
+    @app_commands.command(name="remove", description="從待讀清單移除文章")
+    @app_commands.describe(article_id="文章 ID（從 /reading_list view 取得）")
+    async def remove(self, interaction: discord.Interaction, article_id: str):
+        logger.info(
+            "Command /reading_list remove triggered",
+            user_id=str(interaction.user.id),
+            article_id=article_id,
+        )
+        await interaction.response.defer(ephemeral=True)
+
+        try:
+            from uuid import UUID
+
+            try:
+                parsed_id = UUID(article_id)
+            except ValueError:
+                await interaction.followup.send("❌ 無效的文章 ID 格式。", ephemeral=True)
+                return
+
+            discord_id = str(interaction.user.id)
+            removed = await self.supabase_service.remove_from_reading_list(discord_id, parsed_id)
+
+            if removed:
+                await interaction.followup.send("✅ 已從待讀清單移除該文章。", ephemeral=True)
+            else:
+                await interaction.followup.send("ℹ️ 找不到該文章，可能已被移除。", ephemeral=True)
+
+        except SupabaseServiceError as e:
+            logger.error(
+                "Database error in /reading_list remove",
+                user_id=str(interaction.user.id),
+                error=str(e),
+                exc_info=True,
+            )
+            await interaction.followup.send("❌ 移除失敗，請稍後再試。", ephemeral=True)
+        except Exception as e:
+            logger.critical(
+                "Unexpected error in /reading_list remove",
+                user_id=str(interaction.user.id),
+                error=str(e),
+                exc_info=True,
+            )
+            await interaction.followup.send("❌ 發生未預期的錯誤，請稍後再試。", ephemeral=True)
 
     @app_commands.command(name="recommend", description="根據高評分文章生成推薦摘要")
     async def recommend(self, interaction: discord.Interaction):

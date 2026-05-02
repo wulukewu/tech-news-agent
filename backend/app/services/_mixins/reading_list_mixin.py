@@ -521,6 +521,60 @@ class ReadingListMixin:
                 e, {"discord_id": discord_id, "status": status, "operation": "get_reading_list"}
             )
 
+    async def remove_from_reading_list(self, discord_id: str, article_id: "UUID") -> bool:
+        """從閱讀清單移除文章
+
+        Args:
+            discord_id: Discord 使用者 ID
+            article_id: 文章 UUID
+
+        Returns:
+            True if removed, False if not found
+
+        Raises:
+            SupabaseServiceError: 當資料庫操作失敗時
+        """
+        from uuid import UUID
+
+        try:
+            if isinstance(article_id, str):
+                article_id = self._validate_uuid(article_id)
+            elif not isinstance(article_id, UUID):
+                raise ValueError(
+                    f"article_id must be a UUID or valid UUID string, got {type(article_id)}"
+                )
+
+            user_uuid = await self.get_or_create_user(discord_id)
+
+            response = (
+                self.client.table("reading_list")
+                .delete()
+                .eq("user_id", str(user_uuid))
+                .eq("article_id", str(article_id))
+                .execute()
+            )
+
+            removed = bool(response.data and len(response.data) > 0)
+            logger.info(
+                "remove_from_reading_list: %s",
+                "removed" if removed else "not found",
+                extra={"discord_id": discord_id, "article_id": str(article_id)},
+            )
+            return removed
+
+        except (ValueError, SupabaseServiceError):
+            raise
+        except Exception as e:
+            logger.error("Failed to remove from reading list: %s", e, exc_info=True)
+            self._handle_database_error(
+                e,
+                {
+                    "discord_id": discord_id,
+                    "article_id": str(article_id),
+                    "operation": "remove_from_reading_list",
+                },
+            )
+
     async def get_highly_rated_articles(
         self, discord_id: str, threshold: int = 4
     ) -> list["ReadingListItem"]:

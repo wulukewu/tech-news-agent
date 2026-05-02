@@ -242,10 +242,10 @@ View all your subscribed feeds.
 
 #### `/unsubscribe_feed`
 
-Unsubscribe from a feed.
+Unsubscribe from a feed by name or UUID.
 
 ```
-/unsubscribe_feed feed_name:Hacker News
+/unsubscribe_feed feed_identifier:Hacker News
 ```
 
 ### Article Discovery
@@ -264,6 +264,14 @@ View latest articles from your subscribed feeds with interactive filters and dee
 - 📖 Deep dive analysis buttons (up to 5 articles)
 - ⭐ Read later buttons (up to 10 articles)
 
+#### `/ask`
+
+Ask a natural language question about your subscribed articles.
+
+```
+/ask question:最近有什麼關於 Rust 的文章？
+```
+
 ### Reading List
 
 #### `/reading_list view`
@@ -276,10 +284,19 @@ Browse your reading list with pagination.
 
 **Features:**
 
-- 5 articles per page
+- 3 articles per page
 - ✅ Mark as read buttons
 - ⭐ Rating dropdowns (1-5 stars)
 - Previous/Next navigation
+- 🆔 Article ID shown for use with `/reading_list remove`
+
+#### `/reading_list remove`
+
+Remove an article from your reading list by its ID.
+
+```
+/reading_list remove article_id:<uuid>
+```
 
 #### `/reading_list recommend`
 
@@ -287,6 +304,32 @@ Get AI-generated recommendations based on your highly-rated articles (4+ stars).
 
 ```
 /reading_list recommend
+```
+
+### Profile & Recommendations
+
+#### `/my_profile`
+
+View your preference summary and category weights.
+
+```
+/my_profile
+```
+
+#### `/update_profile`
+
+Immediately update your preference summary based on your DM conversations.
+
+```
+/update_profile
+```
+
+#### `/recommend_now`
+
+Trigger a personalized article recommendation sent to your DM immediately.
+
+```
+/recommend_now
 ```
 
 ### Notification Settings
@@ -306,6 +349,99 @@ Check your current notification settings.
 
 ```
 /notification_status
+```
+
+#### `/notification-settings`
+
+View detailed personalized notification settings (frequency, time, timezone).
+
+```
+/notification-settings
+```
+
+#### `/set-notification-frequency`
+
+Set how often you receive notifications.
+
+```
+/set-notification-frequency frequency:每日
+/set-notification-frequency frequency:每週
+```
+
+#### `/set-notification-time`
+
+Set the time of day to receive notifications.
+
+```
+/set-notification-time hour:9 minute:0
+```
+
+#### `/set-timezone`
+
+Set your timezone for notification scheduling.
+
+```
+/set-timezone timezone:Asia/Taipei
+```
+
+#### `/toggle-notifications`
+
+Quickly toggle notifications on/off.
+
+```
+/toggle-notifications
+```
+
+### Quiet Hours
+
+#### `/quiet-hours`
+
+View your current quiet hours settings.
+
+```
+/quiet-hours
+```
+
+#### `/set-quiet-hours`
+
+Set a time range during which notifications are suppressed.
+
+```
+/set-quiet-hours start_time:22:00 end_time:08:00 enabled:啟用
+```
+
+#### `/toggle-quiet-hours`
+
+Quickly toggle quiet hours on/off.
+
+```
+/toggle-quiet-hours
+```
+
+### Conversations
+
+#### `/conversations`
+
+List your past DM conversations with pagination.
+
+```
+/conversations
+```
+
+#### `/continue`
+
+Continue a specific past conversation by ID.
+
+```
+/continue id:<conversation-id>
+```
+
+#### `/search`
+
+Search through your conversation history.
+
+```
+/search query:Rust async
 ```
 
 For complete command documentation, see [User Guide](./docs/USER_GUIDE.md).
