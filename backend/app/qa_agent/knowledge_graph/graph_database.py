@@ -124,25 +124,17 @@ class GraphDatabase:
     # ── Edges ─────────────────────────────────────────────────────────────────
 
     async def get_edges_by_domain(self, domain_id: UUID) -> List[NodeDependency]:
-        # Join through knowledge_nodes to filter by domain
-        result = self.db.client.rpc(
-            "get_domain_edges",
-            {"p_domain_id": str(domain_id)},
-        ).execute()
-        if not result.data:
-            # Fallback: fetch all nodes then filter edges
-            nodes = await self.get_nodes_by_domain(domain_id)
-            node_ids = {str(n.id) for n in nodes}
-            if not node_ids:
-                return []
-            edges_result = (
-                self.db.client.table("node_dependencies")
-                .select("*")
-                .in_("source_node_id", list(node_ids))
-                .execute()
-            )
-            return [self._row_to_edge(r) for r in (edges_result.data or [])]
-        return [self._row_to_edge(r) for r in result.data]
+        nodes = await self.get_nodes_by_domain(domain_id)
+        node_ids = [str(n.id) for n in nodes]
+        if not node_ids:
+            return []
+        result = (
+            self.db.client.table("node_dependencies")
+            .select("*")
+            .in_("source_node_id", node_ids)
+            .execute()
+        )
+        return [self._row_to_edge(r) for r in (result.data or [])]
 
     async def upsert_edge(
         self,
