@@ -40,11 +40,11 @@ class UpdateNodeStatusRequest(BaseModel):
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 
-def _get_builder() -> KnowledgeGraphBuilder:
+async def _get_builder() -> KnowledgeGraphBuilder:
     return KnowledgeGraphBuilder()
 
 
-def _get_db() -> GraphDatabase:
+async def _get_db() -> GraphDatabase:
     return GraphDatabase()
 
 
