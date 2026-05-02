@@ -57,7 +57,7 @@ async def list_domains(
     db: GraphDatabase = Depends(_get_db),
 ) -> List[Dict]:
     """List built-in domains + user's own custom domains."""
-    user_id = UUID(current_user["id"])
+    user_id = current_user["user_id"]
     domains = await db.get_all_domains(user_id)
 
     result = []
@@ -80,7 +80,7 @@ async def create_domain(
     builder: KnowledgeGraphBuilder = Depends(_get_builder),
 ) -> Dict:
     """Create a new custom domain and build its graph via LLM."""
-    user_id = UUID(current_user["id"])
+    user_id = current_user["user_id"]
     domain = await builder.get_or_build_domain(body.name, user_id)
     return domain.to_dict()
 
@@ -92,7 +92,7 @@ async def get_domain_graph(
     builder: KnowledgeGraphBuilder = Depends(_get_builder),
 ) -> Dict:
     """Get full graph data for a domain (builds it if it doesn't exist)."""
-    user_id = UUID(current_user["id"])
+    user_id = current_user["user_id"]
     graph = await builder.get_graph_data(domain_name, user_id)
     return graph.to_dict()
 
@@ -104,7 +104,7 @@ async def get_domain_progress(
     db: GraphDatabase = Depends(_get_db),
 ) -> Dict:
     """Get user's learning progress for a domain."""
-    user_id = UUID(current_user["id"])
+    user_id = current_user["user_id"]
     domain = await db.get_domain_by_name(domain_name, user_id)
     if not domain:
         raise HTTPException(status_code=404, detail=f"Domain '{domain_name}' not found")
@@ -130,7 +130,7 @@ async def complete_node(
             detail=f"Invalid status '{body.status}'. Must be: not_started, in_progress, completed",
         )
 
-    user_id = UUID(current_user["id"])
+    user_id = current_user["user_id"]
     tracker = ProgressTracker(db)
     await tracker.mark_node(user_id, UUID(node_id), status)
     return {"success": True, "node_id": node_id, "status": status.value}
@@ -144,7 +144,7 @@ async def get_recommendations(
     db: GraphDatabase = Depends(_get_db),
 ) -> List[Dict]:
     """Get personalized learning recommendations for a domain."""
-    user_id = UUID(current_user["id"])
+    user_id = current_user["user_id"]
     domain = await db.get_domain_by_name(domain_name, user_id)
     if not domain:
         raise HTTPException(status_code=404, detail=f"Domain '{domain_name}' not found")
@@ -162,7 +162,7 @@ async def export_domain(
     builder: KnowledgeGraphBuilder = Depends(_get_builder),
 ) -> Any:
     """Export domain graph as JSON or GraphML."""
-    user_id = UUID(current_user["id"])
+    user_id = current_user["user_id"]
     graph = await builder.get_graph_data(domain_name, user_id)
 
     if format == "graphml":
@@ -178,7 +178,7 @@ async def rebuild_domain(
     builder: KnowledgeGraphBuilder = Depends(_get_builder),
 ) -> Dict:
     """Force rebuild a domain's graph via LLM (incremental)."""
-    user_id = UUID(current_user["id"])
+    user_id = current_user["user_id"]
     domain = await builder.rebuild_domain(domain_name, user_id)
     return domain.to_dict()
 
