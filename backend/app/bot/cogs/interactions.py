@@ -99,8 +99,9 @@ class ReadLaterView(discord.ui.View):
 
 
 class FilterSelect(discord.ui.Select):
-    def __init__(self, articles: list[ArticleSchema]):
+    def __init__(self, articles: list[ArticleSchema], supabase_service: SupabaseService = None):
         self.articles = articles
+        self.supabase_service = supabase_service
 
         category_counts = Counter(a.category for a in articles)
         top_categories = [cat for cat, _ in category_counts.most_common(24)]
@@ -141,7 +142,16 @@ class FilterSelect(discord.ui.Select):
             if len(content) > 2000:
                 content = content[:1997] + "..."
 
-            await interaction.response.send_message(content, ephemeral=True)
+            # Add Read Later buttons for filtered articles (up to 5)
+            view = None
+            if self.supabase_service:
+                view = discord.ui.View(timeout=None)
+                for article in filtered[:5]:
+                    if article.id:
+                        btn = ReadLaterButton(article.id, article.title, self.supabase_service)
+                        view.add_item(btn)
+
+            await interaction.response.send_message(content, view=view, ephemeral=True)
             logger.info(
                 f"Successfully sent filtered articles (category: {selected}) to user {interaction.user.id}"
             )
@@ -161,9 +171,9 @@ class FilterSelect(discord.ui.Select):
 
 
 class FilterView(discord.ui.View):
-    def __init__(self, articles: list[ArticleSchema]):
+    def __init__(self, articles: list[ArticleSchema], supabase_service: SupabaseService = None):
         super().__init__(timeout=None)
-        self.add_item(FilterSelect(articles))
+        self.add_item(FilterSelect(articles, supabase_service=supabase_service))
 
 
 class DeepDiveButton(discord.ui.Button):

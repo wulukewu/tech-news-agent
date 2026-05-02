@@ -63,7 +63,7 @@ class NewsPaginationView(discord.ui.View):
         # Row 0: filter select
         from app.bot.cogs.interactions import FilterSelect
 
-        self.add_item(FilterSelect(self.articles))
+        self.add_item(FilterSelect(self.articles, supabase_service=self.supabase_service))
 
         # Row 1: prev/next buttons
         prev_btn = discord.ui.Button(
@@ -395,6 +395,99 @@ class NewsCommands(commands.Cog):
                 "❌ 發生未預期的錯誤，請稍後再試。\n" "💡 建議：如果問題持續發生，請聯繫管理員並提供你的使用者 ID。",
                 ephemeral=True,
             )
+
+    @app_commands.command(name="stats", description="查看你的閱讀統計")
+    async def stats(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        discord_id = str(interaction.user.id)
+
+        try:
+            user_uuid = await self.supabase_service.get_or_create_user(discord_id)
+            resp = (
+                self.supabase_service.client.table("reading_list")
+                .select("status, rating, source, articles(category)")
+                .eq("user_id", str(user_uuid))
+                .execute()
+            )
+            rows = resp.data or []
+        except Exception as exc:
+            logger.error("stats: failed to fetch data: %s", exc)
+            await interaction.followup.send("❌ 無法取得統計資料，請稍後再試。", ephemeral=True)
+            return
+
+        if not rows:
+            await interaction.followup.send("📭 你還沒有任何閱讀記錄。", ephemeral=True)
+            return
+
+        total = len(rows)
+        read = sum(1 for r in rows if r["status"] == "Read")
+        unread = sum(1 for r in rows if r["status"] == "Unread")
+        rated = [r["rating"] for r in rows if r.get("rating")]
+        avg_rating = sum(rated) / len(rated) if rated else 0
+
+        from collections import Counter
+
+        category_counts = Counter(
+            r["articles"]["category"]
+            for r in rows
+            if r.get("articles") and r["articles"].get("category")
+        )
+        top_cats = category_counts.most_common(5)
+
+        embed = discord.Embed(title="📊 我的閱讀統計", color=discord.Color.blurple())
+        embed.add_field(name="📚 總收藏", value=str(total), inline=True)
+        embed.add_field(name="✅ 已讀", value=str(read), inline=True)
+        embed.add_field(name="📖 未讀", value=str(unread), inline=True)
+        embed.add_field(
+            name="⭐ 平均評分",
+            value=f"{avg_rating:.1f} / 5.0（共 {len(rated)} 篇已評分）",
+            inline=False,
+        )
+        if top_cats:
+            bars = "\n".join(f"`{cat:<20}` {count} 篇" for cat, count in top_cats)
+            embed.add_field(name="🏷️ 最常收藏分類 (Top 5)", value=bars, inline=False)
+
+        await interaction.followup.send(embed=embed, ephemeral=True)
+
+    @app_commands.command(name="export", description="匯出你的待讀清單（CSV 格式）")
+    async def export(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        discord_id = str(interaction.user.id)
+
+        try:
+            items = await self.supabase_service.get_reading_list(discord_id)
+        except Exception as exc:
+            logger.error("export: failed to fetch reading list: %s", exc)
+            await interaction.followup.send("❌ 無法取得閱讀清單，請稍後再試。", ephemeral=True)
+            return
+
+        if not items:
+            await interaction.followup.send("📭 你的閱讀清單是空的。", ephemeral=True)
+            return
+
+        import csv
+        import io
+
+        buf = io.StringIO()
+        writer = csv.writer(buf)
+        writer.writerow(["title", "url", "category", "status", "rating", "added_at"])
+        for item in items:
+            writer.writerow(
+                [
+                    item.title,
+                    str(item.url),
+                    item.category,
+                    item.status,
+                    item.rating or "",
+                    item.added_at.strftime("%Y-%m-%d %H:%M"),
+                ]
+            )
+
+        buf.seek(0)
+        file = discord.File(
+            fp=io.BytesIO(buf.getvalue().encode("utf-8-sig")), filename="reading_list.csv"
+        )
+        await interaction.followup.send(f"📥 匯出完成，共 {len(items)} 篇文章。", file=file, ephemeral=True)
 
 
 async def setup(bot: commands.Bot):
