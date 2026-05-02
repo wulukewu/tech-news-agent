@@ -2,18 +2,45 @@
 E2E integration tests for Intelligent Reminder Agent.
 Tests the full pipeline: article analysis → reminder generation → delivery → interaction tracking.
 """
+import sys
 from datetime import datetime, timezone
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
 
+# ── Stub heavy third-party deps before any app import ─────────────────────────
+_STUBS = [
+    "asyncpg",
+    "groq",
+    "discord",
+    "discord.ext",
+    "discord.ext.commands",
+    "discord.ui",
+    "apscheduler",
+    "apscheduler.schedulers",
+    "apscheduler.schedulers.asyncio",
+    "httpx",
+    "supabase",
+    "postgrest",
+    "gotrue",
+    "storage3",
+    "realtime",
+    "feedparser",
+    "aiohttp",
+    "aiofiles",
+]
+for _mod in _STUBS:
+    if _mod not in sys.modules:
+        sys.modules[_mod] = MagicMock()
+
+# ── Import the real modules (app is a real package on sys.path) ───────────────
+from app.qa_agent.intelligent_reminder.intelligent_reminder_agent import (  # noqa: E402
+    IntelligentReminderAgent,
+)
+
 
 def _make_agent(supabase_mock=None, notification_mock=None):
-    from app.qa_agent.intelligent_reminder.intelligent_reminder_agent import (
-        IntelligentReminderAgent,
-    )
-
     agent = IntelligentReminderAgent.__new__(IntelligentReminderAgent)
     agent.supabase_service = supabase_mock or MagicMock()
     agent.notification_service = notification_mock or MagicMock()

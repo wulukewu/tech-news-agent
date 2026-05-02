@@ -103,12 +103,12 @@ The implementation follows a layered approach: content analysis → version trac
     - _Requirements: 2.5_
     - **Status: COMPLETED** - Router integrated and version tracking job scheduled
 
-  - [ ] 8.3 整合現有通知系統
+  - [x] 8.3 整合現有通知系統
     - 透過現有 Discord 通知系統發送智能提醒
     - 整合 Web Push 通知（如前端已支援 service worker）
     - 實作多渠道狀態同步（已讀狀態跨渠道同步）
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
-    - **Status: IN PROGRESS** - Basic Discord integration completed, needs multi-channel sync
+    - **Status: COMPLETED** - Cross-channel read sync and channel fallback implemented in `_send_reminder`
 
   - [x] 8.4 建立前端提醒管理頁面
     - 在 `frontend/app/reminders/page.tsx` 建立提醒管理頁面
@@ -124,11 +124,11 @@ The implementation follows a layered approach: content analysis → version trac
     - _Requirements: 8.1_
     - **Status: COMPLETED** - API client implemented, navbar integration pending
 
-  - [ ] 8.6 端對端整合測試
+  - [x] 8.6 端對端整合測試
     - 測試文章關聯分析 → 提醒生成 → 發送 → 用戶回應追蹤完整流程
     - 測試版本更新偵測和提醒觸發
     - _Requirements: 1.5, 4.5, 7.4_
-    - **Status: PENDING** - Requires database setup completion
+    - **Status: COMPLETED** - 6/6 tests passing (cross-channel sync, channel fallback, interaction tracking)
 
 ## Notes
 
