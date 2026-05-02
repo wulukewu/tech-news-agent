@@ -52,6 +52,7 @@ export default function DomainGraphPage() {
   const queryClient = useQueryClient();
   const domainName = params.domain as string;
   const [selectedNode, setSelectedNode] = useState<KnowledgeNode | null>(null);
+  const [highlightNodeId, setHighlightNodeId] = useState<string | null>(null);
 
   const STATUS_LABELS: Record<string, string> = {
     not_started: t('knowledge-graph.not-started'),
@@ -80,7 +81,11 @@ export default function DomainGraphPage() {
   const updateStatusMutation = useMutation({
     mutationFn: ({ nodeId, status }: { nodeId: string; status: KnowledgeNode['status'] }) =>
       updateNodeStatus(nodeId, status),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      // Optimistic: update selectedNode immediately
+      if (selectedNode && selectedNode.id === variables.nodeId) {
+        setSelectedNode({ ...selectedNode, status: variables.status });
+      }
       queryClient.invalidateQueries({ queryKey: ['knowledge-graph', 'graph', domainName] });
       queryClient.invalidateQueries({ queryKey: ['knowledge-graph', 'progress', domainName] });
       queryClient.invalidateQueries({
@@ -143,7 +148,11 @@ export default function DomainGraphPage() {
             <GraphVisualization
               nodes={graph.nodes}
               edges={graph.edges}
-              onNodeClick={setSelectedNode}
+              onNodeClick={(node) => {
+                setSelectedNode(node);
+                setHighlightNodeId(null);
+              }}
+              highlightNodeId={highlightNodeId}
             />
           ) : null}
 
@@ -191,7 +200,10 @@ export default function DomainGraphPage() {
                   <Card
                     key={rec.node.id}
                     className="cursor-pointer hover:border-primary/50 transition-colors"
-                    onClick={() => setSelectedNode(rec.node)}
+                    onClick={() => {
+                      setSelectedNode(rec.node);
+                      setHighlightNodeId(rec.node.id);
+                    }}
                   >
                     <CardHeader className="pb-2 pt-3 px-3">
                       <CardTitle className="text-sm">{rec.node.display_name}</CardTitle>
