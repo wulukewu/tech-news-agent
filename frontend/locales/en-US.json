@@ -1357,6 +1357,24 @@
     "built-in": "Built-in",
     "custom": "Custom",
     "start-learning": "Start Learning",
-    "continue-learning": "Continue"
+    "continue-learning": "Continue",
+    "not-started": "Not Started",
+    "in-progress": "In Progress",
+    "completed": "Completed",
+    "locked": "Locked",
+    "legend": "Legend",
+    "locked-desc": "Locked (prerequisites needed)",
+    "next-steps": "Next Steps",
+    "overall-progress": "Overall Progress",
+    "total": "Total",
+    "done": "Done",
+    "active": "Active",
+    "badges": "Badges",
+    "no-recommendations": "Complete some nodes to get recommendations!",
+    "building": "Building knowledge graph with AI...",
+    "estimated-hours": "{{h}}h",
+    "update-status": "Update Status",
+    "locked-hint": "Complete the prerequisite nodes to unlock this topic.",
+    "nodes-count-label": "nodes"
   }
 }

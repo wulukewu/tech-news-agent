@@ -1357,6 +1357,24 @@
     "built-in": "內建",
     "custom": "自訂",
     "start-learning": "開始學習",
-    "continue-learning": "繼續學習"
+    "continue-learning": "繼續學習",
+    "not-started": "未開始",
+    "in-progress": "進行中",
+    "completed": "已完成",
+    "locked": "鎖定",
+    "legend": "圖例",
+    "locked-desc": "鎖定（需先完成前置項目）",
+    "next-steps": "下一步",
+    "overall-progress": "整體進度",
+    "total": "總計",
+    "done": "已完成",
+    "active": "進行中",
+    "badges": "成就徽章",
+    "no-recommendations": "完成一些節點後即可獲得建議！",
+    "building": "AI 正在生成知識圖譜...",
+    "estimated-hours": "{{h}} 小時",
+    "update-status": "更新狀態",
+    "locked-hint": "完成前置節點即可解鎖此主題。",
+    "nodes-count-label": "個節點"
   }
 }

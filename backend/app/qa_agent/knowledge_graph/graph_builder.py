@@ -28,23 +28,26 @@ class KnowledgeGraphBuilder:
     async def get_or_build_domain(
         self, domain_name: str, user_id: Optional[UUID] = None
     ) -> TechnicalDomain:
-        """Return existing domain or build it from scratch via LLM."""
+        """Return existing domain (building nodes if empty) or create from scratch via LLM."""
         domain = await self.db.get_domain_by_name(domain_name, user_id)
+
         if domain:
-            return domain
+            nodes = await self.db.get_nodes_by_domain(domain.id)
+            if nodes:
+                return domain
+            logger.info(f"Domain '{domain_name}' has no nodes, building via LLM")
+        else:
+            display_name = domain_name.replace("-", " ").title()
+            domain = await self.db.create_domain(
+                name=domain_name,
+                display_name=display_name,
+                description=f"Knowledge graph for {display_name}",
+                created_by=user_id,
+            )
 
-        # Create domain record first
-        display_name = domain_name.replace("-", " ").title()
-        domain = await self.db.create_domain(
-            name=domain_name,
-            display_name=display_name,
-            description=f"Knowledge graph for {display_name}",
-            created_by=user_id,
-        )
-
-        # Extract nodes/edges via LLM
+        # Use domain.display_name (works for both existing and newly created domains)
         logger.info(f"Building knowledge graph for domain '{domain_name}' via LLM")
-        nodes_data, edges_data = await self.extractor.extract_domain_graph(display_name)
+        nodes_data, edges_data = await self.extractor.extract_domain_graph(domain.display_name)
 
         # Persist nodes
         node_name_to_id = {}
