@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import type { KnowledgeNode, GraphEdge } from '@/lib/api/knowledge-graph';
 
@@ -8,6 +8,7 @@ interface GraphVisualizationProps {
   nodes: KnowledgeNode[];
   edges: GraphEdge[];
   onNodeClick: (node: KnowledgeNode) => void;
+  onNodeQuickComplete?: (node: KnowledgeNode) => void;
   highlightNodeId?: string | null;
 }
 
@@ -23,19 +24,32 @@ const STATUS_STROKE = {
   not_started: '#64748b',
 };
 
+interface TooltipState {
+  x: number;
+  y: number;
+  node: KnowledgeNode;
+}
+
 export function GraphVisualization({
   nodes,
   edges,
   onNodeClick,
+  onNodeQuickComplete,
   highlightNodeId,
 }: GraphVisualizationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const minimapRef = useRef<SVGSVGElement>(null);
+  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
-  // Keep callback in ref so D3 effect doesn't re-run when it changes
+  // Keep callbacks in refs so D3 effect doesn't re-run when they change
   const onNodeClickRef = useRef(onNodeClick);
+  const onNodeQuickCompleteRef = useRef(onNodeQuickComplete);
   useEffect(() => {
     onNodeClickRef.current = onNodeClick;
   }, [onNodeClick]);
+  useEffect(() => {
+    onNodeQuickCompleteRef.current = onNodeQuickComplete;
+  }, [onNodeQuickComplete]);
 
   // Stable structure key — only rebuild D3 when node IDs or edges change
   const structureKey =
@@ -67,10 +81,67 @@ export function GraphVisualization({
     const height = svgRef.current.clientHeight || 600;
 
     const g = svg.append('g');
+
+    // ── Minimap sync ──────────────────────────────────────────────────────────
+    const MINI_W = 140;
+    const MINI_H = 90;
+    let minimapScale = 1;
+    let minimapOffsetX = 0;
+    let minimapOffsetY = 0;
+
+    const syncMinimap = (transform: d3.ZoomTransform) => {
+      if (!minimapRef.current) return;
+      const mini = d3.select(minimapRef.current);
+      mini.selectAll('*').remove();
+
+      // Draw edges
+      mini
+        .append('g')
+        .selectAll('line')
+        .data(simLinks)
+        .join('line')
+        .attr('stroke', '#94a3b8')
+        .attr('stroke-width', 0.5)
+        .attr('x1', (d) => ((d.source as SimNode).x ?? 0) * minimapScale + minimapOffsetX)
+        .attr('y1', (d) => ((d.source as SimNode).y ?? 0) * minimapScale + minimapOffsetY)
+        .attr('x2', (d) => ((d.target as SimNode).x ?? 0) * minimapScale + minimapOffsetX)
+        .attr('y2', (d) => ((d.target as SimNode).y ?? 0) * minimapScale + minimapOffsetY);
+
+      // Draw nodes
+      mini
+        .append('g')
+        .selectAll('circle')
+        .data(simNodes)
+        .join('circle')
+        .attr('r', 3)
+        .attr('fill', (d) => STATUS_COLORS[d.status])
+        .attr('cx', (d) => (d.x ?? 0) * minimapScale + minimapOffsetX)
+        .attr('cy', (d) => (d.y ?? 0) * minimapScale + minimapOffsetY);
+
+      // Viewport rect
+      const vx = -transform.x / transform.k;
+      const vy = -transform.y / transform.k;
+      const vw = width / transform.k;
+      const vh = height / transform.k;
+      mini
+        .append('rect')
+        .attr('x', vx * minimapScale + minimapOffsetX)
+        .attr('y', vy * minimapScale + minimapOffsetY)
+        .attr('width', vw * minimapScale)
+        .attr('height', vh * minimapScale)
+        .attr('fill', 'none')
+        .attr('stroke', '#6366f1')
+        .attr('stroke-width', 1)
+        .attr('opacity', 0.7);
+    };
+
     const zoom = d3
       .zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.2, 3])
-      .on('zoom', (event) => g.attr('transform', event.transform));
+      .on('zoom', (event) => {
+        g.attr('transform', event.transform);
+        syncMinimap(event.transform);
+      });
     svg.call(zoom);
 
     svg
@@ -189,6 +260,50 @@ export function GraphVisualization({
       .attr('font-size', '13px')
       .text('✓');
 
+    // Quick-complete button (✓ on hover for unlocked, non-completed nodes)
+    if (onNodeQuickCompleteRef.current) {
+      const quickBtn = node
+        .filter((d) => d.is_unlocked && d.status !== 'completed')
+        .append('g')
+        .attr('class', 'quick-complete')
+        .attr('opacity', 0)
+        .attr('cursor', 'pointer');
+
+      quickBtn
+        .append('circle')
+        .attr('r', 9)
+        .attr('cx', (d) => 12 + d.difficulty * 2)
+        .attr('cy', (d) => -(12 + d.difficulty * 2))
+        .attr('fill', '#22c55e')
+        .attr('stroke', 'white')
+        .attr('stroke-width', 1.5);
+
+      quickBtn
+        .append('text')
+        .attr('x', (d) => 12 + d.difficulty * 2)
+        .attr('y', (d) => -(12 + d.difficulty * 2))
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'central')
+        .attr('fill', 'white')
+        .attr('font-size', '10px')
+        .attr('font-weight', 'bold')
+        .attr('pointer-events', 'none')
+        .text('✓');
+
+      quickBtn.on('click', (event, d) => {
+        event.stopPropagation();
+        onNodeQuickCompleteRef.current?.(d);
+      });
+
+      node
+        .on('mouseenter.quickbtn', function () {
+          d3.select(this).select('.quick-complete').attr('opacity', 1);
+        })
+        .on('mouseleave.quickbtn', function () {
+          d3.select(this).select('.quick-complete').attr('opacity', 0);
+        });
+    }
+
     // Labels
     node
       .append('text')
@@ -201,35 +316,15 @@ export function GraphVisualization({
         d.display_name.length > 18 ? d.display_name.slice(0, 16) + '…' : d.display_name
       );
 
-    // Tooltip
-    const tooltip = d3
-      .select('body')
-      .append('div')
-      .style('position', 'fixed')
-      .style('background', 'rgba(0,0,0,0.85)')
-      .style('color', 'white')
-      .style('padding', '8px 12px')
-      .style('border-radius', '6px')
-      .style('font-size', '12px')
-      .style('pointer-events', 'none')
-      .style('opacity', 0)
-      .style('z-index', '9999')
-      .style('max-width', '220px');
-
+    // React-controlled tooltip (replaces DOM-appended div)
     node
-      .on('mouseenter', (event, d) => {
-        tooltip
-          .style('opacity', 1)
-          .html(
-            `<strong>${d.display_name}</strong><br/>` +
-              `Difficulty: ${d.difficulty}/5<br/>` +
-              `Est. ${d.estimated_hours}h · ${d.status.replace('_', ' ')}`
-          );
+      .on('mouseenter.tooltip', (event, d) => {
+        setTooltip({ x: event.clientX, y: event.clientY, node: d });
       })
-      .on('mousemove', (event) => {
-        tooltip.style('left', event.clientX + 12 + 'px').style('top', event.clientY - 28 + 'px');
+      .on('mousemove.tooltip', (event) => {
+        setTooltip((prev) => (prev ? { ...prev, x: event.clientX, y: event.clientY } : null));
       })
-      .on('mouseleave', () => tooltip.style('opacity', 0));
+      .on('mouseleave.tooltip', () => setTooltip(null));
 
     simulation.on('tick', () => {
       link
@@ -240,16 +335,29 @@ export function GraphVisualization({
       node.attr('transform', (d) => `translate(${d.x ?? 0},${d.y ?? 0})`);
     });
 
-    // Zoom to highlighted node after simulation settles
-    if (highlightNodeId) {
-      simulation.on('end', () => {
+    // Compute minimap scale after simulation settles
+    simulation.on('end', () => {
+      const xs = simNodes.map((n) => n.x ?? 0);
+      const ys = simNodes.map((n) => n.y ?? 0);
+      const minX = Math.min(...xs);
+      const maxX = Math.max(...xs);
+      const minY = Math.min(...ys);
+      const maxY = Math.max(...ys);
+      const graphW = maxX - minX || 1;
+      const graphH = maxY - minY || 1;
+      minimapScale = Math.min((MINI_W - 16) / graphW, (MINI_H - 16) / graphH);
+      minimapOffsetX = (MINI_W - graphW * minimapScale) / 2 - minX * minimapScale;
+      minimapOffsetY = (MINI_H - graphH * minimapScale) / 2 - minY * minimapScale;
+      syncMinimap(d3.zoomTransform(svgRef.current!));
+
+      // Zoom to highlighted node
+      if (highlightNodeId) {
         const target = simNodes.find((n) => n.id === highlightNodeId);
         if (
-          target &&
-          target.x !== null &&
-          target.x !== undefined &&
-          target.y !== null &&
-          target.y !== undefined &&
+          target?.x !== null &&
+          target?.x !== undefined &&
+          target?.y !== null &&
+          target?.y !== undefined &&
           svgRef.current
         ) {
           const w = svgRef.current.clientWidth || 800;
@@ -265,23 +373,48 @@ export function GraphVisualization({
                 .scale(scale)
             );
         }
-      });
-    }
+      }
+    });
 
     return () => {
       simulation.stop();
-      tooltip.remove();
+      setTooltip(null);
     };
-    // structureKey captures node IDs + edge structure; highlightNodeId for zoom
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [structureKey, highlightNodeId]);
 
   return (
-    <svg
-      ref={svgRef}
-      className="w-full h-full"
-      style={{ minHeight: '500px' }}
-      aria-label="Knowledge graph visualization"
-    />
+    <div className="relative w-full h-full">
+      <svg
+        ref={svgRef}
+        className="w-full h-full"
+        style={{ minHeight: '500px' }}
+        aria-label="Knowledge graph visualization"
+      />
+
+      {/* Minimap */}
+      <div className="absolute bottom-4 right-4 rounded-lg border bg-background/90 backdrop-blur overflow-hidden shadow-sm">
+        <svg ref={minimapRef} width={140} height={90} aria-hidden="true" />
+      </div>
+
+      {/* React-controlled tooltip */}
+      {tooltip && (
+        <div
+          className="fixed z-[9999] pointer-events-none rounded-md px-3 py-2 text-xs text-white shadow-lg"
+          style={{
+            background: 'rgba(0,0,0,0.85)',
+            left: tooltip.x + 12,
+            top: tooltip.y - 28,
+            maxWidth: 220,
+          }}
+        >
+          <strong>{tooltip.node.display_name}</strong>
+          <br />
+          Difficulty: {tooltip.node.difficulty}/5
+          <br />
+          Est. {tooltip.node.estimated_hours}h · {tooltip.node.status.replace('_', ' ')}
+        </div>
+      )}
+    </div>
   );
 }

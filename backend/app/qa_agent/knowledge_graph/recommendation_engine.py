@@ -60,12 +60,12 @@ class RecommendationEngine:
         for node in candidates:
             nid = str(node.id)
             if nid in in_progress_ids:
-                reason = "You've already started this — finish it to unlock next steps."
+                reason = "Already in progress — finish to unlock next steps."
             elif not prereq_map.get(nid):
-                reason = "Great starting point — no prerequisites required."
+                reason = f"No prerequisites — good entry point for {node.display_name}."
             else:
-                completed_prereqs = len(prereq_map.get(nid, []))
-                reason = f"All {completed_prereqs} prerequisite(s) completed. Ready to learn!"
+                n_prereqs = len(prereq_map.get(nid, []))
+                reason = f"All {n_prereqs} prerequisite{'s' if n_prereqs > 1 else ''} done. You're ready for this."
 
             recommendations.append(
                 LearningRecommendation(

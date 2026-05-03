@@ -83,9 +83,9 @@ export default function DomainGraphPage() {
   // Cycle through loading messages so user knows LLM is working
   const loadingMessages = [
     t('knowledge-graph.building'),
-    'Extracting knowledge nodes...',
-    'Mapping dependencies...',
-    'Almost ready...',
+    t('knowledge-graph.loading-extracting') || 'Extracting knowledge nodes...',
+    t('knowledge-graph.loading-mapping') || 'Mapping dependencies...',
+    t('knowledge-graph.loading-almost') || 'Almost ready...',
   ];
   useEffect(() => {
     if (!graphLoading) return;
@@ -270,6 +270,10 @@ export default function DomainGraphPage() {
                   setSelectedNode(node);
                   setHighlightNodeId(null);
                 }}
+                onNodeQuickComplete={(node) => {
+                  if (!node.is_unlocked || node.status === 'completed') return;
+                  updateStatusMutation.mutate({ nodeId: node.id, status: 'completed' });
+                }}
                 highlightNodeId={highlightNodeId}
               />
             ) : null}
@@ -330,7 +334,7 @@ export default function DomainGraphPage() {
                     {t('knowledge-graph.no-recommendations')}
                   </p>
                 ) : (
-                  recommendations.map((rec) => (
+                  recommendations.map((rec, idx) => (
                     <Card
                       key={rec.node.id}
                       className="cursor-pointer hover:border-primary/50 transition-colors"
@@ -339,17 +343,28 @@ export default function DomainGraphPage() {
                         setHighlightNodeId(rec.node.id);
                       }}
                     >
-                      <CardHeader className="pb-2 pt-3 px-3">
-                        <CardTitle className="text-sm">{rec.node.display_name}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="px-3 pb-3 space-y-1.5">
-                        <p className="text-xs text-muted-foreground">{rec.reason}</p>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <CardContent className="px-3 py-3 space-y-2">
+                        <div className="flex items-start gap-2">
+                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center mt-0.5">
+                            {idx + 1}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium leading-tight">
+                              {rec.node.display_name}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-0.5 leading-snug">
+                              {rec.reason}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground pl-7">
                           <Clock className="h-3 w-3" />
                           {rec.estimated_hours}h
-                          <span className="ml-auto">
+                          <span className="ml-auto text-amber-500">
                             {'★'.repeat(rec.node.difficulty)}
-                            {'☆'.repeat(5 - rec.node.difficulty)}
+                            <span className="text-muted-foreground/40">
+                              {'★'.repeat(5 - rec.node.difficulty)}
+                            </span>
                           </span>
                         </div>
                       </CardContent>
@@ -442,7 +457,7 @@ export default function DomainGraphPage() {
                       {t('knowledge-graph.no-recommendations')}
                     </p>
                   ) : (
-                    recommendations.map((rec) => (
+                    recommendations.map((rec, idx) => (
                       <Card
                         key={rec.node.id}
                         className="cursor-pointer"
@@ -452,9 +467,14 @@ export default function DomainGraphPage() {
                           setMobileTab('graph');
                         }}
                       >
-                        <CardContent className="px-3 py-2.5 space-y-1">
-                          <p className="text-sm font-medium">{rec.node.display_name}</p>
-                          <p className="text-xs text-muted-foreground">{rec.reason}</p>
+                        <CardContent className="px-3 py-2.5 flex items-start gap-2">
+                          <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center mt-0.5">
+                            {idx + 1}
+                          </span>
+                          <div>
+                            <p className="text-sm font-medium">{rec.node.display_name}</p>
+                            <p className="text-xs text-muted-foreground">{rec.reason}</p>
+                          </div>
                         </CardContent>
                       </Card>
                     ))
