@@ -15,6 +15,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { ViewModeSelector, type ViewMode } from './components/ViewModeSelector';
 import { SortSelector, type SortOption } from './components/SortSelector';
 import { CategoryFilter } from '@/components/CategoryFilter';
+import { SearchBar } from '@/components/SearchBar';
 import { useI18n } from '@/contexts/I18nContext';
 import type { Article } from '@/types/article';
 
@@ -165,6 +166,7 @@ function DashboardContent() {
       <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
         {/* Filters and Controls */}
         <div className="space-y-2">
+          <SearchBar onSearch={handleSearch} placeholder="Search articles..." />
           <div className="flex items-center gap-2">
             <TabsList>
               <TabsTrigger value="all">{t('ui.all')}</TabsTrigger>
