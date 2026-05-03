@@ -120,6 +120,16 @@ async def lifespan(app: FastAPI):
                 )
             scheduler.start()
             logger.info("Scheduler started successfully.")
+
+            # Resume any interrupted weekly insights jobs from previous deploys
+            try:
+                import asyncio
+
+                from app.qa_agent.weekly_insights.report_generator import InsightReportGenerator
+
+                asyncio.ensure_future(InsightReportGenerator().resume_if_needed())
+            except Exception as e:
+                logger.warning(f"resume_if_needed failed at startup: {e}")
         except Exception as e:
             logger.error(f"Failed to start scheduler: {e}", exc_info=True)
             raise

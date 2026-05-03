@@ -20,6 +20,9 @@ from .trend_detector import TrendDetector
 
 logger = logging.getLogger(__name__)
 
+# If a pending record is older than this, assume it was interrupted
+STALE_PENDING_MINUTES = 10
+
 
 class InsightReportGenerator:
     """Orchestrates the weekly insights pipeline."""
@@ -41,15 +44,8 @@ class InsightReportGenerator:
         """
         Run the full pipeline and return a structured insight report.
 
-        Args:
-            days: Number of days to analyze (default 7).
-            end_date: End of the analysis window (default: now UTC).
-            user_id: Optional user ID for personalization.
-
-        Returns:
-            Report dict with keys: id, period_start, period_end, article_count,
-            executive_summary, clusters, trends, missed_articles, trend_data,
-            created_at.
+        Inserts a 'pending' row before starting so that a restart can detect
+        and resume interrupted jobs via resume_if_needed().
         """
         if end_date is None:
             end_date = datetime.now(UTC)
@@ -57,6 +53,84 @@ class InsightReportGenerator:
 
         logger.info("Generating weekly insights report (%d days)", days)
 
+        pending_id = await self._insert_pending(start_date, end_date)
+
+        try:
+            report = await self._run_pipeline(
+                days=days, start_date=start_date, end_date=end_date, user_id=user_id
+            )
+        except Exception as exc:
+            if pending_id:
+                await self._update_status(pending_id, "failed")
+            raise exc
+
+        report_id = await self._save_report(report, pending_id)
+        report["id"] = report_id
+        logger.info("Weekly insights report generated (id=%s)", report_id)
+        return report
+
+    async def resume_if_needed(self) -> None:
+        """
+        Called at startup. Checks for:
+        1. Stale 'pending' records (interrupted mid-generation) → re-run
+        2. Missing report for the current week → generate now
+
+        This ensures a CD deploy that interrupted a job will self-heal.
+        """
+        try:
+            now = datetime.now(UTC)
+            stale_cutoff = now - timedelta(minutes=STALE_PENDING_MINUTES)
+
+            response = (
+                self.supabase.client.table("weekly_insights")
+                .select("id, status, started_at, period_start, period_end")
+                .in_("status", ["pending", "failed"])
+                .execute()
+            )
+            rows = response.data or []
+
+            for row in rows:
+                started_at = row.get("started_at")
+                if row["status"] == "pending" and started_at:
+                    started_dt = datetime.fromisoformat(started_at)
+                    if started_dt > stale_cutoff:
+                        # Still within grace period, don't interrupt
+                        continue
+                logger.info(
+                    "Resuming interrupted/failed insights job (id=%s, status=%s)",
+                    row["id"],
+                    row["status"],
+                )
+                await self._update_status(row["id"], "failed")  # mark old one as failed
+                await self.generate()
+                return  # one at a time
+
+            # Check if current week is missing a completed report
+            week_start = now - timedelta(days=now.weekday())  # Monday
+            week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
+
+            response = (
+                self.supabase.client.table("weekly_insights")
+                .select("id")
+                .eq("status", "completed")
+                .gte("period_end", week_start.isoformat())
+                .limit(1)
+                .execute()
+            )
+            if not (response.data or []):
+                logger.info("No completed report for current week — generating now")
+                await self.generate()
+
+        except Exception as exc:
+            logger.error("resume_if_needed failed: %s", exc, exc_info=True)
+
+    async def _run_pipeline(
+        self,
+        days: int,
+        start_date: datetime,
+        end_date: datetime,
+        user_id: str | None,
+    ) -> dict[str, Any]:
         # 1. Collect articles
         articles = await self.collector.collect_weekly_articles(days=days, end_date=end_date)
         if not articles:
@@ -103,7 +177,7 @@ class InsightReportGenerator:
             for c in clusters[:10]
         ]
 
-        report: dict[str, Any] = {
+        return {
             "period_start": start_date.isoformat(),
             "period_end": end_date.isoformat(),
             "article_count": len(articles),
@@ -119,16 +193,9 @@ class InsightReportGenerator:
                 }
                 for a in missed_articles
             ],
-            "trend_data": trends[:20],  # stored for historical comparison
+            "trend_data": trends[:20],
             "created_at": datetime.now(UTC).isoformat(),
         }
-
-        # 8. Persist to Supabase
-        report_id = await self._save_report(report)
-        report["id"] = report_id
-
-        logger.info("Weekly insights report generated (id=%s)", report_id)
-        return report
 
     def _build_summary(
         self,
@@ -150,7 +217,6 @@ class InsightReportGenerator:
         Extracts themes/technologies from title + summary using simple keyword matching.
         """
         KEYWORD_MAP: dict[str, tuple[str, str]] = {
-            # (domain, theme)
             "react": ("frontend", "React"),
             "vue": ("frontend", "Vue"),
             "angular": ("frontend", "Angular"),
@@ -233,22 +299,65 @@ class InsightReportGenerator:
             "created_at": datetime.now(UTC).isoformat(),
         }
 
-    async def _save_report(self, report: dict[str, Any]) -> str | None:
-        """Persist the report to the weekly_insights table."""
+    async def _insert_pending(self, start_date: datetime, end_date: datetime) -> str | None:
+        """Insert a pending record before generation starts."""
         try:
-            row = {
-                "period_start": report["period_start"],
-                "period_end": report["period_end"],
-                "article_count": report["article_count"],
-                "executive_summary": report["executive_summary"],
-                "clusters": json.dumps(report["clusters"]),
-                "trends": json.dumps(report["trends"]),
-                "missed_articles": json.dumps(report["missed_articles"]),
-                "trend_data": json.dumps(report["trend_data"]),
-            }
-            response = self.supabase.client.table("weekly_insights").insert(row).execute()
+            response = (
+                self.supabase.client.table("weekly_insights")
+                .insert(
+                    {
+                        "period_start": start_date.isoformat(),
+                        "period_end": end_date.isoformat(),
+                        "article_count": 0,
+                        "status": "pending",
+                        "started_at": datetime.now(UTC).isoformat(),
+                    }
+                )
+                .execute()
+            )
             rows = response.data or []
             return rows[0].get("id") if rows else None
         except Exception as exc:
-            logger.error("Failed to save weekly insights report: %s", exc)
+            logger.warning("Failed to insert pending record: %s", exc)
             return None
+
+    async def _update_status(self, report_id: str, status: str) -> None:
+        try:
+            self.supabase.client.table("weekly_insights").update({"status": status}).eq(
+                "id", report_id
+            ).execute()
+        except Exception as exc:
+            logger.warning("Failed to update report status: %s", exc)
+
+    async def _save_report(
+        self, report: dict[str, Any], pending_id: str | None = None
+    ) -> str | None:
+        """Update the pending record with full data, or insert a new completed record."""
+        row = {
+            "period_start": report["period_start"],
+            "period_end": report["period_end"],
+            "article_count": report["article_count"],
+            "executive_summary": report["executive_summary"],
+            "clusters": json.dumps(report["clusters"]),
+            "trends": json.dumps(report["trends"]),
+            "missed_articles": json.dumps(report["missed_articles"]),
+            "trend_data": json.dumps(report["trend_data"]),
+            "status": "completed",
+        }
+        try:
+            if pending_id:
+                response = (
+                    self.supabase.client.table("weekly_insights")
+                    .update(row)
+                    .eq("id", pending_id)
+                    .execute()
+                )
+                rows = response.data or []
+                return rows[0].get("id") if rows else pending_id
+            else:
+                response = self.supabase.client.table("weekly_insights").insert(row).execute()
+                rows = response.data or []
+                return rows[0].get("id") if rows else None
+        except Exception as exc:
+            logger.error("Failed to save weekly insights report: %s", exc)
+            return pending_id
