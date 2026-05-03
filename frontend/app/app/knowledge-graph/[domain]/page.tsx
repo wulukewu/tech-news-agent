@@ -64,6 +64,7 @@ export default function DomainGraphPage() {
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const [headerHeight, setHeaderHeight] = useState(64);
   const [generateError, setGenerateError] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const autoTriggeredRef = useRef(false);
 
   const [isMobile, setIsMobile] = useState(false);
@@ -119,18 +120,30 @@ export default function DomainGraphPage() {
 
   const rebuildMutation = useMutation({
     mutationFn: () => rebuildDomain(domainName),
+    onMutate: () => setIsGenerating(true),
     onSuccess: () => {
       setGenerateError(false);
       queryClient.invalidateQueries({ queryKey: ['knowledge-graph', 'graph', domainName] });
     },
-    onError: () => setGenerateError(true),
+    onError: () => {
+      setGenerateError(true);
+      setIsGenerating(false);
+    },
   });
+
+  // Clear isGenerating once graph actually has nodes
+  useEffect(() => {
+    if (isGenerating && graph && graph.nodes.length > 0) {
+      setIsGenerating(false);
+    }
+  }, [isGenerating, graph]);
 
   // Auto-trigger once when graph loads with 0 nodes
   useEffect(() => {
     if (!graph || graphLoading || autoTriggeredRef.current) return;
     if (graph.nodes.length === 0) {
       autoTriggeredRef.current = true;
+      setIsGenerating(true);
       rebuildMutation.mutate();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -216,10 +229,10 @@ export default function DomainGraphPage() {
         <div className="flex flex-1 overflow-hidden">
           {/* Graph area */}
           <div className="flex-1 relative bg-muted/20">
-            {graphLoading || rebuildMutation.isPending ? (
+            {graphLoading || isGenerating ? (
               <div className="flex items-center justify-center h-full">
-                {/* Show AI generation UI when: rebuilding, or graph loaded with 0 nodes */}
-                {rebuildMutation.isPending ||
+                {/* Show AI generation UI when: generating, or graph loaded with 0 nodes */}
+                {isGenerating ||
                 (graph !== null &&
                   graph !== undefined &&
                   (graph as { nodes: unknown[] }).nodes.length === 0) ? (
@@ -265,6 +278,7 @@ export default function DomainGraphPage() {
                     size="sm"
                     onClick={() => {
                       setGenerateError(false);
+                      setIsGenerating(true);
                       rebuildMutation.mutate();
                     }}
                   >
