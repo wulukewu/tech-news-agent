@@ -279,7 +279,8 @@ export function GraphVisualization({
       .attr('stroke', '#475569')
       .attr('stroke-width', 2)
       .attr('stroke-linecap', 'round')
-      .attr('transform', 'translate(-6, -6.5) scale(0.5)');
+      // viewBox 24×24, scale 0.5 → 12×12; visual center of lock ~(9,12) → center in circle
+      .attr('transform', 'scale(0.5) translate(-9, -12)');
 
     // Completed checkmark
     node

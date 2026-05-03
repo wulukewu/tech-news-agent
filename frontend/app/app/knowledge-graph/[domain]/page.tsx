@@ -170,6 +170,10 @@ export default function DomainGraphPage() {
           };
         }
       );
+      // If un-completing a node, is_unlocked of dependents may change — refetch graph
+      if (variables.status !== 'completed') {
+        queryClient.invalidateQueries({ queryKey: ['knowledge-graph', 'graph', domainName] });
+      }
       // Only invalidate progress + recommendations (don't re-fetch graph)
       queryClient.invalidateQueries({ queryKey: ['knowledge-graph', 'progress', domainName] });
       queryClient.invalidateQueries({
