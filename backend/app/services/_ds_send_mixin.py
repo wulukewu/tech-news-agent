@@ -1,9 +1,11 @@
 """Mixin extracted from service."""
 from __future__ import annotations
 
+from datetime import datetime
 from uuid import UUID
 
 from app.core.logger import get_logger
+from app.repositories.user_notification_preferences import UserNotificationPreferences
 
 logger = get_logger(__name__)
 
