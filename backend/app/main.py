@@ -415,6 +415,7 @@ app.include_router(platforms_api.router, prefix="/api/user/platforms", tags=["pl
 
 
 @app.get("/")
+@app.head("/")
 async def root():
     return {"status": "ok", "message": "Tech News Agent is running."}
 
