@@ -213,11 +213,15 @@ export default function DomainGraphPage() {
                     {Math.round(graph.user_progress_pct)}%
                   </span>
                 </div>
-                {progress?.badges.map((badge) => (
-                  <Badge key={badge} variant="secondary" className="hidden md:flex">
-                    {badge}
-                  </Badge>
-                ))}
+                {progress?.badges.map((badgeType) => {
+                  const key =
+                    `knowledge-graph.badge-${badgeType}` as import('@/types/i18n').TranslationKey;
+                  return (
+                    <Badge key={badgeType} variant="secondary" className="hidden md:flex">
+                      {t(key) || badgeType}
+                    </Badge>
+                  );
+                })}
               </div>
             </>
           ) : (
@@ -448,11 +452,15 @@ export default function DomainGraphPage() {
                       <div>
                         <p className="text-sm font-medium mb-2">{t('knowledge-graph.badges')}</p>
                         <div className="flex flex-wrap gap-2">
-                          {progress.badges.map((badge) => (
-                            <Badge key={badge} variant="secondary">
-                              {badge}
-                            </Badge>
-                          ))}
+                          {progress.badges.map((badgeType) => {
+                            const key =
+                              `knowledge-graph.badge-${badgeType}` as import('@/types/i18n').TranslationKey;
+                            return (
+                              <Badge key={badgeType} variant="secondary">
+                                {t(key) || badgeType}
+                              </Badge>
+                            );
+                          })}
                         </div>
                       </div>
                     )}

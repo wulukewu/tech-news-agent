@@ -206,12 +206,12 @@ class GraphDatabase:
     async def get_user_achievements(self, user_id: UUID, domain_id: UUID) -> List[str]:
         result = (
             self.db.client.table("user_achievements")
-            .select("badge_name")
+            .select("badge_type")
             .eq("user_id", str(user_id))
             .eq("domain_id", str(domain_id))
             .execute()
         )
-        return [r["badge_name"] for r in (result.data or [])]
+        return [r["badge_type"] for r in (result.data or [])]
 
     async def award_badge(
         self, user_id: UUID, domain_id: UUID, badge_type: str, badge_name: str
