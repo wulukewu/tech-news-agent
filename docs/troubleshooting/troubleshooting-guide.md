@@ -1,657 +1,344 @@
 # Troubleshooting Guide
 
-This guide helps you diagnose and fix common issues in the Tech News Agent development environment.
+This guide helps you diagnose and fix common issues in the Tech News Agent.
 
 ## Table of Contents
 
 - [Quick Diagnostics](#quick-diagnostics)
 - [Common Issues](#common-issues)
-- [Development Environment Issues](#development-environment-issues)
+- [Database Issues](#database-issues)
+- [Discord Bot Issues](#discord-bot-issues)
 - [Frontend Issues](#frontend-issues)
 - [Backend Issues](#backend-issues)
-- [Database Issues](#database-issues)
 - [Docker Issues](#docker-issues)
-- [Performance Issues](#performance-issues)
-- [Error Messages and Solutions](#error-messages-and-solutions)
+- [Error Reference](#error-reference)
 - [Getting Help](#getting-help)
+
+---
 
 ## Quick Diagnostics
 
-### Health Check Commands
-
 ```bash
-# Check all services status
+# Check all service status
 make ps
 
-# Check database connection
-./scripts/dev-migrate.sh status
-
-# Test API health
+# Check backend health
 curl http://localhost:8000/health
-
-# Test frontend
-curl http://localhost:3000
+curl http://localhost:8000/health/scheduler
 
 # Check logs
-make logs-dev
-```
-
-### System Requirements Check
-
-```bash
-# Check Docker
-docker --version
-docker-compose --version
-
-# Check available resources
-docker system df
-docker stats --no-stream
+make logs-dev       # development
+make logs-prod      # production
 
 # Check ports
 lsof -i :3000
 lsof -i :8000
 ```
 
+---
+
 ## Common Issues
 
-### 1. Services Won't Start
+### 1. Missing Database Tables
 
-**Symptoms:**
+**Symptoms:** `relation "X" does not exist`, 500 errors on API calls
 
-- `make dev` fails
-- Containers exit immediately
-- Port binding errors
+**Solutions:**
+
+Option A — Run the init SQL in Supabase SQL Editor:
+```
+Supabase Dashboard → SQL Editor → paste backend/scripts/init_supabase.sql → Run
+```
+
+Option B — Run the migration script:
+```bash
+python3 backend/scripts/apply_missing_migration.py
+```
+
+To verify the database state:
+```bash
+python3 backend/scripts/verify_bot_health.py
+```
+
+---
+
+### 2. Discord Bot Not Responding
+
+**Symptoms:** Bot is online but ignores commands, slash commands not registered
+
+**Checklist:**
+- `DISCORD_TOKEN` is set correctly in `.env`
+- Bot has the required permissions in the Discord server (Send Messages, Use Slash Commands, Send Messages in Threads)
+- OAuth scopes include `bot` and `applications.commands`
+- Bot has been invited to the server with the correct permission integer
+
+```bash
+# Check token is loaded
+docker-compose exec backend env | grep DISCORD_TOKEN
+
+# Check bot logs
+docker-compose logs backend | grep -i discord
+```
+
+---
+
+### 3. Articles Not Fetching
+
+**Symptoms:** No new articles appear, scheduler seems idle
+
+**Checklist:**
+1. Check scheduler health: `curl http://localhost:8000/health/scheduler`
+2. Check backend logs for scheduler errors: `make logs-dev`
+3. Verify RSS feed URLs are valid and reachable
+4. Confirm `GROQ_API_KEY` is set and has remaining credits
+
+```bash
+# Manually trigger a fetch
+curl -X POST http://localhost:8000/api/scheduler/trigger
+# or via Discord: /trigger_fetch
+```
+
+---
+
+### 4. Frontend Can't Connect to Backend
+
+**Symptoms:** API calls fail, "Network Error", blank pages after login
 
 **Solutions:**
 
 ```bash
-# Check if ports are in use
-lsof -i :3000 :8000
+# Verify the env var is set
+grep NEXT_PUBLIC_API_URL .env
 
-# Kill processes using the ports
-kill -9 $(lsof -t -i:3000)
-kill -9 $(lsof -t -i:8000)
-
-# Clean up Docker resources
-make clean
-docker system prune -f
-
-# Rebuild and start
-make up-dev
+# Test backend is reachable
+curl http://localhost:8000/health
 ```
 
-### 2. Environment Variables Not Loading
+- Ensure `NEXT_PUBLIC_API_URL=http://localhost:8000` in `.env`
+- Check CORS config in the backend allows the frontend origin
+- If running in Docker, use the service name: `http://backend:8000`
 
-**Symptoms:**
+---
 
-- "Configuration missing" errors
-- API calls fail with authentication errors
-- Services can't connect to database
+### 5. Authentication Failures
 
-**Solutions:**
+**Symptoms:** Login redirects fail, "Invalid token", 401 errors
 
-```bash
-# Verify .env file exists
-ls -la .env
+**Checklist:**
+- `DISCORD_CLIENT_ID` and `DISCORD_CLIENT_SECRET` match the Discord Developer Portal
+- `DISCORD_REDIRECT_URI` matches exactly what is registered in the portal (e.g. `http://localhost:3000/auth/callback`)
+- `JWT_SECRET_KEY` is set (generate with `openssl rand -hex 32`)
 
-# Check environment variables in containers
-docker-compose exec backend env | grep SUPABASE
-docker-compose exec frontend env | grep NEXT_PUBLIC
+---
 
-# Recreate .env from template
-cp .env.example .env
-# Edit .env with your values
+### 6. Port Conflicts
 
-# Restart services to reload environment
-make restart-dev
-```
-
-### 3. Hot Module Replacement Not Working
-
-**Symptoms:**
-
-- Changes not reflected in browser
-- Need to manually refresh
-- Slow reload times
-
-**Solutions:**
-
-```bash
-# Test HMR performance
-./scripts/test-hmr.sh
-
-# Check file permissions (especially on Windows/WSL)
-ls -la frontend/
-ls -la backend/app/
-
-# Restart with clean build
-make down-dev
-make build-dev
-make dev
-
-# For WSL2 users, try local development
-cd frontend && npm run dev
-cd backend && uvicorn app.main:app --reload
-```
-
-### 4. Database Connection Issues
-
-**Symptoms:**
-
-- "Database connection failed" errors
-- Timeout errors
-- Authentication failures
-
-**Solutions:**
-
-```bash
-# Test database connection
-./scripts/dev-migrate.sh status
-
-# Check Supabase service status
-curl -I https://your-project.supabase.co
-
-# Verify credentials in .env
-grep SUPABASE .env
-
-# Test connection manually
-python3 -c "
-from supabase import create_client
-import os
-client = create_client(os.getenv('SUPABASE_URL'), os.getenv('SUPABASE_KEY'))
-print('Connection successful')
-"
-```
-
-## Development Environment Issues
-
-### Docker Issues
-
-#### Container Exits Immediately
-
-```bash
-# Check container logs
-docker-compose logs backend
-docker-compose logs frontend
-
-# Check for syntax errors in Dockerfile
-docker-compose build --no-cache
-
-# Verify base images are available
-docker pull node:20-alpine
-docker pull python:3.11-slim
-```
-
-#### Out of Disk Space
-
-```bash
-# Check Docker disk usage
-docker system df
-
-# Clean up unused resources
-docker system prune -a -f
-docker volume prune -f
-
-# Remove unused images
-docker image prune -a -f
-```
-
-#### Memory Issues
-
-```bash
-# Check Docker memory usage
-docker stats
-
-# Increase Docker memory limit (Docker Desktop)
-# Settings > Resources > Memory > Increase limit
-
-# Reduce memory usage
-docker-compose down
-docker system prune -f
-make dev
-```
-
-### Network Issues
-
-#### Port Conflicts
+**Symptoms:** `address already in use`, services fail to start
 
 ```bash
 # Find what's using the ports
 lsof -i :3000
 lsof -i :8000
 
-# Change ports in docker-compose.yml if needed
-# Or kill conflicting processes
-sudo kill -9 $(lsof -t -i:3000)
+# Kill the conflicting process
+kill -9 $(lsof -t -i:3000)
+kill -9 $(lsof -t -i:8000)
 ```
 
-#### DNS Resolution Issues
+---
+
+## Database Issues
+
+The project uses **Supabase (cloud PostgreSQL)**. There is no local database and no Alembic. All migrations are SQL files.
+
+### Running Migrations
 
 ```bash
-# Test DNS resolution
-nslookup your-project.supabase.co
+# Option 1: Supabase SQL Editor (recommended)
+# Paste backend/scripts/init_supabase.sql and run
 
-# Try using IP address instead of hostname
-# Check /etc/hosts file for conflicts
-
-# Restart Docker daemon
-sudo systemctl restart docker  # Linux
-# Or restart Docker Desktop
+# Option 2: Migration script
+python3 backend/scripts/apply_missing_migration.py
 ```
+
+### Connection Timeout / Auth Failure
+
+```bash
+# Verify credentials are set
+grep SUPABASE .env
+
+# Test connection manually
+python3 -c "
+from supabase import create_client
+import os
+c = create_client(os.getenv('SUPABASE_URL'), os.getenv('SUPABASE_KEY'))
+print('Connected:', c.table('users').select('count').execute())
+"
+
+# Check Supabase project status
+# Supabase Dashboard → Settings → General
+```
+
+- Use the **service role key** (not the anon key) for `SUPABASE_KEY`
+- Check that RLS policies allow service role access
+
+---
+
+## Discord Bot Issues
+
+### Bot Token Invalid
+
+```bash
+grep DISCORD_TOKEN .env
+# Regenerate token at: Discord Developer Portal → Bot → Reset Token
+```
+
+### Slash Commands Not Appearing
+
+Slash commands can take up to 1 hour to propagate globally. For instant registration, use guild-specific commands during development.
+
+```bash
+docker-compose logs backend | grep -i "command\|sync\|slash"
+```
+
+---
 
 ## Frontend Issues
 
 ### Build Failures
 
-#### TypeScript Errors
-
 ```bash
-# Check TypeScript configuration
 cd frontend
-npm run type-check
-
-# Fix common issues
-npm install --save-dev @types/node @types/react @types/react-dom
-
-# Clear TypeScript cache
-rm -rf .next
+rm -rf node_modules .next
+npm install
 npm run build
 ```
 
-#### Dependency Issues
+### TypeScript Errors
 
 ```bash
-# Clear node_modules and reinstall
 cd frontend
-rm -rf node_modules package-lock.json
-npm install
-
-# Check for peer dependency warnings
-npm ls
-
-# Update dependencies
-npm update
+npm run type-check
 ```
 
-### Runtime Errors
+### Hydration Errors
 
-#### Hydration Errors
-
-**Error:** "Hydration failed because the initial UI does not match what was rendered on the server"
-
-**Solutions:**
-
-- Ensure server and client render the same content
-- Check for browser-only code running on server
-- Use `useEffect` for client-only code
-- Check for date/time formatting differences
+Use `useEffect` for any browser-only code (e.g. `localStorage`, `Date`):
 
 ```typescript
-// Fix hydration issues
-import { useEffect, useState } from 'react';
-
-function MyComponent() {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return null;
-
-  // Client-only code here
-  return <div>{new Date().toLocaleString()}</div>;
-}
+const [mounted, setMounted] = useState(false);
+useEffect(() => setMounted(true), []);
+if (!mounted) return null;
 ```
 
-#### API Call Failures
-
-```bash
-# Check API client configuration
-grep NEXT_PUBLIC_API_URL .env
-
-# Test API endpoints directly
-curl http://localhost:8000/health
-curl http://localhost:8000/api/articles
-
-# Check browser network tab for failed requests
-# Enable API debugging in browser console
-```
+---
 
 ## Backend Issues
 
-### FastAPI Issues
-
-#### Import Errors
+### Import / Dependency Errors
 
 ```bash
-# Check Python path
-docker-compose exec backend python -c "import sys; print(sys.path)"
-
-# Verify all dependencies are installed
 docker-compose exec backend pip list
-
-# Rebuild container with fresh dependencies
 docker-compose build backend --no-cache
 ```
 
-#### Database Migration Issues
+### Scheduler Not Running
 
 ```bash
-# Check database schema
-./scripts/dev-migrate.sh status
-
-# Re-run initialization
-./scripts/dev-migrate.sh init
-
-# Check for SQL syntax errors in migration files
-cat backend/scripts/init_supabase.sql
+curl http://localhost:8000/health/scheduler
+make logs-dev | grep -i scheduler
 ```
 
-### Discord Bot Issues
+Set `LOG_LEVEL=DEBUG` in `.env` for verbose output.
 
-#### Bot Not Responding
+---
+
+## Docker Issues
+
+### Services Won't Start
 
 ```bash
-# Check bot token
-grep DISCORD_TOKEN .env
-
-# Verify bot permissions in Discord Developer Portal
-# Check bot logs
-docker-compose logs backend | grep -i discord
-
-# Test bot connection
-docker-compose exec backend python -c "
-import discord
-import os
-client = discord.Client()
-print('Bot token configured:', bool(os.getenv('DISCORD_TOKEN')))
-"
-```
-
-#### Command Registration Issues
-
-```bash
-# Check command registration logs
-docker-compose logs backend | grep -i command
-
-# Manually sync commands (if needed)
-# Check Discord Developer Portal > Applications > Your Bot > General Information
-```
-
-## Database Issues
-
-### Connection Problems
-
-#### Supabase Connection Timeout
-
-```bash
-# Test connection with curl
-curl -H "apikey: YOUR_SUPABASE_KEY" \
-     -H "Authorization: Bearer YOUR_SUPABASE_KEY" \
-     "https://your-project.supabase.co/rest/v1/users?select=count"
-
-# Check Supabase project status
-# Visit Supabase Dashboard > Settings > General
-```
-
-#### Authentication Failures
-
-```bash
-# Verify service role key (not anon key)
-# Check key permissions in Supabase Dashboard
-# Ensure RLS policies allow service role access
-```
-
-### Data Issues
-
-#### Missing Tables
-
-```bash
-# Check if tables exist
-./scripts/dev-migrate.sh status
-
-# Re-run database initialization
-# Copy backend/scripts/init_supabase.sql to Supabase SQL Editor
-# Execute the SQL script
-```
-
-#### Data Inconsistency
-
-```bash
-# Check data integrity
-./scripts/dev-migrate.sh status
-
-# Reset database if needed
-./scripts/dev-migrate.sh reset --force
-./scripts/dev-migrate.sh init
-./scripts/dev-migrate.sh seed
-```
-
-## Performance Issues
-
-### Slow API Responses
-
-```bash
-# Check API response times
-curl -w "@curl-format.txt" http://localhost:8000/api/articles
-
-# Monitor database query performance
-# Check Supabase Dashboard > Logs > Slow Queries
-
-# Enable FastAPI debug logging
-# Set LOG_LEVEL=DEBUG in .env
-```
-
-### High Memory Usage
-
-```bash
-# Monitor container memory usage
-docker stats
-
-# Check for memory leaks
-# Profile Python code with memory_profiler
-# Check for large objects in memory
-```
-
-### Slow Frontend Loading
-
-```bash
-# Analyze bundle size
-cd frontend
-npm run build
-npm run analyze  # If configured
-
-# Check for large dependencies
-npx webpack-bundle-analyzer .next/static/chunks/*.js
-
-# Optimize images and assets
-# Use Next.js Image component
-# Enable compression
-```
-
-## Error Messages and Solutions
-
-### Common Error Patterns
-
-#### "Cannot read property 'X' of undefined"
-
-**Cause:** Accessing property of undefined/null object
-
-**Solutions:**
-
-```typescript
-// Use optional chaining
-const value = obj?.property?.subProperty;
-
-// Use conditional rendering
-{data && <Component data={data} />}
-
-// Provide default values
-const { property = 'default' } = obj || {};
-```
-
-#### "Module not found"
-
-**Cause:** Missing dependency or incorrect import path
-
-**Solutions:**
-
-```bash
-# Install missing dependency
-npm install missing-package
-
-# Check import paths
-# Use absolute imports with @ alias
-import { Component } from '@/components/Component';
-
-# Clear module cache
-rm -rf node_modules/.cache
-```
-
-#### "Port already in use"
-
-**Cause:** Another process is using the port
-
-**Solutions:**
-
-```bash
-# Find and kill process
-lsof -ti:3000 | xargs kill -9
-
-# Use different port
-# Modify docker-compose.yml ports section
-```
-
-#### "Database connection failed"
-
-**Cause:** Invalid credentials or network issues
-
-**Solutions:**
-
-```bash
-# Verify credentials
-./scripts/dev-migrate.sh status
-
-# Check network connectivity
-ping your-project.supabase.co
-
-# Update connection string
-# Check .env file for typos
-```
-
-### HTTP Error Codes
-
-#### 401 Unauthorized
-
-- Check authentication token
-- Verify token hasn't expired
-- Clear localStorage and re-login
-
-#### 403 Forbidden
-
-- Check user permissions
-- Verify API key has correct permissions
-- Check Supabase RLS policies
-
-#### 404 Not Found
-
-- Verify API endpoint exists
-- Check URL for typos
-- Ensure resource exists in database
-
-#### 500 Internal Server Error
-
-- Check backend logs: `make logs-dev`
-- Verify database connection
-- Check for unhandled exceptions
-
-## Getting Help
-
-### Debugging Steps
-
-1. **Check Logs**
-
-   ```bash
-   make logs-dev
-   docker-compose logs backend
-   docker-compose logs frontend
-   ```
-
-2. **Verify Configuration**
-
-   ```bash
-   cat .env
-   ./scripts/dev-migrate.sh status
-   ```
-
-3. **Test Components Individually**
-
-   ```bash
-   curl http://localhost:8000/health
-   curl http://localhost:3000
-   ```
-
-4. **Check System Resources**
-   ```bash
-   docker stats
-   df -h
-   free -h
-   ```
-
-### Collecting Debug Information
-
-When reporting issues, include:
-
-```bash
-# System information
-uname -a
-docker --version
-docker-compose --version
-
-# Service status
-make ps
-docker-compose logs --tail=50
-
-# Configuration (remove sensitive data)
-cat .env | sed 's/=.*/=***/'
-
-# Resource usage
-docker stats --no-stream
-```
-
-### Documentation Resources
-
-- [README.md](../README.md) - Project overview
-- [quick-start.md](quick-start.md) - Setup guide
-- [DEVELOPMENT_WORKFLOWS.md](DEVELOPMENT_WORKFLOWS.md) - Development workflows
-- [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) - Technical details
-
-### Support Channels
-
-1. **Check existing documentation**
-2. **Search GitHub issues**
-3. **Create detailed bug report with:**
-   - Steps to reproduce
-   - Expected vs actual behavior
-   - System information
-   - Relevant logs
-   - Configuration (sanitized)
-
-### Emergency Recovery
-
-If everything is broken:
-
-```bash
-# Nuclear option - reset everything
+# Check logs for the failing service
+docker-compose logs backend
+docker-compose logs frontend
+
+# Clean up and rebuild
 make clean
-docker system prune -a -f
-rm -rf frontend/node_modules frontend/.next
-rm -rf backend/__pycache__ backend/.pytest_cache
-
-# Start fresh
-./scripts/dev-setup.sh
 make dev
 ```
 
-This should resolve most issues. If problems persist, check the documentation or create an issue with detailed information about your environment and the specific error messages you're seeing.
+### Out of Disk Space
+
+```bash
+docker system df
+docker system prune -a -f
+docker volume prune -f
+```
+
+### Makefile Reference
+
+| Command | Description |
+|---------|-------------|
+| `make dev` | Start development environment |
+| `make prod` | Start production environment |
+| `make logs-dev` | Tail development logs |
+| `make logs-prod` | Tail production logs |
+| `make clean` | Stop and remove containers/volumes |
+| `make ps` | Show running services |
+
+---
+
+## Error Reference
+
+| Error | Likely Cause | Fix |
+|-------|-------------|-----|
+| `relation "X" does not exist` | Missing DB table | Run `init_supabase.sql` or `apply_missing_migration.py` |
+| `401 Unauthorized` | Bad/expired JWT or Discord token | Re-login or check `JWT_SECRET_KEY` |
+| `403 Forbidden` | Missing permissions or RLS policy | Check Supabase RLS, bot permissions |
+| `404 Not Found` | Wrong endpoint or missing resource | Check URL, verify data exists |
+| `500 Internal Server Error` | Unhandled exception | Check `make logs-dev` |
+| `Port already in use` | Port conflict | `kill -9 $(lsof -t -i:PORT)` |
+| `GROQ API error` | No credits or invalid key | Check [console.groq.com](https://console.groq.com) |
+
+---
+
+## Getting Help
+
+### Collect Debug Info
+
+```bash
+# Service status
+make ps
+
+# Recent logs (sanitize before sharing)
+docker-compose logs --tail=100
+
+# Config check (hides values)
+cat .env | sed 's/=.*/=***/'
+
+# System info
+docker --version && docker-compose --version
+```
+
+### Useful Scripts
+
+```bash
+python3 backend/scripts/verify_bot_health.py      # Check bot + DB health
+python3 backend/scripts/apply_missing_migration.py # Apply missing DB migrations
+```
+
+### Emergency Reset
+
+```bash
+make clean
+docker system prune -f
+cp .env.example .env   # re-fill credentials
+make dev
+```
+
+### Documentation
+
+- [Quick Start Guide](../guides/quick-start.md)
+- [Environment Setup](../setup/env-setup-guide.md)
+- [Developer Guide](../development/developer-guide.md)
+- [Architecture Overview](../architecture/architecture-overview.md)

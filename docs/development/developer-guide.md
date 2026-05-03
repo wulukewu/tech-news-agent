@@ -1,640 +1,476 @@
-# Tech News Agent 開發者指南
+# Developer Guide
 
-## 目錄
+## Table of Contents
 
-1. [架構概述](#架構概述)
-2. [多租戶架構](#多租戶架構)
-3. [資料流程](#資料流程)
-4. [API 參考](#api參考)
-5. [測試指南](#測試指南)
-6. [部署指南](#部署指南)
-
----
-
-## 架構概述
-
-### 系統元件
-
-Tech News Agent 由四個主要元件組成：
-
-1. **Discord Bot** - 使用者互動介面
-2. **Supabase Service** - 資料庫存取層
-3. **LLM Service** - AI 分析和推薦
-4. **Background Scheduler** - 自動化任務
-
-### 技術棧
-
-- **Backend**: Python 3.11+, FastAPI
-- **Database**: Supabase (PostgreSQL + pgvector)
-- **Discord**: discord.py 2.0+
-- **AI**: Groq (Llama 3.1 8B, Llama 3.3 70B)
-- **Scheduler**: APScheduler
-- **Testing**: pytest, Hypothesis
+1. [Prerequisites & Setup](#1-prerequisites--setup)
+2. [Project Structure](#2-project-structure)
+3. [Development Workflow](#3-development-workflow)
+4. [Code Quality](#4-code-quality)
+5. [Testing](#5-testing)
+6. [Adding New Features](#6-adding-new-features)
+7. [Key Conventions](#7-key-conventions)
 
 ---
 
-## 多租戶架構
+## 1. Prerequisites & Setup
 
-### 核心概念
+### Requirements
 
-Phase 4 實現了真正的多租戶架構，每個 Discord 使用者視為獨立租戶：
+- Python 3.11+
+- Node.js 18+
+- Docker & Docker Compose (recommended)
+- A Supabase project with pgvector enabled
+- Groq API key
+- Discord application (bot token + OAuth credentials)
 
-- **獨立訂閱**：每個使用者可以訂閱不同的 RSS 來源
-- **獨立閱讀清單**：每個使用者有自己的閱讀清單和評分
-- **共用文章池**：背景排程器抓取的文章供所有使用者共用
-- **資料隔離**：使用者之間的資料完全隔離
-
-### 使用者註冊流程
-
-```python
-# app/bot/utils/decorators.py
-
-async def ensure_user_registered(interaction: discord.Interaction) -> UUID:
-    """
-    確保使用者存在於資料庫
-
-    Args:
-        interaction: Discord interaction 物件
-
-    Returns:
-        使用者 UUID
-    """
-    discord_id = str(interaction.user.id)
-    supabase = SupabaseService()
-    user_uuid = await supabase.get_or_create_user(discord_id)
-    return user_uuid
-```
-
-**特點：**
-
-- 自動註冊：第一次執行指令時自動建立使用者記錄
-- 冪等性：重複呼叫返回相同的 UUID
-- 錯誤處理：註冊失敗時顯示友善的錯誤訊息
-
-### 資料庫結構
-
-```sql
--- 使用者表
-CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    discord_id TEXT UNIQUE NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- RSS 來源表
-CREATE TABLE feeds (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    name TEXT NOT NULL,
-    url TEXT UNIQUE NOT NULL,
-    category TEXT NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 使用者訂閱表
-CREATE TABLE user_subscriptions (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    feed_id UUID REFERENCES feeds(id) ON DELETE CASCADE,
-    subscribed_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(user_id, feed_id)
-);
-
--- 文章表
-CREATE TABLE articles (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    feed_id UUID REFERENCES feeds(id) ON DELETE CASCADE,
-    title TEXT NOT NULL,
-    url TEXT UNIQUE NOT NULL,
-    published_at TIMESTAMPTZ,
-    tinkering_index INTEGER CHECK (tinkering_index BETWEEN 1 AND 5),
-    ai_summary TEXT,
-    embedding VECTOR(1536),
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 閱讀清單表
-CREATE TABLE reading_list (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    article_id UUID REFERENCES articles(id) ON DELETE CASCADE,
-    status TEXT CHECK (status IN ('Unread', 'Read', 'Archived')),
-    rating INTEGER CHECK (rating BETWEEN 1 AND 5),
-    added_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(user_id, article_id)
-);
-```
-
----
-
-## 資料流程
-
-### 訂閱管理流程
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant Discord
-    participant Bot
-    participant Supabase
-    participant Database
-
-    User->>Discord: /add_feed
-    Discord->>Bot: Command interaction
-    Bot->>Supabase: get_or_create_user(discord_id)
-    Supabase->>Database: INSERT INTO users ... ON CONFLICT DO NOTHING
-    Database-->>Supabase: user_uuid
-    Bot->>Supabase: Check if feed exists
-    Supabase->>Database: SELECT id FROM feeds WHERE url=?
-    alt Feed exists
-        Database-->>Supabase: feed_id
-    else Feed doesn't exist
-        Supabase->>Database: INSERT INTO feeds
-        Database-->>Supabase: new feed_id
-    end
-    Bot->>Supabase: subscribe_to_feed(user_uuid, feed_id)
-    Supabase->>Database: INSERT INTO user_subscriptions
-    Database-->>Supabase: Success
-    Bot->>Discord: Confirmation message
-    Discord->>User: "✅ 已訂閱 {feed_name}"
-```
-
-### 文章查詢流程
-
-```mermaid
-flowchart TD
-    A[/news_now command] --> B[Register user]
-    B --> C[Get user subscriptions]
-    C --> D{Has subscriptions?}
-    D -->|No| E[Prompt to subscribe]
-    D -->|Yes| F[Query articles from subscribed feeds]
-    F --> G{Articles found?}
-    G -->|No| H[Inform user to wait]
-    G -->|Yes| I[Build article list]
-    I --> J[Create interactive view]
-    J --> K[Send to Discord]
-```
-
-### 閱讀清單流程
-
-```mermaid
-flowchart TD
-    A[Click Read Later button] --> B[Parse article_id from custom_id]
-    B --> C[Call save_to_reading_list]
-    C --> D{Article in list?}
-    D -->|Yes| E[Update updated_at]
-    D -->|No| F[Insert new record]
-    E --> G[Disable button]
-    F --> G
-    G --> H[Send confirmation]
-```
-
----
-
-## API 參考
-
-### SupabaseService
-
-#### get_or_create_user
-
-```python
-async def get_or_create_user(self, discord_id: str) -> UUID:
-    """
-    取得或建立使用者
-
-    Args:
-        discord_id: Discord 使用者 ID
-
-    Returns:
-        使用者 UUID
-
-    Raises:
-        SupabaseServiceError: 資料庫操作失敗
-    """
-```
-
-#### subscribe_to_feed
-
-```python
-async def subscribe_to_feed(self, discord_id: str, feed_id: UUID) -> None:
-    """
-    訂閱 RSS 來源
-
-    Args:
-        discord_id: Discord 使用者 ID
-        feed_id: Feed UUID
-
-    Raises:
-        SupabaseServiceError: 訂閱失敗
-    """
-```
-
-#### get_user_subscriptions
-
-```python
-async def get_user_subscriptions(self, discord_id: str) -> List[Subscription]:
-    """
-    取得使用者訂閱清單
-
-    Args:
-        discord_id: Discord 使用者 ID
-
-    Returns:
-        訂閱清單
-    """
-```
-
-#### save_to_reading_list
-
-```python
-async def save_to_reading_list(
-    self,
-    discord_id: str,
-    article_id: UUID
-) -> None:
-    """
-    儲存文章到閱讀清單
-
-    Args:
-        discord_id: Discord 使用者 ID
-        article_id: 文章 UUID
-
-    Raises:
-        SupabaseServiceError: 儲存失敗
-    """
-```
-
-#### update_article_status
-
-```python
-async def update_article_status(
-    self,
-    discord_id: str,
-    article_id: UUID,
-    status: str
-) -> None:
-    """
-    更新文章狀態
-
-    Args:
-        discord_id: Discord 使用者 ID
-        article_id: 文章 UUID
-        status: 狀態 ('Unread', 'Read', 'Archived')
-
-    Raises:
-        SupabaseServiceError: 更新失敗
-    """
-```
-
-#### update_article_rating
-
-```python
-async def update_article_rating(
-    self,
-    discord_id: str,
-    article_id: UUID,
-    rating: int
-) -> None:
-    """
-    更新文章評分
-
-    Args:
-        discord_id: Discord 使用者 ID
-        article_id: 文章 UUID
-        rating: 評分 (1-5)
-
-    Raises:
-        SupabaseServiceError: 更新失敗
-    """
-```
-
-### LLMService
-
-#### generate_deep_dive
-
-```python
-async def generate_deep_dive(self, article: ArticleSchema) -> str:
-    """
-    生成深度分析
-
-    Args:
-        article: 文章資料
-
-    Returns:
-        深度分析文字
-
-    Raises:
-        LLMServiceError: 生成失敗
-    """
-```
-
-#### generate_reading_recommendation
-
-```python
-async def generate_reading_recommendation(
-    self,
-    titles: List[str],
-    categories: List[str]
-) -> str:
-    """
-    生成閱讀推薦
-
-    Args:
-        titles: 文章標題列表
-        categories: 文章分類列表
-
-    Returns:
-        推薦摘要
-
-    Raises:
-        LLMServiceError: 生成失敗
-    """
-```
-
----
-
-## 測試指南
-
-### 測試結構
-
-```
-tests/
-├── bot/
-│   ├── utils/
-│   │   └── test_validators.py      # 資料驗證測試
-│   └── test_performance.py         # 效能測試
-├── integration/
-│   └── test_multi_tenant_workflow.py  # 整合測試
-├── test_config.py                  # 配置測試
-├── test_database_properties.py     # 屬性測試
-└── conftest.py                     # 測試配置
-```
-
-### 執行測試
+### Initial Setup
 
 ```bash
-# 執行所有測試
-pytest -v
+# Clone and enter the repo
+git clone https://github.com/yourusername/tech-news-agent.git
+cd tech-news-agent
 
-# 執行特定測試檔案
-pytest tests/bot/utils/test_validators.py -v
-
-# 執行效能測試
-pytest tests/bot/test_performance.py -v
-
-# 執行整合測試
-pytest tests/integration/test_multi_tenant_workflow.py -v
-
-# 執行屬性測試
-pytest tests/test_database_properties.py -v
-
-# 查看測試覆蓋率
-pytest --cov=app --cov-report=html
-```
-
-### 測試類型
-
-#### 1. 單元測試
-
-測試個別函數和類別：
-
-```python
-def test_validate_feed_url():
-    """測試 URL 驗證"""
-    is_valid, error = validate_feed_url("https://example.com/feed.xml")
-    assert is_valid is True
-    assert error == ""
-```
-
-#### 2. 屬性測試
-
-使用 Hypothesis 測試通用屬性：
-
-```python
-@given(st.integers(min_value=1, max_value=5))
-def test_rating_validation_property(rating):
-    """測試評分驗證屬性"""
-    is_valid, error = validate_rating(rating)
-    assert is_valid is True
-```
-
-#### 3. 整合測試
-
-測試完整工作流程：
-
-```python
-@pytest.mark.asyncio
-async def test_complete_user_journey():
-    """測試完整使用者旅程"""
-    # 1. 註冊
-    # 2. 訂閱
-    # 3. 查看文章
-    # 4. 儲存到閱讀清單
-    # 5. 評分
-    # 6. 獲得推薦
-```
-
-#### 4. 效能測試
-
-測試回應時間：
-
-```python
-@pytest.mark.asyncio
-async def test_news_now_response_time():
-    """測試 /news_now 回應時間 < 3 秒"""
-    start_time = time.time()
-    # ... 執行查詢
-    elapsed_time = time.time() - start_time
-    assert elapsed_time < 3.0
-```
-
----
-
-## 部署指南
-
-### Docker 部署
-
-1. **建立 .env 檔案**
-
-```bash
+# Copy and fill in environment variables
 cp .env.example .env
-# 編輯 .env 填入你的設定
+# Edit .env — see Environment Variables section below
+
+# Initialize the database
+# Run backend/scripts/init_supabase.sql in the Supabase SQL Editor
 ```
 
-2. **啟動服務**
+### Environment Variables
 
-```bash
-docker compose up -d
+| Variable | Required | Description |
+|---|---|---|
+| `SUPABASE_URL` | ✅ | Supabase project URL |
+| `SUPABASE_KEY` | ✅ | Supabase service role key |
+| `GROQ_API_KEY` | ✅ | Groq API key |
+| `JWT_SECRET_KEY` | ✅ | JWT signing secret (`openssl rand -hex 32`) |
+| `JWT_ALGORITHM` | ✅ | `HS256` |
+| `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` | ✅ | e.g. `30` |
+| `DISCORD_CLIENT_ID` | ✅ | Discord OAuth client ID |
+| `DISCORD_CLIENT_SECRET` | ✅ | Discord OAuth client secret |
+| `DISCORD_REDIRECT_URI` | ✅ | e.g. `http://localhost:3000/auth/callback` |
+| `NEXT_PUBLIC_API_URL` | ✅ | e.g. `http://localhost:8000` |
+| `DISCORD_TOKEN` | optional | Bot token (required for Discord bot) |
+| `DISCORD_CHANNEL_ID` | optional | Default channel for bot announcements |
+| `SCHEDULER_CRON` | optional | Default: `0 */6 * * *` |
+| `SCHEDULER_TIMEZONE` | optional | Default: `Asia/Taipei` |
+| `TIMEZONE` | optional | Default: `Asia/Taipei` |
+| `RSS_FETCH_DAYS` | optional | Days of history to fetch (default: `7`) |
+| `LOG_LEVEL` | optional | Default: `INFO` |
+
+---
+
+## 2. Project Structure
+
+```
+tech-news-agent/
+├── backend/
+│   ├── app/
+│   │   ├── api/               # REST API endpoints (FastAPI routers)
+│   │   │   ├── auth.py
+│   │   │   ├── articles.py
+│   │   │   ├── feeds.py
+│   │   │   ├── reading_list.py
+│   │   │   ├── qa.py
+│   │   │   ├── conversations/
+│   │   │   ├── notifications/
+│   │   │   ├── learning_path/
+│   │   │   └── ...
+│   │   ├── bot/
+│   │   │   ├── cogs/          # 13 Discord bot command cogs
+│   │   │   └── client.py
+│   │   ├── services/          # ~50 service files (mixin pattern)
+│   │   │   └── _mixins/       # article, feed, reading_list, notification, user
+│   │   ├── qa_agent/          # QA subsystem (vector search, conversation, learning)
+│   │   ├── core/              # config, exceptions, logger, validators
+│   │   ├── repositories/      # data access layer (Supabase queries)
+│   │   ├── schemas/           # Pydantic models
+│   │   └── tasks/             # APScheduler background jobs
+│   ├── scripts/               # DB init, migrations, utilities
+│   ├── tests/                 # pytest test suite
+│   └── requirements.txt
+│
+├── frontend/
+│   ├── app/                   # Next.js 14 App Router pages
+│   │   ├── (public)/          # Unauthenticated routes
+│   │   └── app/               # Authenticated routes
+│   ├── features/              # Feature-sliced components
+│   ├── components/            # Shared UI (shadcn/ui)
+│   ├── lib/                   # API client, hooks, utils
+│   ├── locales/               # i18n strings (EN/ZH)
+│   └── package.json
+│
+├── docs/                      # All documentation
+├── scripts/                   # Dev, CI, migration scripts
+├── docker-compose.yml         # Development
+├── docker-compose.prod.yml    # Production
+└── Makefile
 ```
 
-3. **查看日誌**
+### Backend Layer Responsibilities
+
+| Layer | Path | Responsibility |
+|---|---|---|
+| API | `app/api/` | HTTP request handling, auth, response shaping |
+| Bot | `app/bot/cogs/` | Discord slash commands and interactions |
+| Services | `app/services/` | Business logic, orchestration |
+| Repositories | `app/repositories/` | All Supabase/DB queries |
+| Schemas | `app/schemas/` | Pydantic request/response models |
+| Tasks | `app/tasks/` | Scheduled background jobs |
+| Core | `app/core/` | Config, logging, shared exceptions |
+
+---
+
+## 3. Development Workflow
+
+### Option A: Docker Compose (Recommended)
 
 ```bash
-docker compose logs -f
+# Development (hot reload)
+make dev
+# or
+docker-compose up -d
+
+# View logs
+docker-compose logs -f backend
+docker-compose logs -f frontend
+
+# Stop
+docker-compose down
 ```
 
-4. **停止服務**
+Access:
+- Web: http://localhost:3000
+- API: http://localhost:8000
+- API Docs: http://localhost:8000/docs
+
+### Option B: Local Development
+
+**Backend:**
 
 ```bash
-docker compose down
-```
-
-### 本地開發
-
-1. **安裝依賴**
-
-```bash
+cd backend
 pip install -r requirements.txt
-pip install -r requirements-dev.txt
-```
-
-2. **設定環境變數**
-
-```bash
-cp .env.example .env
-# 編輯 .env
-```
-
-3. **初始化資料庫**
-
-```bash
-# 在 Supabase SQL Editor 執行
-cat scripts/init_supabase.sql
-```
-
-4. **填充預設 feeds**
-
-```bash
-python scripts/seed_feeds.py
-```
-
-5. **啟動應用**
-
-```bash
 python -m app.main
 ```
 
-### 環境變數
-
-| 變數                 | 必填 | 說明                      |
-| -------------------- | ---- | ------------------------- |
-| `SUPABASE_URL`       | ✅   | Supabase 專案 URL         |
-| `SUPABASE_KEY`       | ✅   | Supabase API key          |
-| `DISCORD_TOKEN`      | ✅   | Discord bot token         |
-| `DISCORD_CHANNEL_ID` | ✅   | Discord 頻道 ID           |
-| `GROQ_API_KEY`       | ✅   | Groq API key              |
-| `TIMEZONE`           | ⚪   | 時區（預設：Asia/Taipei） |
-
-### 監控與日誌
-
-#### 日誌級別
-
-- `INFO`: 正常操作（指令執行、按鈕點擊）
-- `WARNING`: 警告（URL 驗證失敗、訊息編輯失敗）
-- `ERROR`: 錯誤（資料庫操作失敗、API 呼叫失敗）
-
-#### 日誌格式
-
-```python
-logger.info(
-    f"User {user_id} executed command {command_name}",
-    extra={
-        "user_id": user_id,
-        "command": command_name,
-        "timestamp": datetime.now(timezone.utc).isoformat()
-    }
-)
-```
-
-#### 查看日誌
+**Frontend** (separate terminal):
 
 ```bash
-# Docker
-docker compose logs -f
+cd frontend
+npm install
+npm run dev
+```
 
-# 本地
-tail -f logs/app.log
+### Pre-commit Hooks
+
+Install once after cloning:
+
+```bash
+pip install pre-commit
+pre-commit install
+```
+
+Hooks run automatically on `git commit`:
+- `black` — Python formatting
+- `ruff` — Python linting
+- `prettier` — TypeScript/CSS formatting
+- `eslint` — TypeScript linting
+- Translation validation — ensures EN/ZH locale keys are in sync
+
+---
+
+## 4. Code Quality
+
+### Backend Tools
+
+| Tool | Purpose | Command |
+|---|---|---|
+| `ruff` | Linting + import sorting | `ruff check app/` |
+| `black` | Formatting | `black app/` |
+| `mypy` | Static type checking | `mypy app/` |
+
+### Frontend Tools
+
+| Tool | Purpose | Command |
+|---|---|---|
+| `eslint` | Linting | `npm run lint` |
+| `prettier` | Formatting | `npm run format` |
+| TypeScript | Type checking | `npm run type-check` |
+
+### CI Scripts
+
+```bash
+# Auto-fix formatting and linting issues
+./scripts/ci-fix.sh
+
+# Full CI check (mirrors GitHub Actions — run before pushing)
+./scripts/ci-local-test.sh
+```
+
+Always run `./scripts/ci-local-test.sh` before opening a PR.
+
+### Python Code Standards
+
+- Use type hints on all function signatures
+- Write Google-style docstrings on public functions
+- Follow PEP 8 (enforced by ruff/black)
+- Handle exceptions explicitly — never silently swallow errors
+
+```python
+async def get_user_articles(user_id: str, limit: int = 20) -> list[ArticleSchema]:
+    """Fetch articles for a user's subscribed feeds.
+
+    Args:
+        user_id: The user's UUID string.
+        limit: Maximum number of articles to return.
+
+    Returns:
+        List of article schemas ordered by published_at desc.
+
+    Raises:
+        RepositoryError: If the database query fails.
+    """
+    return await self.article_repo.get_for_user(user_id, limit=limit)
 ```
 
 ---
 
-## 開發最佳實踐
+## 5. Testing
 
-### 程式碼風格
+### Backend
 
-- 使用 Black 格式化程式碼
-- 使用 type hints
-- 撰寫 docstrings（Google 風格）
-- 遵循 PEP 8
+```bash
+cd backend
 
-### 錯誤處理
+# Run all tests
+pytest -v
+
+# With coverage report
+pytest --cov=app --cov-report=html
+
+# Property-based tests (Hypothesis profiles)
+HYPOTHESIS_PROFILE=dev pytest tests/test_database_properties.py -v   # 10 examples (fast)
+HYPOTHESIS_PROFILE=ci  pytest tests/test_database_properties.py -v   # 100 examples
+```
+
+Test structure:
+
+```
+backend/tests/
+├── conftest.py
+├── test_config.py
+├── test_database_properties.py   # Hypothesis property tests
+├── bot/
+│   ├── utils/test_validators.py
+│   └── test_performance.py
+└── integration/
+    └── test_multi_tenant_workflow.py
+```
+
+Test types:
+- **Unit**: individual functions and validators
+- **Property-based**: Hypothesis for invariants (e.g., rating always 1–5)
+- **Integration**: full user journey across service + repository layers
+- **Performance**: response time assertions for critical paths
+
+### Frontend
+
+```bash
+cd frontend
+
+# Unit tests (vitest)
+npm test
+
+# With coverage
+npm run test:coverage
+
+# E2E tests (Playwright)
+npm run test:e2e
+```
+
+---
+
+## 6. Adding New Features
+
+### A. New API Endpoint
+
+1. Create a router file in `backend/app/api/` (or add to an existing one):
 
 ```python
+# backend/app/api/my_feature.py
+from fastapi import APIRouter, Depends
+from app.core.auth import get_current_user
+from app.schemas.my_feature import MyFeatureResponse
+from app.services.my_feature_service import MyFeatureService
+
+router = APIRouter(prefix="/api/my-feature", tags=["my-feature"])
+
+@router.get("/", response_model=MyFeatureResponse)
+async def get_my_feature(current_user=Depends(get_current_user)):
+    service = MyFeatureService()
+    return await service.get(current_user["id"])
+```
+
+2. Register the router in `backend/app/main.py`:
+
+```python
+from app.api.my_feature import router as my_feature_router
+app.include_router(my_feature_router)
+```
+
+3. Add Pydantic schemas in `backend/app/schemas/my_feature.py`.
+4. Add repository methods in `backend/app/repositories/`.
+5. Add service logic in `backend/app/services/`.
+6. Write tests in `backend/tests/`.
+
+### B. New Discord Bot Command
+
+1. Create or add to a cog in `backend/app/bot/cogs/`:
+
+```python
+# backend/app/bot/cogs/my_commands.py
+import discord
+from discord.ext import commands
+from discord import app_commands
+
+class MyCommands(commands.Cog):
+    def __init__(self, bot: commands.Bot):
+        self.bot = bot
+
+    @app_commands.command(name="my_command", description="Does something useful")
+    async def my_command(self, interaction: discord.Interaction):
+        await interaction.response.defer()
+        # business logic here
+        await interaction.followup.send("Done!")
+
+async def setup(bot: commands.Bot):
+    await bot.add_cog(MyCommands(bot))
+```
+
+2. Register the cog in `backend/app/bot/client.py` under the cog loading section.
+
+3. Use `await interaction.response.defer()` for any operation that may take more than 3 seconds.
+
+### C. New Frontend Page
+
+1. Create the page directory under `frontend/app/app/my-page/`:
+
+```
+frontend/app/app/my-page/
+├── page.tsx        # Page component
+└── loading.tsx     # Optional loading UI
+```
+
+2. Add feature components in `frontend/features/my-feature/`:
+
+```typescript
+// frontend/features/my-feature/components/MyFeatureCard.tsx
+interface MyFeatureCardProps {
+  data: MyFeatureData;
+}
+
+export function MyFeatureCard({ data }: MyFeatureCardProps) {
+  return <div>{data.title}</div>;
+}
+```
+
+3. Add API calls in `frontend/lib/api/` and React Query hooks in `frontend/lib/hooks/`.
+
+4. Add i18n strings to both `frontend/locales/en.json` and `frontend/locales/zh.json` (the pre-commit hook validates they stay in sync).
+
+---
+
+## 7. Key Conventions
+
+### Git Commits
+
+Use [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+<type>(<scope>): <subject>
+
+[optional body]
+
+[optional footer]
+```
+
+Types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`
+
+Examples:
+```
+feat(api): add weekly insights endpoint
+fix(bot): handle missing user profile gracefully
+docs(dev): update developer guide
+test(qa): add property tests for query processor
+```
+
+### Multi-Tenancy
+
+Data isolation is enforced at the **repository layer**. Every query that touches user-owned data (reading list, subscriptions, notifications, conversations) must be scoped by `user_id`. Never fetch all rows and filter in Python.
+
+```python
+# ✅ Correct — scoped at query level
+async def get_reading_list(self, user_id: str) -> list[ReadingListItem]:
+    return await self.db.table("reading_list").select("*").eq("user_id", user_id).execute()
+
+# ❌ Wrong — fetches all rows
+async def get_reading_list(self) -> list[ReadingListItem]:
+    all_items = await self.db.table("reading_list").select("*").execute()
+    return [i for i in all_items if i["user_id"] == user_id]
+```
+
+### Service Mixin Pattern
+
+Large services are split into mixins under `backend/app/services/_mixins/`. Each mixin handles one domain (articles, feeds, reading list, notifications, user). The main `SupabaseService` composes them via multiple inheritance.
+
+When adding new service methods, place them in the appropriate mixin file rather than the main service class.
+
+### Error Handling
+
+Define domain-specific exceptions in `backend/app/core/exceptions.py`. Catch specific exceptions at the API/bot layer and return user-friendly messages.
+
+```python
+# In a cog or API handler
 try:
-    # 資料庫操作
-    result = await supabase.some_operation()
-except SupabaseServiceError as e:
-    logger.error(f"Database error: {e}", exc_info=True)
-    await interaction.followup.send(
-        "❌ 操作失敗，請稍後再試。",
-        ephemeral=True
-    )
-except Exception as e:
-    logger.error(f"Unexpected error: {e}", exc_info=True)
-    await interaction.followup.send(
-        "❌ 發生未預期的錯誤。",
-        ephemeral=True
-    )
+    result = await service.do_something(user_id)
+except RepositoryError as e:
+    logger.error("DB error for user %s: %s", user_id, e, exc_info=True)
+    await interaction.followup.send("Operation failed, please try again.", ephemeral=True)
 ```
 
-### 資料驗證
+### Database
 
-```python
-from app.bot.utils.validators import validate_feed_url
+- No local database, no Alembic migrations — all schema changes go through the Supabase SQL Editor.
+- Migration scripts live in `backend/scripts/`.
+- Use pgvector (`embedding VECTOR(1536)`) for semantic search on articles and conversations.
 
-# 驗證輸入
-is_valid, error_msg = validate_feed_url(url)
-if not is_valid:
-    await interaction.followup.send(
-        f"❌ {error_msg}",
-        ephemeral=True
-    )
-    return
+### Frontend Data Fetching
+
+Use React Query for all server state. Define query keys centrally in `frontend/lib/queryKeys.ts` to avoid cache collisions.
+
+```typescript
+// ✅ Use React Query
+const { data, isLoading } = useQuery({
+  queryKey: queryKeys.readingList(userId),
+  queryFn: () => api.readingList.getAll(),
+});
 ```
 
-### 效能優化
+### i18n
 
-1. **使用資料庫索引**：確保常用查詢欄位有索引
-2. **限制查詢結果**：使用 LIMIT 限制結果數量
-3. **快取使用者資料**：在指令執行期間快取 user_uuid
-4. **使用 defer()**：對可能超過 3 秒的操作使用 defer()
+All user-facing strings must be in both `frontend/locales/en.json` and `frontend/locales/zh.json`. Use the `useTranslations` hook from `next-intl`. The pre-commit hook will reject commits where the two locale files have mismatched keys.
 
 ---
 
-## 貢獻指南
+## References
 
-### 提交 Pull Request
-
-1. Fork 專案
-2. 建立功能分支（`git checkout -b feature/amazing-feature`）
-3. 提交變更（`git commit -m 'Add amazing feature'`）
-4. 推送到分支（`git push origin feature/amazing-feature`）
-5. 開啟 Pull Request
-
-### 程式碼審查
-
-- 確保所有測試通過
-- 確保程式碼覆蓋率 ≥ 90%
-- 確保程式碼符合風格指南
-- 撰寫清楚的 commit 訊息
-
----
-
-## 參考資料
-
-- [Discord.py 文件](https://discordpy.readthedocs.io/)
-- [Supabase 文件](https://supabase.com/docs)
-- [Groq API 文件](https://console.groq.com/docs)
-- [FastAPI 文件](https://fastapi.tiangolo.com/)
-- [Hypothesis 文件](https://hypothesis.readthedocs.io/)
+- [FastAPI Docs](https://fastapi.tiangolo.com/)
+- [discord.py Docs](https://discordpy.readthedocs.io/)
+- [Supabase Docs](https://supabase.com/docs)
+- [Groq API Docs](https://console.groq.com/docs)
+- [Next.js 14 Docs](https://nextjs.org/docs)
+- [shadcn/ui](https://ui.shadcn.com)
+- [Hypothesis Docs](https://hypothesis.readthedocs.io/)
