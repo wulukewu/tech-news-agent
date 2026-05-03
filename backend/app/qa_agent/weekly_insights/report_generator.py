@@ -85,6 +85,7 @@ class InsightReportGenerator:
                 self.supabase.client.table("weekly_insights")
                 .select("id, status, started_at, period_start, period_end")
                 .in_("status", ["pending", "failed"])
+                .gte("started_at", (now - timedelta(hours=24)).isoformat())
                 .execute()
             )
             rows = response.data or []

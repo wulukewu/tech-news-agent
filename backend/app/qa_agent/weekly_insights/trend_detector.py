@@ -110,6 +110,13 @@ class TrendDetector:
         counts: Counter = Counter()
         for row in rows:
             trend_data = row.get("trend_data") or []
+            if isinstance(trend_data, str):
+                try:
+                    import json
+
+                    trend_data = json.loads(trend_data)
+                except Exception:
+                    trend_data = []
             for trend in trend_data:
                 name = trend.get("name", "").lower()
                 counts[name] += trend.get("current_count", 0)
