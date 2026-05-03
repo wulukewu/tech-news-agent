@@ -81,6 +81,10 @@ export function GraphVisualization({
       svg
         .selectAll<SVGTextElement, unknown>(`text[data-label-id="${node.id}"]`)
         .attr('opacity', matched ? 1 : 0.1);
+      // Show/hide checkmark based on current status
+      svg
+        .selectAll<SVGTextElement, unknown>(`text[data-check-id="${node.id}"]`)
+        .attr('display', node.status === 'completed' ? null : 'none');
     });
   }, [nodes, highlightNodeId, searchQuery]);
 
@@ -282,15 +286,16 @@ export function GraphVisualization({
       // viewBox 24×24, scale 0.5 → 12×12; visual center of lock ~(9,12) → center in circle
       .attr('transform', 'scale(0.5) translate(-9, -12)');
 
-    // Completed checkmark
+    // Completed checkmark — always rendered, visibility controlled by lightweight effect
     node
-      .filter((d) => d.status === 'completed')
       .append('text')
+      .attr('data-check-id', (d) => d.id)
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'central')
       .attr('fill', 'white')
       .attr('font-weight', 'bold')
       .attr('font-size', '13px')
+      .attr('display', (d) => (d.status === 'completed' ? null : 'none'))
       .text('✓');
 
     // Quick-complete button (✓ on hover for unlocked, non-completed nodes)
