@@ -10,7 +10,6 @@ interface GraphVisualizationProps {
   onNodeClick: (node: KnowledgeNode) => void;
   onNodeQuickComplete?: (node: KnowledgeNode) => void;
   highlightNodeId?: string | null;
-  searchQuery?: string;
 }
 
 const STATUS_COLORS = {
@@ -37,7 +36,6 @@ export function GraphVisualization({
   onNodeClick,
   onNodeQuickComplete,
   highlightNodeId,
-  searchQuery = '',
 }: GraphVisualizationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const minimapRef = useRef<SVGSVGElement>(null);
@@ -46,6 +44,8 @@ export function GraphVisualization({
   const [minimapReady, setMinimapReady] = useState(false);
   const simNodesRef = useRef<(KnowledgeNode & d3.SimulationNodeDatum)[]>([]);
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
+  // Store minimap projection params so drag handler can convert minimap coords → main coords
+  const minimapProjectionRef = useRef({ scale: 1, offX: 0, offY: 0 });
 
   // Keep callbacks in refs so D3 effect doesn't re-run when they change
   const onNodeClickRef = useRef(onNodeClick);
@@ -61,32 +61,22 @@ export function GraphVisualization({
   const structureKey =
     nodes.map((n) => n.id).join(',') + '|' + edges.map((e) => e.source + e.target).join(',');
 
-  // ── Lightweight color + search dim update (no simulation restart) ─────────
+  // ── Lightweight color update (no simulation restart) ─────────────────────
   useEffect(() => {
     if (!svgRef.current) return;
     const svg = d3.select(svgRef.current);
-    const q = searchQuery.toLowerCase();
     nodes.forEach((node) => {
-      const matched = !q || node.display_name.toLowerCase().includes(q);
       svg
         .selectAll<SVGCircleElement, unknown>(`circle[data-id="${node.id}"]`)
         .attr('fill', STATUS_COLORS[node.status])
         .attr('stroke', node.id === highlightNodeId ? '#6366f1' : STATUS_STROKE[node.status])
         .attr('stroke-width', node.id === highlightNodeId ? 3 : node.is_unlocked ? 2 : 1)
-        .attr(
-          'opacity',
-          matched ? (node.is_unlocked || node.status !== 'not_started' ? 1 : 0.5) : 0.1
-        );
-      // Dim the label too
-      svg
-        .selectAll<SVGTextElement, unknown>(`text[data-label-id="${node.id}"]`)
-        .attr('opacity', matched ? 1 : 0.1);
-      // Show/hide checkmark based on current status
+        .attr('opacity', node.is_unlocked || node.status !== 'not_started' ? 1 : 0.5);
       svg
         .selectAll<SVGTextElement, unknown>(`text[data-check-id="${node.id}"]`)
         .attr('display', node.status === 'completed' ? null : 'none');
     });
-  }, [nodes, highlightNodeId, searchQuery]);
+  }, [nodes, highlightNodeId]);
 
   // ── Full D3 rebuild (only when structure changes) ─────────────────────────
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -148,10 +138,11 @@ export function GraphVisualization({
         .attr('y', vy * minimapScale + minimapOffsetY)
         .attr('width', vw * minimapScale)
         .attr('height', vh * minimapScale)
-        .attr('fill', 'none')
+        .attr('fill', 'rgba(99,102,241,0.08)')
         .attr('stroke', '#6366f1')
         .attr('stroke-width', 1)
-        .attr('opacity', 0.7);
+        .attr('cursor', 'grab')
+        .attr('opacity', 0.9);
     };
 
     const zoom = d3
@@ -387,6 +378,11 @@ export function GraphVisualization({
       minimapScale = Math.min((MINI_W - 16) / graphW, (MINI_H - 16) / graphH);
       minimapOffsetX = (MINI_W - graphW * minimapScale) / 2 - minX * minimapScale;
       minimapOffsetY = (MINI_H - graphH * minimapScale) / 2 - minY * minimapScale;
+      minimapProjectionRef.current = {
+        scale: minimapScale,
+        offX: minimapOffsetX,
+        offY: minimapOffsetY,
+      };
       syncMinimap(d3.zoomTransform(svgRef.current!));
       setMinimapReady(true);
     });
@@ -422,6 +418,7 @@ export function GraphVisualization({
     const scale = Math.min((MINI_W - 16) / graphW, (MINI_H - 16) / graphH);
     const offX = (MINI_W - graphW * scale) / 2 - minX * scale;
     const offY = (MINI_H - graphH * scale) / 2 - minY * scale;
+    minimapProjectionRef.current = { scale, offX, offY };
     mini
       .append('g')
       .selectAll('circle')
@@ -435,14 +432,29 @@ export function GraphVisualization({
     const vy = -currentTransform.y / currentTransform.k;
     mini
       .append('rect')
+      .attr('class', 'minimap-viewport')
       .attr('x', vx * scale + offX)
       .attr('y', vy * scale + offY)
       .attr('width', ((svgRef.current.clientWidth || 800) / currentTransform.k) * scale)
       .attr('height', ((svgRef.current.clientHeight || 600) / currentTransform.k) * scale)
-      .attr('fill', 'none')
+      .attr('fill', 'rgba(99,102,241,0.08)')
       .attr('stroke', '#6366f1')
       .attr('stroke-width', 1)
-      .attr('opacity', 0.7);
+      .attr('cursor', 'grab')
+      .attr('opacity', 0.9);
+
+    // Drag on minimap → pan main view
+    mini.call(
+      d3.drag<SVGSVGElement, unknown>().on('drag', (event) => {
+        if (!svgRef.current || !zoomRef.current) return;
+        const { scale: ms, offX: mox, offY: moy } = minimapProjectionRef.current;
+        // Convert minimap delta to graph-space delta, then to screen-space
+        const currentT = d3.zoomTransform(svgRef.current);
+        const dx = (event.dx / ms) * currentT.k;
+        const dy = (event.dy / ms) * currentT.k;
+        d3.select(svgRef.current).call(zoomRef.current.translateBy, -dx, -dy);
+      })
+    );
   }, [minimapReady]);
   useEffect(() => {
     if (!highlightNodeId || !svgRef.current || !zoomRef.current) return;

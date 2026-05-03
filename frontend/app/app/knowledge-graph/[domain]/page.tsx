@@ -27,7 +27,6 @@ import {
   Lock,
   Network,
   ExternalLink,
-  Search,
 } from 'lucide-react';
 import {
   getDomainGraph,
@@ -60,7 +59,6 @@ export default function DomainGraphPage() {
   const [sidebarTab, setSidebarTab] = useState<'recommendations' | 'progress' | 'node'>(
     'recommendations'
   );
-  const [searchQuery, setSearchQuery] = useState('');
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const [headerHeight, setHeaderHeight] = useState(64);
   const [generateError, setGenerateError] = useState(false);
@@ -308,25 +306,8 @@ export default function DomainGraphPage() {
                   updateStatusMutation.mutate({ nodeId: node.id, status: 'completed' });
                 }}
                 highlightNodeId={highlightNodeId}
-                searchQuery={searchQuery}
               />
             ) : null}
-
-            {/* Search box */}
-            {graph && !graphLoading && (
-              <div className="absolute top-3 right-3">
-                <div className="relative">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <input
-                    type="search"
-                    placeholder={t('knowledge-graph.search-nodes-placeholder')}
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8 pr-3 py-1.5 text-xs rounded-lg border bg-background/90 backdrop-blur w-44 focus:outline-none focus:ring-1 focus:ring-primary"
-                  />
-                </div>
-              </div>
-            )}
 
             {/* Legend */}
             <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur rounded-lg p-3 text-xs space-y-1.5 border">
