@@ -74,6 +74,31 @@ async def version_tracking_job():
         logger.error(f"Version tracking job failed: {e}", exc_info=True)
 
 
+async def daily_digest_job():
+    """
+    Scheduled job: send daily article digest DM to all users with notifications enabled.
+    Runs daily at 09:00 in the configured timezone.
+    """
+    logger.info("Starting daily digest DM job...")
+    try:
+        from app.bot.client import bot
+        from app.services.dm_notification_service import DMNotificationService
+
+        if not bot.is_ready():
+            logger.warning("Bot is not ready, skipping daily digest")
+            return
+
+        service = DMNotificationService(bot)
+        stats = await service.send_weekly_digest_to_all_users()
+        logger.info(
+            "Daily digest job completed: %d sent, %d failed",
+            stats.get("successful", 0),
+            stats.get("failed", 0),
+        )
+    except Exception as exc:
+        logger.error("Daily digest job failed: %s", exc, exc_info=True)
+
+
 async def weekly_insights_job():
     """
     Scheduled job: generate weekly insights report every Monday at 09:00.
@@ -252,6 +277,16 @@ def setup_scheduler():
         name="Technology Version Tracking",
         replace_existing=True,
     )
+
+    # Register daily article digest DM job (every day at 09:00)
+    _scheduler.add_job(
+        daily_digest_job,
+        trigger=CronTrigger(hour=9, minute=0, timezone=scheduler_tz),
+        id="daily_digest",
+        name="Daily Article Digest DM",
+        replace_existing=True,
+    )
+    logger.info(f"Daily digest job registered: Runs daily at 09:00 in timezone '{scheduler_tz}'")
 
     # Register weekly insights generation job (every Monday at 09:00)
     _scheduler.add_job(
