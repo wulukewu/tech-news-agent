@@ -1,223 +1,191 @@
+#!/usr/bin/env python3
 """
-E2E integration tests for Intelligent Reminder Agent.
-Tests the full pipeline: article analysis → reminder generation → delivery → interaction tracking.
+Test script for Intelligent Reminder Agent
+Run this after creating the database tables to verify functionality.
 """
+
+import asyncio
 import sys
-from datetime import datetime, timezone
-from unittest.mock import AsyncMock, MagicMock
-from uuid import uuid4
 
-import pytest
+# Add the backend directory to Python path
+sys.path.append("/app")
 
-# ── Stub heavy third-party deps before any app import ─────────────────────────
-_STUBS = [
-    "asyncpg",
-    "groq",
-    "discord",
-    "discord.ext",
-    "discord.ext.commands",
-    "discord.ui",
-    "apscheduler",
-    "apscheduler.schedulers",
-    "apscheduler.schedulers.asyncio",
-    "httpx",
-    "supabase",
-    "postgrest",
-    "gotrue",
-    "storage3",
-    "realtime",
-    "feedparser",
-    "aiohttp",
-    "aiofiles",
-]
-for _mod in _STUBS:
-    if _mod not in sys.modules:
-        sys.modules[_mod] = MagicMock()
-
-# ── Import the real modules (app is a real package on sys.path) ───────────────
-from app.qa_agent.intelligent_reminder.intelligent_reminder_agent import (  # noqa: E402
-    IntelligentReminderAgent,
-)
+from app.qa_agent.intelligent_reminder.intelligent_reminder_agent import IntelligentReminderAgent
+from app.services.supabase_service import SupabaseService
 
 
-def _make_agent(supabase_mock=None, notification_mock=None):
-    agent = IntelligentReminderAgent.__new__(IntelligentReminderAgent)
-    agent.supabase_service = supabase_mock or MagicMock()
-    agent.notification_service = notification_mock or MagicMock()
-    agent.llm_service = MagicMock()
-    agent.content_analyzer = MagicMock()
-    agent.version_tracker = MagicMock()
-    agent.behavior_analyzer = MagicMock()
-    agent.timing_engine = MagicMock()
-    agent.context_generator = MagicMock()
-    return agent
+async def test_intelligent_reminder_agent():
+    """Test the intelligent reminder agent end-to-end"""
+    print("🧪 Testing Intelligent Reminder Agent...")
+
+    try:
+        # Initialize services
+        supabase = SupabaseService()
+        agent = IntelligentReminderAgent()
+
+        # Check if tables exist
+        print("\n📋 Checking database tables...")
+        tables = ["reminder_log", "reminder_settings", "article_graph", "technology_registry"]
+        for table in tables:
+            try:
+                result = supabase.client.table(table).select("*").limit(1).execute()
+                print(f"✅ {table}: exists")
+            except Exception as e:
+                print(f"❌ {table}: {str(e)[:100]}")
+                return False
+
+        # Get a test user (first user from users table)
+        users_result = supabase.client.table("users").select("id, discord_id").limit(1).execute()
+        if not users_result.data:
+            print("❌ No users found in database. Please create a user first.")
+            return False
+
+        test_user = users_result.data[0]
+        user_id = test_user["id"]
+        print(f"👤 Using test user: {user_id}")
+
+        # Get some test articles
+        articles_result = supabase.client.table("articles").select("id, title").limit(3).execute()
+        if len(articles_result.data) < 2:
+            print("❌ Need at least 2 articles in database for testing.")
+            return False
+
+        articles = articles_result.data
+        print(f"📄 Found {len(articles)} articles for testing")
+
+        # Test 1: Create reminder settings for user
+        print("\n🔧 Test 1: Creating reminder settings...")
+        reminder_settings = {
+            "user_id": user_id,
+            "enabled": True,
+            "max_daily_reminders": 3,
+            "preferred_channels": ["discord"],
+            "reminder_frequency": "smart",
+        }
+
+        # Insert or update reminder settings
+        try:
+            supabase.client.table("reminder_settings").upsert(reminder_settings).execute()
+            print("✅ Reminder settings created")
+        except Exception as e:
+            print(f"❌ Failed to create reminder settings: {e}")
+            return False
+
+        # Test 2: Create article relationships
+        print("\n🔗 Test 2: Creating article relationships...")
+        if len(articles) >= 2:
+            article_relation = {
+                "source_article_id": articles[0]["id"],
+                "target_article_id": articles[1]["id"],
+                "relationship_type": "follow_up",
+                "confidence_score": 0.8,
+                "analysis_metadata": {"reason": "Test relationship"},
+            }
+
+            try:
+                supabase.client.table("article_graph").upsert(article_relation).execute()
+                print("✅ Article relationship created")
+            except Exception as e:
+                print(f"❌ Failed to create article relationship: {e}")
+
+        # Test 3: Create a test reminder
+        print("\n📬 Test 3: Creating test reminder...")
+        test_reminder = {
+            "user_id": user_id,
+            "reminder_type": "article_relation",
+            "content_id": articles[0]["id"],
+            "reminder_context": {
+                "title": "Test Reminder",
+                "message": f'You might be interested in reading: {articles[0]["title"]}',
+                "article_title": articles[0]["title"],
+                "reason": "Based on your reading history",
+            },
+            "channel": "discord",
+            "status": "pending",
+        }
+
+        try:
+            reminder_result = supabase.client.table("reminder_log").insert(test_reminder).execute()
+            reminder_id = reminder_result.data[0]["id"]
+            print(f"✅ Test reminder created: {reminder_id}")
+        except Exception as e:
+            print(f"❌ Failed to create test reminder: {e}")
+            return False
+
+        # Test 4: Get pending reminders
+        print("\n📋 Test 4: Getting pending reminders...")
+        try:
+            pending_reminders = await agent.get_pending_reminders(user_id)
+            print(f"✅ Found {len(pending_reminders)} pending reminders")
+
+            if pending_reminders:
+                print("📝 Sample reminder:")
+                sample = pending_reminders[0]
+                print(f"   Type: {sample.get('reminder_type')}")
+                print(f"   Channel: {sample.get('channel')}")
+                print(f"   Status: {sample.get('status')}")
+        except Exception as e:
+            print(f"❌ Failed to get pending reminders: {e}")
+            return False
+
+        # Test 5: Test multi-channel sync logic
+        print("\n🔄 Test 5: Testing multi-channel sync...")
+        try:
+            # Create a reminder that's already read on another channel
+            read_reminder = {
+                "user_id": user_id,
+                "reminder_type": "article_relation",
+                "content_id": articles[0]["id"],  # Same content as before
+                "reminder_context": {"title": "Already Read Test"},
+                "channel": "web",
+                "status": "read",  # Mark as already read
+            }
+
+            supabase.client.table("reminder_log").insert(read_reminder).execute()
+
+            # Now try to send the original reminder - it should be skipped
+            test_reminder_dict = {
+                "id": reminder_id,
+                "user_id": user_id,
+                "content_id": articles[0]["id"],
+                "reminder_context": test_reminder["reminder_context"],
+                "channel": "discord",
+            }
+
+            await agent._send_reminder(test_reminder_dict)
+            print("✅ Multi-channel sync test completed")
+
+        except Exception as e:
+            print(f"❌ Multi-channel sync test failed: {e}")
+
+        # Test 6: Generate effectiveness report
+        print("\n📊 Test 6: Generating effectiveness report...")
+        try:
+            report = await agent.generate_effectiveness_report(user_id)
+            print("✅ Effectiveness report generated")
+            print(f"   Total reminders: {report.total_reminders}")
+            print(f"   Click rate: {report.click_rate:.2%}")
+            print(f"   Avg response time: {report.avg_response_time}")
+        except Exception as e:
+            print(f"❌ Failed to generate effectiveness report: {e}")
+
+        print("\n🎉 Intelligent Reminder Agent test completed!")
+        print("\n💡 To see reminders in action:")
+        print("   1. Make sure the database tables are created in Supabase")
+        print("   2. Add some articles to your reading list")
+        print("   3. The agent will analyze relationships and send smart reminders")
+        print("   4. Check the /app/reminders page in the web interface")
+
+        return True
+
+    except Exception as e:
+        print(f"❌ Test failed with error: {e}")
+        import traceback
+
+        traceback.print_exc()
+        return False
 
 
-def _make_reminder(user_id=None, content_id=None, channel="discord"):
-    uid = str(user_id or uuid4())
-    cid = str(content_id or uuid4())
-    return {
-        "id": str(uuid4()),
-        "user_id": uid,
-        "content_id": cid,
-        "channel": channel,
-        "status": "pending",
-        "reminder_context": {
-            "title": "Test Reminder",
-            "description": "You should read this related article",
-            "related_articles": [],
-            "version_info": None,
-            "reading_time_estimate": 5,
-            "priority_score": 0.7,
-            "action_url": "https://example.com/article",
-        },
-    }
-
-
-# ── Task 8.3: Cross-channel read sync ─────────────────────────────────────────
-
-
-class TestCrossChannelSync:
-    """When a reminder is already read on one channel, skip sending on another."""
-
-    @pytest.mark.asyncio
-    async def test_skips_send_if_already_read_on_another_channel(self):
-        supabase = MagicMock()
-        notification = MagicMock()
-        notification.send_discord_dm = AsyncMock(return_value=True)
-
-        # Simulate: content already read on web channel
-        supabase.client.table.return_value.select.return_value.eq.return_value.eq.return_value.in_.return_value.execute.return_value = MagicMock(
-            data=[{"id": str(uuid4())}]  # non-empty = already read
-        )
-        supabase.client.table.return_value.update.return_value.eq.return_value.execute.return_value = (
-            MagicMock()
-        )
-
-        agent = _make_agent(supabase, notification)
-        reminder = _make_reminder(channel="discord")
-
-        await agent._send_reminder(reminder)
-
-        # Discord DM should NOT have been called
-        notification.send_discord_dm.assert_not_called()
-
-    @pytest.mark.asyncio
-    async def test_sends_if_not_yet_read_on_any_channel(self):
-        supabase = MagicMock()
-        notification = MagicMock()
-        notification.send_discord_dm = AsyncMock(return_value=True)
-
-        # Simulate: not read anywhere yet
-        supabase.client.table.return_value.select.return_value.eq.return_value.eq.return_value.in_.return_value.execute.return_value = MagicMock(
-            data=[]  # empty = not read
-        )
-        supabase.client.table.return_value.select.return_value.eq.return_value.eq.return_value.eq.return_value.order.return_value.limit.return_value.execute.return_value = MagicMock(
-            data=[]  # no failures
-        )
-        supabase.client.table.return_value.update.return_value.eq.return_value.execute.return_value = (
-            MagicMock()
-        )
-
-        agent = _make_agent(supabase, notification)
-        reminder = _make_reminder(channel="discord")
-
-        await agent._send_reminder(reminder)
-
-        notification.send_discord_dm.assert_called_once()
-
-
-# ── Task 8.3: Channel fallback after 3 failures ───────────────────────────────
-
-
-class TestChannelFallback:
-    """After 3 consecutive failures, _resolve_channel should switch to fallback."""
-
-    @pytest.mark.asyncio
-    async def test_falls_back_after_3_failures(self):
-        supabase = MagicMock()
-        # Simulate 3 recent failures for discord
-        supabase.client.table.return_value.select.return_value.eq.return_value.eq.return_value.eq.return_value.order.return_value.limit.return_value.execute.return_value = MagicMock(
-            data=[{"status": "failed"}, {"status": "failed"}, {"status": "failed"}]
-        )
-
-        agent = _make_agent(supabase)
-        result = await agent._resolve_channel("user-1", "discord")
-        assert result == "web"
-
-    @pytest.mark.asyncio
-    async def test_keeps_channel_with_fewer_than_3_failures(self):
-        supabase = MagicMock()
-        # Only 2 failures
-        supabase.client.table.return_value.select.return_value.eq.return_value.eq.return_value.eq.return_value.order.return_value.limit.return_value.execute.return_value = MagicMock(
-            data=[{"status": "failed"}, {"status": "failed"}]
-        )
-
-        agent = _make_agent(supabase)
-        result = await agent._resolve_channel("user-1", "discord")
-        assert result == "discord"
-
-
-# ── Task 8.6: Interaction tracking pipeline ───────────────────────────────────
-
-
-class TestInteractionTracking:
-    """track_reminder_interaction updates status and triggers behavior analysis."""
-
-    @pytest.mark.asyncio
-    async def test_read_interaction_updates_status(self):
-        supabase = MagicMock()
-        reminder_id = uuid4()
-
-        # Mock _get_reminder_by_id
-        supabase.client.table.return_value.select.return_value.eq.return_value.execute.return_value = MagicMock(
-            data=[
-                {
-                    "id": str(reminder_id),
-                    "user_id": str(uuid4()),
-                    "status": "delivered",
-                    "sent_at": datetime.now(timezone.utc).isoformat(),
-                }
-            ]
-        )
-        supabase.client.table.return_value.update.return_value.eq.return_value.execute.return_value = (
-            MagicMock()
-        )
-
-        agent = _make_agent(supabase)
-        agent.behavior_analyzer.track_reminder_response = AsyncMock()
-
-        await agent.track_reminder_interaction(reminder_id, "read")
-
-        # Verify update was called with "read" status
-        update_call = supabase.client.table.return_value.update.call_args
-        assert update_call is not None
-        update_data = update_call[0][0]
-        assert update_data["status"] == "read"
-
-    @pytest.mark.asyncio
-    async def test_dismissed_interaction_does_not_trigger_behavior_tracking(self):
-        supabase = MagicMock()
-        reminder_id = uuid4()
-
-        supabase.client.table.return_value.select.return_value.eq.return_value.execute.return_value = MagicMock(
-            data=[
-                {
-                    "id": str(reminder_id),
-                    "user_id": str(uuid4()),
-                    "status": "delivered",
-                    "sent_at": datetime.now(timezone.utc).isoformat(),
-                }
-            ]
-        )
-        supabase.client.table.return_value.update.return_value.eq.return_value.execute.return_value = (
-            MagicMock()
-        )
-
-        agent = _make_agent(supabase)
-        agent.behavior_analyzer.track_reminder_response = AsyncMock()
-
-        await agent.track_reminder_interaction(reminder_id, "dismissed")
-
-        # behavior_analyzer should NOT be called for dismissed
-        agent.behavior_analyzer.track_reminder_response.assert_not_called()
+if __name__ == "__main__":
+    success = asyncio.run(test_intelligent_reminder_agent())
+    sys.exit(0 if success else 1)

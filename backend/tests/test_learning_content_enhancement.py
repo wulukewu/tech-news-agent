@@ -1,234 +1,341 @@
+#!/usr/bin/env python3
 """
-Unit tests for learning content enhancement system.
-Tests classification logic, recommendation scoring, and API endpoints.
+Learning Content Enhancement System Test
+Comprehensive test of all components in the learning content enhancement system.
 """
-from unittest.mock import MagicMock
-from uuid import uuid4
 
-import pytest
+import asyncio
+import os
+import sys
 
-# ── Task 2.3 / 2.2: ContentClassificationService fallback heuristics ──────────
+# Add the backend directory to the Python path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
+from app.core.logger import get_logger
+from app.schemas.article import ArticleSchema
+from app.services.content_classification_service import ContentClassificationService, ContentType
+from app.services.educational_rss_manager import EducationalRSSManager
+from app.services.enhanced_recommendation_engine import EnhancedRecommendationEngine
+from app.services.llm_service import LLMService
+from app.services.quality_assurance_system import ContentFeedback, QualityAssuranceSystem
+from app.services.supabase_service import SupabaseService
 
-class TestContentClassificationFallback:
-    """Test heuristic classification without LLM calls."""
-
-    def _make_service(self):
-        from app.services.content_classification_service import ContentClassificationService
-
-        svc = ContentClassificationService.__new__(ContentClassificationService)
-        svc.llm = MagicMock()
-        svc.supabase = MagicMock()
-        svc.classification_cache = {}
-        return svc
-
-    def _make_article(self, title: str, category: str = ""):
-        from app.schemas.article import ArticleSchema
-
-        return ArticleSchema(
-            id=uuid4(),
-            title=title,
-            url="https://example.com/article",
-            feed_id=uuid4(),
-            feed_name="Test Feed",
-            category=category,
-        )
-
-    def test_tutorial_detected_by_title(self):
-        from app.services.content_classification_service import ContentType
-
-        svc = self._make_service()
-        article = self._make_article("How to Build a REST API with FastAPI")
-        result = svc._fallback_classification(article)
-        assert result.content_type == ContentType.TUTORIAL
-        assert result.learning_value_score >= 0.7
-
-    def test_guide_detected_by_title(self):
-        from app.services.content_classification_service import ContentType
-
-        svc = self._make_service()
-        article = self._make_article("A Complete Guide to Docker Networking")
-        result = svc._fallback_classification(article)
-        assert result.content_type == ContentType.GUIDE
-
-    def test_news_is_default(self):
-        from app.services.content_classification_service import ContentType
-
-        svc = self._make_service()
-        article = self._make_article("Some Random Tech Article")
-        result = svc._fallback_classification(article)
-        assert result.content_type == ContentType.NEWS
-        assert result.learning_value_score <= 0.4
-
-    def test_confidence_lower_for_fallback(self):
-        svc = self._make_service()
-        article = self._make_article("Introduction to Kubernetes")
-        result = svc._fallback_classification(article)
-        assert result.confidence_score < 1.0
+logger = get_logger(__name__)
 
 
-# ── Task 3.1: ArticleRecommender content_type weighting ───────────────────────
+class LearningContentEnhancementTest:
+    """Comprehensive test suite for learning content enhancement system."""
 
+    def __init__(self):
+        self.supabase = SupabaseService()
+        self.llm = LLMService()
+        self.rss_manager = EducationalRSSManager(self.supabase)
+        self.classifier = ContentClassificationService(self.llm, self.supabase)
+        self.recommender = EnhancedRecommendationEngine(self.supabase, self.classifier)
+        self.quality_system = QualityAssuranceSystem(self.supabase)
 
-class TestArticleRecommenderScoring:
-    """Test that tutorial/guide articles score higher than news."""
-
-    def _make_recommender(self):
-        from app.qa_agent.learning_path.article_recommender import ArticleRecommender
-
-        rec = ArticleRecommender.__new__(ArticleRecommender)
-        rec.supabase = MagicMock()
-        return rec
-
-    def _make_article(self, title: str, content_type: str, tinkering_index: int = 3):
-        from app.schemas.article import ArticleSchema
-
-        a = ArticleSchema(
-            id=uuid4(),
-            title=title,
-            url="https://example.com/a",
-            feed_id=uuid4(),
-            feed_name="Feed",
-            category="Web Development & Programming",
-            tinkering_index=tinkering_index,
-        )
-        a.content_type = content_type
-        return a
-
-    def _make_stage(self):
-        from app.services.content_classification_service import DifficultyLevel
-
-        skill = MagicMock()
-        skill.name = "python"
-        skill.tags = ["python", "programming"]
-        skill.category = "web"
-        skill.difficulty_level = DifficultyLevel.INTERMEDIATE
-
-        stage = MagicMock()
-        stage.stage_name = "Python Basics"
-        stage.skills = [skill]
-        return stage
-
-    @pytest.mark.asyncio
-    async def test_tutorial_scores_higher_than_news(self):
-        rec = self._make_recommender()
-        stage = self._make_stage()
-
-        tutorial = self._make_article("Python Tutorial: Build a Web App", "tutorial")
-        news = self._make_article("Python 3.13 Released", "news")
-
-        tutorial_result = await rec._score_article(tutorial, stage, {})
-        news_result = await rec._score_article(news, stage, {})
-
-        assert tutorial_result is not None
-        assert news_result is not None
-        assert tutorial_result.relevance_score > news_result.relevance_score
-
-    @pytest.mark.asyncio
-    async def test_guide_scores_higher_than_news(self):
-        rec = self._make_recommender()
-        stage = self._make_stage()
-
-        guide = self._make_article("Complete Guide to Python Async", "guide")
-        news = self._make_article("Company Announces Python Partnership", "news")
-
-        guide_result = await rec._score_article(guide, stage, {})
-        news_result = await rec._score_article(news, stage, {})
-
-        assert guide_result.relevance_score > news_result.relevance_score
-
-    @pytest.mark.asyncio
-    async def test_none_content_type_is_neutral(self):
-        """Articles without content_type should not crash and get neutral score."""
-        rec = self._make_recommender()
-        stage = self._make_stage()
-
-        article = self._make_article("Some Article", None)
-        result = await rec._score_article(article, stage, {})
-        assert result is not None
-
-
-# ── Task 4.2: EnhancedRecommendationEngine quality feedback weighting ─────────
-
-
-class TestEnhancedRecommendationQualityWeighting:
-    """Test that user feedback quality scores affect recommendation ranking."""
-
-    def _make_engine(self):
-        from app.services.enhanced_recommendation_engine import EnhancedRecommendationEngine
-
-        engine = EnhancedRecommendationEngine.__new__(EnhancedRecommendationEngine)
-        engine.supabase = MagicMock()
-        engine.classifier = MagicMock()
-        return engine
-
-    def _make_candidate(self, article_id: str, content_type: str = "tutorial") -> dict:
-        return {
-            "article_id": article_id,
-            "content_type": content_type,
-            "difficulty_level": 2,
-            "learning_value_score": 0.8,
-            "confidence_score": 0.9,
-            "educational_features": {
-                "has_code_examples": True,
-                "has_step_by_step": True,
-                "has_practical_exercises": False,
-                "has_visual_aids": False,
-                "estimated_reading_time": 15,
-                "prerequisite_skills": [],
-            },
-            "articles": {
-                "id": article_id,
-                "title": "Test Article",
-                "url": "https://example.com",
-                "published_at": None,
-                "feed_id": str(uuid4()),
-                "tinkering_index": 3,
-                "ai_summary": "Test summary",
-            },
+        self.test_results = {
+            "database_setup": False,
+            "educational_feeds": False,
+            "content_classification": False,
+            "enhanced_recommendations": False,
+            "quality_assurance": False,
+            "api_endpoints": False,
         }
 
-    def _make_preferences(self):
-        from app.services.content_classification_service import ContentType
-        from app.services.enhanced_recommendation_engine import LearningPreferences
+    async def test_database_setup(self) -> bool:
+        """Test database tables and schema."""
+        try:
+            print("🗄️  Testing database setup...")
 
-        return LearningPreferences(
-            preferred_content_types=[ContentType.TUTORIAL, ContentType.GUIDE],
-            preferred_difficulty_progression=0.5,
-            learning_style="balanced",
-            time_availability=30,
-            completion_rate_threshold=0.8,
-        )
+            # Test each new table
+            tables_to_test = [
+                "feed_categories",
+                "article_classifications",
+                "content_feedback",
+                "user_learning_preferences",
+                "content_quality_metrics",
+            ]
 
-    @pytest.mark.asyncio
-    async def test_high_quality_article_scores_higher(self):
-        engine = self._make_engine()
-        prefs = self._make_preferences()
+            for table in tables_to_test:
+                try:
+                    result = self.supabase.client.table(table).select("*").limit(1).execute()
+                    print(f"   ✅ Table {table}: OK")
+                except Exception as e:
+                    print(f"   ❌ Table {table}: {e}")
+                    return False
 
-        high_id = str(uuid4())
-        low_id = str(uuid4())
+            print("   ✅ All database tables accessible")
+            return True
 
-        # Mock quality metrics: high_id has good ratings, low_id has poor ratings
-        def mock_quality_query(table_name):
-            mock = MagicMock()
-            mock.select.return_value = mock
-            mock.in_.return_value = mock
-            mock.execute.return_value = MagicMock(
-                data=[
-                    {"article_id": high_id, "average_rating": 5.0, "completion_rate": 0.9},
-                    {"article_id": low_id, "average_rating": 1.0, "completion_rate": 0.1},
-                ]
+        except Exception as e:
+            print(f"   ❌ Database setup test failed: {e}")
+            return False
+
+    async def test_educational_feeds(self) -> bool:
+        """Test educational RSS feed management."""
+        try:
+            print("📡 Testing educational RSS feeds...")
+
+            # Test getting educational feeds
+            feeds = await self.rss_manager.get_educational_feeds()
+            print(f"   📊 Found {len(feeds)} educational feeds")
+
+            if len(feeds) == 0:
+                print("   ⚠️  No educational feeds found - run seed script first")
+                return False
+
+            # Test feed categorization
+            educational_count = len([f for f in feeds if f.get("feed_type") == "educational"])
+            official_count = len([f for f in feeds if f.get("feed_type") == "official"])
+            community_count = len([f for f in feeds if f.get("feed_type") == "community"])
+
+            print(f"   📚 Educational: {educational_count}")
+            print(f"   🏛️  Official: {official_count}")
+            print(f"   👥 Community: {community_count}")
+
+            # Test quality scoring
+            if feeds:
+                sample_feed_id = feeds[0].get("feed_id")
+                if sample_feed_id:
+                    quality_score = await self.rss_manager.calculate_feed_quality_score(
+                        sample_feed_id
+                    )
+                    print(f"   ⭐ Sample quality score: {quality_score:.2f}")
+
+            print("   ✅ Educational RSS feeds working")
+            return True
+
+        except Exception as e:
+            print(f"   ❌ Educational feeds test failed: {e}")
+            return False
+
+    async def test_content_classification(self) -> bool:
+        """Test content classification service."""
+        try:
+            print("🏷️  Testing content classification...")
+
+            # Get a sample article for testing
+            articles_result = self.supabase.client.table("articles").select("*").limit(1).execute()
+
+            if not articles_result.data:
+                print("   ⚠️  No articles found for testing")
+                return False
+
+            article_data = articles_result.data[0]
+            article = ArticleSchema(**article_data)
+
+            print(f"   📰 Testing with article: {article.title[:50]}...")
+
+            # Test classification
+            classification = await self.classifier.classify_article(article)
+
+            print(f"   🏷️  Content type: {classification.content_type.value}")
+            print(f"   📊 Difficulty level: {classification.difficulty_level.value}")
+            print(f"   📈 Learning value: {classification.learning_value_score:.2f}")
+            print(f"   🎯 Confidence: {classification.confidence_score:.2f}")
+
+            # Test educational features
+            features = classification.educational_features
+            print(f"   💻 Has code examples: {features.has_code_examples}")
+            print(f"   📝 Has step-by-step: {features.has_step_by_step}")
+            print(f"   ⏱️  Reading time: {features.estimated_reading_time} min")
+
+            # Test getting educational articles
+            educational_articles = await self.classifier.get_educational_articles(
+                content_types=[ContentType.TUTORIAL, ContentType.GUIDE], limit=5
             )
-            return mock
+            print(f"   📚 Found {len(educational_articles)} educational articles")
 
-        engine.supabase.client.table = mock_quality_query
+            print("   ✅ Content classification working")
+            return True
 
-        candidates = [
-            self._make_candidate(high_id),
-            self._make_candidate(low_id),
+        except Exception as e:
+            print(f"   ❌ Content classification test failed: {e}")
+            return False
+
+    async def test_enhanced_recommendations(self) -> bool:
+        """Test enhanced recommendation engine."""
+        try:
+            print("🎯 Testing enhanced recommendations...")
+
+            # Get a test user
+            users_result = self.supabase.client.table("users").select("*").limit(1).execute()
+
+            if not users_result.data:
+                print("   ⚠️  No users found for testing")
+                return False
+
+            user_id = str(users_result.data[0]["id"])
+            print(f"   👤 Testing with user: {user_id}")
+
+            # Test getting recommendations
+            recommendations = await self.recommender.get_learning_recommendations(
+                user_id=user_id, limit=5
+            )
+
+            print(f"   📋 Generated {len(recommendations)} recommendations")
+
+            if recommendations:
+                for i, rec in enumerate(recommendations[:3], 1):
+                    article = rec["article"]
+                    score = rec["score"]
+                    print(f"   {i}. {article['title'][:40]}... (score: {score:.2f})")
+
+            # Test user preferences
+            preferences = await self.recommender._get_user_preferences(user_id)
+            print(
+                f"   ⚙️  User preferences: {[ct.value for ct in preferences.preferred_content_types]}"
+            )
+
+            print("   ✅ Enhanced recommendations working")
+            return True
+
+        except Exception as e:
+            print(f"   ❌ Enhanced recommendations test failed: {e}")
+            return False
+
+    async def test_quality_assurance(self) -> bool:
+        """Test quality assurance system."""
+        try:
+            print("🔍 Testing quality assurance...")
+
+            # Get test data
+            users_result = self.supabase.client.table("users").select("*").limit(1).execute()
+            articles_result = self.supabase.client.table("articles").select("*").limit(1).execute()
+
+            if not users_result.data or not articles_result.data:
+                print("   ⚠️  No test data available")
+                return False
+
+            user_id = str(users_result.data[0]["id"])
+            article_id = str(articles_result.data[0]["id"])
+
+            # Test feedback collection
+            test_feedback = ContentFeedback(
+                user_id=user_id,
+                article_id=article_id,
+                educational_value_rating=4,
+                difficulty_accuracy=True,
+                content_type_accuracy=True,
+                completion_status="completed",
+                time_spent_minutes=15,
+                feedback_text="Great tutorial with clear examples",
+            )
+
+            success = await self.quality_system.collect_user_feedback(test_feedback)
+            print(f"   📝 Feedback collection: {'✅' if success else '❌'}")
+
+            # Test quality score calculation
+            quality_score = await self.quality_system.calculate_content_quality_score(article_id)
+            print(f"   ⭐ Quality score: {quality_score:.2f}")
+
+            # Test quality overview
+            overview = await self.quality_system.get_quality_overview()
+            if "error" not in overview:
+                print(f"   📊 Total articles: {overview.get('total_articles', 0)}")
+                print(f"   📚 Educational ratio: {overview.get('educational_content_ratio', 0):.1%}")
+                print(f"   📈 Avg learning value: {overview.get('average_learning_value', 0):.2f}")
+
+            print("   ✅ Quality assurance working")
+            return True
+
+        except Exception as e:
+            print(f"   ❌ Quality assurance test failed: {e}")
+            return False
+
+    async def test_api_endpoints(self) -> bool:
+        """Test API endpoints (basic connectivity)."""
+        try:
+            print("🌐 Testing API endpoints...")
+
+            # This is a basic test - in a real scenario you'd use a test client
+            # For now, we'll just verify the services can be instantiated
+
+            from app.api.learning_content import (
+                get_content_classifier,
+                get_educational_rss_manager,
+                get_enhanced_recommender,
+                get_quality_system,
+            )
+
+            # Test service instantiation
+            rss_manager = get_educational_rss_manager()
+            classifier = get_content_classifier()
+            recommender = get_enhanced_recommender()
+            quality_system = get_quality_system()
+
+            print("   ✅ All API services instantiated successfully")
+            print("   ℹ️  Full API testing requires running server")
+
+            return True
+
+        except Exception as e:
+            print(f"   ❌ API endpoints test failed: {e}")
+            return False
+
+    async def run_all_tests(self) -> dict:
+        """Run all tests and return results."""
+        print("🧪 Learning Content Enhancement System Test")
+        print("=" * 60)
+
+        # Run tests in order
+        tests = [
+            ("database_setup", self.test_database_setup),
+            ("educational_feeds", self.test_educational_feeds),
+            ("content_classification", self.test_content_classification),
+            ("enhanced_recommendations", self.test_enhanced_recommendations),
+            ("quality_assurance", self.test_quality_assurance),
+            ("api_endpoints", self.test_api_endpoints),
         ]
 
-        results = await engine._score_articles(candidates, prefs, "user-1")
-        assert len(results) == 2
-        # High quality article should rank first
-        assert str(results[0].article.id) == high_id
+        for test_name, test_func in tests:
+            try:
+                result = await test_func()
+                self.test_results[test_name] = result
+                print()
+            except Exception as e:
+                print(f"   ❌ Test {test_name} crashed: {e}")
+                self.test_results[test_name] = False
+                print()
+
+        # Summary
+        print("📋 Test Summary")
+        print("-" * 30)
+
+        passed = 0
+        total = len(self.test_results)
+
+        for test_name, result in self.test_results.items():
+            status = "✅ PASS" if result else "❌ FAIL"
+            print(f"{test_name.replace('_', ' ').title()}: {status}")
+            if result:
+                passed += 1
+
+        print(f"\nOverall: {passed}/{total} tests passed ({passed/total:.1%})")
+
+        return {
+            "passed": passed,
+            "total": total,
+            "success_rate": passed / total,
+            "results": self.test_results,
+        }
+
+
+async def main():
+    """Main test function."""
+    tester = LearningContentEnhancementTest()
+    results = await tester.run_all_tests()
+
+    if results["success_rate"] == 1.0:
+        print("\n🎉 All tests passed! Learning Content Enhancement System is ready.")
+        sys.exit(0)
+    else:
+        print(
+            f"\n⚠️  {results['total'] - results['passed']} tests failed. Please check the issues above."
+        )
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

@@ -1,57 +1,63 @@
 # Tech News Agent
 
-一個自動化技術資訊策展系統，結合 FastAPI 後端、Next.js Web 介面、Discord Bot 和 Groq LLM。自動抓取 RSS 訂閱源、使用 AI 分析文章，並透過 Web Dashboard 和 Discord DM 提供個人化的技術新聞。
+一個結合 FastAPI 後端、Next.js 網頁介面、Discord Bot 和 Groq LLM 的自動化技術資訊整理系統。自動抓取 RSS 訂閱源、以 AI 分析文章，並透過網頁儀表板和 Discord DM 提供個人化技術新聞——包含完整的對話式 AI 層、智慧提醒、學習路徑和每週洞察。
 
 ## 🌟 核心功能
 
 ### 📱 多平台存取
 
-- **Web Dashboard**：現代化的 Next.js 介面，支援深色模式
-- **Discord Bot**：互動式指令和 DM 通知
-- **REST API**：完整的 API 供程式化存取
+- **網頁儀表板**：現代化 Next.js 介面，支援深色模式、i18n（中英文）和完整響應式設計
+- **Discord Bot**：斜線指令、DM 通知和互動式 UI 元件
+- **REST API**：完整功能的 API，附 Swagger/ReDoc 文件
 
-### 🤖 AI 驅動智能
+### 🤖 AI 驅動智慧
 
-- **智慧評分**：使用 Groq (Llama 3.1 8B) 評估技術深度
-- **AI 摘要**：使用 Llama 3.3 70B 生成精簡摘要
-- **個人化推薦**：從你的評分學習，推薦相關內容
-- **深度分析**：隨選的詳細技術解析
+- **智慧評分**：使用 Groq（Llama 3.1 8B）評估技術深度
+- **AI 摘要**：使用 Llama 3.3 70B 生成簡潔摘要
+- **個人化推薦**：從你的評分中學習，推薦相關內容
+- **深度分析**：按需提供詳細技術解析
+- **QA Agent**：完整的對話式問答系統，支援向量搜尋、多輪記憶和用戶偏好學習
+- **每週洞察**：AI 生成的每週摘要，包含趨勢偵測和主題聚類
+- **智慧提醒**：根據閱讀行為和興趣提供情境感知提醒
+- **學習路徑**：技能樹、目標追蹤和自適應內容推薦
 
 ### 👥 多租戶架構
 
-- **個人訂閱**：每個使用者管理自己的 RSS 訂閱源
+- **個人訂閱**：每位用戶管理自己的 RSS 訂閱源
 - **私人閱讀清單**：獨立評分和整理文章
-- **自訂通知**：控制何時以及如何接收更新
-- **資料隔離**：使用者之間完全隱私
+- **自訂通知**：細粒度控制頻率、時間、靜音時段和內容類型閾值
+- **資料隔離**：用戶之間完全隱私
 
 ### ⚡ 彈性排程
 
-- **自動抓取**：可配置的背景排程器（預設：每 6 小時）
-- **手動觸發**：透過 Web、Discord 或 API 即時抓取文章
-- **智慧通知**：文章處理後 10 分鐘發送 DM
+- **自動抓取**：可設定的背景排程器（預設：每 6 小時）
+- **每用戶動態排程**：每位用戶的通知遵循自己的排程和時區
+- **手動觸發**：透過網頁、Discord 或 API 即時刷新文章
+- **智慧通知**：DM 傳送，支援重複防止和靜音時段
 
-### 🗄️ 強大資料層
+### 🗄️ 強健的資料層
 
 - **Supabase/PostgreSQL**：可靠的資料儲存，支援 pgvector
-- **語義搜尋就緒**：向量嵌入供未來 AI 驅動搜尋
-- **高效索引**：使用適當的資料庫索引優化查詢
+- **語意搜尋**：向量嵌入，支援 AI 驅動的文章搜尋
+- **對話持久化**：完整的聊天記錄，支援搜尋和匯出
+- **知識圖譜**：文章依賴關係和概念連結
+
+---
 
 ## 🚀 快速開始
 
-> **⚡ 快速設定**: 查看 [環境變數快速設定指南](./QUICK_ENV_SETUP.md) 5 分鐘完成配置
-
 ### 前置需求
 
-1. **Supabase 帳號** - [在 supabase.com 註冊](https://supabase.com)
-2. **Discord Bot**（選填）- [在 Discord Developer Portal 建立](https://discord.com/developers/applications)
-3. **Groq API Key** - [從 Groq Cloud 取得](https://console.groq.com)
+1. **Supabase 帳號** — [supabase.com](https://supabase.com)
+2. **Discord Bot**（可選）— [Discord 開發者入口](https://discord.com/developers/applications)
+3. **Groq API 金鑰** — [console.groq.com](https://console.groq.com)
 
 ### 安裝
 
-#### 選項 1：Docker Compose（推薦）
+#### 方式一：Docker Compose（推薦）
 
 ```bash
-# 1. 複製專案
+# 1. 複製儲存庫
 git clone https://github.com/yourusername/tech-news-agent.git
 cd tech-news-agent
 
@@ -60,18 +66,18 @@ cp .env.example .env
 # 編輯 .env 填入你的憑證
 
 # 3. 初始化資料庫
-# 在 Supabase SQL Editor 執行 backend/scripts/init_supabase.sql
+# 在 Supabase SQL 編輯器中執行 backend/scripts/init_supabase.sql
 
 # 4. 啟動服務
 docker compose up -d
 
 # 5. 存取應用程式
-# Web: http://localhost:3000
-# API: http://localhost:8000
-# API 文件: http://localhost:8000/docs
+# 網頁：      http://localhost:3000
+# API：       http://localhost:8000
+# API 文件：  http://localhost:8000/docs
 ```
 
-#### 選項 2：本地開發
+#### 方式二：本地開發
 
 ```bash
 # 後端
@@ -85,426 +91,476 @@ npm install
 npm run dev
 ```
 
-### 首次使用
+### 第一步
 
-1. **Web 介面**：訪問 http://localhost:3000 並使用 Discord OAuth 登入
-2. **訂閱 Feeds**：從 Dashboard 新增你喜愛的 RSS 訂閱源
-3. **觸發抓取**：點擊「抓取新文章」取得第一批文章
-4. **探索**：瀏覽文章、儲存到閱讀清單、評分內容
+1. **網頁介面**：前往 http://localhost:3000，使用 Discord OAuth 登入
+2. **訂閱訂閱源**：從訂閱頁面新增你喜愛的 RSS 訂閱源
+3. **觸發抓取**：點擊「抓取新文章」或在 Discord 使用 `/trigger_fetch`
+4. **探索**：瀏覽文章、儲存到閱讀清單、評分內容，並與 AI 對話
 
-詳細設定說明請參考 [快速開始指南](./docs/QUICKSTART.md)。
+---
 
-## 📚 文件
+## 如何執行
 
-### 快速開始
+### 方式一：Docker Compose（推薦）
 
-- **[快速開始指南](./docs/QUICKSTART.md)** - 幾分鐘內啟動並運行
-- **[環境設定](./docs/setup/ENV_SETUP_GUIDE.md)** - 完整的環境變數參考
-- **[Docker 指南](./docs/docker/DOCKER_GUIDE.md)** - Docker 部署說明
+#### 🔧 開發環境（支援熱重載）
 
-### 使用者指南
-
-- **[使用者指南](./docs/USER_GUIDE.md)** - 使用 Web 介面和 Discord Bot
-- **[手動觸發 Scheduler](./docs/MANUAL_SCHEDULER_TRIGGER.md)** - 隨選文章抓取
-
-### 開發者資源
-
-- **[開發者指南](./docs/DEVELOPER_GUIDE.md)** - 架構和 API 參考
-- **[專案概覽](./docs/PROJECT_OVERVIEW.md)** - 完整的系統文件
-- **[系統架構](./docs/ARCHITECTURE.md)** - 系統架構細節
-- **[測試指南](./docs/testing/supabase-migration-testing.md)** - 測試策略和工具
-
-### 部署
-
-- **[部署指南](./docs/deployment/DEPLOYMENT.md)** - 正式環境部署步驟
-- **[部署檢查清單](./docs/deployment/DEPLOYMENT_CHECKLIST.md)** - 部署前驗證
-- **[公開 Bot 設定](./docs/PUBLIC_BOT_SETUP.md)** - 將你的 Bot 設為公開
-
-📖 **[完整文件索引](./docs/README.md)** - 瀏覽所有文件
-
-## 🎯 主要功能
-
-### Web Dashboard
-
-- **現代化 UI**：使用 Next.js 14、React 18 和 Tailwind CSS 建立
-- **深色模式**：使用 next-themes 無縫切換主題
-- **即時更新**：React Query 高效資料抓取
-- **響應式設計**：在桌面和行動裝置上完美運作
-- **Discord OAuth**：安全的認證整合
-
-### Discord Bot
-
-- **Slash 指令**：直覺的指令介面
-- **DM 通知**：個人文章摘要直接發送到你的收件匣
-- **互動式 UI**：按鈕、選單和分頁
-- **持久化元件**：Bot 重啟後仍可運作
-- **多伺服器支援**：可邀請到任何 Discord 伺服器
-
-### 後端 API
-
-- **FastAPI**：高效能非同步 Python 框架
-- **RESTful 設計**：清晰、有文件的 API 端點
-- **JWT 認證**：安全的 Token 認證
-- **背景任務**：APScheduler 自動化作業
-- **健康檢查**：監控系統狀態
-
-### AI 整合
-
-- **Groq LLM**：快速、經濟實惠的 AI 處理
-- **雙模型**：
-  - Llama 3.1 8B 快速評分
-  - Llama 3.3 70B 詳細分析
-- **智慧快取**：文章分析一次，多次服務
-- **速率限制**：自動 API 配額管理
-
-## 🏗️ 架構
-
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   Next.js Web   │────▶│  FastAPI Backend│────▶│    Supabase     │
-│   Dashboard     │     │   + Discord Bot │     │   PostgreSQL    │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-        │                       │                         │
-        │                       │                         │
-        ▼                       ▼                         ▼
-  Discord OAuth          Groq LLM API            pgvector Search
-  React Query            APScheduler             Multi-tenant Data
+```bash
+make dev
+# 或
+docker-compose up -d
 ```
 
-### 技術棧
+#### 🚀 正式環境
 
-**前端**
-
-- Next.js 14 (App Router)
-- React 18
-- TypeScript
-- Tailwind CSS + shadcn/ui
-- React Query (TanStack Query)
-- Playwright (E2E 測試)
-
-**後端**
-
-- Python 3.11+
-- FastAPI 0.111.0+
-- discord.py 2.4.0+
-- APScheduler 3.10.4+
-- pytest + Hypothesis (測試)
-
-**基礎設施**
-
-- Supabase (PostgreSQL + pgvector)
-- Docker + Docker Compose
-- Groq Cloud (Llama 模型)
-
-## 📊 資料庫架構
-
-```sql
-users                    feeds                   articles
-├── id (UUID)           ├── id (UUID)           ├── id (UUID)
-├── discord_id          ├── name                ├── feed_id (FK)
-├── dm_notifications    ├── url                 ├── title
-└── created_at          ├── category            ├── url
-                        ├── is_active           ├── published_at
-user_subscriptions      └── created_at          ├── tinkering_index
-├── id (UUID)                                   ├── ai_summary
-├── user_id (FK)        reading_list            ├── embedding (vector)
-├── feed_id (FK)        ├── id (UUID)           └── created_at
-└── subscribed_at       ├── user_id (FK)
-                        ├── article_id (FK)
-                        ├── status
-                        ├── rating
-                        └── updated_at
+```bash
+make prod
+# 或
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
-## 📁 專案結構
+### 方式二：本地 Python
 
+```bash
+pip install -r requirements.txt
+python -m app.main
 ```
-tech-news-agent/
-├── backend/                    # FastAPI 後端 + Discord bot
-│   ├── app/
-│   │   ├── api/               # REST API 端點
-│   │   ├── bot/               # Discord bot
-│   │   ├── core/              # 核心配置
-│   │   ├── schemas/           # Pydantic 模型
-│   │   ├── services/          # 業務邏輯
-│   │   ├── tasks/             # 背景作業
-│   │   └── main.py            # 應用程式入口
-│   ├── scripts/               # 資料庫腳本
-│   ├── tests/                 # 後端測試
-│   └── requirements.txt       # Python 依賴
-│
-├── frontend/                  # Next.js Web 介面
-│   ├── app/                   # App router 頁面
-│   ├── components/            # React 元件
-│   ├── lib/                   # 工具函式
-│   ├── hooks/                 # 自訂 React hooks
-│   └── package.json           # Node 依賴
-│
-├── docs/                      # 文件
-│   ├── setup/                 # 設定指南
-│   ├── docker/                # Docker 文件
-│   ├── deployment/            # 部署指南
-│   └── testing/               # 測試文件
-│
-├── docker-compose.yml         # 開發 compose
-├── docker-compose.prod.yml    # 正式 compose
-└── README.md                  # 本文件
-```
+
+---
 
 ## ⚙️ 環境變數
 
-### 必要變數
+### 必要
 
 ```bash
-# Supabase 配置
+# Supabase
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_KEY=your-service-role-key
 
-# Groq AI 配置
+# Groq AI
 GROQ_API_KEY=your-groq-api-key
 
-# JWT 認證（使用 openssl rand -hex 32 生成）
-JWT_SECRET_KEY=your-secret-key-here
+# JWT 認證
+JWT_SECRET_KEY=your-secret-key-here   # openssl rand -hex 32
 JWT_ALGORITHM=HS256
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
 
-# Discord OAuth（用於 Web 登入）
+# Discord OAuth（網頁登入用）
 DISCORD_CLIENT_ID=your-client-id
 DISCORD_CLIENT_SECRET=your-client-secret
 DISCORD_REDIRECT_URI=http://localhost:3000/auth/callback
 
-# 前端配置
+# 前端
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
 
-### 選填變數
+### 可選
 
 ```bash
-# Discord Bot（選填 - 用於 Discord 整合）
+# Discord Bot
 DISCORD_TOKEN=your-bot-token
-DISCORD_CHANNEL_ID=your-channel-id  # 用於頻道通知
+DISCORD_CHANNEL_ID=your-channel-id
 
-# Scheduler 配置
-SCHEDULER_CRON=0 */6 * * *          # 每 6 小時
+# 排程器
+SCHEDULER_CRON=0 */6 * * *
 SCHEDULER_TIMEZONE=Asia/Taipei
 
-# 應用程式設定
+# 應用程式
 TIMEZONE=Asia/Taipei
-RSS_FETCH_DAYS=7                    # 抓取最近 N 天的文章
-BATCH_SIZE=50                       # 每批文章數
-BATCH_SPLIT_THRESHOLD=100           # 何時分批
-
-# 開發
-LOG_LEVEL=INFO                      # DEBUG, INFO, WARNING, ERROR
+RSS_FETCH_DAYS=7
+BATCH_SIZE=50
+LOG_LEVEL=INFO
 ```
 
-詳細配置指南請參考 [環境設定指南](./docs/setup/ENV_SETUP_GUIDE.md)。
+---
 
 ## 💬 Discord Bot 指令
 
-### Scheduler 管理
+### 排程器
 
-```
-/trigger_fetch          # 立即手動觸發文章抓取
-/scheduler_status       # 檢查 scheduler 執行狀態和健康度
-```
+| 指令 | 說明 |
+|------|------|
+| `/trigger_fetch` | 手動觸發文章抓取 |
+| `/scheduler_status` | 檢查排程器健康狀態 |
 
-### Feed 管理
+### 訂閱源管理
 
-```
-/add_feed name:Hacker News url:https://news.ycombinator.com/rss category:Tech News
-/list_feeds             # 查看所有訂閱的 feeds
-/unsubscribe_feed feed_name:Hacker News
-```
+| 指令 | 說明 |
+|------|------|
+| `/add_feed name: url: category:` | 訂閱 RSS/Atom 訂閱源 |
+| `/list_feeds` | 查看所有已訂閱的訂閱源 |
+| `/unsubscribe_feed feed_identifier:` | 取消訂閱 |
 
 ### 文章探索
 
-```
-/news_now               # 查看訂閱 feeds 的最新文章
-                        # 包含互動式篩選和深度分析
-```
+| 指令 | 說明 |
+|------|------|
+| `/news_now` | 最新文章，附分類篩選、深度分析和儲存按鈕 |
+| `/ask question:` | 用自然語言詢問你的文章 |
 
 ### 閱讀清單
 
-```
-/reading_list view      # 瀏覽閱讀清單（分頁）
-/reading_list recommend # 根據高評分文章獲得 AI 推薦
-```
+| 指令 | 說明 |
+|------|------|
+| `/reading_list view` | 瀏覽，支援分頁、標記已讀和評分（1–5 星） |
+| `/reading_list remove article_id:` | 依 ID 移除文章 |
+| `/reading_list recommend` | 根據 4 星以上評分的 AI 推薦 |
+
+### 對話
+
+| 指令 | 說明 |
+|------|------|
+| `/conversations` | 列出過去的 DM 對話 |
+| `/continue id:` | 繼續過去的對話 |
+| `/search query:` | 搜尋對話記錄 |
+
+### 個人資料與推薦
+
+| 指令 | 說明 |
+|------|------|
+| `/my_profile` | 查看偏好摘要和分類權重 |
+| `/update_profile` | 從 DM 記錄重建偏好摘要 |
+| `/recommend_now` | 觸發個人化推薦到 DM |
+| `/stats` | 閱讀統計：已儲存、已讀/未讀、平均評分、熱門分類 |
+| `/export` | 將閱讀清單匯出為 CSV |
 
 ### 通知設定
 
-```
-/notifications enabled:開啟通知
-/notifications enabled:關閉通知
-/notification_status    # 檢查目前通知設定
-```
+| 指令 | 說明 |
+|------|------|
+| `/notifications enabled:` | 開關 DM 通知 |
+| `/notification_status` | 查看目前通知設定 |
+| `/set-notification-frequency frequency:` | 設定每日/每週頻率 |
+| `/set-notification-time hour: minute:` | 設定傳送時間 |
+| `/set-timezone timezone:` | 設定你的時區 |
+| `/toggle-notifications` | 快速切換 |
+| `/quiet-hours` | 查看靜音時段設定 |
+| `/set-quiet-hours start_time: end_time: enabled:` | 設定靜音時段 |
+| `/toggle-quiet-hours` | 快速切換靜音時段 |
 
-完整指令文件請參考 [使用者指南](./docs/USER_GUIDE.md)。
+---
 
 ## 🌐 Web API 端點
 
 ### 認證
-
-```http
+```
 POST /api/auth/discord/login
 POST /api/auth/discord/callback
 GET  /api/auth/me
 ```
 
 ### 文章
-
-```http
-GET  /api/articles              # 列出文章
-GET  /api/articles/{id}         # 取得文章詳情
-POST /api/articles/{id}/analyze # 深度分析
+```
+GET  /api/articles
+GET  /api/articles/{id}
+POST /api/articles/{id}/analyze
 ```
 
-### Feeds
-
-```http
-GET    /api/feeds               # 列出所有 feeds
-POST   /api/feeds               # 建立 feed
-GET    /api/feeds/subscriptions # 使用者訂閱
-POST   /api/feeds/subscribe     # 訂閱 feed
-DELETE /api/feeds/unsubscribe   # 取消訂閱
+### 訂閱源
+```
+GET    /api/feeds
+POST   /api/feeds
+GET    /api/feeds/subscriptions
+POST   /api/feeds/subscribe
+DELETE /api/feeds/unsubscribe
 ```
 
 ### 閱讀清單
-
-```http
-GET    /api/reading-list        # 取得閱讀清單
-POST   /api/reading-list        # 加入閱讀清單
-PATCH  /api/reading-list/{id}   # 更新狀態/評分
-DELETE /api/reading-list/{id}   # 從清單移除
-GET    /api/reading-list/recommend # 取得推薦
+```
+GET    /api/reading-list
+POST   /api/reading-list
+PATCH  /api/reading-list/{id}
+DELETE /api/reading-list/{id}
+GET    /api/reading-list/recommend
 ```
 
-### Scheduler
-
-```http
-POST /api/scheduler/trigger     # 觸發手動抓取
-GET  /api/scheduler/status      # 取得 scheduler 狀態
+### QA / 對話
+```
+POST /api/qa/ask
+GET  /api/conversations
+GET  /api/conversations/{id}
+GET  /api/conversations/{id}/messages
+POST /api/conversations/{id}/ai
+GET  /api/conversations/{id}/insights
+GET  /api/conversations/{id}/related
+POST /api/conversations/{id}/share
+GET  /api/conversations/{id}/export
 ```
 
-### 健康檢查
-
-```http
-GET /                           # 基本健康檢查
-GET /health                     # 詳細健康狀態
-GET /health/scheduler           # Scheduler 健康度
+### 通知
+```
+GET  /api/notifications/preferences
+PUT  /api/notifications/preferences
+GET  /api/notifications/quiet-hours
+PUT  /api/notifications/quiet-hours
+GET  /api/notifications/history
+GET  /api/notifications/settings
+PUT  /api/notifications/settings
+POST /api/notifications/proactive
 ```
 
-完整 API 文件請訪問 `/docs` (Swagger UI) 或 `/redoc` (ReDoc)。
-
-## 🧪 測試
-
-### 快速 CI 驗證
-
-在推送程式碼前，**務必**執行以下命令：
-
-```bash
-# 1. 自動修復格式和 linting 問題
-./scripts/ci-fix.sh
-
-# 2. 在本地執行所有 CI 檢查（完全模擬 GitHub Actions）
-./scripts/ci-local-test.sh
+### 學習
+```
+GET  /api/learning/goals
+POST /api/learning/goals
+GET  /api/learning/progress
+GET  /api/learning/evaluation
+GET  /api/learning-content
+GET  /api/weekly-insights
+POST /api/intelligent-reminder
+GET  /api/reminder-settings
+PUT  /api/reminder-settings
 ```
 
-**CI 文件：**
-
-- 📖 [快速開始指南](./docs/ci/QUICK_START.md) - 必要命令和常見修復
-- 📚 [完整 CI 指南](./docs/ci/CI_GUIDE.md) - 詳細文件和故障排除
-- 🔄 [CI 重新設計總結](./docs/ci/CI_REDESIGN_SUMMARY.md) - 架構和改進
-
-**CI 檢查項目：**
-
-- ✅ 程式碼格式化（Black、Prettier）
-- ✅ Linting（Ruff、ESLint）
-- ✅ 類型檢查（mypy、TypeScript）
-- ✅ 測試覆蓋率（後端 ≥70%、前端 ≥70%）
-- ✅ 建置驗證
-
-### 後端測試
-
-```bash
-cd backend
-
-# 執行所有測試
-pytest -v
-
-# 執行特定測試套件
-pytest tests/test_database_properties.py -v  # Property-based 測試（17 個屬性）
-pytest tests/test_config.py -v              # 配置測試
-pytest tests/test_sql_init_integration.py -v # SQL 初始化測試
-
-# 執行覆蓋率測試
-pytest --cov=app --cov-report=html
-
-# 調整 Hypothesis 測試強度
-HYPOTHESIS_PROFILE=dev pytest tests/test_database_properties.py -v  # 快速（10 個範例）
-HYPOTHESIS_PROFILE=ci pytest tests/test_database_properties.py -v   # CI（100 個範例）
+### 分析與系統
+```
+GET  /api/analytics
+GET  /api/knowledge-graph
+GET  /api/user/platforms
+POST /api/scheduler/trigger
+GET  /api/scheduler/status
+GET  /health
+GET  /health/scheduler
 ```
 
-### 前端測試
-
-```bash
-cd frontend
-
-# 單元測試
-npm test                    # 執行一次
-npm run test:watch          # Watch 模式
-npm run test:coverage       # 含覆蓋率
-
-# E2E 測試
-npm run test:e2e           # Headless
-npm run test:e2e:ui        # 互動式 UI
-```
-
-### 測試覆蓋率
-
-- **後端**：17 個 property-based 測試 + 單元測試 + 整合測試
-- **前端**：Jest 單元測試 + Playwright E2E 測試
-- **資料庫**：使用 Hypothesis 的完整架構驗證
-
-詳細測試文件請參考 [測試指南](./docs/testing/supabase-migration-testing.md)。
-
-## 🤝 貢獻
-
-歡迎貢獻！以下是你可以幫助的方式：
-
-1. **Fork 專案**
-2. **建立功能分支**：`git checkout -b feature/amazing-feature`
-3. **進行變更**並新增測試
-4. **執行測試**：`pytest`（後端）和 `npm test`（前端）
-5. **提交**：`git commit -m 'Add amazing feature'`
-6. **推送**：`git push origin feature/amazing-feature`
-7. **開啟 Pull Request**
-
-### 開發指南
-
-- 遵循現有程式碼風格（Python 使用 Black，TypeScript 使用 ESLint）
-- 為新功能撰寫測試
-- 根據需要更新文件
-- 保持 commit 原子化且描述清楚
-
-## 📝 授權
-
-MIT License - 詳見 [LICENSE](LICENSE) 檔案
-
-## 🙏 致謝
-
-- [Supabase](https://supabase.com) - 資料庫和認證
-- [Groq](https://groq.com) - 快速 LLM 推理
-- [Discord](https://discord.com) - Bot 平台和 OAuth
-- [Vercel](https://vercel.com) - Next.js 框架
-- [shadcn/ui](https://ui.shadcn.com) - UI 元件
-
-## 📞 支援
-
-- 📖 [文件](./docs/README.md)
-- 🐛 [Issue Tracker](https://github.com/yourusername/tech-news-agent/issues)
-- 💬 [Discussions](https://github.com/yourusername/tech-news-agent/discussions)
+後端執行時，完整互動文件在 `/docs`（Swagger）或 `/redoc`。
 
 ---
 
-**用 ❤️ 為技術社群打造**
+## 🧪 測試
+
+```bash
+# 推送前——在本地執行 CI 檢查
+./scripts/ci-fix.sh          # 自動修復格式/lint
+./scripts/ci-local-test.sh   # 完整 CI 檢查（與 GitHub Actions 一致）
+```
+
+### 後端
+
+```bash
+cd backend
+pytest -v
+pytest --cov=app --cov-report=html
+
+# Hypothesis 設定檔
+HYPOTHESIS_PROFILE=dev pytest tests/test_database_properties.py -v   # 快速（10 個範例）
+HYPOTHESIS_PROFILE=ci  pytest tests/test_database_properties.py -v   # CI（100 個範例）
+```
+
+### 前端
+
+```bash
+cd frontend
+npm test                 # 單元測試
+npm run test:coverage    # 含覆蓋率
+npm run test:e2e         # Playwright E2E
+```
+
+---
+
+## 📁 專案結構
+
+```
+tech-news-agent/
+├── backend/
+│   ├── app/
+│   │   ├── api/               # REST API 端點
+│   │   │   ├── auth.py
+│   │   │   ├── articles.py
+│   │   │   ├── feeds.py
+│   │   │   ├── reading_list.py
+│   │   │   ├── scheduler.py
+│   │   │   ├── qa.py
+│   │   │   ├── conversations/  # 對話 CRUD、訊息、AI、洞察、分享、匯出
+│   │   │   ├── notifications/  # 偏好、靜音時段、記錄、設定、主動通知
+│   │   │   ├── learning_path/  # 目標、進度、評估
+│   │   │   ├── weekly_insights.py
+│   │   │   ├── intelligent_reminder.py
+│   │   │   ├── knowledge_graph.py
+│   │   │   ├── analytics.py
+│   │   │   └── ...
+│   │   ├── bot/
+│   │   │   ├── cogs/
+│   │   │   │   ├── news_commands.py
+│   │   │   │   ├── reading_list.py
+│   │   │   │   ├── subscription_commands.py
+│   │   │   │   ├── notification_settings.py
+│   │   │   │   ├── quiet_hours_settings.py
+│   │   │   │   ├── conversation_commands.py
+│   │   │   │   ├── qa_commands.py
+│   │   │   │   ├── proactive_dm.py
+│   │   │   │   ├── dm_conversation_listener.py
+│   │   │   │   ├── conversation_auto_manager.py
+│   │   │   │   ├── persistent_views.py
+│   │   │   │   ├── interactions.py
+│   │   │   │   └── admin_commands.py
+│   │   │   └── client.py
+│   │   ├── services/          # ~50 個服務檔案（mixin 模式）
+│   │   │   ├── supabase_service.py
+│   │   │   ├── llm_service.py
+│   │   │   ├── rss_service.py
+│   │   │   ├── dynamic_scheduler.py
+│   │   │   ├── smart_conversation.py
+│   │   │   ├── enhanced_recommendation_engine.py
+│   │   │   ├── intelligent_reminder_generator.py
+│   │   │   ├── cross_platform_sync.py
+│   │   │   └── _mixins/       # article、feed、reading_list、notification、user
+│   │   ├── qa_agent/          # 完整 QA 子系統
+│   │   │   ├── qa_agent_controller.py
+│   │   │   ├── query_processor.py
+│   │   │   ├── retrieval_engine.py
+│   │   │   ├── response_generator.py
+│   │   │   ├── conversation_manager.py
+│   │   │   ├── user_profile_manager.py
+│   │   │   ├── knowledge_graph/
+│   │   │   ├── intelligent_reminder/
+│   │   │   ├── weekly_insights/
+│   │   │   ├── proactive_learning/
+│   │   │   └── learning_path/
+│   │   ├── core/              # 設定、例外、日誌、驗證器
+│   │   ├── repositories/      # 資料存取層
+│   │   ├── schemas/           # Pydantic 模型
+│   │   └── tasks/             # APScheduler 任務
+│   ├── scripts/               # 資料庫腳本、遷移、工具
+│   ├── tests/                 # pytest 測試套件
+│   └── requirements.txt
+│
+├── frontend/
+│   ├── app/
+│   │   ├── (public)/          # /、/login、/auth/callback、/chat、/conversations、/demo
+│   │   └── app/               # 需認證的路由
+│   │       ├── articles/
+│   │       ├── reading-list/
+│   │       ├── subscriptions/
+│   │       ├── recommendations/
+│   │       ├── chat/
+│   │       ├── learning/
+│   │       ├── insights/
+│   │       ├── knowledge-graph/
+│   │       ├── reminders/
+│   │       ├── analytics/
+│   │       └── settings/      # 通知、提醒、偏好、外觀、帳號
+│   ├── features/              # 功能切片元件
+│   │   ├── articles/
+│   │   ├── ai-analysis/
+│   │   ├── notifications/
+│   │   ├── recommendations/
+│   │   ├── subscriptions/
+│   │   └── system-monitor/
+│   ├── components/            # 共用 UI 元件（shadcn/ui）
+│   ├── lib/                   # API 客戶端、hooks、工具
+│   ├── locales/               # i18n（中英文）
+│   └── package.json
+│
+├── docs/                      # 所有文件
+├── scripts/                   # 開發、CI、遷移腳本
+├── .github/workflows/ci.yml
+├── docker-compose.yml         # 開發環境
+├── docker-compose.prod.yml    # 正式環境
+├── Makefile
+└── README.md
+```
+
+---
+
+## 🏗️ 架構
+
+```
+┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
+│   Next.js 網頁  │────▶│   FastAPI 後端        │────▶│    Supabase     │
+│   儀表板        │     │   + Discord Bot       │     │   PostgreSQL    │
+│   (i18n 中英文) │     │   + QA Agent          │     │   + pgvector    │
+└─────────────────┘     └──────────────────────┘     └─────────────────┘
+        │                         │                           │
+        ▼                         ▼                           ▼
+  Discord OAuth            Groq LLM API              向量搜尋
+  React Query              APScheduler               對話儲存
+  功能切片                  動態排程器                知識圖譜
+```
+
+### 技術棧
+
+**前端**：Next.js 14（App Router）、React 18、TypeScript、Tailwind CSS、shadcn/ui、React Query、next-intl、Playwright
+
+**後端**：Python 3.11+、FastAPI、discord.py 2.4+、APScheduler 3.10+、Supabase Python 客戶端
+
+**基礎設施**：Supabase（PostgreSQL + pgvector）、Docker + Docker Compose、Groq Cloud（Llama 3.1 8B / 3.3 70B）
+
+---
+
+## 📊 資料庫結構
+
+```
+users                    feeds                   articles
+├── id (UUID)           ├── id (UUID)           ├── id (UUID)
+├── discord_id          ├── name                ├── feed_id (FK)
+├── dm_notifications    ├── url                 ├── title
+└── created_at          ├── category            ├── url
+                        └── is_active           ├── published_at
+user_subscriptions                              ├── tinkering_index
+├── user_id (FK)        reading_list            ├── ai_summary
+└── feed_id (FK)        ├── user_id (FK)        ├── embedding (vector)
+                        ├── article_id (FK)     └── created_at
+conversations           ├── status
+├── id (UUID)           └── rating              user_notification_preferences
+├── user_id (FK)                                ├── user_id (FK)
+├── title               messages                ├── frequency
+└── created_at          ├── conversation_id     ├── notification_time
+                        ├── role                ├── timezone
+knowledge_graph         └── content             └── quiet_hours_*
+├── article_id (FK)
+├── concept
+└── relationships
+```
+
+---
+
+## 🔧 故障排除
+
+**資料庫錯誤 / 缺少資料表：**
+```bash
+cd backend
+python3 scripts/verify_bot_health.py
+python3 scripts/apply_missing_migration.py
+```
+
+**Discord Bot 沒有回應：** 檢查 `DISCORD_TOKEN`、Bot 權限和 OAuth 範圍。
+
+**文章沒有抓取：** 檢查排程器日誌（`docker-compose logs -f backend`），確認 RSS 訂閱源有效，並確認 Groq API 金鑰有額度。
+
+更多資訊請見 [docs/troubleshooting/](./docs/troubleshooting/)。
+
+---
+
+## 📚 文件
+
+- [快速開始指南](./docs/guides/quick-start.md)
+- [環境設定](./docs/setup/env-setup-guide.md)
+- [Docker 指南](./docs/docker/docker-guide.md)
+- [用戶指南](./docs/guides/user-guide.md)
+- [開發者指南](./docs/development/developer-guide.md)
+- [架構概覽](./docs/architecture/architecture-overview.md)
+- [部署指南](./docs/deployment/deployment-guide.md)
+- [完整文件索引](./docs/README.md)
+
+---
+
+## 🤝 貢獻
+
+1. Fork 儲存庫
+2. 建立功能分支：`git checkout -b feature/amazing-feature`
+3. 修改並新增測試
+4. 執行檢查：`./scripts/ci-fix.sh && ./scripts/ci-local-test.sh`
+5. 提交：`git commit -m 'feat(scope): add amazing feature'`
+6. 推送並開啟 Pull Request
+
+---
+
+## 📝 授權
+
+MIT 授權 — 詳見 [LICENSE](LICENSE)。
+
+## 🙏 致謝
+
+[Supabase](https://supabase.com) · [Groq](https://groq.com) · [Discord](https://discord.com) · [Vercel/Next.js](https://nextjs.org) · [shadcn/ui](https://ui.shadcn.com)
