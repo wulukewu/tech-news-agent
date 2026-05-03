@@ -123,8 +123,6 @@ async def lifespan(app: FastAPI):
 
             # Resume any interrupted weekly insights jobs from previous deploys
             try:
-                import asyncio
-
                 from app.qa_agent.weekly_insights.report_generator import InsightReportGenerator
 
                 asyncio.ensure_future(InsightReportGenerator().resume_if_needed())
