@@ -10,6 +10,7 @@ interface GraphVisualizationProps {
   onNodeClick: (node: KnowledgeNode) => void;
   onNodeQuickComplete?: (node: KnowledgeNode) => void;
   highlightNodeId?: string | null;
+  searchQuery?: string;
 }
 
 const STATUS_COLORS = {
@@ -36,6 +37,7 @@ export function GraphVisualization({
   onNodeClick,
   onNodeQuickComplete,
   highlightNodeId,
+  searchQuery = '',
 }: GraphVisualizationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const minimapRef = useRef<SVGSVGElement>(null);
@@ -59,19 +61,28 @@ export function GraphVisualization({
   const structureKey =
     nodes.map((n) => n.id).join(',') + '|' + edges.map((e) => e.source + e.target).join(',');
 
-  // ── Lightweight color update (no simulation restart) ──────────────────────
+  // ── Lightweight color + search dim update (no simulation restart) ─────────
   useEffect(() => {
     if (!svgRef.current) return;
     const svg = d3.select(svgRef.current);
+    const q = searchQuery.toLowerCase();
     nodes.forEach((node) => {
+      const matched = !q || node.display_name.toLowerCase().includes(q);
       svg
         .selectAll<SVGCircleElement, unknown>(`circle[data-id="${node.id}"]`)
         .attr('fill', STATUS_COLORS[node.status])
         .attr('stroke', node.id === highlightNodeId ? '#6366f1' : STATUS_STROKE[node.status])
         .attr('stroke-width', node.id === highlightNodeId ? 3 : node.is_unlocked ? 2 : 1)
-        .attr('opacity', node.is_unlocked || node.status !== 'not_started' ? 1 : 0.5);
+        .attr(
+          'opacity',
+          matched ? (node.is_unlocked || node.status !== 'not_started' ? 1 : 0.5) : 0.1
+        );
+      // Dim the label too
+      svg
+        .selectAll<SVGTextElement, unknown>(`text[data-label-id="${node.id}"]`)
+        .attr('opacity', matched ? 1 : 0.1);
     });
-  }, [nodes, highlightNodeId]);
+  }, [nodes, highlightNodeId, searchQuery]);
 
   // ── Full D3 rebuild (only when structure changes) ─────────────────────────
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -313,6 +324,7 @@ export function GraphVisualization({
     // Labels
     node
       .append('text')
+      .attr('data-label-id', (d) => d.id)
       .attr('dy', (d) => 20 + d.difficulty * 2)
       .attr('text-anchor', 'middle')
       .attr('font-size', '11px')

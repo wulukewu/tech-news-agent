@@ -39,6 +39,7 @@ import {
   type KnowledgeNode,
 } from '@/lib/api/knowledge-graph';
 import { GraphVisualization } from '@/components/knowledge-graph/GraphVisualization';
+import type { TranslationFunction } from '@/types/i18n';
 
 const STATUS_BADGE_VARIANTS: Record<string, 'secondary' | 'default' | 'outline'> = {
   not_started: 'secondary',
@@ -56,6 +57,9 @@ export default function DomainGraphPage() {
   const [selectedNode, setSelectedNode] = useState<KnowledgeNode | null>(null);
   const [highlightNodeId, setHighlightNodeId] = useState<string | null>(null);
   const [mobileTab, setMobileTab] = useState<'graph' | 'steps' | 'progress'>('graph');
+  const [sidebarTab, setSidebarTab] = useState<'recommendations' | 'progress' | 'node'>(
+    'recommendations'
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [loadingMsgIdx, setLoadingMsgIdx] = useState(0);
   const [headerHeight, setHeaderHeight] = useState(64);
@@ -99,6 +103,11 @@ export default function DomainGraphPage() {
     queryFn: () => getDomainProgress(domainName),
     enabled: !!user && !!domainName,
   });
+
+  // Default to progress tab when user has no progress yet
+  useEffect(() => {
+    if (progress && progress.progress_pct === 0) setSidebarTab('progress');
+  }, [progress]);
 
   const { data: recommendations = [] } = useQuery({
     queryKey: ['knowledge-graph', 'recommendations', domainName],
@@ -261,20 +270,19 @@ export default function DomainGraphPage() {
               </div>
             ) : graph ? (
               <GraphVisualization
-                nodes={graph.nodes.filter(
-                  (n) =>
-                    !searchQuery || n.display_name.toLowerCase().includes(searchQuery.toLowerCase())
-                )}
+                nodes={graph.nodes}
                 edges={graph.edges}
                 onNodeClick={(node) => {
                   setSelectedNode(node);
                   setHighlightNodeId(null);
+                  setSidebarTab('node');
                 }}
                 onNodeQuickComplete={(node) => {
                   if (!node.is_unlocked || node.status === 'completed') return;
                   updateStatusMutation.mutate({ nodeId: node.id, status: 'completed' });
                 }}
                 highlightNodeId={highlightNodeId}
+                searchQuery={searchQuery}
               />
             ) : null}
 
@@ -316,7 +324,11 @@ export default function DomainGraphPage() {
 
           {/* Right sidebar */}
           <div className="w-80 border-l bg-background overflow-y-auto hidden lg:block">
-            <Tabs defaultValue="recommendations" className="h-full">
+            <Tabs
+              value={sidebarTab}
+              onValueChange={(v) => setSidebarTab(v as typeof sidebarTab)}
+              className="h-full"
+            >
               <TabsList className="w-full rounded-none border-b">
                 <TabsTrigger value="recommendations" className="flex-1">
                   <Lightbulb className="h-3.5 w-3.5 mr-1" />
@@ -326,6 +338,12 @@ export default function DomainGraphPage() {
                   <Trophy className="h-3.5 w-3.5 mr-1" />
                   {t('knowledge-graph.overall-progress')}
                 </TabsTrigger>
+                {selectedNode && (
+                  <TabsTrigger value="node" className="flex-1">
+                    <Network className="h-3.5 w-3.5 mr-1" />
+                    Node
+                  </TabsTrigger>
+                )}
               </TabsList>
 
               <TabsContent value="recommendations" className="p-4 space-y-3">
@@ -341,6 +359,7 @@ export default function DomainGraphPage() {
                       onClick={() => {
                         setSelectedNode(rec.node);
                         setHighlightNodeId(rec.node.id);
+                        setSidebarTab('node');
                       }}
                     >
                       <CardContent className="px-3 py-3 space-y-2">
@@ -422,6 +441,25 @@ export default function DomainGraphPage() {
                   </>
                 ) : (
                   <Skeleton className="h-32" />
+                )}
+              </TabsContent>
+
+              <TabsContent value="node" className="p-4 space-y-4">
+                {selectedNode && (
+                  <NodeDetail
+                    node={selectedNode}
+                    statusLabels={STATUS_LABELS}
+                    isPending={updateStatusMutation.isPending}
+                    onStatusChange={(status) => {
+                      updateStatusMutation.mutate({ nodeId: selectedNode.id, status });
+                      setSelectedNode({ ...selectedNode, status });
+                    }}
+                    onClose={() => {
+                      setSelectedNode(null);
+                      setSidebarTab('recommendations');
+                    }}
+                    t={t}
+                  />
                 )}
               </TabsContent>
             </Tabs>
@@ -506,85 +544,141 @@ export default function DomainGraphPage() {
           )}
         </div>
 
-        {/* Node detail dialog */}
+        {/* Node detail dialog — mobile only (desktop uses sidebar) */}
         <Dialog open={!!selectedNode} onOpenChange={(open) => !open && setSelectedNode(null)}>
-          <DialogContent>
+          <DialogContent className="lg:hidden">
             {selectedNode && (
-              <>
-                <DialogHeader>
-                  <DialogTitle>{selectedNode.display_name}</DialogTitle>
-                  <DialogDescription>{selectedNode.description}</DialogDescription>
-                </DialogHeader>
-                <div className="mt-4 space-y-4">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <Badge variant={STATUS_BADGE_VARIANTS[selectedNode.status]}>
-                      {STATUS_LABELS[selectedNode.status]}
-                    </Badge>
-                    {!selectedNode.is_unlocked && (
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        <Lock className="h-3 w-3" />
-                        {t('knowledge-graph.locked')}
-                      </Badge>
-                    )}
-                    <span className="text-sm text-muted-foreground ml-auto">
-                      {'★'.repeat(selectedNode.difficulty)}
-                      {'☆'.repeat(5 - selectedNode.difficulty)}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Clock className="h-4 w-4" />
-                    {selectedNode.estimated_hours}h
-                  </div>
-
-                  {selectedNode.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {selectedNode.tags.map((tag) => (
-                        <Badge key={tag} variant="outline" className="text-xs">
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
-
-                  <RelatedArticles nodeId={selectedNode.id} />
-
-                  {selectedNode.is_unlocked ? (
-                    <div className="space-y-2 pt-1">
-                      <p className="text-sm font-medium">{t('knowledge-graph.update-status')}</p>
-                      <div className="grid grid-cols-1 gap-2">
-                        {(
-                          ['not_started', 'in_progress', 'completed'] as KnowledgeNode['status'][]
-                        ).map((status) => (
-                          <Button
-                            key={status}
-                            variant={selectedNode.status === status ? 'default' : 'outline'}
-                            size="sm"
-                            disabled={
-                              updateStatusMutation.isPending || selectedNode.status === status
-                            }
-                            onClick={() => {
-                              updateStatusMutation.mutate({ nodeId: selectedNode.id, status });
-                              setSelectedNode({ ...selectedNode, status });
-                            }}
-                          >
-                            {STATUS_LABELS[status]}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground bg-muted rounded-lg p-3">
-                      {t('knowledge-graph.locked-hint')}
-                    </p>
-                  )}
-                </div>
-              </>
+              <NodeDetail
+                node={selectedNode}
+                statusLabels={STATUS_LABELS}
+                isPending={updateStatusMutation.isPending}
+                onStatusChange={(status) => {
+                  updateStatusMutation.mutate({ nodeId: selectedNode.id, status });
+                  setSelectedNode({ ...selectedNode, status });
+                }}
+                onClose={() => setSelectedNode(null)}
+                t={t}
+              />
             )}
           </DialogContent>
         </Dialog>
       </div>
     </>
+  );
+}
+
+// ── NodeDetail ────────────────────────────────────────────────────────────────
+
+function NodeDetail({
+  node,
+  statusLabels,
+  isPending,
+  onStatusChange,
+  onClose,
+  t,
+}: {
+  node: KnowledgeNode;
+  statusLabels: Record<string, string>;
+  isPending: boolean;
+  onStatusChange: (status: KnowledgeNode['status']) => void;
+  onClose: () => void;
+  t: TranslationFunction;
+}) {
+  const [pendingStatus, setPendingStatus] = useState<KnowledgeNode['status'] | null>(null);
+
+  // Clear pending when isPending resolves
+  useEffect(() => {
+    if (!isPending) setPendingStatus(null);
+  }, [isPending]);
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-2">
+        <div>
+          <h3 className="font-semibold text-base leading-tight">{node.display_name}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{node.description}</p>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 flex-shrink-0 -mt-0.5"
+          onClick={onClose}
+        >
+          <span className="text-base leading-none">×</span>
+        </Button>
+      </div>
+
+      <div className="flex items-center gap-2 flex-wrap">
+        <Badge
+          variant={
+            node.status === 'completed'
+              ? 'outline'
+              : node.status === 'in_progress'
+                ? 'default'
+                : 'secondary'
+          }
+        >
+          {statusLabels[node.status]}
+        </Badge>
+        {!node.is_unlocked && (
+          <Badge variant="outline" className="flex items-center gap-1">
+            <Lock className="h-3 w-3" />
+            {t('knowledge-graph.locked')}
+          </Badge>
+        )}
+        <span className="text-sm text-amber-500 ml-auto">
+          {'★'.repeat(node.difficulty)}
+          <span className="text-muted-foreground/40">{'★'.repeat(5 - node.difficulty)}</span>
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Clock className="h-4 w-4" />
+        {node.estimated_hours}h
+      </div>
+
+      {node.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {node.tags.map((tag) => (
+            <Badge key={tag} variant="outline" className="text-xs">
+              {tag}
+            </Badge>
+          ))}
+        </div>
+      )}
+
+      <RelatedArticles nodeId={node.id} />
+
+      {node.is_unlocked ? (
+        <div className="space-y-2 pt-1">
+          <p className="text-sm font-medium">{t('knowledge-graph.update-status')}</p>
+          <div className="grid grid-cols-1 gap-2">
+            {(['not_started', 'in_progress', 'completed'] as KnowledgeNode['status'][]).map(
+              (status) => (
+                <Button
+                  key={status}
+                  variant={node.status === status ? 'default' : 'outline'}
+                  size="sm"
+                  disabled={isPending && pendingStatus === status}
+                  onClick={() => {
+                    setPendingStatus(status);
+                    onStatusChange(status);
+                  }}
+                >
+                  {isPending && pendingStatus === status ? (
+                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                  ) : null}
+                  {statusLabels[status]}
+                </Button>
+              )
+            )}
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm text-muted-foreground bg-muted rounded-lg p-3">
+          {t('knowledge-graph.locked-hint')}
+        </p>
+      )}
+    </div>
   );
 }
 

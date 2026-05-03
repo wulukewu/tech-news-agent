@@ -19,6 +19,16 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import {
   Plus,
@@ -45,6 +55,7 @@ export default function KnowledgeGraphPage() {
   const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newDomain, setNewDomain] = useState({ display_name: '', description: '' });
+  const [deleteTarget, setDeleteTarget] = useState<TechnicalDomain | null>(null);
 
   // Auto-generate slug from display name
   const autoSlug = newDomain.display_name
@@ -194,16 +205,36 @@ export default function KnowledgeGraphPage() {
               key={domain.id}
               domain={domain}
               onClick={() => router.push(`/app/knowledge-graph/${domain.name}`)}
-              onDelete={() => {
-                if (confirm(`Delete "${domain.display_name}"?`)) {
-                  deleteMutation.mutate(domain.name);
-                }
-              }}
+              onDelete={() => setDeleteTarget(domain)}
               t={t}
             />
           ))}
         </div>
       )}
+
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete &ldquo;{deleteTarget?.display_name}&rdquo;?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the domain and all its nodes. This action cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deleteTarget) deleteMutation.mutate(deleteTarget.name);
+                setDeleteTarget(null);
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
