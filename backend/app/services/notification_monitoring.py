@@ -204,13 +204,8 @@ class NotificationMonitoringService(BaseService):
                     if total_locks > 0:
                         metrics.lock_acquisition_success_rate = active_locks / total_locks
 
-                # Dynamic scheduler metrics
-                scheduler_stats = health["components"].get("dynamic_scheduler", {}).get("stats", {})
-                if scheduler_stats:
-                    total_jobs = scheduler_stats.get("total_jobs", 0)
-                    user_jobs = scheduler_stats.get("user_notification_jobs", 0)
-                    if total_jobs > 0:
-                        metrics.scheduler_job_success_rate = user_jobs / total_jobs
+                # Dynamic scheduler metrics — skip misleading ratio calculation
+                # (user_jobs / total_jobs measures job composition, not success rate)
 
             # Get notification delivery metrics from database
             await self._collect_notification_delivery_metrics(metrics)
