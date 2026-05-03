@@ -41,6 +41,7 @@ export function ArticleCard({
 }: ArticleCardProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isAdded, setIsAdded] = useState(article.isInReadingList);
+  const isRead = article.readStatus === 'read';
   const addToReadingList = useAddToReadingList();
   const { theme } = useTheme();
   const { t, locale } = useI18n();
@@ -113,7 +114,12 @@ export function ArticleCard({
   if (layout === 'mobile') {
     return (
       <article>
-        <Card className="group hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1">
+        <Card
+          className={cn(
+            'group hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1',
+            isRead && 'opacity-60 border-l-4 border-l-green-500'
+          )}
+        >
           <CardContent className="p-0">
             {/* Vertical stack layout */}
             <div className="flex flex-col">
@@ -255,7 +261,12 @@ export function ArticleCard({
   // Desktop horizontal layout (Task 6.2)
   return (
     <article>
-      <Card className="group hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.01]">
+      <Card
+        className={cn(
+          'group hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.01]',
+          isRead && 'opacity-60 border-l-4 border-l-green-500'
+        )}
+      >
         <CardContent className="p-0">
           {/* Horizontal layout: image left (if available), content right */}
           <div className="flex gap-0">

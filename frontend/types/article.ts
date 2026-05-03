@@ -30,6 +30,8 @@ export interface Article {
   aiSummary: string | null;
   /** Whether the article is already in the user's reading list */
   isInReadingList: boolean;
+  /** Reading status from reading list: 'read' | 'unread' | null */
+  readStatus?: string | null;
 }
 
 /**

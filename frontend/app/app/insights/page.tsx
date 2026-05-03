@@ -121,6 +121,44 @@ function TrendsSection({ trends }: { trends: TrendItem[] }) {
   );
 }
 
+function ClusterBubbles({ clusters }: { clusters: ClusterItem[] }) {
+  const max = Math.max(...clusters.map((c) => c.article_count), 1);
+  const COLORS = [
+    'bg-blue-500/20 text-blue-700 dark:text-blue-300 border-blue-500/30',
+    'bg-purple-500/20 text-purple-700 dark:text-purple-300 border-purple-500/30',
+    'bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30',
+    'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30',
+    'bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-500/30',
+    'bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border-cyan-500/30',
+  ];
+  return (
+    <div className="flex flex-wrap gap-3 items-end py-2">
+      {clusters.map((cluster, i) => {
+        const pct = cluster.article_count / max;
+        const size = Math.round(48 + pct * 80); // 48px–128px
+        return (
+          <div
+            key={cluster.name}
+            className={`flex flex-col items-center justify-center rounded-full border font-medium transition-transform hover:scale-105 cursor-default ${COLORS[i % COLORS.length]}`}
+            style={{ width: size, height: size }}
+            title={`${cluster.name}: ${cluster.article_count}`}
+          >
+            <span
+              className="text-center leading-tight px-1"
+              style={{ fontSize: Math.max(10, size / 8) }}
+            >
+              {cluster.name}
+            </span>
+            <span style={{ fontSize: Math.max(9, size / 10) }} className="opacity-70">
+              {cluster.article_count}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function ClusterCard({ cluster }: { cluster: ClusterItem }) {
   const { t } = useI18n();
   const [expanded, setExpanded] = useState(false);
@@ -309,7 +347,8 @@ export default function InsightsPage() {
               <h2 id="clusters-heading" className="text-lg font-semibold mb-3">
                 {t('insights.clusters-title')}
               </h2>
-              <div className="space-y-2">
+              <ClusterBubbles clusters={report.clusters} />
+              <div className="space-y-2 mt-4">
                 {report.clusters.map((cluster) => (
                   <ClusterCard key={cluster.name} cluster={cluster} />
                 ))}

@@ -133,6 +133,9 @@ class ArticleResponse(BaseModel):
     is_in_reading_list: bool = Field(
         False, description="是否已加入閱讀清單", serialization_alias="isInReadingList"
     )
+    read_status: str | None = Field(
+        None, description="閱讀狀態 (unread/read)", serialization_alias="readStatus"
+    )
 
     model_config = ConfigDict(populate_by_name=True, by_alias=True)
 

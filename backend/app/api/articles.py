@@ -145,14 +145,16 @@ async def get_my_articles(
         count_response = count_query.execute()
         total_count = count_response.count if count_response.count else 0
 
-        # 3. 查詢用戶的 reading list 中的文章 IDs
+        # 3. 查詢用戶的 reading list 中的文章 IDs 和狀態
         reading_list_response = (
             supabase.client.table("reading_list")
-            .select("article_id")
+            .select("article_id, status")
             .eq("user_id", str(current_user["user_id"]))
             .execute()
         )
-        reading_list_article_ids = {item["article_id"] for item in reading_list_response.data}
+        reading_list_status_map = {
+            item["article_id"]: item["status"] for item in reading_list_response.data
+        }
 
         # 組合回應
         articles = []
@@ -175,7 +177,8 @@ async def get_my_articles(
                     published_at = None
 
             # 檢查文章是否在 reading list 中
-            is_in_reading_list = article["id"] in reading_list_article_ids
+            is_in_reading_list = article["id"] in reading_list_status_map
+            read_status = reading_list_status_map.get(article["id"])
 
             articles.append(
                 ArticleResponse(
@@ -188,6 +191,7 @@ async def get_my_articles(
                     feed_name=feed_info.get("name", "Unknown"),
                     category=feed_info.get("category", "Unknown"),
                     is_in_reading_list=is_in_reading_list,
+                    read_status=read_status,
                 )
             )
 
