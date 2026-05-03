@@ -20,6 +20,8 @@ services:
         value: 65
       - key: TIMEOUT_GRACEFUL_SHUTDOWN
         value: 30
+      - key: ENABLE_SCHEDULER
+        value: true
     # Health check settings
     healthCheck:
       path: /health
