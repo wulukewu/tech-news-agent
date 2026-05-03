@@ -111,8 +111,8 @@ function TrendsSection({ trends }: { trends: TrendItem[] }) {
               </div>
               <TrendBar value={trend.current_count} max={maxCount} />
             </div>
-            <span className="text-xs text-muted-foreground flex-shrink-0 w-16 text-right capitalize">
-              {trend.domain.replace('_', '/')}
+            <span className="text-xs text-muted-foreground flex-shrink-0 max-w-[72px] truncate text-right capitalize">
+              {trend.domain.split('|')[0].replace('_', '/')}
             </span>
           </div>
         ))}

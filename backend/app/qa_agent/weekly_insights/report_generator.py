@@ -57,9 +57,8 @@ class InsightReportGenerator:
 
         logger.info("Generating weekly insights report (%d days)", days)
 
-        # 1. Collect articles (cap at 30 to stay within Groq free tier TPM)
+        # 1. Collect articles
         articles = await self.collector.collect_weekly_articles(days=days, end_date=end_date)
-        articles = articles[:30]
         if not articles:
             logger.warning("No articles found for the period")
             return self._empty_report(start_date, end_date)
