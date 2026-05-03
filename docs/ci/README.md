@@ -1,75 +1,46 @@
-# CI/CD 文件索引
+# CI/CD Documentation
 
-本目錄包含專案的 CI/CD 相關文件。
+Documentation for the project's CI/CD pipeline.
 
-## 📚 文件列表
+## Guides
 
-### 快速開始
+- [CI Guide](ci-guide.md) — Full CI/CD pipeline explanation, all checks, troubleshooting
+- [Quick CI Guide](quick-ci-guide.md) — Pre-push checklist and common fixes
+- [CI Analysis & Recommendations](ci-analysis-and-recommendations.md) — CI design analysis
 
-- **[QUICK_START.md](./QUICK_START.md)** - CI 快速開始指南（推薦新手閱讀）
-  - 推送前檢查清單
-  - 常見問題快速修復
-  - 基本工作流程
-
-### 完整指南
-
-- **[CI_GUIDE.md](./CI_GUIDE.md)** - 完整 CI/CD 指南
-  - CI 流程詳解
-  - 所有檢查項目說明
-  - 詳細故障排除
-  - 最佳實踐
-
-## 🚀 快速命令
+## Quick Commands
 
 ```bash
-# 自動修復格式問題
+# Auto-fix formatting issues
 ./scripts/ci-fix.sh
 
-# 執行完整 CI 檢查
+# Run full CI check locally
 ./scripts/ci-local-test.sh
 ```
 
-## 📊 CI 架構
+## CI Architecture
 
 ```
 GitHub Actions CI
-├── Backend Job (並行)
-│   ├── Black 格式化
+├── Backend Job (parallel)
+│   ├── Black formatting
 │   ├── Ruff linting
-│   ├── mypy 類型檢查
-│   └── pytest 測試 + 覆蓋率
+│   ├── mypy type checking
+│   └── pytest + coverage
 │
-├── Frontend Job (並行)
-│   ├── Prettier 格式化
+├── Frontend Job (parallel)
+│   ├── Prettier formatting
 │   ├── ESLint linting
-│   ├── TypeScript 類型檢查
-│   ├── Vitest 測試 + 覆蓋率
-│   └── Next.js 建置
+│   ├── TypeScript type checking
+│   ├── Vitest + coverage
+│   └── Next.js build
 │
 └── Quality Gate
-    └── 確保所有檢查通過
+    └── All checks must pass
 ```
 
-## 🎯 設計原則
+## Related
 
-1. **快速反饋** - 並行執行，5 分鐘內完成
-2. **本地優先** - 推送前在本地驗證
-3. **自動修復** - 提供自動修復腳本
-4. **清晰錯誤** - 詳細的錯誤訊息和修復建議
-
-## 🔗 相關資源
-
-- [GitHub Actions 配置](../../.github/workflows/ci.yml)
-- [本地測試腳本](../../scripts/ci-local-test.sh)
-- [自動修復腳本](../../scripts/ci-fix.sh)
-
-## 📞 需要幫助？
-
-1. 查看 [QUICK_START.md](./QUICK_START.md) 快速解決常見問題
-2. 查看 [CI_GUIDE.md](./CI_GUIDE.md) 了解詳細資訊
-3. 在 GitHub Issues 搜尋類似問題
-4. 建立新的 Issue 並附上錯誤訊息
-
----
-
-**最後更新**: 2026-04-18
+- [GitHub Actions config](../../.github/workflows/ci.yml)
+- [Local test script](../../scripts/ci-local-test.sh)
+- [Auto-fix script](../../scripts/ci-fix.sh)
