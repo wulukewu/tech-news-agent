@@ -20,7 +20,7 @@ import { Menu, X } from 'lucide-react';
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import { useI18n } from '@/contexts/I18nContext';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
 interface LandingNavProps {
   isAuthenticated?: boolean;
@@ -72,7 +72,7 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
               </a>
             ))}
             <div className="animate-in zoom-in-50 duration-500 delay-400 hover:scale-[1.02] transition-transform duration-300">
-              <LanguageSwitcher variant="icon" />
+              <LanguageToggle />
             </div>
             {isAuthenticated ? (
               <Link
@@ -149,7 +149,7 @@ export function LandingNav({ isAuthenticated = false }: LandingNavProps) {
 
             <div className="pt-4 border-t space-y-3 animate-in fade-in duration-500 delay-300">
               <div className="hover:scale-[1.02] transition-transform duration-300">
-                <LanguageSwitcher variant="compact" />
+                <LanguageToggle />
               </div>
               {isAuthenticated ? (
                 <Link href="/app/articles" className="block">

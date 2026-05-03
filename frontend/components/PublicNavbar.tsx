@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/Logo';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { LanguageToggle } from '@/components/LanguageToggle';
 import { ThemeCycleToggle } from '@/components/ThemeCycleToggle';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -45,7 +45,7 @@ export function PublicNavbar({
 
         {/* Right: Controls */}
         <div className="flex items-center gap-3">
-          <LanguageSwitcher variant="icon" />
+          <LanguageToggle />
           <ThemeCycleToggle />
 
           {!loading && (

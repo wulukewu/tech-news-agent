@@ -17,7 +17,7 @@
 
 import { Github, Twitter, Mail } from 'lucide-react';
 import { Logo } from '@/components/Logo';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
 const footerLinks = {
   product: [
@@ -162,7 +162,7 @@ export function Footer() {
             </p>
             <div className="flex items-center gap-6">
               <div className="hover:scale-[1.02] transition-transform duration-300">
-                <LanguageSwitcher variant="compact" />
+                <LanguageToggle />
               </div>
               <p className="text-sm text-muted-foreground hidden sm:block">
                 Built with Next.js, TypeScript, and Tailwind CSS

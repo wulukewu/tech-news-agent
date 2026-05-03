@@ -27,7 +27,7 @@ import type { TranslationKey } from '@/types/i18n';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ThemeCycleToggle } from '@/components/ThemeCycleToggle';
-import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { LanguageToggle } from '@/components/LanguageToggle';
 import { Logo } from '@/components/Logo';
 import { UserMenu } from '@/components/UserMenu';
 import { cn } from '@/lib/utils';
@@ -164,7 +164,7 @@ export function Navigation() {
           </div>
 
           <div className="flex items-center gap-2 flex-shrink-0">
-            <LanguageSwitcher variant="icon" />
+            <LanguageToggle />
             <ThemeCycleToggle />
 
             {/* User menu for desktop - shows avatar with dropdown (Req 4.1, 4.2, 4.3, 4.4) */}
@@ -315,7 +315,7 @@ export function Navigation() {
               <div className="flex flex-col gap-3">
                 <div className="flex items-center justify-between px-2">
                   <span className="text-sm font-medium">{t('nav.language')}</span>
-                  <LanguageSwitcher variant="compact" />
+                  <LanguageToggle />
                 </div>
                 <div className="flex items-center justify-between px-2">
                   <span className="text-sm font-medium">{t('nav.theme')}</span>
