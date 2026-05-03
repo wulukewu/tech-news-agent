@@ -130,7 +130,7 @@ export function Navigation() {
             <div className="hidden md:flex gap-2 lg:gap-3 min-w-0 overflow-hidden">
               {translatedMainNavItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href;
+                const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                 return (
                   <Link
                     key={item.href}
@@ -242,7 +242,7 @@ export function Navigation() {
                 <div className="space-y-1">
                   {translatedMainNavItems.map((item, index) => {
                     const Icon = item.icon;
-                    const isActive = pathname === item.href;
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                     return (
                       <Link
                         key={item.href}
@@ -285,7 +285,7 @@ export function Navigation() {
                 <div className="space-y-1">
                   {translatedSecondaryNavItems.map((item) => {
                     const Icon = item.icon;
-                    const isActive = pathname === item.href;
+                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                     return (
                       <Link
                         key={item.href}
