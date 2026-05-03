@@ -55,7 +55,7 @@ const mainNavItems: NavItem[] = [
 const secondaryNavItems: NavItem[] = [
   { href: '/app/preferences', labelKey: 'nav.preferences', icon: Brain },
   { href: '/app/recommendations', labelKey: 'nav.recommendations', icon: Heart },
-  { href: '/app/analytics', labelKey: 'nav.analytics', icon: BarChart3 },
+  { href: '/app/settings/analytics', labelKey: 'nav.analytics', icon: BarChart3 },
   { href: '/app/settings', labelKey: 'nav.settings', icon: Settings },
   { href: '/app/system-status', labelKey: 'nav.system-status', icon: Monitor },
 ];
