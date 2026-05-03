@@ -302,9 +302,9 @@ export default function InsightsPage() {
         <div className="space-y-6">
           <ExecutiveSummaryCard report={report} />
 
-          {report.trends.length > 0 && <TrendsSection trends={report.trends} />}
+          {(report.trends ?? []).length > 0 && <TrendsSection trends={report.trends} />}
 
-          {report.clusters.length > 0 && (
+          {(report.clusters ?? []).length > 0 && (
             <section aria-labelledby="clusters-heading">
               <h2 id="clusters-heading" className="text-lg font-semibold mb-3">
                 {t('insights.clusters-title')}
@@ -317,7 +317,7 @@ export default function InsightsPage() {
             </section>
           )}
 
-          {report.missed_articles.length > 0 && (
+          {(report.missed_articles ?? []).length > 0 && (
             <section aria-labelledby="missed-heading">
               <h2 id="missed-heading" className="text-lg font-semibold mb-3">
                 {t('insights.missed-title')}

@@ -309,6 +309,10 @@ class InsightReportGenerator:
                         "period_start": start_date.isoformat(),
                         "period_end": end_date.isoformat(),
                         "article_count": 0,
+                        "clusters": "[]",
+                        "trends": "[]",
+                        "missed_articles": "[]",
+                        "trend_data": "[]",
                         "status": "pending",
                         "started_at": datetime.now(UTC).isoformat(),
                     }
