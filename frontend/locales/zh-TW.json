@@ -1394,6 +1394,10 @@
     "estimated-hours": "{{h}} 小時",
     "update-status": "更新狀態",
     "locked-hint": "完成前置節點即可解鎖此主題。",
-    "nodes-count-label": "個節點"
+    "nodes-count-label": "個節點",
+    "delete-domain-title": "刪除「{{name}}」？",
+    "delete-domain-desc": "這將永久刪除此領域及其所有節點，此操作無法復原。",
+    "delete-btn": "刪除",
+    "cancel-btn": "取消"
   }
 }

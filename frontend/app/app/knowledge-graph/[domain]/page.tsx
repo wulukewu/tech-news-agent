@@ -73,6 +73,18 @@ export default function DomainGraphPage() {
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  // Measure actual navbar height for mobile layout calculation
+  useEffect(() => {
+    const navbar = document.querySelector('header');
+    if (!navbar) return;
+    const observer = new ResizeObserver(() =>
+      setHeaderHeight(navbar.getBoundingClientRect().height)
+    );
+    observer.observe(navbar);
+    setHeaderHeight(navbar.getBoundingClientRect().height);
+    return () => observer.disconnect();
+  }, []);
+
   const STATUS_LABELS: Record<string, string> = {
     not_started: t('knowledge-graph.not-started'),
     in_progress: t('knowledge-graph.in-progress'),
@@ -88,9 +100,9 @@ export default function DomainGraphPage() {
   // Cycle through loading messages so user knows LLM is working
   const loadingMessages = [
     t('knowledge-graph.building'),
-    t('knowledge-graph.loading-extracting') || 'Extracting knowledge nodes...',
-    t('knowledge-graph.loading-mapping') || 'Mapping dependencies...',
-    t('knowledge-graph.loading-almost') || 'Almost ready...',
+    t('knowledge-graph.loading-extracting'),
+    t('knowledge-graph.loading-mapping'),
+    t('knowledge-graph.loading-almost'),
   ];
   useEffect(() => {
     if (!graphLoading) return;

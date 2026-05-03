@@ -215,14 +215,18 @@ export default function KnowledgeGraphPage() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete &ldquo;{deleteTarget?.display_name}&rdquo;?</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t('knowledge-graph.delete-domain-title').replace(
+                '{{name}}',
+                deleteTarget?.display_name ?? ''
+              )}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the domain and all its nodes. This action cannot be
-              undone.
+              {t('knowledge-graph.delete-domain-desc')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{t('knowledge-graph.cancel-btn')}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={() => {
@@ -230,7 +234,7 @@ export default function KnowledgeGraphPage() {
                 setDeleteTarget(null);
               }}
             >
-              Delete
+              {t('knowledge-graph.delete-btn')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

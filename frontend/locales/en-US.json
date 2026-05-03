@@ -1394,6 +1394,10 @@
     "estimated-hours": "{{h}}h",
     "update-status": "Update Status",
     "locked-hint": "Complete the prerequisite nodes to unlock this topic.",
-    "nodes-count-label": "nodes"
+    "nodes-count-label": "nodes",
+    "delete-domain-title": "Delete \"{{name}}\"?",
+    "delete-domain-desc": "This will permanently delete the domain and all its nodes. This action cannot be undone.",
+    "delete-btn": "Delete",
+    "cancel-btn": "Cancel"
   }
 }
