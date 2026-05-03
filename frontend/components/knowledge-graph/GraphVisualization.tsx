@@ -43,7 +43,7 @@ export function GraphVisualization({
   const minimapRef = useRef<SVGSVGElement>(null);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
-  // Persist simulation nodes + zoom across renders for zoom-to-node effect
+  const [minimapReady, setMinimapReady] = useState(false);
   const simNodesRef = useRef<(KnowledgeNode & d3.SimulationNodeDatum)[]>([]);
   const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
 
@@ -388,16 +388,62 @@ export function GraphVisualization({
       minimapOffsetX = (MINI_W - graphW * minimapScale) / 2 - minX * minimapScale;
       minimapOffsetY = (MINI_H - graphH * minimapScale) / 2 - minY * minimapScale;
       syncMinimap(d3.zoomTransform(svgRef.current!));
+      setMinimapReady(true);
     });
 
     return () => {
       simulation.stop();
       setTooltip(null);
+      setMinimapReady(false);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [structureKey]);
 
-  // ── Zoom to highlighted node (no simulation restart) ──────────────────────
+  // Re-sync minimap once its SVG mounts (after minimapReady flips true)
+  useEffect(() => {
+    if (!minimapReady || !minimapRef.current || !svgRef.current) return;
+    // Trigger a zoom event to repaint minimap with current transform
+    const currentTransform = d3.zoomTransform(svgRef.current);
+    const mini = d3.select(minimapRef.current);
+    mini.selectAll('*').remove();
+    // Re-draw by dispatching a synthetic zoom — reuse simNodesRef
+    const nodes = simNodesRef.current;
+    if (!nodes.length) return;
+    const xs = nodes.map((n) => n.x ?? 0);
+    const ys = nodes.map((n) => n.y ?? 0);
+    const minX = Math.min(...xs),
+      maxX = Math.max(...xs);
+    const minY = Math.min(...ys),
+      maxY = Math.max(...ys);
+    const MINI_W = 140,
+      MINI_H = 90;
+    const graphW = maxX - minX || 1,
+      graphH = maxY - minY || 1;
+    const scale = Math.min((MINI_W - 16) / graphW, (MINI_H - 16) / graphH);
+    const offX = (MINI_W - graphW * scale) / 2 - minX * scale;
+    const offY = (MINI_H - graphH * scale) / 2 - minY * scale;
+    mini
+      .append('g')
+      .selectAll('circle')
+      .data(nodes)
+      .join('circle')
+      .attr('r', 3)
+      .attr('fill', (d) => STATUS_COLORS[(d as KnowledgeNode).status])
+      .attr('cx', (d) => (d.x ?? 0) * scale + offX)
+      .attr('cy', (d) => (d.y ?? 0) * scale + offY);
+    const vx = -currentTransform.x / currentTransform.k;
+    const vy = -currentTransform.y / currentTransform.k;
+    mini
+      .append('rect')
+      .attr('x', vx * scale + offX)
+      .attr('y', vy * scale + offY)
+      .attr('width', ((svgRef.current.clientWidth || 800) / currentTransform.k) * scale)
+      .attr('height', ((svgRef.current.clientHeight || 600) / currentTransform.k) * scale)
+      .attr('fill', 'none')
+      .attr('stroke', '#6366f1')
+      .attr('stroke-width', 1)
+      .attr('opacity', 0.7);
+  }, [minimapReady]);
   useEffect(() => {
     if (!highlightNodeId || !svgRef.current || !zoomRef.current) return;
     const target = simNodesRef.current.find((n) => n.id === highlightNodeId);
@@ -430,10 +476,12 @@ export function GraphVisualization({
         aria-label="Knowledge graph visualization"
       />
 
-      {/* Minimap */}
-      <div className="absolute bottom-4 right-4 rounded-lg border bg-background/90 backdrop-blur overflow-hidden shadow-sm">
-        <svg ref={minimapRef} width={140} height={90} aria-hidden="true" />
-      </div>
+      {/* Minimap — only shown after simulation settles */}
+      {minimapReady && (
+        <div className="absolute bottom-4 right-4 rounded-lg border bg-background/90 backdrop-blur overflow-hidden shadow-sm">
+          <svg ref={minimapRef} width={140} height={90} aria-hidden="true" />
+        </div>
+      )}
 
       {/* React-controlled tooltip */}
       {tooltip && (
