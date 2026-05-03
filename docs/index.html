@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tech News Agent — Docs</title>
+    <meta name="description" content="Documentation for Tech News Agent — AI-powered tech news curation with Discord Bot, Web Dashboard, and REST API." />
+    <link rel="icon" href="https://raw.githubusercontent.com/wulukewu/tech-news-agent/main/frontend/public/favicon.ico" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+
+    <!-- Docsify Dark Theme -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css" />
+
+    <style>
+      :root {
+        --theme-color: #22c55e;
+        --base-font-family: 'IBM Plex Sans', system-ui, sans-serif;
+        --mono-font-family: 'JetBrains Mono', monospace;
+        --base-background-color: #0f172a;
+        --sidebar-background: #1e293b;
+        --sidebar-nav-link-color: #94a3b8;
+        --sidebar-nav-link-color--active: #22c55e;
+        --sidebar-nav-link-border-color--active: #22c55e;
+        --cover-background-color: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        --cover-heading-color: #f8fafc;
+        --cover-link-color: #22c55e;
+        --link-color: #22c55e;
+        --code-theme-background: #1e293b;
+        --code-font-family: 'JetBrains Mono', monospace;
+        --heading-color: #f8fafc;
+        --base-color: #cbd5e1;
+        --blockquote-border-color: #22c55e;
+        --blockquote-color: #94a3b8;
+        --table-head-background: #1e293b;
+        --table-row-odd-background: #1e293b33;
+      }
+
+      /* Sidebar tweaks */
+      .sidebar {
+        border-right: 1px solid #334155;
+      }
+
+      .sidebar-nav a:hover {
+        color: #22c55e !important;
+        transition: color 200ms;
+      }
+
+      /* Code blocks */
+      pre[data-lang]::after {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
+        color: #475569;
+      }
+
+      /* Cover page */
+      section.cover .cover-main > p:last-child a {
+        border-radius: 6px;
+        padding: 10px 24px;
+        font-weight: 600;
+        transition: all 200ms;
+      }
+
+      section.cover .cover-main > p:last-child a:first-child {
+        background: #22c55e;
+        color: #0f172a;
+        border: 2px solid #22c55e;
+      }
+
+      section.cover .cover-main > p:last-child a:first-child:hover {
+        background: #16a34a;
+        border-color: #16a34a;
+      }
+
+      section.cover .cover-main > p:last-child a:last-child {
+        border: 2px solid #334155;
+        color: #94a3b8;
+      }
+
+      section.cover .cover-main > p:last-child a:last-child:hover {
+        border-color: #22c55e;
+        color: #22c55e;
+      }
+
+      /* Search */
+      .search input {
+        background: #1e293b;
+        border: 1px solid #334155;
+        color: #f8fafc;
+        border-radius: 6px;
+      }
+
+      .search input:focus {
+        border-color: #22c55e;
+        outline: none;
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: #0f172a; }
+      ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    </style>
+  </head>
+  <body>
+    <div id="app">Loading...</div>
+
+    <script>
+      window.$docsify = {
+        name: 'Tech News Agent',
+        repo: 'wulukewu/tech-news-agent',
+        homepage: 'README.md',
+        loadSidebar: false,
+        loadNavbar: false,
+        coverpage: false,
+        auto2top: true,
+        maxLevel: 4,
+        subMaxLevel: 3,
+        search: {
+          maxAge: 86400000,
+          paths: 'auto',
+          placeholder: 'Search docs...',
+          noData: 'No results found.',
+          depth: 4,
+        },
+        pagination: {
+          previousText: '← Previous',
+          nextText: 'Next →',
+          crossChapter: true,
+        },
+        copyCode: {
+          buttonText: 'Copy',
+          errorText: 'Error',
+          successText: 'Copied!',
+        },
+        plugins: [],
+      };
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code@2/dist/docsify-copy-code.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docsify-pagination/dist/docsify-pagination.min.js"></script>
+
+    <!-- Syntax highlighting -->
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-typescript.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-yaml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-json.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-sql.min.js"></script>
+  </body>
+</html>
