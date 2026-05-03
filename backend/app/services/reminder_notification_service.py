@@ -99,23 +99,12 @@ class ReminderNotificationService:
     def _format_reminder_message(
         self, title: str, description: str, priority: float, reading_time: int, url: str
     ) -> str:
-        """格式化提醒訊息"""
-        # 根據優先級選擇 emoji
-        if priority >= 0.8:
-            emoji = "🔥"
-        elif priority >= 0.6:
-            emoji = "⭐"
-        else:
-            emoji = "📖"
-
-        message = f"{emoji} **智能提醒**\n\n"
-        message += f"**{title}**\n\n"
-        message += f"{description}\n\n"
-        message += f"📊 優先級: {priority:.0%} | ⏱️ 閱讀時間: ~{reading_time} 分鐘\n\n"
-
+        """格式化提醒訊息 — 簡潔自然風格"""
+        message = f"📌 **{title}**\n"
+        message += f"{description}\n"
+        message += f"⏱️ 約 {reading_time} 分鐘"
         if url:
-            message += f"🔗 閱讀文章: {url}"
-
+            message += f"\n{url}"
         return message
 
 

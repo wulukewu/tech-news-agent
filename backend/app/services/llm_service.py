@@ -245,8 +245,9 @@ class LLMService:
         logger.info(f"Evaluating {len(set_of_articles)} articles.")
 
         # Semaphore limits true concurrency to avoid hitting Groq rate limits.
-        # Free tier: 30 RPM, so we use 2 concurrent requests with delays
-        semaphore = asyncio.Semaphore(2)
+        # Free tier: 6000 TPM, ~500 tokens/article → max 12 articles/min
+        # Use 1 concurrent request with 6s delay = 10 req/min, ~5000 TPM (safe margin)
+        semaphore = asyncio.Semaphore(1)
 
         tinkering_failed_count = 0
         tinkering_success_count = 0
@@ -259,10 +260,9 @@ class LLMService:
 
             async with semaphore:
                 # Add delay to respect rate limits
-                # Free tier: 30 RPM = 2 seconds per request minimum
-                # With 2 concurrent, we need 4 seconds delay to stay under 30 RPM
-                # (60 seconds / 30 requests) × 2 concurrent = 4 seconds
-                await asyncio.sleep(4)
+                # Free tier: 6000 TPM, ~500 tokens/article
+                # 1 concurrent + 6s delay = 10 req/min, ~5000 TPM
+                await asyncio.sleep(6)
 
                 # Process tinkering_index if it's NULL
                 if article.tinkering_index is None:
