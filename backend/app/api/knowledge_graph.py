@@ -179,8 +179,12 @@ async def rebuild_domain(
 ) -> Dict:
     """Force rebuild a domain's graph via LLM (incremental)."""
     user_id = current_user["user_id"]
-    domain = await builder.rebuild_domain(domain_name, user_id)
-    return domain.to_dict()
+    try:
+        domain = await builder.rebuild_domain(domain_name, user_id)
+        return domain.to_dict()
+    except Exception as e:
+        logger.error(f"rebuild_domain failed for '{domain_name}': {e}")
+        raise HTTPException(status_code=500, detail=f"Graph generation failed: {str(e)}")
 
 
 @router.delete("/domains/{domain_name}")

@@ -136,6 +136,16 @@ export default function DomainGraphPage() {
     }
   }, [isGenerating, graph]);
 
+  // Safety timeout: if isGenerating stays true for > 90s, assume failure
+  useEffect(() => {
+    if (!isGenerating) return;
+    const id = setTimeout(() => {
+      setIsGenerating(false);
+      setGenerateError(true);
+    }, 90_000);
+    return () => clearTimeout(id);
+  }, [isGenerating]);
+
   // Auto-trigger once when graph loads with 0 nodes
   useEffect(() => {
     if (!graph || graphLoading || autoTriggeredRef.current) return;
