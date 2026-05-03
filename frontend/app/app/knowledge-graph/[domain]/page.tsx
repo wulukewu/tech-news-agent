@@ -66,10 +66,12 @@ export default function DomainGraphPage() {
   const [generateError, setGenerateError] = useState(false);
   const autoTriggeredRef = useRef(false);
 
-  // Measure actual header height for accurate fullscreen positioning
+  const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
-    const header = document.getElementById('app-header');
-    if (header) setHeaderHeight(header.offsetHeight);
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
   }, []);
 
   const STATUS_LABELS: Record<string, string> = {
@@ -545,7 +547,10 @@ export default function DomainGraphPage() {
         </div>
 
         {/* Node detail dialog — mobile only (desktop uses sidebar) */}
-        <Dialog open={!!selectedNode} onOpenChange={(open) => !open && setSelectedNode(null)}>
+        <Dialog
+          open={!!selectedNode && isMobile}
+          onOpenChange={(open) => !open && setSelectedNode(null)}
+        >
           <DialogContent className="lg:hidden">
             {selectedNode && (
               <NodeDetail
