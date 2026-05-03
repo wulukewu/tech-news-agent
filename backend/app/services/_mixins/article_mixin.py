@@ -267,7 +267,7 @@ class ArticleMixin:
         # 根據頻率自動調整時間範圍
         if frequency:
             if frequency == "daily":
-                days = 1
+                days = 2  # 2-day buffer in case yesterday's analysis was incomplete
             elif frequency == "weekly":
                 days = 7
             elif frequency == "monthly":
@@ -346,7 +346,6 @@ class ArticleMixin:
                 )
                 .in_("feed_id", feed_ids)
                 .gte("published_at", cutoff_date.isoformat())
-                .not_.is_("tinkering_index", "null")
                 .order("tinkering_index", desc=True)
                 .limit(limit)
             )
