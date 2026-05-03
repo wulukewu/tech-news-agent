@@ -49,11 +49,33 @@ class KnowledgeGraphBuilder:
         logger.info(f"Building knowledge graph for domain '{domain_name}' via LLM")
         nodes_data, edges_data = await self.extractor.extract_domain_graph(domain.display_name)
 
-        # Persist nodes
+        # Persist nodes (without embedding first)
         node_name_to_id = {}
         for node_data in nodes_data:
-            node = await self.db.upsert_node(domain.id, node_data)
+            node = await self.db.upsert_node(domain.id, node_data, skip_embedding=True)
             node_name_to_id[node_data["name"]] = node.id
+
+        # Batch generate embeddings (1 API call for all nodes)
+        if node_name_to_id:
+            try:
+                from app.services.voyage_embedding import embed_texts
+
+                texts = [
+                    f"{nd.get('display_name', nd['name'])} {nd.get('description', '')} {' '.join(nd.get('tags', []))}"
+                    for nd in nodes_data
+                ]
+                embeddings = await embed_texts(texts)
+                for nd, emb in zip(nodes_data, embeddings):
+                    nid = node_name_to_id.get(nd["name"])
+                    if nid and emb:
+                        self.db.db.client.table("knowledge_nodes").update({"embedding": emb}).eq(
+                            "id", str(nid)
+                        ).execute()
+                logger.info(
+                    f"Generated batch embeddings for {sum(1 for e in embeddings if e)} nodes"
+                )
+            except Exception as e:
+                logger.warning(f"Batch embedding failed (non-critical): {e}")
 
         # Persist edges
         for edge_data in edges_data:

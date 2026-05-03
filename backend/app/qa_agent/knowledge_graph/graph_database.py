@@ -103,16 +103,20 @@ class GraphDatabase:
         )
         return [self._row_to_node(r) for r in (result.data or [])]
 
-    async def upsert_node(self, domain_id: UUID, node_data: Dict[str, Any]) -> KnowledgeNode:
+    async def upsert_node(
+        self, domain_id: UUID, node_data: Dict[str, Any], skip_embedding: bool = False
+    ) -> KnowledgeNode:
         # Generate embedding for semantic search (best-effort, non-blocking)
+        # Skip when caller will do batch embedding instead
         embedding = None
-        try:
-            from app.services.voyage_embedding import embed_text
+        if not skip_embedding:
+            try:
+                from app.services.voyage_embedding import embed_text
 
-            text = f"{node_data.get('display_name', node_data['name'])} {node_data.get('description', '')} {' '.join(node_data.get('tags', []))}"
-            embedding = await embed_text(text.strip())
-        except Exception:
-            pass
+                text = f"{node_data.get('display_name', node_data['name'])} {node_data.get('description', '')} {' '.join(node_data.get('tags', []))}"
+                embedding = await embed_text(text.strip())
+            except Exception:
+                pass
 
         data: Dict[str, Any] = {
             "domain_id": str(domain_id),

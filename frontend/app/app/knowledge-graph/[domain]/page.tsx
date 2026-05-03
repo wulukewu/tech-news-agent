@@ -205,59 +205,59 @@ export default function DomainGraphPage() {
         <div className="flex flex-1 overflow-hidden">
           {/* Graph area */}
           <div className="flex-1 relative bg-muted/20">
-            {graphLoading ? (
+            {graphLoading || rebuildMutation.isPending ? (
               <div className="flex items-center justify-center h-full">
-                {/* Distinguish: first load (possibly AI generating) vs refetch */}
-                {graph !== null &&
-                graph !== undefined &&
-                (graph as { nodes: unknown[] }).nodes.length === 0 ? (
+                {/* Show AI generation UI when: rebuilding, or graph loaded with 0 nodes */}
+                {rebuildMutation.isPending ||
+                (graph !== null &&
+                  graph !== undefined &&
+                  (graph as { nodes: unknown[] }).nodes.length === 0) ? (
                   <div className="text-center space-y-4 max-w-xs px-4">
-                    {rebuildMutation.isPending ? (
-                      <>
-                        <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" />
-                        <div>
-                          <p className="text-sm font-medium">{loadingMessages[loadingMsgIdx]}</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            This usually takes 15–30 seconds
-                          </p>
-                        </div>
-                        <div className="flex justify-center gap-1">
-                          {loadingMessages.map((_, i) => (
-                            <div
-                              key={i}
-                              className={`h-1 w-6 rounded-full transition-colors duration-300 ${i === loadingMsgIdx ? 'bg-primary' : 'bg-muted'}`}
-                            />
-                          ))}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <Network className="h-10 w-10 mx-auto text-muted-foreground/40" />
-                        <div>
-                          <p className="text-sm font-medium">
-                            {generateError ? 'Generation failed' : 'No nodes yet'}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            {generateError
-                              ? 'The AI generation failed. Please try again.'
-                              : 'Click to generate the knowledge graph with AI.'}
-                          </p>
-                        </div>
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            setGenerateError(false);
-                            rebuildMutation.mutate();
-                          }}
-                        >
-                          Generate Knowledge Graph
-                        </Button>
-                      </>
-                    )}
+                    <Loader2 className="h-10 w-10 animate-spin mx-auto text-primary" />
+                    <div>
+                      <p className="text-sm font-medium">{loadingMessages[loadingMsgIdx]}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        This usually takes 15–30 seconds
+                      </p>
+                    </div>
+                    <div className="flex justify-center gap-1">
+                      {loadingMessages.map((_, i) => (
+                        <div
+                          key={i}
+                          className={`h-1 w-6 rounded-full transition-colors duration-300 ${i === loadingMsgIdx ? 'bg-primary' : 'bg-muted'}`}
+                        />
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                 )}
+              </div>
+            ) : graph && graph.nodes.length === 0 ? (
+              /* Graph loaded, 0 nodes, not rebuilding — show manual trigger */
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center space-y-4 max-w-xs px-4">
+                  <Network className="h-10 w-10 mx-auto text-muted-foreground/40" />
+                  <div>
+                    <p className="text-sm font-medium">
+                      {generateError ? 'Generation failed' : 'No nodes yet'}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {generateError
+                        ? 'The AI generation failed. Please try again.'
+                        : 'Click to generate the knowledge graph with AI.'}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setGenerateError(false);
+                      rebuildMutation.mutate();
+                    }}
+                  >
+                    Generate Knowledge Graph
+                  </Button>
+                </div>
               </div>
             ) : graph ? (
               <GraphVisualization
