@@ -256,20 +256,30 @@ export function GraphVisualization({
       .attr('stroke-dasharray', '4,3')
       .attr('opacity', 0.7);
 
-    // Lock indicator — Lucide lock SVG path, centered on node
-    node
+    // Lock indicator — white circle badge + Lucide lock path
+    const lockGroup = node
       .filter((d) => !d.is_unlocked && d.status === 'not_started')
+      .append('g')
+      .attr('transform', (d) => `translate(${-(8 + d.difficulty)}, ${-(8 + d.difficulty)})`);
+
+    lockGroup
+      .append('circle')
+      .attr('r', 7)
+      .attr('fill', 'white')
+      .attr('stroke', '#94a3b8')
+      .attr('stroke-width', 1);
+
+    lockGroup
       .append('path')
       .attr(
         'd',
         'M5 11V7a4 4 0 0 1 8 0v4M3 11h12a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1z'
       )
       .attr('fill', 'none')
-      .attr('stroke', '#64748b')
-      .attr('stroke-width', 1.5)
+      .attr('stroke', '#475569')
+      .attr('stroke-width', 2)
       .attr('stroke-linecap', 'round')
-      // Lucide lock viewBox is 24x24; scale to ~12px and center
-      .attr('transform', 'translate(-6, -7) scale(0.5)');
+      .attr('transform', 'translate(-6, -6.5) scale(0.5)');
 
     // Completed checkmark
     node

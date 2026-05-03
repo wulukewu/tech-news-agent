@@ -363,7 +363,7 @@ export default function DomainGraphPage() {
                 {selectedNode && (
                   <TabsTrigger value="node" className="flex-1">
                     <Network className="h-3.5 w-3.5 mr-1" />
-                    Node
+                    {t('knowledge-graph.node-tab')}
                   </TabsTrigger>
                 )}
               </TabsList>

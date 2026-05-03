@@ -576,6 +576,7 @@ export type TranslationKey =
   | 'knowledge-graph.related-articles'
   | 'knowledge-graph.no-related-articles'
   | 'knowledge-graph.article-read-badge'
+  | 'knowledge-graph.node-tab'
   | 'knowledge-graph.badge-starter'
   | 'knowledge-graph.badge-halfway'
   | 'knowledge-graph.badge-advanced'
