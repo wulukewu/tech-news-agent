@@ -155,4 +155,4 @@ cp .env.example .env
 - [環境變數檔案結構說明](./docs/ENV_FILE_STRUCTURE.md)
 - [OAuth Redirect 修復指南](./docs/deployment/oauth-redirect-fix.md)
 - [Render 環境變數設定](./docs/deployment/render-env-setup.md)
-- [完整環境變數參考](./docs/setup/ENV_SETUP_GUIDE.md)
+- [完整環境變數參考](./docs/setup/env-setup-guide.md)

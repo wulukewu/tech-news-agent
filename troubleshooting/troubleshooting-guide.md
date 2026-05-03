@@ -623,7 +623,7 @@ docker stats --no-stream
 ### Documentation Resources
 
 - [README.md](../README.md) - Project overview
-- [QUICKSTART.md](QUICKSTART.md) - Setup guide
+- [quick-start.md](quick-start.md) - Setup guide
 - [DEVELOPMENT_WORKFLOWS.md](DEVELOPMENT_WORKFLOWS.md) - Development workflows
 - [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) - Technical details
 

@@ -497,7 +497,7 @@ make logs-prod
 
 4. **Documentation**
    - [README.md](../README.md) - Project overview
-   - [QUICKSTART.md](QUICKSTART.md) - Quick setup guide
+   - [quick-start.md](quick-start.md) - Quick setup guide
    - [DEVELOPER_GUIDE.md](DEVELOPER_GUIDE.md) - Detailed development guide
 
 ### Performance Optimization

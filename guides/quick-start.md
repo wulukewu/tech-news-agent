@@ -46,7 +46,7 @@ cp .env.example .env
 nano .env
 ```
 
-詳細的環境變數說明請參考 [ENV_SETUP_GUIDE.md](./setup/ENV_SETUP_GUIDE.md)
+詳細的環境變數說明請參考 [env-setup-guide.md](./setup/env-setup-guide.md)
 
 3. 啟動開發環境：
 
@@ -209,4 +209,4 @@ make logs-prod
 
 ## 📚 更多資訊
 
-詳細說明請參考 [DOCKER_GUIDE.md](./docker/DOCKER_GUIDE.md)
+詳細說明請參考 [docker-guide.md](./docker/docker-guide.md)
