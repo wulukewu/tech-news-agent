@@ -172,12 +172,16 @@ export default function DomainGraphPage() {
   const updateStatusMutation = useMutation({
     mutationFn: ({ nodeId, status }: { nodeId: string; status: KnowledgeNode['status'] }) =>
       updateNodeStatus(nodeId, status),
+    onMutate: async (variables) => {
+      // Snapshot previous state for rollback
+      const previousGraph = queryClient.getQueryData(['knowledge-graph', 'graph', domainName]);
+      const previousSelectedNode = selectedNode;
+      return { previousGraph, previousSelectedNode };
+    },
     onSuccess: (_data, variables) => {
-      // Optimistic: update selectedNode immediately
       if (selectedNode && selectedNode.id === variables.nodeId) {
         setSelectedNode({ ...selectedNode, status: variables.status });
       }
-      // Update graph nodes in-place via queryClient setQueryData to avoid full re-render
       queryClient.setQueryData(
         ['knowledge-graph', 'graph', domainName],
         (old: typeof graph | undefined) => {
@@ -190,15 +194,23 @@ export default function DomainGraphPage() {
           };
         }
       );
-      // If un-completing a node, is_unlocked of dependents may change — refetch graph
       if (variables.status !== 'completed') {
         queryClient.invalidateQueries({ queryKey: ['knowledge-graph', 'graph', domainName] });
       }
-      // Only invalidate progress + recommendations (don't re-fetch graph)
       queryClient.invalidateQueries({ queryKey: ['knowledge-graph', 'progress', domainName] });
       queryClient.invalidateQueries({
         queryKey: ['knowledge-graph', 'recommendations', domainName],
       });
+    },
+    onError: (_err, _variables, context) => {
+      // Rollback optimistic updates
+      if (context?.previousGraph) {
+        queryClient.setQueryData(['knowledge-graph', 'graph', domainName], context.previousGraph);
+      }
+      if (context?.previousSelectedNode) {
+        setSelectedNode(context.previousSelectedNode);
+      }
+      queryClient.invalidateQueries({ queryKey: ['knowledge-graph', 'graph', domainName] });
     },
   });
 
@@ -697,7 +709,7 @@ function NodeDetail({
                   key={status}
                   variant={node.status === status ? 'default' : 'outline'}
                   size="sm"
-                  disabled={isPending && pendingStatus === status}
+                  disabled={isPending}
                   onClick={() => {
                     setPendingStatus(status);
                     onStatusChange(status);
