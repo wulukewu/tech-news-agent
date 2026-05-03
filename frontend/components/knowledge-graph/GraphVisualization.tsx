@@ -41,6 +41,10 @@ export function GraphVisualization({
   const minimapRef = useRef<SVGSVGElement>(null);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
+  // Persist simulation nodes + zoom across renders for zoom-to-node effect
+  const simNodesRef = useRef<(KnowledgeNode & d3.SimulationNodeDatum)[]>([]);
+  const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null);
+
   // Keep callbacks in refs so D3 effect doesn't re-run when they change
   const onNodeClickRef = useRef(onNodeClick);
   const onNodeQuickCompleteRef = useRef(onNodeQuickComplete);
@@ -143,6 +147,7 @@ export function GraphVisualization({
         syncMinimap(event.transform);
       });
     svg.call(zoom);
+    zoomRef.current = zoom;
 
     svg
       .append('defs')
@@ -164,6 +169,7 @@ export function GraphVisualization({
     type SimLink = d3.SimulationLinkDatum<SimNode> & { type: string };
 
     const simNodes: SimNode[] = nodes.map((n) => ({ ...n }));
+    simNodesRef.current = simNodes;
     const simLinks: SimLink[] = edges
       .filter((e) => nodeMap.has(e.source) && nodeMap.has(e.target))
       .map((e) => ({ source: e.source, target: e.target, type: e.type }));
@@ -349,31 +355,6 @@ export function GraphVisualization({
       minimapOffsetX = (MINI_W - graphW * minimapScale) / 2 - minX * minimapScale;
       minimapOffsetY = (MINI_H - graphH * minimapScale) / 2 - minY * minimapScale;
       syncMinimap(d3.zoomTransform(svgRef.current!));
-
-      // Zoom to highlighted node
-      if (highlightNodeId) {
-        const target = simNodes.find((n) => n.id === highlightNodeId);
-        if (
-          target?.x !== null &&
-          target?.x !== undefined &&
-          target?.y !== null &&
-          target?.y !== undefined &&
-          svgRef.current
-        ) {
-          const w = svgRef.current.clientWidth || 800;
-          const h = svgRef.current.clientHeight || 600;
-          const scale = 1.5;
-          svg
-            .transition()
-            .duration(600)
-            .call(
-              zoom.transform,
-              d3.zoomIdentity
-                .translate(w / 2 - scale * target.x, h / 2 - scale * target.y)
-                .scale(scale)
-            );
-        }
-      }
     });
 
     return () => {
@@ -381,7 +362,31 @@ export function GraphVisualization({
       setTooltip(null);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [structureKey, highlightNodeId]);
+  }, [structureKey]);
+
+  // ── Zoom to highlighted node (no simulation restart) ──────────────────────
+  useEffect(() => {
+    if (!highlightNodeId || !svgRef.current || !zoomRef.current) return;
+    const target = simNodesRef.current.find((n) => n.id === highlightNodeId);
+    if (
+      target?.x === null ||
+      target?.x === undefined ||
+      target?.y === null ||
+      target?.y === undefined
+    )
+      return;
+    const svg = d3.select(svgRef.current);
+    const w = svgRef.current.clientWidth || 800;
+    const h = svgRef.current.clientHeight || 600;
+    const scale = 1.5;
+    svg
+      .transition()
+      .duration(600)
+      .call(
+        zoomRef.current.transform,
+        d3.zoomIdentity.translate(w / 2 - scale * target.x, h / 2 - scale * target.y).scale(scale)
+      );
+  }, [highlightNodeId]);
 
   return (
     <div className="relative w-full h-full">
