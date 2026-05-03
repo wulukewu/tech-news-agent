@@ -593,6 +593,7 @@ export default function DomainGraphPage() {
                   setSelectedNode({ ...selectedNode, status });
                 }}
                 onClose={() => setSelectedNode(null)}
+                hideCloseButton
                 t={t}
               />
             )}
@@ -611,6 +612,7 @@ function NodeDetail({
   isPending,
   onStatusChange,
   onClose,
+  hideCloseButton = false,
   t,
 }: {
   node: KnowledgeNode;
@@ -618,6 +620,7 @@ function NodeDetail({
   isPending: boolean;
   onStatusChange: (status: KnowledgeNode['status']) => void;
   onClose: () => void;
+  hideCloseButton?: boolean;
   t: TranslationFunction;
 }) {
   const [pendingStatus, setPendingStatus] = useState<KnowledgeNode['status'] | null>(null);
@@ -636,7 +639,7 @@ function NodeDetail({
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 flex-shrink-0 -mt-0.5"
+          className={`h-7 w-7 flex-shrink-0 -mt-0.5 ${hideCloseButton ? 'hidden' : ''}`}
           onClick={onClose}
         >
           <span className="text-base leading-none">×</span>
