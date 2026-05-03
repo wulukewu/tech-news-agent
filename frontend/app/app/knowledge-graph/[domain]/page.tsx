@@ -228,7 +228,7 @@ export default function DomainGraphPage() {
                     <div>
                       <p className="text-sm font-medium">{loadingMessages[loadingMsgIdx]}</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        This usually takes 15–30 seconds
+                        {t('knowledge-graph.loading-time-hint')}
                       </p>
                     </div>
                     <div className="flex justify-center gap-1">
@@ -251,12 +251,14 @@ export default function DomainGraphPage() {
                   <Network className="h-10 w-10 mx-auto text-muted-foreground/40" />
                   <div>
                     <p className="text-sm font-medium">
-                      {generateError ? 'Generation failed' : 'No nodes yet'}
+                      {generateError
+                        ? t('knowledge-graph.generate-failed')
+                        : t('knowledge-graph.no-nodes-yet')}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {generateError
-                        ? 'The AI generation failed. Please try again.'
-                        : 'Click to generate the knowledge graph with AI.'}
+                        ? t('knowledge-graph.generate-failed-hint')
+                        : t('knowledge-graph.generate-hint')}
                     </p>
                   </div>
                   <Button
@@ -266,7 +268,7 @@ export default function DomainGraphPage() {
                       rebuildMutation.mutate();
                     }}
                   >
-                    Generate Knowledge Graph
+                    {t('knowledge-graph.generate-btn')}
                   </Button>
                 </div>
               </div>
@@ -295,7 +297,7 @@ export default function DomainGraphPage() {
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <input
                     type="search"
-                    placeholder="Search nodes..."
+                    placeholder={t('knowledge-graph.search-nodes-placeholder')}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-8 pr-3 py-1.5 text-xs rounded-lg border bg-background/90 backdrop-blur w-44 focus:outline-none focus:ring-1 focus:ring-primary"
@@ -481,7 +483,7 @@ export default function DomainGraphPage() {
                 {tab === 'steps' && <Lightbulb className="h-4 w-4" />}
                 {tab === 'progress' && <Trophy className="h-4 w-4" />}
                 {tab === 'graph'
-                  ? 'Graph'
+                  ? t('knowledge-graph.graph-tab')
                   : tab === 'steps'
                     ? t('knowledge-graph.next-steps')
                     : t('knowledge-graph.overall-progress')}
@@ -688,6 +690,7 @@ function NodeDetail({
 }
 
 function RelatedArticles({ nodeId }: { nodeId: string }) {
+  const { t } = useI18n();
   const { data: articles = [], isLoading } = useQuery({
     queryKey: ['knowledge-graph', 'node-articles', nodeId],
     queryFn: () => getNodeArticles(nodeId),
@@ -698,11 +701,11 @@ function RelatedArticles({ nodeId }: { nodeId: string }) {
   return (
     <div className="space-y-1.5">
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-        Related Articles {articles.length > 0 ? `(${articles.length})` : ''}
+        {t('knowledge-graph.related-articles')} {articles.length > 0 ? `(${articles.length})` : ''}
       </p>
       {articles.length === 0 ? (
         <p className="text-xs text-muted-foreground italic">
-          No matching articles in your feeds yet.
+          {t('knowledge-graph.no-related-articles')}
         </p>
       ) : (
         <div className="space-y-1">
@@ -721,7 +724,7 @@ function RelatedArticles({ nodeId }: { nodeId: string }) {
                   variant="outline"
                   className="text-[10px] px-1 py-0 h-4 flex-shrink-0 text-green-600 border-green-200"
                 >
-                  Read
+                  {t('knowledge-graph.article-read-badge')}
                 </Badge>
               )}
             </a>
