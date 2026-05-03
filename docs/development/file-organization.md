@@ -80,9 +80,9 @@ This document describes the recent file organization and cleanup performed on Ap
 docs/
 ├── README.md                          # Documentation index (NEW)
 ├── setup/                             # Setup guides
-│   └── ENV_SETUP_GUIDE.md
+│   └── env-setup-guide.md
 ├── docker/                            # Docker documentation
-│   └── DOCKER_GUIDE.md
+│   └── docker-guide.md
 ├── deployment/                        # Deployment guides
 │   ├── DEPLOYMENT.md
 │   └── DEPLOYMENT_CHECKLIST.md
@@ -170,13 +170,13 @@ Contains backend-specific implementation documentation.
 ## 🔍 Finding Documentation
 
 **Quick Start:**
-→ `docs/QUICKSTART.md`
+→ `docs/quick-start.md`
 
 **Environment Setup:**
-→ `docs/setup/ENV_SETUP_GUIDE.md`
+→ `docs/setup/env-setup-guide.md`
 
 **Docker Deployment:**
-→ `docs/docker/DOCKER_GUIDE.md`
+→ `docs/docker/docker-guide.md`
 
 **Testing:**
 → `docs/testing/supabase-migration-testing.md`

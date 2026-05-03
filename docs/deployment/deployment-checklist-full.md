@@ -97,7 +97,7 @@ cp .env.example .env
 nano .env
 ```
 
-**重要:** 詳細的環境變數說明請參考 [ENV_SETUP_GUIDE.md](./ENV_SETUP_GUIDE.md)
+**重要:** 詳細的環境變數說明請參考 [env-setup-guide.md](./env-setup-guide.md)
 
 ### 4. 建置並啟動
 

@@ -354,7 +354,7 @@ Bot 會自動處理 Rate Limit：
 
 - [User Guide](./USER_GUIDE.md) - 使用者指南
 - [Developer Guide](./DEVELOPER_GUIDE.md) - 開發者指南
-- [Environment Setup](./setup/ENV_SETUP_GUIDE.md) - 環境變數設定
+- [Environment Setup](./setup/env-setup-guide.md) - 環境變數設定
 
 ---
 

@@ -314,6 +314,6 @@ grep -v "KEY\|SECRET\|TOKEN" .env
 
 ## 📚 相關文件
 
-- [QUICKSTART.md](./QUICKSTART.md) - 快速開始指南
-- [DOCKER_GUIDE.md](./DOCKER_GUIDE.md) - Docker 使用指南
+- [quick-start.md](./quick-start.md) - 快速開始指南
+- [docker-guide.md](./docker-guide.md) - Docker 使用指南
 - [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md) - 部署檢查清單

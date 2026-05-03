@@ -12,7 +12,7 @@ tech-news-agent/
 │   ├── .env.example    ✅ 範本檔案 (可提交到 Git)
 │   └── .env.local      ❌ 實際環境變數 (不可提交，需自行建立)
 │
-├── ENV_SETUP_GUIDE.md  📚 環境變數完整設定指南
+├── env-setup-guide.md  📚 環境變數完整設定指南
 ├── setup-env.sh        🔧 自動設定腳本
 └── .gitignore          🔒 確保 .env 不被提交
 ```
@@ -44,13 +44,13 @@ frontend/.env.local
 
 ### 4. 建立文件
 
-- ✅ `ENV_SETUP_GUIDE.md` - 詳細的環境變數設定指南
+- ✅ `env-setup-guide.md` - 詳細的環境變數設定指南
 - ✅ `setup-env.sh` - 自動化設定腳本
 
 ### 5. 更新現有文件
 
 - ✅ `README.md` - 加入環境變數指南連結
-- ✅ `QUICKSTART.md` - 更新設定步驟
+- ✅ `quick-start.md` - 更新設定步驟
 - ✅ `DEPLOYMENT_CHECKLIST.md` - 更新環境變數檢查項目
 
 ---
@@ -160,7 +160,7 @@ make dev
 
 1. 在 `.env.example` 中新增變數和註解
 2. 在實際的 `.env` 或 `.env.local` 中新增值
-3. 更新 `ENV_SETUP_GUIDE.md`
+3. 更新 `env-setup-guide.md`
 4. 提交 `.env.example` 的變更
 
 ### 修改環境變數
@@ -174,9 +174,9 @@ make dev
 
 | 文件                      | 說明                 |
 | ------------------------- | -------------------- |
-| `ENV_SETUP_GUIDE.md`      | 環境變數完整設定指南 |
-| `QUICKSTART.md`           | 快速開始指南         |
-| `DOCKER_GUIDE.md`         | Docker 使用指南      |
+| `env-setup-guide.md`      | 環境變數完整設定指南 |
+| `quick-start.md`           | 快速開始指南         |
+| `docker-guide.md`         | Docker 使用指南      |
 | `DEPLOYMENT_CHECKLIST.md` | 部署檢查清單         |
 
 ---
@@ -265,13 +265,13 @@ A:
 
 - 應用程式可能無法啟動
 - 查看日誌: `make logs-dev`
-- 參考 `ENV_SETUP_GUIDE.md` 補充缺少的變數
+- 參考 `env-setup-guide.md` 補充缺少的變數
 
 ---
 
 ## 📞 需要幫助？
 
-1. 查看 `ENV_SETUP_GUIDE.md` 詳細說明
+1. 查看 `env-setup-guide.md` 詳細說明
 2. 執行 `./setup-env.sh` 自動設定
 3. 檢查 `.env.example` 中的註解
 4. 查看應用程式日誌找出問題

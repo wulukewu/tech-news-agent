@@ -67,9 +67,9 @@ services:
 
 ### 4. 文件更新
 
-- ✅ `ENV_SETUP_GUIDE.md` - 重寫為單一 .env 結構
+- ✅ `env-setup-guide.md` - 重寫為單一 .env 結構
 - ✅ `setup-env.sh` - 更新為複製單一 .env
-- ✅ `QUICKSTART.md` - 更新設定步驟
+- ✅ `quick-start.md` - 更新設定步驟
 - ✅ `DEPLOYMENT_CHECKLIST.md` - 更新環境變數檢查項目
 - ✅ `README.md` - 保持環境變數指南連結
 
@@ -196,10 +196,10 @@ NEXT_PUBLIC_APP_URL=...
 | 文件                      | 說明                               |
 | ------------------------- | ---------------------------------- |
 | `.env.example`            | 環境變數範本（包含所有變數和說明） |
-| `ENV_SETUP_GUIDE.md`      | 詳細的環境變數設定指南             |
+| `env-setup-guide.md`      | 詳細的環境變數設定指南             |
 | `setup-env.sh`            | 自動化設定腳本                     |
-| `QUICKSTART.md`           | 快速開始指南                       |
-| `DOCKER_GUIDE.md`         | Docker 使用指南                    |
+| `quick-start.md`           | 快速開始指南                       |
+| `docker-guide.md`         | Docker 使用指南                    |
 | `DEPLOYMENT_CHECKLIST.md` | 部署檢查清單                       |
 
 ---

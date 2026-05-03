@@ -190,7 +190,7 @@ npm run build  # 會顯示載入的環境變數
 
 ## 相關文件
 
-- [環境變數設定指南](./setup/ENV_SETUP_GUIDE.md)
+- [環境變數設定指南](./setup/env-setup-guide.md)
 - [OAuth Redirect 修復](./deployment/oauth-redirect-fix.md)
 - [Render 環境變數設定](./deployment/render-env-setup.md)
 - [環境變數範本](../.env.example)
