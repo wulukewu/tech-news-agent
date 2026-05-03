@@ -77,6 +77,7 @@ async def get_latest_insights(
         response = (
             supabase.client.table("weekly_insights")
             .select("*")
+            .eq("status", "completed")
             .order("created_at", desc=True)
             .limit(1)
             .execute()
@@ -103,6 +104,7 @@ async def get_insights_history(
         response = (
             supabase.client.table("weekly_insights")
             .select("id, period_start, period_end, article_count, executive_summary, created_at")
+            .eq("status", "completed")
             .order("created_at", desc=True)
             .range(offset, offset + page_size - 1)
             .execute()
@@ -150,6 +152,7 @@ async def get_trends_data(
         response = (
             supabase.client.table("weekly_insights")
             .select("trend_data, period_start, period_end")
+            .eq("status", "completed")
             .order("created_at", desc=True)
             .limit(1)
             .execute()
