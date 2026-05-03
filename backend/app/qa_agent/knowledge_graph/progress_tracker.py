@@ -96,9 +96,8 @@ class ProgressTracker:
         )
 
     async def _check_badges(self, user_id: UUID, node_id: UUID) -> None:
-        """Award badges based on completion percentage milestones."""
+        """Award badges based on completion percentage milestones, send Discord DM for new ones."""
         try:
-            # Get the domain for this node
             result = (
                 self.db.db.client.table("knowledge_nodes")
                 .select("domain_id")
@@ -117,8 +116,67 @@ class ProgressTracker:
             completed = sum(1 for n in nodes if progress_map.get(str(n.id)) == NodeStatus.COMPLETED)
             pct = completed / total * 100
 
+            existing_badges = set(await self.db.get_user_achievements(user_id, domain_id))
+
+            # Get domain name for notification
+            domain_result = (
+                self.db.db.client.table("technical_domains")
+                .select("display_name")
+                .eq("id", str(domain_id))
+                .execute()
+            )
+            domain_name = domain_result.data[0]["display_name"] if domain_result.data else "Unknown"
+
             for threshold, badge_type, badge_name in _BADGE_THRESHOLDS:
                 if pct >= threshold:
                     await self.db.award_badge(user_id, domain_id, badge_type, badge_name)
+                    # Send Discord DM only for newly earned badges
+                    if badge_name not in existing_badges:
+                        await self._send_badge_notification(
+                            user_id, domain_name, badge_name, pct, nodes, progress_map
+                        )
         except Exception as e:
             logger.error(f"Badge check failed: {e}")
+
+    async def _send_badge_notification(
+        self,
+        user_id: UUID,
+        domain_name: str,
+        badge_name: str,
+        pct: float,
+        nodes: list,
+        progress_map: dict,
+    ) -> None:
+        """Send Discord DM when user earns a new badge."""
+        try:
+            from app.qa_agent.knowledge_graph.recommendation_engine import RecommendationEngine
+            from app.services.notification_service import NotificationService
+
+            # Get next recommendation
+            domain_result = (
+                self.db.db.client.table("technical_domains")
+                .select("id")
+                .eq("display_name", domain_name)
+                .execute()
+            )
+            next_step = ""
+            if domain_result.data:
+                domain_id = UUID(domain_result.data[0]["id"])
+                engine = RecommendationEngine(self.db)
+                recs = await engine.get_recommendations(user_id, domain_id, max_results=1)
+                if recs:
+                    next_step = (
+                        f"\n\n**Next recommended:** {recs[0].node.display_name}\n_{recs[0].reason}_"
+                    )
+
+            message = (
+                f"**{badge_name}** — {domain_name}\n"
+                f"You've completed **{pct:.0f}%** of the {domain_name} knowledge graph!"
+                f"{next_step}"
+            )
+
+            svc = NotificationService()
+            await svc.send_discord_dm(user_id=user_id, message=message)
+            logger.info(f"Sent badge notification to user {user_id}: {badge_name}")
+        except Exception as e:
+            logger.warning(f"Badge notification failed (non-critical): {e}")
