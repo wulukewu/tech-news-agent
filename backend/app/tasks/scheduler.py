@@ -102,19 +102,40 @@ async def daily_digest_job():
 async def weekly_insights_job():
     """
     Scheduled job: generate weekly insights report every Monday at 09:00.
+    Generates a personalized report for each active user, plus a global fallback.
     Requirements: 7.2, 7.4
     """
     logger.info("Starting weekly insights report generation job...")
     try:
         from app.qa_agent.weekly_insights.report_generator import InsightReportGenerator
 
-        generator = InsightReportGenerator()
-        report = await generator.generate(days=7)
-        logger.info(
-            "Weekly insights report generated successfully (id=%s, articles=%d)",
-            report.get("id"),
-            report.get("article_count", 0),
+        supabase = SupabaseService()
+        generator = InsightReportGenerator(supabase)
+
+        # Fetch users who have rated at least one article
+        resp = (
+            supabase.client.table("reading_list")
+            .select("user_id")
+            .not_.is_("rating", "null")
+            .execute()
         )
+        user_ids = list({row["user_id"] for row in (resp.data or [])})
+
+        if user_ids:
+            for user_id in user_ids:
+                try:
+                    await generator.generate(days=7, user_id=user_id)
+                    logger.info("Weekly insights generated for user %s", user_id)
+                except Exception as exc:
+                    logger.error("Weekly insights failed for user %s: %s", user_id, exc)
+        else:
+            # No users with ratings yet — generate global report as fallback
+            report = await generator.generate(days=7)
+            logger.info(
+                "Weekly insights global report generated (id=%s, articles=%d)",
+                report.get("id"),
+                report.get("article_count", 0),
+            )
     except Exception as exc:
         logger.error("Weekly insights job failed: %s", exc, exc_info=True)
 

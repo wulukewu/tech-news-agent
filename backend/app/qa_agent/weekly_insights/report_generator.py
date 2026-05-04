@@ -51,9 +51,9 @@ class InsightReportGenerator:
             end_date = datetime.now(UTC)
         start_date = end_date - timedelta(days=days)
 
-        logger.info("Generating weekly insights report (%d days)", days)
+        logger.info("Generating weekly insights report (%d days, user=%s)", days, user_id)
 
-        pending_id = await self._insert_pending(start_date, end_date)
+        pending_id = await self._insert_pending(start_date, end_date, user_id=user_id)
 
         try:
             report = await self._run_pipeline(
@@ -64,6 +64,7 @@ class InsightReportGenerator:
                 await self._update_status(pending_id, "failed")
             raise exc
 
+        report["user_id"] = user_id
         report_id = await self._save_report(report, pending_id)
         report["id"] = report_id
         logger.info("Weekly insights report generated (id=%s)", report_id)
@@ -300,26 +301,25 @@ class InsightReportGenerator:
             "created_at": datetime.now(UTC).isoformat(),
         }
 
-    async def _insert_pending(self, start_date: datetime, end_date: datetime) -> str | None:
+    async def _insert_pending(
+        self, start_date: datetime, end_date: datetime, user_id: str | None = None
+    ) -> str | None:
         """Insert a pending record before generation starts."""
         try:
-            response = (
-                self.supabase.client.table("weekly_insights")
-                .insert(
-                    {
-                        "period_start": start_date.isoformat(),
-                        "period_end": end_date.isoformat(),
-                        "article_count": 0,
-                        "clusters": "[]",
-                        "trends": "[]",
-                        "missed_articles": "[]",
-                        "trend_data": "[]",
-                        "status": "pending",
-                        "started_at": datetime.now(UTC).isoformat(),
-                    }
-                )
-                .execute()
-            )
+            row: dict[str, Any] = {
+                "period_start": start_date.isoformat(),
+                "period_end": end_date.isoformat(),
+                "article_count": 0,
+                "clusters": "[]",
+                "trends": "[]",
+                "missed_articles": "[]",
+                "trend_data": "[]",
+                "status": "pending",
+                "started_at": datetime.now(UTC).isoformat(),
+            }
+            if user_id:
+                row["user_id"] = user_id
+            response = self.supabase.client.table("weekly_insights").insert(row).execute()
             rows = response.data or []
             return rows[0].get("id") if rows else None
         except Exception as exc:
@@ -349,6 +349,8 @@ class InsightReportGenerator:
             "trend_data": json.dumps(report["trend_data"]),
             "status": "completed",
         }
+        if report.get("user_id"):
+            row["user_id"] = report["user_id"]
         try:
             if pending_id:
                 response = (

@@ -71,13 +71,33 @@ async def generate_weekly_insights(
 async def get_latest_insights(
     current_user: dict[str, Any] = Depends(get_current_user),
 ):
-    """Return the most recently generated weekly insights report."""
+    """Return the most recently generated weekly insights report for the current user.
+    Falls back to the latest global report if no user-specific report exists."""
     try:
         supabase = SupabaseService()
+        user_id = str(current_user.get("id", ""))
+
+        # Try user-specific report first
+        if user_id:
+            response = (
+                supabase.client.table("weekly_insights")
+                .select("*")
+                .eq("status", "completed")
+                .eq("user_id", user_id)
+                .order("created_at", desc=True)
+                .limit(1)
+                .execute()
+            )
+            rows = response.data or []
+            if rows:
+                return success_response(_deserialize_report(rows[0]))
+
+        # Fallback to global report (user_id IS NULL)
         response = (
             supabase.client.table("weekly_insights")
             .select("*")
             .eq("status", "completed")
+            .is_("user_id", "null")
             .order("created_at", desc=True)
             .limit(1)
             .execute()
