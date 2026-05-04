@@ -171,6 +171,7 @@ function DashboardContent() {
             <TabsList>
               <TabsTrigger value="all">{t('ui.all')}</TabsTrigger>
               <TabsTrigger value="saved">{t('ui.saved')}</TabsTrigger>
+              <TabsTrigger value="recommended">{t('ui.recommended')}</TabsTrigger>
             </TabsList>
             <div className="flex items-center gap-2 ml-auto">
               <SortSelector value={sortOption} onChange={setSortOption} />
@@ -231,6 +232,21 @@ function DashboardContent() {
           ) : (
             <section aria-label={t('articles-page.saved-aria')}>
               <ArticleGrid articles={savedArticles} viewMode={viewMode} />
+            </section>
+          )}
+        </TabsContent>
+
+        <TabsContent value="recommended" className="mt-6">
+          {loading ? (
+            <ArticleListSkeleton />
+          ) : filteredArticles.length === 0 ? (
+            <section className="flex flex-col items-center justify-center min-h-[40vh] text-center gap-4">
+              <p className="text-xl font-semibold">{t('articles-page.no-recommended-articles')}</p>
+              <p className="text-muted-foreground">{t('articles-page.no-recommended-hint')}</p>
+            </section>
+          ) : (
+            <section aria-label={t('articles-page.recommended-aria')}>
+              <ArticleGrid articles={filteredArticles} viewMode={viewMode} />
             </section>
           )}
         </TabsContent>

@@ -956,7 +956,9 @@
     "subscribed-aria": "Subscribed articles",
     "saved-aria": "Saved articles",
     "no-saved-articles": "No saved articles yet",
-    "save-articles-hint": "Click \"Read Later\" on any article to save it here"
+    "save-articles-hint": "Click \"Read Later\" on any article to save it here",
+    "no-recommended-articles": "No recommended articles yet",
+    "no-recommended-hint": "Articles with high technical depth (score ≥ 7) will appear here"
   },
   "statistics": {
     "total-articles": "Total Articles",

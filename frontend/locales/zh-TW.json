@@ -956,7 +956,9 @@
     "subscribed-aria": "訂閱文章",
     "saved-aria": "已儲存文章",
     "no-saved-articles": "尚無已儲存的文章",
-    "save-articles-hint": "在文章列表中點擊「稍後閱讀」即可儲存文章"
+    "save-articles-hint": "在文章列表中點擊「稍後閱讀」即可儲存文章",
+    "no-recommended-articles": "目前沒有推薦文章",
+    "no-recommended-hint": "技術深度較高的文章（評分 ≥ 7）會顯示在這裡"
   },
   "statistics": {
     "total-articles": "總文章數",
