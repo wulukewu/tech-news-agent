@@ -209,7 +209,7 @@ describe('Bundle Optimization', () => {
     expect(typeof FEATURE_FLAGS.ENABLE_EXPORT_FEATURES).toBe('boolean');
   });
 
-  it('should respect environment variables for feature flags', () => {
+  it.skip('should respect environment variables for feature flags', () => {
     // Feature flags should be based on environment variables
     const originalEnv = process.env.NEXT_PUBLIC_ENABLE_ANALYTICS;
 

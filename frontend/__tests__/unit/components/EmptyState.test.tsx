@@ -135,8 +135,8 @@ describe('EmptyState Component', () => {
         />
       );
 
-      expect(screen.getByText(/上次執行時間/)).toBeInTheDocument();
-      expect(screen.getByText(/預計 5-10 分鐘 後會有新文章/)).toBeInTheDocument();
+      expect(screen.getByText(/Last execution time/)).toBeInTheDocument();
+      expect(screen.getByText(/New articles expected in/)).toBeInTheDocument();
     });
 
     it('should not display scheduler status when not provided', () => {
@@ -144,7 +144,7 @@ describe('EmptyState Component', () => {
         <EmptyState type="no-articles" title="No Articles" description="Waiting for articles" />
       );
 
-      expect(screen.queryByText(/上次執行時間/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Last execution time/)).not.toBeInTheDocument();
     });
   });
 

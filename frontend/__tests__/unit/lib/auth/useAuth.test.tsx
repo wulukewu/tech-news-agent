@@ -49,7 +49,7 @@ describe('useAuth Hook', () => {
 
   describe('Authentication State', () => {
     it('should return authenticated state when user is logged in', async () => {
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockUser });
+      vi.mocked(apiClient.get).mockResolvedValue({ data: { data: mockUser } });
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -156,7 +156,7 @@ describe('useAuth Hook', () => {
 
   describe('User Information', () => {
     it('should return complete user information', async () => {
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockUser });
+      vi.mocked(apiClient.get).mockResolvedValue({ data: { data: mockUser } });
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -178,7 +178,7 @@ describe('useAuth Hook', () => {
         discord_id: 'discord-456',
       };
 
-      vi.mocked(apiClient.get).mockResolvedValue({ data: minimalUser });
+      vi.mocked(apiClient.get).mockResolvedValue({ data: { data: minimalUser } });
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -194,7 +194,7 @@ describe('useAuth Hook', () => {
 
   describe('Caching Behavior', () => {
     it('should cache authentication state for 5 minutes', async () => {
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockUser });
+      vi.mocked(apiClient.get).mockResolvedValue({ data: { data: mockUser } });
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -207,7 +207,7 @@ describe('useAuth Hook', () => {
     });
 
     it('should use cached data for subsequent hook instances', async () => {
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockUser });
+      vi.mocked(apiClient.get).mockResolvedValue({ data: { data: mockUser } });
 
       const { result: result1 } = renderHook(() => useAuth(), { wrapper });
 
@@ -232,7 +232,7 @@ describe('useAuth Hook', () => {
 
   describe('Query Key', () => {
     it('should use correct query key', async () => {
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockUser });
+      vi.mocked(apiClient.get).mockResolvedValue({ data: { data: mockUser } });
 
       renderHook(() => useAuth(), { wrapper });
 
@@ -246,7 +246,7 @@ describe('useAuth Hook', () => {
 
   describe('API Integration', () => {
     it('should call correct API endpoint', async () => {
-      vi.mocked(apiClient.get).mockResolvedValue({ data: mockUser });
+      vi.mocked(apiClient.get).mockResolvedValue({ data: { data: mockUser } });
 
       renderHook(() => useAuth(), { wrapper });
 
@@ -256,7 +256,7 @@ describe('useAuth Hook', () => {
     });
 
     it('should handle API response format correctly', async () => {
-      const apiResponse = { data: mockUser };
+      const apiResponse = { data: { data: mockUser } };
       vi.mocked(apiClient.get).mockResolvedValue(apiResponse);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
@@ -283,7 +283,7 @@ describe('useAuth Hook', () => {
       expect(result.current.isLoading).toBe(true);
       expect(result.current.isAuthenticated).toBe(false);
 
-      resolveAuth!({ data: mockUser });
+      resolveAuth!({ data: { data: mockUser } });
 
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);

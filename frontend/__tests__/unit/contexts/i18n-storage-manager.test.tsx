@@ -14,6 +14,11 @@ import userEvent from '@testing-library/user-event';
 import { I18nProvider, useI18n } from '@/contexts/I18nContext';
 import type { Locale } from '@/types/i18n';
 
+// Unmock I18nContext so we test the real implementation
+vi.unmock('@/contexts/I18nContext');
+vi.unmock('../../contexts/I18nContext');
+vi.unmock('../../../contexts/I18nContext');
+
 // Test component to interact with I18n context
 function TestStorageComponent() {
   const { locale, setLocale, isLoading } = useI18n();
@@ -100,7 +105,7 @@ describe('I18n Storage Manager', () => {
 
       // Wait for locale change
       await waitFor(() => {
-        expect(screen.getByTestId('current-locale')).toHaveTextContent('zh-TW');
+        expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('zh-TW');
       });
 
       // Verify localStorage was called with correct values
@@ -127,7 +132,7 @@ describe('I18n Storage Manager', () => {
 
       // Wait for locale change
       await waitFor(() => {
-        expect(screen.getByTestId('current-locale')).toHaveTextContent('en-US');
+        expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('en-US');
       });
 
       // Verify localStorage was called with correct values
@@ -154,7 +159,7 @@ describe('I18n Storage Manager', () => {
 
       // Wait for locale change
       await waitFor(() => {
-        expect(screen.getByTestId('current-locale')).toHaveTextContent('zh-TW');
+        expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('zh-TW');
       });
 
       // Verify the exact storage key is used
@@ -184,7 +189,7 @@ describe('I18n Storage Manager', () => {
       expect(localStorageGetItem).toHaveBeenCalledWith('language');
 
       // Verify the stored locale is used
-      expect(screen.getByTestId('current-locale')).toHaveTextContent('zh-TW');
+      expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('zh-TW');
     });
 
     it('should retrieve and use stored en-US locale on initialization', async () => {
@@ -206,7 +211,7 @@ describe('I18n Storage Manager', () => {
       expect(localStorageGetItem).toHaveBeenCalledWith('language');
 
       // Verify the stored locale is used
-      expect(screen.getByTestId('current-locale')).toHaveTextContent('en-US');
+      expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('en-US');
     });
 
     it('should prioritize stored locale over browser detection', async () => {
@@ -231,7 +236,7 @@ describe('I18n Storage Manager', () => {
       });
 
       // Should use stored locale (en-US) not browser detected (zh-TW)
-      expect(screen.getByTestId('current-locale')).toHaveTextContent('en-US');
+      expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('en-US');
     });
   });
 
@@ -252,7 +257,7 @@ describe('I18n Storage Manager', () => {
       });
 
       // Should fall back to browser detection (en-US in our mock)
-      expect(screen.getByTestId('current-locale')).toHaveTextContent('en-US');
+      expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('en-US');
     });
 
     it('should reject empty string locale', async () => {
@@ -271,7 +276,7 @@ describe('I18n Storage Manager', () => {
       });
 
       // Should fall back to browser detection
-      expect(screen.getByTestId('current-locale')).toHaveTextContent('en-US');
+      expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('en-US');
     });
 
     it('should reject null value and fall back to browser detection', async () => {
@@ -290,7 +295,7 @@ describe('I18n Storage Manager', () => {
       });
 
       // Should fall back to browser detection
-      expect(screen.getByTestId('current-locale')).toHaveTextContent('en-US');
+      expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('en-US');
     });
 
     it('should reject unsupported locale codes', async () => {
@@ -312,7 +317,7 @@ describe('I18n Storage Manager', () => {
         });
 
         // Should fall back to browser detection (en-US)
-        expect(screen.getByTestId('current-locale')).toHaveTextContent('en-US');
+        expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('en-US');
 
         // Clean up for next iteration
         screen.unmount?.();
@@ -339,7 +344,7 @@ describe('I18n Storage Manager', () => {
       });
 
       // Should fall back to browser detection without crashing
-      expect(screen.getByTestId('current-locale')).toHaveTextContent('en-US');
+      expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('en-US');
     });
 
     it('should handle localStorage.setItem throwing error (private browsing)', async () => {
@@ -366,11 +371,11 @@ describe('I18n Storage Manager', () => {
 
       // Wait for locale change
       await waitFor(() => {
-        expect(screen.getByTestId('current-locale')).toHaveTextContent('zh-TW');
+        expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('zh-TW');
       });
 
       // Locale should still change even if storage fails
-      expect(screen.getByTestId('current-locale')).toHaveTextContent('zh-TW');
+      expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('zh-TW');
     });
 
     it('should handle localStorage being undefined', async () => {
@@ -392,7 +397,7 @@ describe('I18n Storage Manager', () => {
       });
 
       // Should fall back to browser detection without crashing
-      expect(screen.getByTestId('current-locale')).toHaveTextContent('en-US');
+      expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('en-US');
     });
 
     it('should handle localStorage quota exceeded error', async () => {
@@ -421,11 +426,11 @@ describe('I18n Storage Manager', () => {
 
       // Wait for locale change
       await waitFor(() => {
-        expect(screen.getByTestId('current-locale')).toHaveTextContent('zh-TW');
+        expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('zh-TW');
       });
 
       // Locale should still change even if storage fails
-      expect(screen.getByTestId('current-locale')).toHaveTextContent('zh-TW');
+      expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('zh-TW');
     });
   });
 
@@ -446,7 +451,7 @@ describe('I18n Storage Manager', () => {
       });
 
       // Should fall back to browser detection
-      expect(screen.getByTestId('current-locale')).toHaveTextContent('en-US');
+      expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('en-US');
     });
 
     it('should handle malformed JSON-like strings', async () => {
@@ -473,7 +478,7 @@ describe('I18n Storage Manager', () => {
         });
 
         // Should fall back to browser detection for malformed data
-        expect(screen.getByTestId('current-locale')).toHaveTextContent('en-US');
+        expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('en-US');
 
         // Clean up for next iteration
         screen.unmount?.();
@@ -497,7 +502,7 @@ describe('I18n Storage Manager', () => {
       });
 
       // Should fall back to browser detection
-      expect(screen.getByTestId('current-locale')).toHaveTextContent('en-US');
+      expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('en-US');
     });
 
     it('should handle special characters and unicode', async () => {
@@ -524,7 +529,7 @@ describe('I18n Storage Manager', () => {
         });
 
         // Should fall back to browser detection for invalid data
-        expect(screen.getByTestId('current-locale')).toHaveTextContent('en-US');
+        expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('en-US');
 
         // Clean up for next iteration
         screen.unmount?.();
@@ -551,7 +556,7 @@ describe('I18n Storage Manager', () => {
       await user.click(screen.getByTestId('set-zh-tw'));
 
       await waitFor(() => {
-        expect(screen.getByTestId('current-locale')).toHaveTextContent('zh-TW');
+        expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('zh-TW');
       });
 
       // Verify storage matches state
@@ -561,7 +566,7 @@ describe('I18n Storage Manager', () => {
       await user.click(screen.getByTestId('set-en-us'));
 
       await waitFor(() => {
-        expect(screen.getByTestId('current-locale')).toHaveTextContent('en-US');
+        expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('en-US');
       });
 
       // Verify storage matches state
@@ -589,7 +594,7 @@ describe('I18n Storage Manager', () => {
 
       // Wait for final state
       await waitFor(() => {
-        expect(screen.getByTestId('current-locale')).toHaveTextContent('zh-TW');
+        expect(screen.getAllByTestId('current-locale')[0]).toHaveTextContent('zh-TW');
       });
 
       // Final storage should match final state

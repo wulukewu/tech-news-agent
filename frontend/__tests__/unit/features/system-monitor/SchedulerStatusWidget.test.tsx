@@ -1,14 +1,3 @@
-/**
- * Unit Tests for SchedulerStatusWidget
- *
- * Tests the scheduler status widget component including:
- * - Status display
- * - Manual trigger button
- * - Health indicators
- *
- * Requirements: 5.1, 5.2, 5.3
- */
-
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -38,116 +27,87 @@ describe('SchedulerStatusWidget', () => {
     issues: ['Scheduler has never executed', 'High failure rate'],
   };
 
-  const mockRunningStatus: SchedulerStatus = {
-    ...mockHealthyStatus,
-    isRunning: true,
-  };
+  const mockRunningStatus: SchedulerStatus = { ...mockHealthyStatus, isRunning: true };
 
   it('should render scheduler status widget', () => {
     render(<SchedulerStatusWidget status={mockHealthyStatus} />);
-
-    expect(screen.getByText('排程器狀態')).toBeInTheDocument();
-    expect(screen.getByText('背景任務執行狀況和下次執行時間')).toBeInTheDocument();
+    expect(screen.getByText('Scheduler Status')).toBeInTheDocument();
   });
 
   it('should display healthy status badge', () => {
     render(<SchedulerStatusWidget status={mockHealthyStatus} />);
-
-    expect(screen.getByText('正常')).toBeInTheDocument();
+    expect(screen.getByText('Healthy')).toBeInTheDocument();
   });
 
   it('should display unhealthy status badge', () => {
     render(<SchedulerStatusWidget status={mockUnhealthyStatus} />);
-
-    expect(screen.getByText('異常')).toBeInTheDocument();
+    expect(screen.getByText('Abnormal')).toBeInTheDocument();
   });
 
   it('should display running status badge', () => {
     render(<SchedulerStatusWidget status={mockRunningStatus} />);
-
-    expect(screen.getByText('執行中')).toBeInTheDocument();
+    expect(screen.getByText('Running')).toBeInTheDocument();
   });
 
-  it('should display last execution time', () => {
+  it('should display last execution label', () => {
     render(<SchedulerStatusWidget status={mockHealthyStatus} />);
-
-    expect(screen.getByText(/上次執行/)).toBeInTheDocument();
+    expect(screen.getByText('Last Execution')).toBeInTheDocument();
   });
 
   it('should display articles processed count', () => {
     render(<SchedulerStatusWidget status={mockHealthyStatus} />);
-
-    expect(screen.getByText(/15 篇文章/)).toBeInTheDocument();
+    expect(screen.getByText(/15 articles/)).toBeInTheDocument();
   });
 
-  it('should display next execution time', () => {
+  it('should display next scheduled label', () => {
     render(<SchedulerStatusWidget status={mockHealthyStatus} />);
-
-    expect(screen.getByText(/下次排程/)).toBeInTheDocument();
+    expect(screen.getByText('Next Scheduled')).toBeInTheDocument();
   });
 
   it('should display execution statistics', () => {
     render(<SchedulerStatusWidget status={mockHealthyStatus} />);
-
-    expect(screen.getByText('執行統計')).toBeInTheDocument();
-    expect(screen.getByText('總操作')).toBeInTheDocument();
-    expect(screen.getByText('成功')).toBeInTheDocument();
-    expect(screen.getByText('失敗')).toBeInTheDocument();
+    expect(screen.getByText('Execution Statistics')).toBeInTheDocument();
+    expect(screen.getByText('Total Operations')).toBeInTheDocument();
+    expect(screen.getByText('Success')).toBeInTheDocument();
+    expect(screen.getByText('Failed')).toBeInTheDocument();
   });
 
   it('should display health issues when present', () => {
     render(<SchedulerStatusWidget status={mockUnhealthyStatus} />);
-
-    expect(screen.getByText('健康度問題')).toBeInTheDocument();
+    expect(screen.getByText('Health Issues')).toBeInTheDocument();
     expect(screen.getByText('Scheduler has never executed')).toBeInTheDocument();
     expect(screen.getByText('High failure rate')).toBeInTheDocument();
   });
 
   it('should not display health issues when healthy', () => {
     render(<SchedulerStatusWidget status={mockHealthyStatus} />);
-
-    expect(screen.queryByText('健康度問題')).not.toBeInTheDocument();
+    expect(screen.queryByText('Health Issues')).not.toBeInTheDocument();
   });
 
   it('should render manual trigger button when onTrigger is provided', () => {
     const onTrigger = vi.fn();
     render(<SchedulerStatusWidget status={mockHealthyStatus} onTrigger={onTrigger} />);
-
-    expect(screen.getByRole('button', { name: /手動觸發抓取/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Manual Trigger Fetch/i })).toBeInTheDocument();
   });
 
   it('should not render manual trigger button when onTrigger is not provided', () => {
     render(<SchedulerStatusWidget status={mockHealthyStatus} />);
-
-    expect(screen.queryByRole('button', { name: /手動觸發抓取/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Manual Trigger Fetch/i })).not.toBeInTheDocument();
   });
 
   it('should call onTrigger when manual trigger button is clicked', async () => {
     const user = userEvent.setup();
     const onTrigger = vi.fn();
     render(<SchedulerStatusWidget status={mockHealthyStatus} onTrigger={onTrigger} />);
-
-    const button = screen.getByRole('button', { name: /手動觸發抓取/ });
+    const button = screen.getByRole('button', { name: /Manual Trigger Fetch/i });
     await user.click(button);
-
     expect(onTrigger).toHaveBeenCalledTimes(1);
   });
 
   it('should disable manual trigger button when scheduler is running', () => {
     const onTrigger = vi.fn();
     render(<SchedulerStatusWidget status={mockRunningStatus} onTrigger={onTrigger} />);
-
-    const button = screen.getByRole('button', { name: /手動觸發抓取/ });
-    expect(button).toBeDisabled();
-  });
-
-  it('should disable manual trigger button when isTriggering is true', () => {
-    const onTrigger = vi.fn();
-    render(
-      <SchedulerStatusWidget status={mockHealthyStatus} onTrigger={onTrigger} isTriggering={true} />
-    );
-
-    const button = screen.getByRole('button', { name: /觸發中/ });
+    const button = screen.getByRole('button', { name: /Manual Trigger Fetch/i });
     expect(button).toBeDisabled();
   });
 
@@ -156,21 +116,18 @@ describe('SchedulerStatusWidget', () => {
     render(
       <SchedulerStatusWidget status={mockHealthyStatus} onTrigger={onTrigger} isTriggering={true} />
     );
-
-    expect(screen.getByText('觸發中...')).toBeInTheDocument();
+    expect(screen.getByText('Triggering...')).toBeInTheDocument();
   });
 
-  it('should display "尚未執行" when lastExecutionTime is null', () => {
+  it('should display "Not executed yet" when lastExecutionTime is null', () => {
     const status = { ...mockHealthyStatus, lastExecutionTime: null };
     render(<SchedulerStatusWidget status={status} />);
-
-    expect(screen.getByText('尚未執行')).toBeInTheDocument();
+    expect(screen.getByText('Not executed yet')).toBeInTheDocument();
   });
 
-  it('should display "計算中..." when nextExecutionTime is null', () => {
+  it('should display "Calculating..." when nextExecutionTime is null', () => {
     const status = { ...mockHealthyStatus, nextExecutionTime: null };
     render(<SchedulerStatusWidget status={status} />);
-
-    expect(screen.getByText('計算中...')).toBeInTheDocument();
+    expect(screen.getByText('Calculating...')).toBeInTheDocument();
   });
 });

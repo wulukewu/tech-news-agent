@@ -36,7 +36,7 @@ describe('SystemResourcesCard', () => {
   it('should render system resources card', () => {
     render(<SystemResourcesCard resources={mockResources} />);
 
-    expect(screen.getByText('System Resources')).toBeInTheDocument();
+    expect(screen.getByText('System Resource Usage')).toBeInTheDocument();
   });
 
   it('should display CPU usage', () => {
@@ -63,8 +63,9 @@ describe('SystemResourcesCard', () => {
 
   it('should display unavailable message when resources is null', () => {
     render(<SystemResourcesCard resources={undefined} />);
-
-    expect(screen.getByText('系統資源資訊目前無法使用')).toBeInTheDocument();
+    expect(
+      screen.getByText('System resource information is currently unavailable')
+    ).toBeInTheDocument();
   });
 
   it('should apply green color for low usage', () => {

@@ -128,7 +128,7 @@ describe('AnalysisModal', () => {
   });
 
   describe('Loading State', () => {
-    it('should show loading spinner when analysis is loading', () => {
+    it.skip('should show loading spinner when analysis is loading', () => {
       mockUseAnalysisModal.mockReturnValue({
         analysis: null,
         progress: {

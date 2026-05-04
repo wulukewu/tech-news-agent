@@ -56,19 +56,17 @@ describe('Loading Skeleton Components', () => {
 
   describe('FeedListSkeleton', () => {
     it('renders feed list skeleton with default count', () => {
-      render(<FeedListSkeleton />);
+      const { container } = render(<FeedListSkeleton />);
 
       // Should render multiple feed items (5 by default)
-      const container = screen.getByRole('generic');
-      expect(container).toBeInTheDocument();
+      expect(container.firstChild).toBeInTheDocument();
     });
 
     it('renders feed list skeleton with custom count', () => {
-      render(<FeedListSkeleton count={3} />);
+      const { container } = render(<FeedListSkeleton count={3} />);
 
       // Should render the specified number of feed items
-      const container = screen.getByRole('generic');
-      expect(container).toBeInTheDocument();
+      expect(container.firstChild).toBeInTheDocument();
     });
   });
 
@@ -88,19 +86,17 @@ describe('Loading Skeleton Components', () => {
 
   describe('ReadingListSkeleton', () => {
     it('renders reading list skeleton with default count', () => {
-      render(<ReadingListSkeleton />);
+      const { container } = render(<ReadingListSkeleton />);
 
       // Should render the container
-      const container = screen.getByRole('generic');
-      expect(container).toBeInTheDocument();
+      expect(container.firstChild).toBeInTheDocument();
     });
 
     it('renders reading list skeleton with custom count', () => {
-      render(<ReadingListSkeleton count={3} />);
+      const { container } = render(<ReadingListSkeleton count={3} />);
 
       // Should render the container
-      const container = screen.getByRole('generic');
-      expect(container).toBeInTheDocument();
+      expect(container.firstChild).toBeInTheDocument();
     });
   });
 });

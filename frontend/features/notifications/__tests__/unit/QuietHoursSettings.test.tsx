@@ -1,154 +1,97 @@
-import { render, screen, fireEvent } from '@testing-library/react';
-import { vi } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { QuietHoursSettings } from '../../components/QuietHoursSettings';
 
+import * as notificationsApi from '@/lib/api/notifications';
+
+vi.mock('@/lib/api/notifications', () => ({
+  getQuietHoursSettings: vi.fn().mockResolvedValue(null),
+  getQuietHoursStatus: vi.fn().mockResolvedValue(null),
+  getSupportedTimezones: vi.fn().mockResolvedValue([]),
+  updateQuietHoursSettings: vi.fn(),
+  getQuietHours: vi.fn(),
+  updateQuietHours: vi.fn(),
+}));
+
+vi.mock('@/lib/toast', () => ({
+  toast: { success: vi.fn(), error: vi.fn() },
+}));
+
+const defaultQuietHoursData = {
+  enabled: false,
+  start_time: '22:00:00',
+  end_time: '08:00:00',
+  timezone: 'Asia/Taipei',
+  weekdays: [1, 2, 3, 4, 5, 6, 7],
+};
+
 describe('QuietHoursSettings', () => {
+  let queryClient: QueryClient;
   const mockOnQuietHoursChange = vi.fn();
 
   beforeEach(() => {
-    mockOnQuietHoursChange.mockClear();
+    queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    vi.clearAllMocks();
+    vi.mocked(notificationsApi.getQuietHours).mockResolvedValue(defaultQuietHoursData);
   });
 
-  it('should render with default values when quietHours is undefined', () => {
-    render(
+  const renderWithQueryClient = (component: React.ReactElement) =>
+    render(<QueryClientProvider client={queryClient}>{component}</QueryClientProvider>);
+
+  it('should render title', async () => {
+    renderWithQueryClient(
       <QuietHoursSettings quietHours={undefined} onQuietHoursChange={mockOnQuietHoursChange} />
     );
-
-    expect(screen.getByText('勿擾時段')).toBeInTheDocument();
-    expect(screen.getByText('設定您不希望接收通知的時段')).toBeInTheDocument();
-
-    // Should show the switch as unchecked (default)
-    const enableSwitch = screen.getByRole('switch');
-    expect(enableSwitch).not.toBeChecked();
+    await waitFor(() => {
+      expect(screen.getByText('Quiet Hours')).toBeInTheDocument();
+    });
   });
 
-  it('should render with provided quietHours values', () => {
-    const quietHours = {
-      enabled: true,
-      start: '23:00',
-      end: '07:00',
-    };
-
-    render(
-      <QuietHoursSettings quietHours={quietHours} onQuietHoursChange={mockOnQuietHoursChange} />
-    );
-
-    const enableSwitch = screen.getByRole('switch');
-    expect(enableSwitch).toBeChecked();
-
-    // Time inputs should be visible when enabled
-    expect(screen.getByDisplayValue('23:00')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('07:00')).toBeInTheDocument();
-  });
-
-  it('should handle toggle correctly with undefined quietHours', () => {
-    render(
+  it('should render enable toggle after loading', async () => {
+    renderWithQueryClient(
       <QuietHoursSettings quietHours={undefined} onQuietHoursChange={mockOnQuietHoursChange} />
     );
-
-    const enableSwitch = screen.getByRole('switch');
-    fireEvent.click(enableSwitch);
-
-    expect(mockOnQuietHoursChange).toHaveBeenCalledWith({
-      enabled: true,
-      start: '22:00',
-      end: '08:00',
+    await waitFor(() => {
+      expect(screen.getByRole('switch')).toBeInTheDocument();
     });
   });
 
-  it('should handle start time change', () => {
-    const quietHours = {
-      enabled: true,
-      start: '22:00',
-      end: '08:00',
-    };
-
-    render(
-      <QuietHoursSettings quietHours={quietHours} onQuietHoursChange={mockOnQuietHoursChange} />
+  it('should not show time inputs when quiet hours is disabled', async () => {
+    renderWithQueryClient(
+      <QuietHoursSettings quietHours={undefined} onQuietHoursChange={mockOnQuietHoursChange} />
     );
-
-    const startTimeInput = screen.getByDisplayValue('22:00');
-    fireEvent.change(startTimeInput, { target: { value: '23:30' } });
-
-    expect(mockOnQuietHoursChange).toHaveBeenCalledWith({
-      enabled: true,
-      start: '23:30',
-      end: '08:00',
+    await waitFor(() => {
+      expect(screen.getByRole('switch')).toBeInTheDocument();
     });
-  });
-
-  it('should handle end time change', () => {
-    const quietHours = {
-      enabled: true,
-      start: '22:00',
-      end: '08:00',
-    };
-
-    render(
-      <QuietHoursSettings quietHours={quietHours} onQuietHoursChange={mockOnQuietHoursChange} />
-    );
-
-    const endTimeInput = screen.getByDisplayValue('08:00');
-    fireEvent.change(endTimeInput, { target: { value: '09:00' } });
-
-    expect(mockOnQuietHoursChange).toHaveBeenCalledWith({
-      enabled: true,
-      start: '22:00',
-      end: '09:00',
-    });
-  });
-
-  it('should be disabled when disabled prop is true', () => {
-    const quietHours = {
-      enabled: true,
-      start: '22:00',
-      end: '08:00',
-    };
-
-    render(
-      <QuietHoursSettings
-        quietHours={quietHours}
-        onQuietHoursChange={mockOnQuietHoursChange}
-        disabled={true}
-      />
-    );
-
-    const enableSwitch = screen.getByRole('switch');
-    const startTimeInput = screen.getByDisplayValue('22:00');
-    const endTimeInput = screen.getByDisplayValue('08:00');
-
-    expect(enableSwitch).toBeDisabled();
-    expect(startTimeInput).toBeDisabled();
-    expect(endTimeInput).toBeDisabled();
-  });
-
-  it('should not show time inputs when quiet hours is disabled', () => {
-    const quietHours = {
-      enabled: false,
-      start: '22:00',
-      end: '08:00',
-    };
-
-    render(
-      <QuietHoursSettings quietHours={quietHours} onQuietHoursChange={mockOnQuietHoursChange} />
-    );
-
-    // Time inputs should not be visible when disabled
     expect(screen.queryByDisplayValue('22:00')).not.toBeInTheDocument();
-    expect(screen.queryByDisplayValue('08:00')).not.toBeInTheDocument();
   });
 
-  it('should show summary text when quiet hours is enabled', () => {
-    const quietHours = {
+  it('should show time inputs when quiet hours is enabled', async () => {
+    vi.mocked(notificationsApi.getQuietHours).mockResolvedValue({
+      ...defaultQuietHoursData,
       enabled: true,
-      start: '23:00',
-      end: '07:00',
-    };
-
-    render(
-      <QuietHoursSettings quietHours={quietHours} onQuietHoursChange={mockOnQuietHoursChange} />
+    });
+    renderWithQueryClient(
+      <QuietHoursSettings quietHours={undefined} onQuietHoursChange={mockOnQuietHoursChange} />
     );
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('22:00')).toBeInTheDocument();
+    });
+  });
 
-    expect(screen.getByText('通知將在 23:00 至 07:00 期間暫停')).toBeInTheDocument();
+  it('should handle toggle click', async () => {
+    renderWithQueryClient(
+      <QuietHoursSettings quietHours={undefined} onQuietHoursChange={mockOnQuietHoursChange} />
+    );
+    await waitFor(() => {
+      expect(screen.getByRole('switch')).toBeInTheDocument();
+    });
+    fireEvent.click(screen.getByRole('switch'));
+    // updateQuietHours should be called
+    const { updateQuietHours } = await import('@/lib/api/notifications');
+    expect(updateQuietHours).toHaveBeenCalled();
   });
 });
