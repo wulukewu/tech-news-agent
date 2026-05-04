@@ -83,12 +83,10 @@ jobs:
           }
 
       - name: Run tests with coverage
-        continue-on-error: true
         working-directory: backend
         run: |
           echo "🧪 Running backend tests with coverage..."
-          python -m pytest tests/ -v --tb=short --cov=app --cov-report=term --cov-report=html --cov-fail-under=60 || \
-            echo "⚠️ Backend tests have failures; please review above."
+          python -m pytest tests/ -v --tb=short --cov=app --cov-report=term --cov-report=html --cov-fail-under=60
 
   # ============================================
   # Frontend Quality & Tests
@@ -150,12 +148,10 @@ jobs:
           }
 
       - name: Run tests with coverage
-        continue-on-error: true
         working-directory: frontend
         run: |
           echo "🧪 Running frontend tests with coverage..."
-          npm run test:coverage -- --run || \
-            echo "⚠️ Frontend tests have failures; please review above."
+          npm run test:coverage -- --run
 
   # ============================================
   # Quality Gate

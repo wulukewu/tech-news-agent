@@ -3,7 +3,7 @@
  * Requirements: 1.2, 4.3
  */
 
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AxiosError, AxiosRequestConfig } from 'axios';
 import {
   shouldRetry,

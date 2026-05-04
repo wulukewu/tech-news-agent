@@ -3,7 +3,7 @@
  * Requirements: 1.2, 1.4, 4.3
  */
 
-import { describe, it, expect } from '@jest/globals';
+import { describe, it, expect, vi } from 'vitest';
 import { AxiosError } from 'axios';
 import {
   ApiError,

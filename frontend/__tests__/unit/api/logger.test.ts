@@ -4,7 +4,7 @@ import { logger } from '@/lib/utils/logger';
  * Requirements: 1.2, 4.3
  */
 
-import { describe, it, expect, beforeEach, jest } from '@jest/globals';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { AxiosRequestConfig, AxiosResponse } from 'axios';
 import { ApiLogger, LogLevel, apiLogger } from '@/lib/api/logger';
 import { ApiError, ErrorCode } from '@/lib/api/errors';

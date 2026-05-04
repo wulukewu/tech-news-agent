@@ -87,12 +87,78 @@ const mockEnUSTranslations = {
 };
 
 // Mock dynamic imports
+// Unmock I18nContext to test real implementation
+vi.unmock('@/contexts/I18nContext');
 vi.mock('@/locales/zh-TW.json', () => ({
-  default: mockZhTWTranslations,
+  default: {
+    nav: {
+      articles: '文章',
+      'reading-list': '閱讀清單',
+    },
+    buttons: {
+      save: '儲存',
+      cancel: '取消',
+    },
+    messages: {
+      'article-count': '成功抓取 {count} 篇新文章',
+      loading: '載入中...',
+      'user-count': '共有 {count} 位使用者',
+      'status-active': '狀態：{active}',
+      'empty-message': '',
+    },
+    errors: {
+      'network-error': '網路連線異常',
+    },
+    language: {
+      'changed-to-chinese': '語言已切換為繁體中文',
+      'changed-to-english': '語言已切換為英文',
+    },
+    special: {
+      'quotes-single': "It's a beautiful day",
+      'quotes-double': 'He said "Hello world"',
+      'quotes-mixed': `She replied: "I'm fine, thanks!"`,
+      'unicode-emoji': '歡迎使用 🚀 技術新聞',
+      'unicode-symbols': '溫度：25°C • 濕度：60%',
+      apostrophe: "Don't worry, be happy",
+      'complex-punctuation': '問題？答案！解決方案... (完成)',
+    },
+  },
 }));
 
 vi.mock('@/locales/en-US.json', () => ({
-  default: mockEnUSTranslations,
+  default: {
+    nav: {
+      articles: 'Articles',
+      'reading-list': 'Reading List',
+    },
+    buttons: {
+      save: 'Save',
+      cancel: 'Cancel',
+    },
+    messages: {
+      'article-count': 'Successfully fetched {count} new articles',
+      loading: 'Loading...',
+      'user-count': 'Total {count} users',
+      'status-active': 'Status: {active}',
+      'empty-message': '',
+    },
+    errors: {
+      'network-error': 'Network connection error',
+    },
+    language: {
+      'changed-to-chinese': 'Language changed to Traditional Chinese',
+      'changed-to-english': 'Language changed to English',
+    },
+    special: {
+      'quotes-single': "It's a beautiful day",
+      'quotes-double': 'He said "Hello world"',
+      'quotes-mixed': `She replied: "I'm fine, thanks!"`,
+      'unicode-emoji': 'Welcome to 🚀 Tech News',
+      'unicode-symbols': 'Temperature: 25°C • Humidity: 60%',
+      apostrophe: "Don't worry, be happy",
+      'complex-punctuation': 'Question? Answer! Solution... (Done)',
+    },
+  },
 }));
 
 describe('I18nContext', () => {
