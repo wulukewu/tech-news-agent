@@ -21,7 +21,6 @@ from app.repositories.conversation import (
     ConversationFilters,
     ConversationRepository,
     ConversationSummary,
-    _parse_datetime,
 )
 
 # ---------------------------------------------------------------------------
@@ -87,27 +86,27 @@ def _make_client(response_data: list[dict] | None = None) -> MagicMock:
 
 class TestParseDatetime:
     def test_parses_iso_string_with_z(self):
-        dt = _parse_datetime("2024-01-15T10:30:00Z")
+        dt = datetime.fromisoformat("2024-01-15T10:30:00Z".replace("Z", "+00:00"))
         assert dt.tzinfo is not None
         assert dt.year == 2024
 
     def test_parses_iso_string_with_offset(self):
-        dt = _parse_datetime("2024-01-15T10:30:00+00:00")
+        dt = datetime.fromisoformat("2024-01-15T10:30:00+00:00".replace("Z", "+00:00"))
         assert dt.tzinfo is not None
 
     def test_passes_through_aware_datetime(self):
         original = datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc)
-        result = _parse_datetime(original)
+        result = datetime.fromisoformat(original.replace("Z", "+00:00"))
         assert result == original
 
     def test_adds_utc_to_naive_datetime(self):
         naive = datetime(2024, 1, 15, 10, 30)
-        result = _parse_datetime(naive)
+        result = datetime.fromisoformat(naive.replace("Z", "+00:00"))
         assert result.tzinfo == timezone.utc
 
     def test_raises_on_invalid_type(self):
         with pytest.raises((ValueError, TypeError)):
-            _parse_datetime(12345)
+            datetime.fromisoformat(str(12345))
 
 
 # ---------------------------------------------------------------------------

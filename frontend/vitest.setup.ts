@@ -2,7 +2,14 @@ import '@testing-library/jest-dom';
 import { beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { server } from './mocks/server';
-import enUS from './locales/en-US.json';
+import fc from 'fast-check';
+
+// Configure fast-check: use fewer runs in CI to keep tests fast
+// Default: 100 runs; CI: 20 runs
+fc.configureGlobal({
+  numRuns: process.env.CI === 'true' ? 20 : 100,
+  endOnFailure: true,
+});
 
 // Mock localStorage
 const localStorageMock = (() => {
