@@ -51,7 +51,13 @@ import { PlatformBadge } from './components/PlatformBadge';
 
 // ─── Message Components ───────────────────────────────────────────────────────
 
-export function ChatShell({ initialId }: { initialId: string | null }) {
+export function ChatShell({
+  initialId,
+  initialMessage,
+}: {
+  initialId: string | null;
+  initialMessage?: string;
+}) {
   const { t } = useI18n();
 
   // mode: 'new' = blank QA, 'history' = loaded existing conversation
@@ -63,7 +69,7 @@ export function ChatShell({ initialId }: { initialId: string | null }) {
 
   // New-conversation QA state
   const [qaMessages, setQaMessages] = useState<QAMessage[]>([]);
-  const [qaInput, setQaInput] = useState('');
+  const [qaInput, setQaInput] = useState(initialMessage ?? '');
   const [qaLoading, setQaLoading] = useState(false);
   const [qaError, setQaError] = useState<string | null>(null);
 

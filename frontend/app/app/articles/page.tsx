@@ -35,6 +35,10 @@ function DashboardContent() {
   const [viewMode, setViewMode] = useState<ViewMode>('card');
   const [sortOption, setSortOption] = useState<SortOption>('latest');
 
+  const handleAnalyze = (articleId: string) => {
+    router.push(`/app/chat?articleId=${articleId}`);
+  };
+
   useScrollRestoration('dashboard');
 
   const {
@@ -200,7 +204,12 @@ function DashboardContent() {
           ) : (
             <>
               <section aria-label={t('articles-page.article-list-aria')}>
-                <ArticleGrid articles={filteredArticles} viewMode={viewMode} />
+                <ArticleGrid
+                  articles={filteredArticles}
+                  viewMode={viewMode}
+                  showAnalysisButton
+                  onAnalyze={handleAnalyze}
+                />
               </section>
 
               {hasNextPage && <div ref={sentinelRef} className="h-px" aria-hidden="true" />}
@@ -246,7 +255,12 @@ function DashboardContent() {
             </section>
           ) : (
             <section aria-label={t('articles-page.recommended-aria')}>
-              <ArticleGrid articles={filteredArticles} viewMode={viewMode} />
+              <ArticleGrid
+                articles={filteredArticles}
+                viewMode={viewMode}
+                showAnalysisButton
+                onAnalyze={handleAnalyze}
+              />
             </section>
           )}
         </TabsContent>
