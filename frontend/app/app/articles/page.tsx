@@ -36,7 +36,11 @@ function DashboardContent() {
   const [sortOption, setSortOption] = useState<SortOption>('latest');
 
   const handleAnalyze = (articleId: string) => {
-    router.push(`/app/chat?articleId=${articleId}`);
+    const article = filteredArticles.find((a) => a.id === articleId);
+    const title = article?.title;
+    const params = new URLSearchParams({ articleId });
+    if (title) params.set('articleTitle', title);
+    router.push(`/app/chat?${params.toString()}`);
   };
 
   useScrollRestoration('dashboard');
