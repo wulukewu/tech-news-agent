@@ -73,10 +73,8 @@ class InsightReportGenerator:
     async def resume_if_needed(self) -> None:
         """
         Called at startup. Checks for:
-        1. Stale 'pending' records (interrupted mid-generation) → re-run
-        2. Missing report for the current week → generate now
-
-        This ensures a CD deploy that interrupted a job will self-heal.
+        1. Stale 'pending' records (interrupted mid-generation) → re-run with same user_id
+        2. Missing global report for the current week → generate now
         """
         try:
             now = datetime.now(UTC)
@@ -84,7 +82,7 @@ class InsightReportGenerator:
 
             response = (
                 self.supabase.client.table("weekly_insights")
-                .select("id, status, started_at, period_start, period_end")
+                .select("id, status, started_at, period_start, period_end, user_id")
                 .in_("status", ["pending", "failed"])
                 .gte("started_at", (now - timedelta(hours=24)).isoformat())
                 .execute()
@@ -96,31 +94,32 @@ class InsightReportGenerator:
                 if row["status"] == "pending" and started_at:
                     started_dt = datetime.fromisoformat(started_at)
                     if started_dt > stale_cutoff:
-                        # Still within grace period, don't interrupt
                         continue
                 logger.info(
-                    "Resuming interrupted/failed insights job (id=%s, status=%s)",
+                    "Resuming interrupted/failed insights job (id=%s, status=%s, user=%s)",
                     row["id"],
                     row["status"],
+                    row.get("user_id"),
                 )
-                await self._update_status(row["id"], "failed")  # mark old one as failed
-                await self.generate()
+                await self._update_status(row["id"], "failed")
+                await self.generate(user_id=row.get("user_id"))
                 return  # one at a time
 
-            # Check if current week is missing a completed report
-            week_start = now - timedelta(days=now.weekday())  # Monday
+            # Check if current week is missing a completed global report
+            week_start = now - timedelta(days=now.weekday())
             week_start = week_start.replace(hour=0, minute=0, second=0, microsecond=0)
 
             response = (
                 self.supabase.client.table("weekly_insights")
                 .select("id")
                 .eq("status", "completed")
+                .is_("user_id", "null")
                 .gte("period_end", week_start.isoformat())
                 .limit(1)
                 .execute()
             )
             if not (response.data or []):
-                logger.info("No completed report for current week — generating now")
+                logger.info("No completed global report for current week — generating now")
                 await self.generate()
 
         except Exception as exc:
@@ -154,15 +153,19 @@ class InsightReportGenerator:
 
         # 5. Personalization (optional)
         missed_articles: list[dict[str, Any]] = []
+        user_lang = "en"
         if user_id:
             interests = await self.personalization.get_user_interests(user_id)
             clusters = self.personalization.personalize_clusters(clusters, interests)
             missed_articles = self.personalization.get_missed_articles(analyzed, interests)
+            user_lang = await self._get_user_language(user_id)
 
         # 6. Build executive summary
         top_themes = [c["name"] for c in clusters[:3]]
         rising_trends = [t["name"] for t in trends if t["direction"] == "rising"][:3]
-        executive_summary = self._build_summary(len(articles), top_themes, rising_trends)
+        executive_summary = self._build_summary(
+            len(articles), top_themes, rising_trends, lang=user_lang
+        )
 
         # 7. Serialize clusters (strip full article lists for storage, keep top 3)
         clusters_serializable = [
@@ -204,14 +207,31 @@ class InsightReportGenerator:
         article_count: int,
         top_themes: list[str],
         rising_trends: list[str],
+        lang: str = "en",
     ) -> str:
-        themes_str = ", ".join(top_themes) if top_themes else "various topics"
-        trends_str = ", ".join(rising_trends) if rising_trends else "no clear emerging trends"
-        return (
-            f"This week's digest covers {article_count} articles. "
-            f"Top themes: {themes_str}. "
-            f"Rising trends: {trends_str}."
-        )
+        themes_str = ", ".join(top_themes) if top_themes else None
+        trends_str = ", ".join(rising_trends) if rising_trends else None
+        if lang.startswith("zh"):
+            themes_part = f"主要主題：{themes_str}。" if themes_str else "涵蓋多元技術主題。"
+            trends_part = f"上升趨勢：{trends_str}。" if trends_str else "本週無明顯新興趨勢。"
+            return f"本週精選涵蓋 {article_count} 篇文章。{themes_part}{trends_part}"
+        themes_part = f"Top themes: {themes_str}." if themes_str else "Covering various topics."
+        trends_part = f"Rising trends: {trends_str}." if trends_str else "No clear emerging trends."
+        return f"This week's digest covers {article_count} articles. {themes_part} {trends_part}"
+
+    async def _get_user_language(self, user_id: str) -> str:
+        """Fetch user's language preference from user_profiles table."""
+        try:
+            resp = (
+                self.supabase.client.table("user_profiles")
+                .select("language_preference")
+                .eq("user_id", user_id)
+                .single()
+                .execute()
+            )
+            return (resp.data or {}).get("language_preference") or "en"
+        except Exception:
+            return "en"
 
     def _keyword_analyze(self, article: dict[str, Any]) -> dict[str, Any]:
         """
