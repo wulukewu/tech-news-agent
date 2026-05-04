@@ -808,6 +808,7 @@
       "immediate-send": "Notification will be sent immediately",
       "daily-digest": "Notification will be included in daily digest",
       "weekly-digest": "Notification will be included in weekly digest",
+      "monthly-digest": "Notification will be included in monthly digest",
       "no-channels": "No notification channels enabled",
       "no-history": "No notification history",
       "load-history-failed": "Unable to load notification history",

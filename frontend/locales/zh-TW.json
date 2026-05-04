@@ -808,6 +808,7 @@
       "immediate-send": "通知將立即發送",
       "daily-digest": "通知將包含在每日摘要中",
       "weekly-digest": "通知將包含在每週摘要中",
+      "monthly-digest": "通知將包含在每月摘要中",
       "no-channels": "無啟用的通知渠道",
       "no-history": "尚無通知記錄",
       "load-history-failed": "無法載入通知歷史記錄",

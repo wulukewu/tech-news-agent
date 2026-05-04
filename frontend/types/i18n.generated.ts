@@ -991,6 +991,7 @@ export type TranslationKey =
   | 'settings.notifications.load-history-failed'
   | 'settings.notifications.min-technical-depth'
   | 'settings.notifications.min-threshold'
+  | 'settings.notifications.monthly-digest'
   | 'settings.notifications.new-article'
   | 'settings.notifications.no-available-sources'
   | 'settings.notifications.no-channels'
