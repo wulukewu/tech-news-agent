@@ -22,6 +22,7 @@ import type { Article, ArticleFilters } from '@/types/article';
 const mockUseArticles = vi.fn();
 vi.mock('@/lib/hooks/useArticles', () => ({
   useArticles: () => mockUseArticles(),
+  useCategories: () => ({ data: [], isLoading: false }),
 }));
 
 // Mock the ArticleCard component

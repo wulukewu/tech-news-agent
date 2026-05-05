@@ -28,6 +28,7 @@ vi.mock('next/navigation', () => ({
 
 // Mock AuthContext
 vi.mock('@/contexts/AuthContext', () => ({
+  AuthContext: { Consumer: ({ children }: any) => children(undefined) },
   useAuth: vi.fn(),
 }));
 

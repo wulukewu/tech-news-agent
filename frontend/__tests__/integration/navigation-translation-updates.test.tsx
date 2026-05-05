@@ -41,6 +41,7 @@ vi.mock('@/lib/hooks/useAuth', () => ({
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({
+  AuthContext: { Consumer: ({ children }: any) => children(undefined) },
   useAuth: () => ({
     logout: vi.fn(),
   }),

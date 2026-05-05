@@ -7,6 +7,23 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
+
+vi.mock('@/contexts/AuthContext', () => ({
+  useAuth: () => ({
+    user: null,
+    isAuthenticated: false,
+    isLoading: false,
+    login: vi.fn(),
+    logout: vi.fn(),
+  }),
+  AuthProvider: ({ children }: any) => children,
+  AuthContext: { Consumer: ({ children }: any) => children(undefined) },
+}));
+
+vi.mock('@/contexts/UserContext', () => ({
+  useUser: () => ({ user: null, isLoading: false, error: null, refetch: vi.fn() }),
+  UserProvider: ({ children }: any) => children,
+}));
 import { screen } from '@testing-library/react';
 import fc from 'fast-check';
 import { AppLayout, DashboardLayout, Sidebar, Header, Breadcrumb } from '@/components/layout';
