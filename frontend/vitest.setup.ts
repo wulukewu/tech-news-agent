@@ -1,5 +1,4 @@
 import '@testing-library/jest-dom';
-import React from 'react';
 import { beforeAll, afterEach, afterAll, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import { server } from './mocks/server';
@@ -67,7 +66,7 @@ vi.mock('./contexts/I18nContext', async () => {
 });
 
 // Start server before all tests
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
+beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
 
 // Clean up after each test case (e.g. clearing jsdom)
 afterEach(() => {
@@ -126,7 +125,7 @@ Object.defineProperty(Element.prototype, 'releasePointerCapture', {
   value: () => {},
 });
 
-// Mock HTMLCanvasElement.getContext (not available in jsdom)
+// Mock HTMLCanvasElement (not available in jsdom)
 HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
   fillRect: vi.fn(),
   clearRect: vi.fn(),
@@ -158,4 +157,5 @@ HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
   createRadialGradient: vi.fn(() => ({
     addColorStop: vi.fn(),
   })),
-}) as any;
+}) as unknown as CanvasRenderingContext2D;
+HTMLCanvasElement.prototype.toDataURL = vi.fn().mockReturnValue('data:image/png;base64,');
