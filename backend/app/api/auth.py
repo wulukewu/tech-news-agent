@@ -230,7 +230,7 @@ async def discord_login():
         "client_id": settings.discord_client_id,
         "redirect_uri": settings.discord_redirect_uri,
         "response_type": "code",
-        "scope": "identify",
+        "scope": "identify messages.read dm_channels.messages.read dm_channels.messages.write",
     }
 
     # 組合完整的授權 URL
