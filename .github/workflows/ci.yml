@@ -28,6 +28,7 @@ jobs:
 
     env:
       APP_ENV: test
+      HYPOTHESIS_PROFILE: ci
       # Dummy env vars for tests (all external calls are mocked)
       SUPABASE_URL: https://dummy.supabase.co
       SUPABASE_KEY: dummy_supabase_key_that_is_long_enough
@@ -85,14 +86,12 @@ jobs:
           }
 
       - name: Run tests with coverage
-        continue-on-error: true
         working-directory: backend
         run: |
-          echo "🧪 Running backend tests with coverage (informational)..."
+          echo "🧪 Running backend tests with coverage..."
           python -m pytest tests/ --tb=short --cov=app --cov-report=term \
-            --continue-on-collection-errors --timeout=30 \
-            -n 4 --dist=loadfile -q || \
-            echo "⚠️ Backend tests have failures (non-blocking)"
+            --cov-fail-under=60 --continue-on-collection-errors --timeout=30 \
+            -n 4 --dist=loadfile -q
 
   # ============================================
   # Frontend Quality & Tests
