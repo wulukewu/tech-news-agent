@@ -57,10 +57,9 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
   it('should successfully add articles with valid UUID article_id', async () => {
     console.log('\n=== Testing addToReadingList with valid UUIDs ===');
 
-    const mockPost = apiClient.post as jest.Mock;
+    const mockPost = apiClient.post as ReturnType<typeof vi.fn>;
     mockPost.mockResolvedValue({
-      message: 'Article added to reading list',
-      articleId: 'test-uuid',
+      data: { data: { message: 'Article added to reading list', articleId: 'test-uuid' } },
     });
 
     const validUuid = '550e8400-e29b-41d4-a716-446655440000';
@@ -94,10 +93,14 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
   it('should successfully update status with valid UUID article_id', async () => {
     console.log('\n=== Testing updateReadingListStatus with valid UUIDs ===');
 
-    const mockPatch = apiClient.patch as jest.Mock;
+    const mockPatch = apiClient.patch as ReturnType<typeof vi.fn>;
     mockPatch.mockResolvedValue({
-      message: 'Status updated',
-      status: 'Read',
+      data: {
+        data: {
+          message: 'Status updated',
+          status: 'Read',
+        },
+      },
     });
 
     const validUuid = '550e8400-e29b-41d4-a716-446655440000';
@@ -130,10 +133,14 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
   it('should successfully update rating with valid UUID article_id', async () => {
     console.log('\n=== Testing updateReadingListRating with valid UUIDs ===');
 
-    const mockPatch = apiClient.patch as jest.Mock;
+    const mockPatch = apiClient.patch as ReturnType<typeof vi.fn>;
     mockPatch.mockResolvedValue({
-      message: 'Rating updated',
-      rating: 4,
+      data: {
+        data: {
+          message: 'Rating updated',
+          rating: 4,
+        },
+      },
     });
 
     const validUuid = '550e8400-e29b-41d4-a716-446655440000';
@@ -165,9 +172,13 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
   it('should successfully remove articles with valid UUID article_id', async () => {
     console.log('\n=== Testing removeFromReadingList with valid UUIDs ===');
 
-    const mockDelete = apiClient.delete as jest.Mock;
+    const mockDelete = apiClient.delete as ReturnType<typeof vi.fn>;
     mockDelete.mockResolvedValue({
-      message: 'Article removed from reading list',
+      data: {
+        data: {
+          message: 'Article removed from reading list',
+        },
+      },
     });
 
     const validUuid = '550e8400-e29b-41d4-a716-446655440000';
@@ -205,8 +216,8 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
       {
         name: 'addToReadingList',
         test: async (uuid: string) => {
-          const mockPost = apiClient.post as jest.Mock;
-          mockPost.mockResolvedValue({ message: 'Success', articleId: uuid });
+          const mockPost = apiClient.post as ReturnType<typeof vi.fn>;
+          mockPost.mockResolvedValue({ data: { data: { message: 'Success', articleId: uuid } } });
           await addToReadingList(uuid);
           return mockPost.mock.calls.length === 1;
         },
@@ -214,8 +225,8 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
       {
         name: 'updateStatus',
         test: async (uuid: string) => {
-          const mockPatch = apiClient.patch as jest.Mock;
-          mockPatch.mockResolvedValue({ message: 'Success' });
+          const mockPatch = apiClient.patch as ReturnType<typeof vi.fn>;
+          mockPatch.mockResolvedValue({ data: { data: { message: 'Success' } } });
           await updateReadingListStatus(uuid, 'Read');
           return mockPatch.mock.calls.length === 1;
         },
@@ -223,8 +234,8 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
       {
         name: 'updateRating',
         test: async (uuid: string) => {
-          const mockPatch = apiClient.patch as jest.Mock;
-          mockPatch.mockResolvedValue({ message: 'Success' });
+          const mockPatch = apiClient.patch as ReturnType<typeof vi.fn>;
+          mockPatch.mockResolvedValue({ data: { data: { message: 'Success' } } });
           await updateReadingListRating(uuid, 3);
           return mockPatch.mock.calls.length === 1;
         },
@@ -232,8 +243,8 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
       {
         name: 'removeFromReadingList',
         test: async (uuid: string) => {
-          const mockDelete = apiClient.delete as jest.Mock;
-          mockDelete.mockResolvedValue({ message: 'Success' });
+          const mockDelete = apiClient.delete as ReturnType<typeof vi.fn>;
+          mockDelete.mockResolvedValue({ data: { data: { message: 'Success' } } });
           await removeFromReadingList(uuid);
           return mockDelete.mock.calls.length === 1;
         },
@@ -281,10 +292,14 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
         fc.asyncProperty(fc.uuid(), async (validArticleId) => {
           vi.clearAllMocks();
 
-          const mockPatch = apiClient.patch as jest.Mock;
+          const mockPatch = apiClient.patch as ReturnType<typeof vi.fn>;
           mockPatch.mockResolvedValue({
-            message: 'Status updated',
-            status,
+            data: {
+              data: {
+                message: 'Status updated',
+                status,
+              },
+            },
           });
 
           try {
@@ -334,10 +349,14 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
         async (validArticleId, rating) => {
           vi.clearAllMocks();
 
-          const mockPatch = apiClient.patch as jest.Mock;
+          const mockPatch = apiClient.patch as ReturnType<typeof vi.fn>;
           mockPatch.mockResolvedValue({
-            message: 'Rating updated',
-            rating,
+            data: {
+              data: {
+                message: 'Rating updated',
+                rating,
+              },
+            },
           });
 
           try {
@@ -384,13 +403,13 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
       fc.asyncProperty(fc.uuid(), async (validArticleId) => {
         vi.clearAllMocks();
 
-        const mockPost = apiClient.post as jest.Mock;
-        const mockPatch = apiClient.patch as jest.Mock;
-        const mockDelete = apiClient.delete as jest.Mock;
+        const mockPost = apiClient.post as ReturnType<typeof vi.fn>;
+        const mockPatch = apiClient.patch as ReturnType<typeof vi.fn>;
+        const mockDelete = apiClient.delete as ReturnType<typeof vi.fn>;
 
-        mockPost.mockResolvedValue({ message: 'Success' });
-        mockPatch.mockResolvedValue({ message: 'Success' });
-        mockDelete.mockResolvedValue({ message: 'Success' });
+        mockPost.mockResolvedValue({ data: { data: { message: 'Success' } } });
+        mockPatch.mockResolvedValue({ data: { data: { message: 'Success' } } });
+        mockDelete.mockResolvedValue({ data: { data: { message: 'Success' } } });
 
         // Test addToReadingList
         await addToReadingList(validArticleId);
@@ -442,7 +461,7 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
   it('should preserve error handling for invalid status values', async () => {
     console.log('\n=== Testing error handling for invalid status ===');
 
-    const mockPatch = apiClient.patch as jest.Mock;
+    const mockPatch = apiClient.patch as ReturnType<typeof vi.fn>;
     mockPatch.mockRejectedValue({
       response: {
         status: 422,
@@ -483,7 +502,7 @@ describe('Preservation Property Tests - Valid article_id Operations', () => {
   it('should preserve error handling for invalid rating values', async () => {
     console.log('\n=== Testing error handling for invalid ratings ===');
 
-    const mockPatch = apiClient.patch as jest.Mock;
+    const mockPatch = apiClient.patch as ReturnType<typeof vi.fn>;
     mockPatch.mockRejectedValue({
       response: {
         status: 422,

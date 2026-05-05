@@ -18,6 +18,8 @@ describe('Property-Based Tests: Frontend Logger', () => {
   let logger: FrontendLogger;
 
   beforeEach(() => {
+    // Re-assign fetch mock in case MSW overwrote it
+    global.fetch = vi.fn();
     vi.clearAllMocks();
     FrontendLogger.resetInstance();
     logger = FrontendLogger.getInstance({
@@ -54,7 +56,7 @@ describe('Property-Based Tests: Frontend Logger', () => {
           (numLogs, messages) => {
             // Clear buffer
             logger.clearBuffer();
-            (global.fetch as jest.Mock).mockClear();
+            vi.mocked(global.fetch).mockClear();
 
             // Log messages (less than batch size)
             for (let i = 0; i < Math.min(numLogs, messages.length); i++) {
@@ -84,8 +86,8 @@ describe('Property-Based Tests: Frontend Logger', () => {
         minLevel: LogLevel.DEBUG,
       });
 
-      (global.fetch as jest.Mock).mockClear();
-      (global.fetch as jest.Mock).mockResolvedValue({ ok: true, status: 200 });
+      vi.mocked(global.fetch).mockClear();
+      vi.mocked(global.fetch).mockResolvedValue({ ok: true, status: 200 });
 
       // Log exactly batch size messages
       for (let i = 0; i < 5; i++) {
@@ -115,7 +117,7 @@ describe('Property-Based Tests: Frontend Logger', () => {
           ),
           (logs) => {
             logger.clearBuffer();
-            (global.fetch as jest.Mock).mockClear();
+            vi.mocked(global.fetch).mockClear();
 
             // Log messages with different levels
             for (const log of logs) {
@@ -177,7 +179,7 @@ describe('Property-Based Tests: Frontend Logger', () => {
           fc.integer({ min: 1, max: 9 }),
           (numLogs) => {
             logger.clearBuffer();
-            (global.fetch as jest.Mock).mockClear();
+            vi.mocked(global.fetch).mockClear();
 
             // Rapidly log messages
             for (let i = 0; i < numLogs; i++) {
@@ -302,7 +304,7 @@ describe('Property-Based Tests: Frontend Logger', () => {
 
   describe('Flush Behavior', () => {
     it('should send batched logs to correct endpoint', async () => {
-      (global.fetch as jest.Mock).mockResolvedValue({ ok: true });
+      vi.mocked(global.fetch).mockResolvedValue({ ok: true });
 
       // Log enough messages to trigger flush
       for (let i = 0; i < 10; i++) {
@@ -324,13 +326,13 @@ describe('Property-Based Tests: Frontend Logger', () => {
       );
 
       // Verify logs were sent
-      const fetchCall = (global.fetch as jest.Mock).mock.calls[0];
+      const fetchCall = vi.mocked(global.fetch).mock.calls[0];
       const body = JSON.parse(fetchCall[1].body);
       expect(body.logs).toHaveLength(10);
     });
 
     it('should retry failed flushes by keeping logs in buffer', async () => {
-      (global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'));
+      vi.mocked(global.fetch).mockRejectedValue(new Error('Network error'));
 
       // Log enough messages to trigger flush
       for (let i = 0; i < 10; i++) {
