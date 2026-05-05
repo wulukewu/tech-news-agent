@@ -306,7 +306,7 @@ describe('Performance Optimization Properties', () => {
           };
 
           // Import the module to test tree shaking
-          const { FEATURE_FLAGS } = require('../../lib/utils/bundle-optimization');
+          const { FEATURE_FLAGS } = require('@/lib/utils/bundle-optimization');
 
           expect(FEATURE_FLAGS.ENABLE_ANALYTICS).toBe(featureFlags.analytics);
           expect(FEATURE_FLAGS.ENABLE_SOCIAL_SHARING).toBe(featureFlags.socialSharing);

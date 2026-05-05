@@ -341,13 +341,16 @@ describe('Bug Condition Exploration - Frontend Undefined article_id', () => {
           const mockPatch = apiClient.patch as jest.Mock;
           const mockDelete = apiClient.delete as jest.Mock;
 
-          // Mock all methods to succeed
+          // Mock all methods to succeed with correct response shape
           mockPost.mockResolvedValue({
-            message: 'Success',
-            articleId: validArticleId,
+            data: { data: { message: 'Success', articleId: validArticleId } },
           });
-          mockPatch.mockResolvedValue({ message: 'Success' });
-          mockDelete.mockResolvedValue({ message: 'Success' });
+          mockPatch.mockResolvedValue({
+            data: { data: { message: 'Success', rating: 3 } },
+          });
+          mockDelete.mockResolvedValue({
+            data: { data: { message: 'Success' } },
+          });
 
           let apiWasCalled = false;
           let success = false;

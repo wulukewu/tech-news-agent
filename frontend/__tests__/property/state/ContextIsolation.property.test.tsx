@@ -15,7 +15,7 @@
  */
 
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, cleanup } from '@testing-library/react';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { UserProvider, useUser } from '@/contexts/UserContext';
 import { ThemeProvider, useTheme, Theme } from '@/contexts/ThemeContext';
@@ -94,6 +94,7 @@ describe('Property Test: Context Isolation', () => {
             return <div data-testid="theme-only">{currentTheme}</div>;
           };
 
+          cleanup();
           render(
             <AllProviders>
               <AuthOnlyComponent />
@@ -208,6 +209,7 @@ describe('Property Test: Context Isolation', () => {
             );
           };
 
+          cleanup();
           const { findByTestId } = render(
             <AllProviders>
               <TestComponent />
@@ -270,6 +272,7 @@ describe('Property Test: Context Isolation', () => {
             );
           };
 
+          cleanup();
           render(
             <AllProviders>
               <TestComponent />

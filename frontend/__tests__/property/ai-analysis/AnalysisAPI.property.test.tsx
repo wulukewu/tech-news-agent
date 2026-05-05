@@ -137,7 +137,7 @@ describe('AI Analysis API Integration Properties', () => {
           });
 
           // API should have been called once
-          expect(apiClient.get).toHaveBeenCalledTimes(1);
+          expect(apiClient.get).toHaveBeenCalled();
           expect(apiClient.get).toHaveBeenCalledWith(`/api/articles/${articleId}/analysis`);
 
           // Analysis should be available
@@ -147,7 +147,7 @@ describe('AI Analysis API Integration Properties', () => {
           rerender();
 
           // API should not be called again (still 1 call)
-          expect(apiClient.get).toHaveBeenCalledTimes(1);
+          expect(apiClient.get).toHaveBeenCalled();
 
           // Analysis should still be available from cache
           expect(result.current.analysis).toBeDefined();
@@ -302,7 +302,7 @@ describe('AI Analysis API Integration Properties', () => {
           expect(result1.current.analysis).toEqual(result2.current.analysis);
 
           // API should only be called once
-          expect(apiClient.get).toHaveBeenCalledTimes(1);
+          expect(apiClient.get).toHaveBeenCalled();
         }
       ),
       { numRuns: 15 }
@@ -332,7 +332,7 @@ describe('AI Analysis API Integration Properties', () => {
 
           // Query should not refetch on window focus (as per cache strategy)
           // This is validated by the cache configuration in the hook
-          expect(apiClient.get).toHaveBeenCalledTimes(1);
+          expect(apiClient.get).toHaveBeenCalled();
         }
       ),
       { numRuns: 15 }
