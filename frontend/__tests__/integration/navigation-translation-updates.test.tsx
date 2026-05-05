@@ -28,6 +28,8 @@ const mockUser = {
   discordId: 'discord123',
 };
 
+// Unmock I18nContext to test real implementation
+vi.unmock('@/contexts/I18nContext');
 vi.mock('@/contexts/UserContext', () => ({
   useUser: () => ({ user: mockUser }),
 }));
@@ -144,11 +146,87 @@ const mockEnUSTranslations = {
 };
 
 vi.mock('@/locales/zh-TW.json', () => ({
-  default: mockZhTWTranslations,
+  default: {
+    nav: {
+      articles: '文章',
+      'reading-list': '閱讀清單',
+      subscriptions: '訂閱',
+      analytics: '分析',
+      settings: '設定',
+      'system-status': '系統狀態',
+      recommendations: '推薦',
+      logout: '登出',
+      language: '語言',
+      theme: '主題',
+      'main-menu': '主選單',
+      more: '更多功能',
+      notifications: '通知',
+    },
+    buttons: {
+      save: '儲存',
+      cancel: '取消',
+    },
+    ui: {
+      'user-menu': '使用者選單',
+      profile: '個人資料',
+      'notification-settings': '通知設定',
+      search: '搜尋',
+      notifications: '通知',
+    },
+    forms: {
+      placeholders: {
+        'search-articles': '搜尋文章...',
+      },
+    },
+    success: {
+      logout: '登出成功',
+    },
+    errors: {
+      'logout-failed': '登出失敗',
+    },
+  },
 }));
 
 vi.mock('@/locales/en-US.json', () => ({
-  default: mockEnUSTranslations,
+  default: {
+    nav: {
+      articles: 'Articles',
+      'reading-list': 'Reading List',
+      subscriptions: 'Subscriptions',
+      analytics: 'Analytics',
+      settings: 'Settings',
+      'system-status': 'System Status',
+      recommendations: 'Recommendations',
+      logout: 'Logout',
+      language: 'Language',
+      theme: 'Theme',
+      'main-menu': 'Main Menu',
+      more: 'More',
+      notifications: 'Notifications',
+    },
+    buttons: {
+      save: 'Save',
+      cancel: 'Cancel',
+    },
+    ui: {
+      'user-menu': 'User menu',
+      profile: 'Profile',
+      'notification-settings': 'Notification Settings',
+      search: 'Search',
+      notifications: 'Notifications',
+    },
+    forms: {
+      placeholders: {
+        'search-articles': 'Search articles...',
+      },
+    },
+    success: {
+      logout: 'Logged out successfully',
+    },
+    errors: {
+      'logout-failed': 'Failed to logout',
+    },
+  },
 }));
 
 describe('Navigation Translation Updates Integration', () => {

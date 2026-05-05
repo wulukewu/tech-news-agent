@@ -92,8 +92,7 @@ describe('Property-Based Tests: API Client', () => {
               expect(instances[i].getAxiosInstance()).toBe(firstAxiosInstance);
             }
           }
-        ),
-        { numRuns: 100 }
+        )
       );
     });
 
@@ -121,8 +120,7 @@ describe('Property-Based Tests: API Client', () => {
               expect(instances[i]).toBe(firstInstance);
             }
           }
-        ),
-        { numRuns: 100 }
+        )
       );
     });
   });

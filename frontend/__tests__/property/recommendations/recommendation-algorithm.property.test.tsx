@@ -89,8 +89,7 @@ describe('Recommendation Algorithm Properties', () => {
 
           expect(lowRatedInHighSet).toBe(false);
         }
-      }),
-      { numRuns: 100 }
+      })
     );
   });
 
@@ -154,8 +153,7 @@ describe('Recommendation Algorithm Properties', () => {
             expect(rec.reason.length).toBeGreaterThan(0);
           });
         }
-      ),
-      { numRuns: 100 }
+      )
     );
   });
 
@@ -178,8 +176,7 @@ describe('Recommendation Algorithm Properties', () => {
             expect(Number.isNaN(rec.confidence)).toBe(false);
           });
         }
-      ),
-      { numRuns: 100 }
+      )
     );
   });
 
@@ -204,8 +201,7 @@ describe('Recommendation Algorithm Properties', () => {
             expect(sorted[i].confidence).toBeGreaterThanOrEqual(sorted[i + 1].confidence);
           }
         }
-      ),
-      { numRuns: 100 }
+      )
     );
   });
 });

@@ -170,8 +170,7 @@ describe('AnalysisModal Property Tests', () => {
 
             unmount();
           }
-        ),
-        { numRuns: 100 }
+        )
       );
     });
 
@@ -203,8 +202,7 @@ describe('AnalysisModal Property Tests', () => {
           expect(modal).toBeInTheDocument();
 
           unmount();
-        }),
-        { numRuns: 100 }
+        })
       );
     });
   });
@@ -275,8 +273,7 @@ describe('AnalysisModal Property Tests', () => {
               unmount();
             }
           }
-        ),
-        { numRuns: 100 }
+        )
       );
     });
 
@@ -326,8 +323,7 @@ describe('AnalysisModal Property Tests', () => {
               unmount();
             }
           }
-        ),
-        { numRuns: 100 }
+        )
       );
     });
   });
@@ -346,14 +342,14 @@ describe('AnalysisModal Property Tests', () => {
           articleIdArbitrary,
           analysisResultArbitrary,
           async (articleId, mockAnalysis) => {
-            const mockGenerateAnalysis = vi.fn().mockResolvedValue(mockAnalysis);
-            vi.mocked(services.generateAnalysis).mockImplementation(mockGenerateAnalysis);
+            vi.mocked(services.generateAnalysis).mockReset();
+            vi.mocked(services.generateAnalysis).mockResolvedValue(mockAnalysis);
 
             // Call the service directly
             const result = await services.generateAnalysis(articleId);
 
             // Verify the function was called with correct article ID
-            expect(mockGenerateAnalysis).toHaveBeenCalledWith(articleId);
+            expect(services.generateAnalysis).toHaveBeenCalledWith(articleId);
 
             // Verify the result matches expected structure
             expect(result).toHaveProperty('coreConcepts');
@@ -363,8 +359,7 @@ describe('AnalysisModal Property Tests', () => {
             expect(result).toHaveProperty('generatedAt');
             expect(result).toHaveProperty('model');
           }
-        ),
-        { numRuns: 100 }
+        )
       );
     });
 
@@ -387,8 +382,7 @@ describe('AnalysisModal Property Tests', () => {
 
           // Verify the model is one of the supported models
           expect(['llama-3.1-8b', 'llama-3.3-70b']).toContain(result.model);
-        }),
-        { numRuns: 100 }
+        })
       );
     });
   });
@@ -449,8 +443,7 @@ describe('AnalysisModal Property Tests', () => {
             // Always cleanup, even if assertions fail
             unmount();
           }
-        }),
-        { numRuns: 100 }
+        })
       );
     });
 
@@ -502,8 +495,7 @@ describe('AnalysisModal Property Tests', () => {
             // Always cleanup, even if assertions fail
             unmount();
           }
-        }),
-        { numRuns: 100 }
+        })
       );
     });
   });
@@ -522,7 +514,7 @@ describe('AnalysisModal Property Tests', () => {
           articleIdArbitrary,
           analysisResultArbitrary,
           async (articleId, mockAnalysis) => {
-            vi.mocked(services.getCachedAnalysis).mockClear();
+            vi.mocked(services.getCachedAnalysis).mockReset();
             vi.mocked(services.getCachedAnalysis).mockResolvedValue(mockAnalysis);
 
             // First call - should fetch from cache
@@ -538,8 +530,7 @@ describe('AnalysisModal Property Tests', () => {
             // Results should be identical
             expect(result1).toEqual(result2);
           }
-        ),
-        { numRuns: 100 }
+        )
       );
     });
 
@@ -551,8 +542,7 @@ describe('AnalysisModal Property Tests', () => {
           const result = await services.getCachedAnalysis(articleId);
 
           expect(result).toBeNull();
-        }),
-        { numRuns: 100 }
+        })
       );
     });
   });
@@ -586,6 +576,7 @@ describe('AnalysisModal Property Tests', () => {
               configurable: true,
             });
 
+            vi.mocked(services.copyAnalysisToClipboard).mockReset();
             vi.mocked(services.copyAnalysisToClipboard).mockImplementation(async (text) => {
               await navigator.clipboard.writeText(text);
               return true;
@@ -596,8 +587,7 @@ describe('AnalysisModal Property Tests', () => {
             expect(success).toBe(true);
             expect(mockWriteText).toHaveBeenCalledWith(formattedText);
           }
-        ),
-        { numRuns: 100 }
+        )
       );
     });
 
@@ -627,8 +617,7 @@ describe('AnalysisModal Property Tests', () => {
           analysis.recommendedSteps.forEach((step) => {
             expect(formatted).toContain(step);
           });
-        }),
-        { numRuns: 100 }
+        })
       );
     });
   });
@@ -655,8 +644,7 @@ describe('AnalysisModal Property Tests', () => {
 
           // Verify link is a valid URL format
           expect(() => new URL(shareLink, 'http://localhost')).not.toThrow();
-        }),
-        { numRuns: 100 }
+        })
       );
     });
 
@@ -674,8 +662,7 @@ describe('AnalysisModal Property Tests', () => {
           uniqueIds.forEach((id, index) => {
             expect(links[index]).toContain(id);
           });
-        }),
-        { numRuns: 100 }
+        })
       );
     });
 
@@ -695,8 +682,7 @@ describe('AnalysisModal Property Tests', () => {
               expect(shareLink).toContain(analysisId);
             }
           }
-        ),
-        { numRuns: 100 }
+        )
       );
     });
   });

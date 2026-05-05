@@ -119,8 +119,7 @@ describe('Notification Preferences Property Tests', () => {
           expect(hours).toBeLessThanOrEqual(23);
           expect(minutes).toBeGreaterThanOrEqual(0);
           expect(minutes).toBeLessThanOrEqual(59);
-        }),
-        { numRuns: 100 }
+        })
       );
     });
 
@@ -356,8 +355,7 @@ describe('Notification Preferences Property Tests', () => {
               expect(input.value).toBe('');
             }
           }
-        ),
-        { numRuns: 100 }
+        )
       );
     });
 

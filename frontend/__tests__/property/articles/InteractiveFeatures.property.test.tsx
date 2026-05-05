@@ -157,8 +157,7 @@ describe('Interactive Features Properties (Task 4.7)', () => {
 
           cleanup();
         }
-      ),
-      { numRuns: 100 }
+      )
     );
   });
 
@@ -258,8 +257,7 @@ describe('Interactive Features Properties (Task 4.7)', () => {
 
           cleanup();
         }
-      ),
-      { numRuns: 100 }
+      )
     );
   });
 
@@ -387,8 +385,7 @@ describe('Interactive Features Properties (Task 4.7)', () => {
 
           cleanup();
         }
-      ),
-      { numRuns: 100 }
+      )
     );
   });
 

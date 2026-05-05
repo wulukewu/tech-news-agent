@@ -37,8 +37,7 @@ describe('Property: TanStack Query Caching Strategies', () => {
         expect(strategy.staleTime).toBe(5 * 60 * 1000);
         expect(strategy.gcTime).toBe(10 * 60 * 1000);
         expect(strategy.refetchOnWindowFocus).toBe(true);
-      }),
-      { numRuns: 100 }
+      })
     );
   });
 
@@ -52,8 +51,7 @@ describe('Property: TanStack Query Caching Strategies', () => {
         expect(strategy.staleTime).toBe(24 * 60 * 60 * 1000);
         expect(strategy.gcTime).toBe(7 * 24 * 60 * 60 * 1000);
         expect(strategy.refetchOnWindowFocus).toBe(false);
-      }),
-      { numRuns: 100 }
+      })
     );
   });
 
@@ -67,8 +65,7 @@ describe('Property: TanStack Query Caching Strategies', () => {
         expect(strategy.staleTime).toBe(0);
         expect(strategy.refetchOnWindowFocus).toBe(true);
         expect(strategy.refetchOnReconnect).toBe(true);
-      }),
-      { numRuns: 100 }
+      })
     );
   });
 
@@ -82,8 +79,7 @@ describe('Property: TanStack Query Caching Strategies', () => {
         expect(strategy.staleTime).toBe(30 * 1000);
         expect(strategy.gcTime).toBe(2 * 60 * 1000);
         expect(strategy.refetchInterval).toBe(60 * 1000);
-      }),
-      { numRuns: 100 }
+      })
     );
   });
 
@@ -97,8 +93,7 @@ describe('Property: TanStack Query Caching Strategies', () => {
     fc.assert(
       fc.property(fc.constantFrom(...strategies), (strategy) => {
         expect(strategy.staleTime).toBeLessThanOrEqual(strategy.gcTime);
-      }),
-      { numRuns: 100 }
+      })
     );
   });
 
@@ -113,8 +108,7 @@ describe('Property: TanStack Query Caching Strategies', () => {
       fc.property(fc.constantFrom(...strategies), (strategy) => {
         expect(strategy.retry).toBeGreaterThanOrEqual(0);
         expect(strategy.retry).toBeLessThanOrEqual(3);
-      }),
-      { numRuns: 100 }
+      })
     );
   });
 
@@ -136,8 +130,7 @@ describe('Property: TanStack Query Caching Strategies', () => {
 
           expect(JSON.stringify(key1)).toBe(JSON.stringify(key2));
         }
-      ),
-      { numRuns: 100 }
+      )
     );
   });
 

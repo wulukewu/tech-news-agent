@@ -90,8 +90,7 @@ describe('Category Filter Properties', () => {
 
           cleanup();
         }
-      ),
-      { numRuns: 100 }
+      )
     );
   });
 
@@ -202,7 +201,7 @@ describe('Category Filter Properties', () => {
           // Test removing a category by clicking its badge
           if (initialSelection.length > 0) {
             const categoryToRemove = initialSelection[0];
-            const badge = screen.getByText(categoryToRemove);
+            const badge = screen.getAllByText(categoryToRemove)[0];
 
             await user.click(badge);
 
@@ -287,7 +286,7 @@ describe('Category Filter Properties', () => {
 
           // Click on a category badge to remove it
           const categoryToRemove = selectedCategories[0];
-          const badge = screen.getByText(categoryToRemove);
+          const badge = screen.getAllByText(categoryToRemove)[0];
 
           await user.click(badge);
 

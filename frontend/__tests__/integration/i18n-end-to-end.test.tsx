@@ -132,12 +132,116 @@ const mockEnUSTranslations = {
 let networkDelay = 0;
 const originalImport = global.import;
 
+// Unmock I18nContext to test real implementation
+vi.unmock('@/contexts/I18nContext');
 vi.mock('@/locales/zh-TW.json', () => ({
-  default: mockZhTWTranslations,
+  default: {
+    nav: {
+      articles: '文章',
+      'reading-list': '閱讀清單',
+      subscriptions: '訂閱',
+      analytics: '分析',
+      settings: '設定',
+      'system-status': '系統狀態',
+    },
+    buttons: {
+      save: '儲存',
+      cancel: '取消',
+      delete: '刪除',
+      edit: '編輯',
+      add: '新增',
+      remove: '移除',
+      confirm: '確認',
+      close: '關閉',
+    },
+    messages: {
+      'article-count': '成功抓取 {count} 篇新文章',
+      loading: '載入中...',
+      'no-articles': '沒有發現新文章',
+      'fetching-articles': '正在抓取文章...',
+      'scheduler-running': '排程器執行中，請稍候',
+    },
+    errors: {
+      'network-error': '網路連線異常，請檢查您的網路設定',
+      'server-error': '伺服器發生錯誤，請稍後再試',
+      unauthorized: '請先登入後再進行此操作',
+    },
+    success: {
+      'article-saved': '文章已加入閱讀清單',
+      'settings-saved': '設定已儲存',
+      'subscription-added': '訂閱已新增',
+    },
+    forms: {
+      labels: {
+        title: '標題',
+        description: '描述',
+        email: '電子郵件',
+      },
+      placeholders: {
+        'search-articles': '搜尋文章...',
+        'enter-title': '請輸入標題',
+      },
+    },
+    language: {
+      'changed-to-chinese': '語言已切換為繁體中文',
+      'changed-to-english': '語言已切換為英文',
+    },
+  },
 }));
 
 vi.mock('@/locales/en-US.json', () => ({
-  default: mockEnUSTranslations,
+  default: {
+    nav: {
+      articles: 'Articles',
+      'reading-list': 'Reading List',
+      subscriptions: 'Subscriptions',
+      analytics: 'Analytics',
+      settings: 'Settings',
+      'system-status': 'System Status',
+    },
+    buttons: {
+      save: 'Save',
+      cancel: 'Cancel',
+      delete: 'Delete',
+      edit: 'Edit',
+      add: 'Add',
+      remove: 'Remove',
+      confirm: 'Confirm',
+      close: 'Close',
+    },
+    messages: {
+      'article-count': 'Successfully fetched {count} new articles',
+      loading: 'Loading...',
+      'no-articles': 'No new articles found',
+      'fetching-articles': 'Fetching articles...',
+      'scheduler-running': 'Scheduler is running, please wait',
+    },
+    errors: {
+      'network-error': 'Network connection error. Please check your internet connection',
+      'server-error': 'Server error occurred. Please try again later',
+      unauthorized: 'Please log in to perform this action',
+    },
+    success: {
+      'article-saved': 'Article added to reading list',
+      'settings-saved': 'Settings saved successfully',
+      'subscription-added': 'Subscription added successfully',
+    },
+    forms: {
+      labels: {
+        title: 'Title',
+        description: 'Description',
+        email: 'Email',
+      },
+      placeholders: {
+        'search-articles': 'Search articles...',
+        'enter-title': 'Enter title',
+      },
+    },
+    language: {
+      'changed-to-chinese': 'Language changed to Traditional Chinese',
+      'changed-to-english': 'Language changed to English',
+    },
+  },
 }));
 
 // Test component that uses multiple translation features

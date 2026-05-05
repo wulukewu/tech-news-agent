@@ -789,3 +789,6 @@ describe('I18n Error Handling Integration Tests', () => {
     });
   });
 });
+
+// Unmock I18nContext to test real implementation
+vi.unmock('@/contexts/I18nContext');

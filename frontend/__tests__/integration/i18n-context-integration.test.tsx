@@ -44,12 +44,38 @@ const mockEnUSTranslations = {
   },
 };
 
+// Unmock I18nContext to test real implementation
+vi.unmock('@/contexts/I18nContext');
 vi.mock('@/locales/zh-TW.json', () => ({
-  default: mockZhTWTranslations,
+  default: {
+    nav: {
+      articles: '文章',
+      'reading-list': '閱讀清單',
+    },
+    buttons: {
+      save: '儲存',
+      cancel: '取消',
+    },
+    messages: {
+      'article-count': '成功抓取 {count} 篇新文章',
+    },
+  },
 }));
 
 vi.mock('@/locales/en-US.json', () => ({
-  default: mockEnUSTranslations,
+  default: {
+    nav: {
+      articles: 'Articles',
+      'reading-list': 'Reading List',
+    },
+    buttons: {
+      save: 'Save',
+      cancel: 'Cancel',
+    },
+    messages: {
+      'article-count': 'Successfully fetched {count} new articles',
+    },
+  },
 }));
 
 // Test component that uses translations

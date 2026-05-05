@@ -187,8 +187,7 @@ describe('Performance Optimization Properties', () => {
             expect(actualStatus).toBe(expectedStatus);
           }
         });
-      }),
-      { numRuns: 100 }
+      })
     );
   });
 
@@ -394,8 +393,7 @@ describe('Performance Optimization Properties', () => {
           expect(expectedStrategy).toBeDefined();
           expect(typeof expectedStrategy).toBe('string');
         }
-      ),
-      { numRuns: 100 }
+      )
     );
   });
 });
@@ -427,8 +425,7 @@ describe('Performance Monitoring Integration', () => {
         // Score should be a number
         expect(typeof score).toBe('number');
         expect(Number.isFinite(score)).toBe(true);
-      }),
-      { numRuns: 100 }
+      })
     );
   });
 

@@ -24,6 +24,7 @@ jobs:
   backend:
     name: Backend
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     env:
       APP_ENV: test
@@ -87,7 +88,7 @@ jobs:
         working-directory: backend
         run: |
           echo "🧪 Running backend tests with coverage..."
-          python -m pytest tests/ -v --tb=short --cov=app --cov-report=term --cov-report=html --cov-fail-under=60 --continue-on-collection-errors
+          python -m pytest tests/ -v --tb=short --cov=app --cov-report=term --cov-report=html --cov-fail-under=60 --continue-on-collection-errors --timeout=300
 
   # ============================================
   # Frontend Quality & Tests
@@ -95,6 +96,7 @@ jobs:
   frontend:
     name: Frontend
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout code
