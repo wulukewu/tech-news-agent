@@ -39,7 +39,7 @@ export function ConditionalLayout({ children }: ConditionalLayoutProps) {
   const { isNotFound } = useNotFound();
 
   // Routes that should NOT have navigation/layout/auth
-  const publicRoutes = ['/', '/login', '/auth/callback'];
+  const publicRoutes = ['/', '/login', '/auth/callback', '/terms', '/privacy'];
   const isPublicRoute = !pathname || publicRoutes.includes(pathname);
 
   // Check if this is a protected route (app, recommendations, etc.)

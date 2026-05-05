@@ -7,6 +7,7 @@ import { ArrowRight, Zap, Brain, MessageSquare, Star, FileText } from 'lucide-re
 import Link from 'next/link';
 import { Logo } from '@/components/Logo';
 import { PublicNavbar } from '@/components/PublicNavbar';
+import { Footer } from '@/components/landing/Footer';
 import { useI18n } from '@/contexts/I18nContext';
 
 // Mock data for demo
@@ -207,18 +208,7 @@ export default function ModernLandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t bg-muted/30 py-12">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row items-center justify-between">
-            <div className="flex items-center gap-3 mb-4 md:mb-0">
-              <Logo size={24} />
-              <span className="font-semibold">Tech News Agent</span>
-            </div>
-            <p className="text-sm text-muted-foreground">{t('pages.landing.footer.copyright')}</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 }
