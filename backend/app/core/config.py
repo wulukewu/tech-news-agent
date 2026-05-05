@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     # Discord Configuration (Required)
     discord_token: str
     discord_channel_id: int | None = None  # Optional: DM notifications used instead
+    discord_guild_id: str | None = None  # Optional: auto-join users for DM support
 
     # Discord OAuth2 Configuration (Required for authentication)
     discord_client_id: str = ""

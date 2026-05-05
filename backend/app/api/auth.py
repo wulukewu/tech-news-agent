@@ -230,7 +230,7 @@ async def discord_login():
         "client_id": settings.discord_client_id,
         "redirect_uri": settings.discord_redirect_uri,
         "response_type": "code",
-        "scope": "identify messages.read dm_channels.messages.read dm_channels.messages.write",
+        "scope": "identify guilds.join",
     }
 
     # 組合完整的授權 URL
@@ -333,6 +333,18 @@ async def discord_callback(
 
             if not discord_id:
                 return redirect_error("Failed to retrieve user information")
+
+            # Auto-join user to the guild so the bot can DM them
+            if settings.discord_guild_id and settings.discord_token:
+                try:
+                    await client.put(
+                        f"https://discord.com/api/v10/guilds/{settings.discord_guild_id}/members/{discord_id}",
+                        headers={"Authorization": f"Bot {settings.discord_token}"},
+                        json={"access_token": access_token},
+                        timeout=30.0,
+                    )
+                except Exception:
+                    pass  # 201 = joined, 204 = already in guild, both are fine
 
     except httpx.RequestError:
         return redirect_error("Failed to communicate with Discord API")
