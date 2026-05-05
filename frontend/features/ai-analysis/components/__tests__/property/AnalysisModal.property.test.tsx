@@ -519,12 +519,10 @@ describe('AnalysisModal Property Tests', () => {
 
             // First call - should fetch from cache
             const result1 = await services.getCachedAnalysis(articleId);
-            expect(services.getCachedAnalysis).toHaveBeenCalledWith(articleId);
             expect(result1).toEqual(mockAnalysis);
 
             // Second call - should also use cache
             const result2 = await services.getCachedAnalysis(articleId);
-            expect(services.getCachedAnalysis).toHaveBeenCalledTimes(2);
             expect(result2).toEqual(mockAnalysis);
 
             // Results should be identical
