@@ -1,365 +1,231 @@
-# Discord OAuth 設定與測試指南
+# Discord OAuth & Bot DM Setup Guide
 
-## ✅ 已完成的設定
+Complete guide for configuring Discord OAuth2 login and enabling bot DM notifications for all users.
 
-### 1. 後端 OAuth Callback
+## 📖 Table of Contents
 
-- ✅ 處理 Discord OAuth 回調
-- ✅ 交換 authorization code 取得 access token
-- ✅ 取得用戶資訊並註冊/登入
-- ✅ 生成 JWT token
-- ✅ 設定 HttpOnly Cookie
-- ✅ 重定向到前端 `/auth/callback`
-
-### 2. 前端 Callback 頁面
-
-- ✅ 處理 OAuth 回調
-- ✅ 從 Cookie 讀取 JWT token
-- ✅ 更新認證狀態
-- ✅ 重定向到 Dashboard
-- ✅ 錯誤處理和顯示
+- [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [Step 1: Discord Developer Portal](#step-1-discord-developer-portal)
+- [Step 2: Create a Discord Server](#step-2-create-a-discord-server)
+- [Step 3: Add Bot to Server](#step-3-add-bot-to-server)
+- [Step 4: Configure Environment Variables](#step-4-configure-environment-variables)
+- [Step 5: Verify the Flow](#step-5-verify-the-flow)
+- [How It Works](#how-it-works)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
-## 🔧 Discord Developer Portal 設定
+## Overview
 
-### 1. 前往 Discord Developer Portal
+Tech News Agent uses Discord OAuth2 for authentication. When a user logs in, the backend:
 
-訪問：https://discord.com/developers/applications
+1. Authenticates the user via Discord OAuth2 (`identify` + `guilds.join` scopes)
+2. Automatically adds the user to your Discord server using the `guilds.join` scope
+3. Issues a JWT token for the web session
 
-### 2. 選擇你的應用程式
+Because the user and the bot are now in the same server, the bot can send DMs to the user.
 
-Client ID: `1482750418084823081`
+> **Note:** DMs can still fail if the user has disabled "Allow direct messages from server members" in their Discord privacy settings. This is user-controlled and cannot be bypassed.
 
-### 3. 設定 OAuth2 Redirects
+---
 
-在 **OAuth2** > **Redirects** 中新增：
+## Prerequisites
 
-#### 開發環境
+- A Discord account
+- A Discord application with a bot created at [discord.com/developers/applications](https://discord.com/developers/applications)
+- Backend running with valid `DISCORD_TOKEN`, `DISCORD_CLIENT_ID`, and `DISCORD_CLIENT_SECRET`
+
+---
+
+## Step 1: Discord Developer Portal
+
+### 1.1 OAuth2 Scopes
+
+No manual scope configuration is needed in the portal — scopes are set in code. The backend requests:
+
+| Scope | Purpose |
+|-------|---------|
+| `identify` | Read user's username, avatar, and ID |
+| `guilds.join` | Add the user to your server automatically |
+
+### 1.2 Redirect URIs
+
+In your application → **OAuth2** → **Redirects**, add:
 
 ```
+# Development
 http://localhost:8000/api/auth/discord/callback
+
+# Production
+https://your-api-domain.com/api/auth/discord/callback
 ```
 
-#### 正式環境（之後部署時）
+Click **Save Changes**.
 
-```
-https://api.yourdomain.com/api/auth/discord/callback
-```
+### 1.3 Bot Permissions
 
-### 4. OAuth2 Scopes
+In your application → **Bot**:
 
-確認已啟用以下 scopes：
-
-- ✅ `identify` - 讀取用戶基本資訊（ID、用戶名）
-- ✅ `email` - 讀取用戶 email（選填）
+- Enable **Server Members Intent** under Privileged Gateway Intents
+- Ensure the bot token is copied to `DISCORD_TOKEN` in your `.env`
 
 ---
 
-## 🚀 測試 OAuth 登入流程
+## Step 2: Create a Discord Server
 
-### 1. 確認服務運行
+The bot needs to share a server with users to send them DMs.
+
+1. Open Discord
+2. Click **+** in the left sidebar → **Create My Own** → **For me and my friends**
+3. Give it a name (e.g., `Tech News Agent`)
+4. Click **Create**
+
+### Get the Server ID
+
+1. Go to Discord **Settings** → **Advanced** → enable **Developer Mode**
+2. Right-click your server icon → **Copy Server ID**
+3. Save this ID — you'll need it for `DISCORD_GUILD_ID`
+
+---
+
+## Step 3: Add Bot to Server
+
+1. Go to [discord.com/developers/applications](https://discord.com/developers/applications) → your app
+2. Navigate to **OAuth2** → **URL Generator**
+3. Under **Scopes**, check `bot`
+4. Under **Bot Permissions**, check:
+   - `Send Messages`
+   - `Create Instant Invite` ← required for `guilds.join` to work
+5. Copy the generated URL, open it in a browser
+6. Select your server → **Authorize**
+
+Verify the bot appears in your server's member list.
+
+---
+
+## Step 4: Configure Environment Variables
+
+Add the following to your `.env`:
 
 ```bash
-# 檢查容器狀態
-docker-compose ps
-
-# 應該看到兩個容器都在運行
-# tech-news-agent-backend-dev
-# tech-news-agent-frontend-dev
+# Required for auto-join and DM support
+DISCORD_GUILD_ID=your_server_id_here
 ```
 
-### 2. 訪問前端首頁
-
-打開瀏覽器訪問：
-
-```
-http://localhost:3000
-```
-
-### 3. 點擊「使用 Discord 登入」
-
-應該會：
-
-1. 重定向到 Discord 授權頁面
-2. 顯示你的應用程式名稱和請求的權限
-3. 要求你授權
-
-### 4. 授權後的流程
-
-```
-用戶點擊「授權」
-    ↓
-Discord 重定向到: http://localhost:8000/api/auth/discord/callback?code=xxx
-    ↓
-後端處理:
-  - 交換 code 取得 access token
-  - 取得用戶資訊
-  - 註冊/登入用戶
-  - 生成 JWT token
-  - 設定 HttpOnly Cookie
-    ↓
-後端重定向到: http://localhost:3000/auth/callback
-    ↓
-前端處理:
-  - 從 Cookie 讀取 JWT token
-  - 呼叫 checkAuth() 更新狀態
-  - 重定向到 /dashboard
-    ↓
-用戶看到 Dashboard 頁面（已登入）
-```
-
----
-
-## 🔍 驗證登入成功
-
-### 1. 檢查 Cookie
-
-在瀏覽器開發者工具中：
-
-1. 打開 **Application** > **Cookies**
-2. 選擇 `http://localhost:3000`
-3. 應該看到 `access_token` cookie
-4. 屬性應該包含：
-   - ✅ HttpOnly
-   - ✅ SameSite=Lax
-   - ✅ Path=/
-
-### 2. 檢查認證狀態
-
-在 Dashboard 頁面：
-
-- ✅ 應該顯示你的 Discord 用戶名
-- ✅ 應該顯示你的頭像
-- ✅ 應該能看到導航選單
-
-### 3. 測試 API 請求
-
-打開瀏覽器控制台，執行：
-
-```javascript
-fetch('http://localhost:8000/api/feeds', {
-  credentials: 'include',
-})
-  .then((r) => r.json())
-  .then(console.log);
-```
-
-應該返回你的訂閱列表（而不是 401 錯誤）
-
----
-
-## 🐛 常見問題排解
-
-### 問題 1: 「無效的 OAuth2 redirect_uri」
-
-**原因：** Discord Developer Portal 中沒有設定 redirect URI
-
-**解決方法：**
-
-1. 前往 Discord Developer Portal
-2. OAuth2 > Redirects
-3. 新增 `http://localhost:8000/api/auth/discord/callback`
-4. 點擊 Save Changes
-
-### 問題 2: 授權後顯示 JSON 而不是重定向
-
-**原因：** 後端沒有正確重定向（已修復）
-
-**解決方法：**
+Full Discord-related variables:
 
 ```bash
-# 重啟後端容器
-docker-compose restart backend
-```
+# Bot
+DISCORD_TOKEN=your_discord_bot_token_here
 
-### 問題 3: 前端顯示「驗證失敗」
+# OAuth2
+DISCORD_CLIENT_ID=your_discord_client_id_here
+DISCORD_CLIENT_SECRET=your_discord_client_secret_here
+DISCORD_REDIRECT_URI=http://localhost:8000/api/auth/discord/callback
 
-**可能原因：**
-
-- Cookie 沒有正確設定
-- CORS 設定問題
-- JWT Secret 不一致
-
-**檢查步驟：**
-
-```bash
-# 1. 檢查後端日誌
-docker-compose logs backend
-
-# 2. 檢查 .env 設定
-cat .env | grep -E "JWT_SECRET|CORS_ORIGINS|NEXT_PUBLIC"
-
-# 3. 確認 CORS_ORIGINS 包含前端 URL
-# 應該是: CORS_ORIGINS=http://localhost:3000
-```
-
-### 問題 4: Cookie 沒有設定
-
-**可能原因：**
-
-- `COOKIE_SECURE=true` 但使用 HTTP（開發環境應該是 false）
-- SameSite 設定問題
-
-**解決方法：**
-
-```bash
-# 檢查 .env
-grep COOKIE_SECURE .env
-
-# 開發環境應該是:
-# COOKIE_SECURE=false
-```
-
-### 問題 5: 「Failed to authenticate with Discord」
-
-**可能原因：**
-
-- Discord Client ID 或 Secret 錯誤
-- Redirect URI 不匹配
-
-**解決方法：**
-
-```bash
-# 檢查 .env 設定
-cat .env | grep DISCORD
-
-# 確認:
-# - DISCORD_CLIENT_ID 正確
-# - DISCORD_CLIENT_SECRET 正確
-# - DISCORD_REDIRECT_URI=http://localhost:8000/api/auth/discord/callback
+# Guild (server) for auto-join
+DISCORD_GUILD_ID=your_server_id_here
 ```
 
 ---
 
-## 🔐 安全性說明
+## Step 5: Verify the Flow
 
-### OAuth 和 Bot 的關係
-
-#### Discord Bot（你現在的設定）
-
-- Bot 在你的私人 Discord 頻道運作
-- 只有你能看到 bot 發送的通知
-- Bot Token: `DISCORD_TOKEN`
-
-#### Discord OAuth（Web 登入）
-
-- 用於網站的身份驗證
-- **任何人都可以用 Discord 登入你的網站**
-- **不需要**在你的 Discord 伺服器裡
-- **不需要**能看到 bot 的頻道
-- OAuth Credentials: `DISCORD_CLIENT_ID` + `DISCORD_CLIENT_SECRET`
-
-### 開放給其他人使用
-
-你的 OAuth 設定**完全可以開放給其他人使用**：
-
-✅ **可以做的：**
-
-- 任何人用 Discord 登入你的網站
-- 每個用戶管理自己的 RSS 訂閱
-- 每個用戶在網站上看自己的文章
-
-⚠️ **目前的限制：**
-
-- Bot 通知只發給你（在你的私人頻道）
-- 其他用戶不會收到 Discord 通知
-- 其他用戶只能在網站上看文章
-
-💡 **如果要給其他用戶 Discord 通知：**
-需要修改程式碼，讓 Bot 發送 DM 給用戶
+1. Start the backend and frontend
+2. Visit `http://localhost:3000` and click **Login with Discord**
+3. The Discord authorization page should show:
+   - ✅ Access your username, avatar, and banner (`identify`)
+   - ✅ Join servers for you (`guilds.join`)
+4. After authorizing, you should be redirected to the dashboard
+5. Check your Discord server — the user should now appear as a member
+6. The bot can now send DMs to that user
 
 ---
 
-## 📊 OAuth 流程圖
+## How It Works
+
+### OAuth Login Flow
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    OAuth 登入完整流程                        │
-└─────────────────────────────────────────────────────────────┘
-
-1. 用戶訪問前端
-   http://localhost:3000
-
-2. 點擊「使用 Discord 登入」
-   ↓
-   前端重定向到後端 OAuth 端點
-   http://localhost:8000/api/auth/discord/login
-
-3. 後端重定向到 Discord
-   ↓
-   https://discord.com/oauth2/authorize?
-     client_id=xxx&
-     redirect_uri=http://localhost:8000/api/auth/discord/callback&
-     response_type=code&
-     scope=identify
-
-4. Discord 顯示授權頁面
-   ↓
-   用戶點擊「授權」
-
-5. Discord 重定向回後端
-   ↓
-   http://localhost:8000/api/auth/discord/callback?code=xxx
-
-6. 後端處理 callback
-   ├─ 交換 code → access token
-   ├─ 取得用戶資訊
-   ├─ 註冊/登入用戶
-   ├─ 生成 JWT token
-   ├─ 設定 HttpOnly Cookie
-   └─ 重定向到前端
-
-7. 前端 callback 頁面
-   ↓
-   http://localhost:3000/auth/callback
-   ├─ 從 Cookie 讀取 JWT
-   ├─ 呼叫 checkAuth()
-   ├─ 更新認證狀態
-   └─ 重定向到 Dashboard
-
-8. 用戶看到 Dashboard
-   ✅ 登入成功！
+User clicks "Login with Discord"
+    ↓
+Backend redirects to Discord OAuth
+(scope: identify guilds.join)
+    ↓
+User authorizes on Discord
+    ↓
+Discord redirects to /api/auth/discord/callback?code=xxx
+    ↓
+Backend:
+  1. Exchanges code for access_token
+  2. Fetches user info (/users/@me)
+  3. Calls PUT /guilds/{guild_id}/members/{user_id}
+     → Adds user to your server (201 = joined, 204 = already in)
+  4. Creates/fetches user in database
+  5. Issues JWT token
+    ↓
+Frontend receives JWT → redirects to dashboard
 ```
 
----
+### Why guilds.join Is Needed for DMs
 
-## ✅ 測試檢查清單
+Discord bots can only DM users who share at least one server with the bot. The `guilds.join` scope + the `PUT /guilds/{id}/members/{id}` API call ensures every user who logs in is automatically added to your server, satisfying this requirement.
 
-完整測試 OAuth 登入流程：
+### DM Delivery Conditions
 
-- [ ] Discord Developer Portal 已設定 redirect URI
-- [ ] `.env` 中所有 Discord 變數已填入
-- [ ] 前後端容器都在運行
-- [ ] 訪問 `http://localhost:3000` 看到登入頁面
-- [ ] 點擊「使用 Discord 登入」
-- [ ] 重定向到 Discord 授權頁面
-- [ ] 授權後重定向回前端
-- [ ] 前端顯示 Dashboard（不是錯誤頁面）
-- [ ] 瀏覽器 Cookie 中有 `access_token`
-- [ ] Dashboard 顯示用戶名和頭像
-- [ ] 可以訪問其他需要認證的頁面
-- [ ] 登出功能正常運作
+| Condition | Required |
+|-----------|----------|
+| Bot and user share a server | ✅ Yes |
+| User has DMs from server members enabled | ✅ Yes (user-controlled) |
+| `DISCORD_GUILD_ID` is set | ✅ Yes |
+| `DISCORD_TOKEN` is set | ✅ Yes |
+
+If `DISCORD_GUILD_ID` is not set, the auto-join step is skipped silently and DMs may fail for new users.
 
 ---
 
-## 🎉 完成！
+## Troubleshooting
 
-如果所有測試都通過，你的 OAuth 登入系統就完全正常運作了！
+### "驗證失敗 / errors.server-error" on callback page
 
-### 下一步
+**Cause:** The OAuth scope contained invalid values (e.g., `dm_channels.messages.*`), causing Discord to return an error before the callback.
 
-1. **測試其他功能**
-   - 訂閱管理
-   - 文章列表
-   - 閱讀清單
+**Fix:** Ensure the scope in `backend/app/api/auth.py` → `discord_login` is exactly:
+```python
+"scope": "identify guilds.join",
+```
 
-2. **準備部署**
-   - 在 Discord Developer Portal 新增正式環境的 redirect URI
-   - 更新 `.env` 為正式環境設定
-   - 參考 `DEPLOYMENT_CHECKLIST.md`
+### Bot cannot DM user
 
-3. **開放給其他用戶**
-   - OAuth 已經可以開放使用
-   - 任何人都可以用 Discord 登入
-   - 不需要在你的 Discord 伺服器裡
+Check in order:
+
+1. `DISCORD_GUILD_ID` is set in `.env`
+2. Bot is in the server specified by `DISCORD_GUILD_ID`
+3. Bot has `Send Messages` permission in the server
+4. User's Discord privacy settings allow DMs from server members
+5. Check backend logs for `403 Cannot send messages to this user`
+
+### User not added to server after login
+
+1. Verify `DISCORD_GUILD_ID` is correct (numeric server ID)
+2. Verify the bot has `Create Instant Invite` permission in the server
+3. Verify **Server Members Intent** is enabled in Developer Portal → Bot
+4. Check backend logs for errors during the `PUT /guilds/.../members/...` call
+
+### "Invalid OAuth2 redirect_uri"
+
+The `DISCORD_REDIRECT_URI` in `.env` must exactly match one of the URIs registered in Developer Portal → OAuth2 → Redirects.
+
+### User already in server (204 response)
+
+This is expected and handled correctly — the backend ignores 204 responses. No action needed.
+
+---
+
+## Security Notes
+
+- `guilds.join` only allows adding users to servers where the bot is already a member. It cannot add users to arbitrary servers.
+- The `access_token` from OAuth is used only for the guild join call and is never stored.
+- JWT tokens are issued separately and are independent of the Discord access token.
+- Users can leave the server at any time; this does not affect their web session or JWT.
