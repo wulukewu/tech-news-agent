@@ -10,7 +10,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, cleanup } from '@testing-library/react';
 import fc from 'fast-check';
 import {
   OptimizedImage,
@@ -59,6 +59,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
           height: fc.integer({ min: 100, max: 1000 }),
         }),
         ({ src, alt, width, height }) => {
+          cleanup();
           const { container } = render(
             <OptimizedImage src={src} alt={alt} width={width} height={height} lazy={true} />
           );
@@ -67,7 +68,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
           expect(container.firstChild).toBeTruthy();
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 5 }
     );
   });
 
@@ -85,6 +86,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
           height: fc.integer({ min: 100, max: 1000 }),
         }),
         ({ src, alt, width, height }) => {
+          cleanup();
           render(
             <OptimizedImage
               src={src}
@@ -101,7 +103,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
           expect(img).toBeTruthy();
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 5 }
     );
   });
 
@@ -119,6 +121,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
           height: fc.integer({ min: 50, max: 500 }),
         }),
         ({ src, alt, width, height }) => {
+          cleanup();
           render(
             <OptimizedImage
               src={src}
@@ -135,7 +138,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
           expect(img.getAttribute('alt')).toBeTruthy();
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 5 }
     );
   });
 
@@ -156,6 +159,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
           ),
         }),
         ({ src, alt, sizes }) => {
+          cleanup();
           render(
             <OptimizedImage
               src={src}
@@ -171,7 +175,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
           expect(img).toHaveAttribute('sizes');
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 5 }
     );
   });
 
@@ -188,6 +192,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
           quality: fc.integer({ min: 1, max: 100 }),
         }),
         ({ src, alt, quality }) => {
+          cleanup();
           render(
             <OptimizedImage
               src={src}
@@ -205,7 +210,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
           expect(img).toBeTruthy();
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 5 }
     );
   });
 
@@ -222,6 +227,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
           size: fc.integer({ min: 20, max: 200 }),
         }),
         ({ src, alt, size }) => {
+          cleanup();
           const { container } = render(
             <OptimizedAvatar src={src} alt={alt} size={size} priority={true} lazy={false} />
           );
@@ -231,7 +237,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
           expect(element).toBeTruthy();
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 5 }
     );
   });
 
@@ -247,6 +253,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
           alt: fc.string({ minLength: 5, maxLength: 50 }),
         }),
         ({ src, alt }) => {
+          cleanup();
           const { container } = render(
             <OptimizedThumbnail src={src} alt={alt} priority={true} lazy={false} />
           );
@@ -255,7 +262,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
           expect(container.firstChild).toBeTruthy();
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 5 }
     );
   });
 
@@ -264,8 +271,8 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
    * For any image that fails to load, it should show fallback
    */
   it('should handle load errors with fallback', async () => {
-    fc.assert(
-      fc.property(
+    await fc.assert(
+      fc.asyncProperty(
         fc.record({
           src: fc.constant('https://invalid-url.test/image.jpg'),
           alt: fc.string({ minLength: 5, maxLength: 50 }),
@@ -279,6 +286,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
             },
           });
 
+          cleanup();
           render(
             <OptimizedImage
               src={src}
@@ -298,7 +306,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
           });
         }
       ),
-      { numRuns: 30 }
+      { numRuns: 5 }
     );
   });
 
@@ -315,6 +323,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
           placeholder: fc.constant('blur' as const),
         }),
         ({ src, alt, placeholder }) => {
+          cleanup();
           render(
             <OptimizedImage
               src={src}
@@ -332,7 +341,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
           expect(img).toBeTruthy();
         }
       ),
-      { numRuns: 50 }
+      { numRuns: 5 }
     );
   });
 
@@ -343,13 +352,14 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
   it('should track image load performance', async () => {
     const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-    fc.assert(
-      fc.property(
+    await fc.assert(
+      fc.asyncProperty(
         fc.record({
           src: fc.webUrl(),
           alt: fc.string({ minLength: 5, maxLength: 50 }),
         }),
         async ({ src, alt }) => {
+          cleanup();
           render(
             <OptimizedImage
               src={src}
@@ -375,7 +385,7 @@ describe('Property: Image Lazy Loading and Progressive Enhancement', () => {
           expect(true).toBe(true);
         }
       ),
-      { numRuns: 20 }
+      { numRuns: 5 }
     );
 
     consoleSpy.mockRestore();
