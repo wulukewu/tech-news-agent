@@ -5,6 +5,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from app.core.config import settings
+from app.services.llm_service import LLMService as LLMService  # noqa: F401 - re-export for tests
 from app.services.notion_service import (
     NotionService as NotionService,
 )

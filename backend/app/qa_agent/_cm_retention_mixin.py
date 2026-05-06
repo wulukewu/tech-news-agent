@@ -1,5 +1,6 @@
 """Mixin extracted from app/qa_agent/conversation_manager.py."""
 import logging
+from datetime import timedelta
 from typing import Any, Dict, List, Optional
 from uuid import UUID
 

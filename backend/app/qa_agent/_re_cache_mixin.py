@@ -2,6 +2,7 @@
 import hashlib
 import json
 import logging
+import time
 from typing import Any, Dict, List, Optional
 
 from app.qa_agent.models import ArticleMatch

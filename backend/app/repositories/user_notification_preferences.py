@@ -7,6 +7,7 @@ Handles all database operations related to user notification preferences.
 Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 2.1, 2.2, 2.3, 2.4
 """
 
+import time
 from datetime import datetime, time
 from typing import Any
 from uuid import UUID

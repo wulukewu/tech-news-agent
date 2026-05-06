@@ -24,8 +24,8 @@ def make_article(title="Test Article", category="AI", feed_name="TestSource"):
         title=title,
         url="https://example.com",
         ai_summary="Some preview content",
-        category=source_category,
-        feed_name=source_name,
+        category=category,
+        feed_name=feed_name,
     )
 
 

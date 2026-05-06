@@ -15,13 +15,22 @@ logger = logging.getLogger(__name__)
 
 
 class ReadLaterButton(discord.ui.Button):
-    def __init__(self, article_id: UUID, article_title: str, supabase_service: SupabaseService):
-        # Labels have limits, so we truncate the title slightly for the button
+    def __init__(
+        self,
+        article_id: "UUID | None" = None,
+        article_title: str = "",
+        supabase_service: "SupabaseService | None" = None,
+        article: "Any | None" = None,
+        index: int = 0,
+    ):
+        # Support old API: ReadLaterButton(article=article, index=0)
+        if article is not None and article_id is None:
+            article_id = getattr(article, "id", None) or getattr(article, "article_id", None)
+            article_title = article_title or getattr(article, "title", "")
         label_text = (
             f"⭐ {article_title[:15]}..." if len(article_title) > 15 else f"⭐ {article_title}"
         )
-        # Custom ID includes the full UUID
-        custom_id = f"read_later_{article_id}"
+        custom_id = f"read_later_{article_id}_{index}"
         super().__init__(style=discord.ButtonStyle.primary, label=label_text, custom_id=custom_id)
         self.article_id = article_id
         self.supabase_service = supabase_service

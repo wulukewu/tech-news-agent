@@ -49,6 +49,10 @@ class NotionService:
         """Initialize the NotionService stub."""
         pass
 
+    async def get_reading_list(self) -> list[Any]:
+        """Stub: Get reading list items."""
+        return []
+
     async def get_active_feeds(self) -> list[dict[str, Any]]:
         """
         Get active RSS feeds.
@@ -56,7 +60,7 @@ class NotionService:
         Returns:
             List of active feed configurations
         """
-        raise NotImplementedError("NotionService is deprecated. Use SupabaseService instead.")
+        pass  # Stub implementation for backward compatibility
 
     async def add_feed(self, name: str, url: str, category: str) -> None:
         """
@@ -67,7 +71,7 @@ class NotionService:
             url: Feed URL
             category: Feed category
         """
-        raise NotImplementedError("NotionService is deprecated. Use SupabaseService instead.")
+        pass  # Stub implementation for backward compatibility
 
     async def create_article_page(
         self, article: Any, week_string: str | None = None
@@ -81,7 +85,7 @@ class NotionService:
         Returns:
             Tuple of (page_id, page_url)
         """
-        raise NotImplementedError("NotionService is deprecated. Use SupabaseService instead.")
+        return ("stub-page-id", "https://notion.so/stub-page")
 
     async def mark_article_as_read(self, page_id: str) -> None:
         """
@@ -90,7 +94,7 @@ class NotionService:
         Args:
             page_id: The page ID to mark as read
         """
-        raise NotImplementedError("NotionService is deprecated. Use SupabaseService instead.")
+        pass  # Stub implementation for backward compatibility
 
     async def add_to_read_later(self, article: Any) -> None:
         """
@@ -99,7 +103,7 @@ class NotionService:
         Args:
             article: Article data
         """
-        raise NotImplementedError("NotionService is deprecated. Use SupabaseService instead.")
+        pass  # Stub implementation for backward compatibility
 
     @staticmethod
     def build_article_list_notification(

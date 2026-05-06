@@ -3,6 +3,7 @@ Timing Engine for the Intelligent Reminder Agent.
 Determines optimal timing for sending reminders based on user behavior patterns.
 """
 import logging
+import time
 from datetime import datetime, time, timedelta
 from typing import Any, Dict, Optional
 from uuid import UUID
@@ -357,8 +358,6 @@ class TimingEngine:
             optimal_time = tomorrow.replace(
                 hour=profile.active_hours[0], minute=0, second=0, microsecond=0
             )
-
-            import random
 
             optimal_time += timedelta(minutes=random.randint(0, 30))
 
