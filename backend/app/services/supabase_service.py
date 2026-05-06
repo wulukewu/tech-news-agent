@@ -59,6 +59,12 @@ class SupabaseService(UserMixin, FeedMixin, ArticleMixin, ReadingListMixin, Noti
         if client is not None:
             self.client = client
             logger.info("Using provided Supabase client for testing")
+        elif os.getenv("APP_ENV") == "test":
+            # In test environment, use a mock client to avoid SSL/network issues
+            from unittest.mock import MagicMock
+
+            self.client = MagicMock()
+            logger.info("Using mock Supabase client for test environment")
         else:
             try:
                 self.client = create_client(settings.supabase_url, settings.supabase_key)
