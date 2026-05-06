@@ -6,6 +6,8 @@ import logging
 from datetime import datetime, timezone
 from typing import Any, Callable, Coroutine
 
+from app.services.cross_platform_sync import PLATFORM_WEB, ConflictResolution
+
 logger = logging.getLogger(__name__)
 
 _RETRY_BASE_DELAY = 0.1

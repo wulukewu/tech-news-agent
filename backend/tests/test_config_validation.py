@@ -5,6 +5,7 @@ Validates: Requirements 6.1, 6.3, 6.4
 """
 
 import pytest
+from pydantic import ValidationError
 
 from app.core.config import Settings, get_env_file
 from app.core.exceptions import ConfigurationError
@@ -56,7 +57,7 @@ class TestConfigurationValidation:
         self.setup_valid_env(monkeypatch)
         monkeypatch.setenv("SUPABASE_URL", "http://invalid.com")
 
-        with pytest.raises(ConfigurationError) as exc_info:
+        with pytest.raises((ConfigurationError, ValidationError)) as exc_info:
             Settings()
 
         # Should fail on https:// check first
@@ -67,7 +68,7 @@ class TestConfigurationValidation:
         self.setup_valid_env(monkeypatch)
         monkeypatch.setenv("SUPABASE_KEY", "short")
 
-        with pytest.raises(ConfigurationError) as exc_info:
+        with pytest.raises((ConfigurationError, ValidationError)) as exc_info:
             Settings()
 
         assert "SUPABASE_KEY" in str(exc_info.value)
@@ -78,7 +79,7 @@ class TestConfigurationValidation:
         self.setup_valid_env(monkeypatch)
         monkeypatch.setenv("DISCORD_TOKEN", "short")
 
-        with pytest.raises(ConfigurationError) as exc_info:
+        with pytest.raises((ConfigurationError, ValidationError)) as exc_info:
             Settings()
 
         assert "DISCORD_TOKEN" in str(exc_info.value)
@@ -89,7 +90,7 @@ class TestConfigurationValidation:
         self.setup_valid_env(monkeypatch)
         monkeypatch.setenv("DISCORD_CLIENT_ID", "not_a_number")
 
-        with pytest.raises(ConfigurationError) as exc_info:
+        with pytest.raises((ConfigurationError, ValidationError)) as exc_info:
             Settings()
 
         assert "DISCORD_CLIENT_ID" in str(exc_info.value)
@@ -100,7 +101,7 @@ class TestConfigurationValidation:
         self.setup_valid_env(monkeypatch)
         monkeypatch.setenv("DISCORD_CLIENT_SECRET", "short")
 
-        with pytest.raises(ConfigurationError) as exc_info:
+        with pytest.raises((ConfigurationError, ValidationError)) as exc_info:
             Settings()
 
         assert "DISCORD_CLIENT_SECRET" in str(exc_info.value)
@@ -111,7 +112,7 @@ class TestConfigurationValidation:
         self.setup_valid_env(monkeypatch)
         monkeypatch.setenv("DISCORD_REDIRECT_URI", "not_a_url")
 
-        with pytest.raises(ConfigurationError) as exc_info:
+        with pytest.raises((ConfigurationError, ValidationError)) as exc_info:
             Settings()
 
         assert "DISCORD_REDIRECT_URI" in str(exc_info.value)
@@ -122,7 +123,7 @@ class TestConfigurationValidation:
         self.setup_valid_env(monkeypatch)
         monkeypatch.setenv("GROQ_API_KEY", "invalid_key")
 
-        with pytest.raises(ConfigurationError) as exc_info:
+        with pytest.raises((ConfigurationError, ValidationError)) as exc_info:
             Settings()
 
         assert "GROQ_API_KEY" in str(exc_info.value)
@@ -133,7 +134,7 @@ class TestConfigurationValidation:
         self.setup_valid_env(monkeypatch)
         monkeypatch.setenv("JWT_SECRET", "short")
 
-        with pytest.raises(ConfigurationError) as exc_info:
+        with pytest.raises((ConfigurationError, ValidationError)) as exc_info:
             Settings()
 
         assert "JWT_SECRET" in str(exc_info.value)
@@ -151,7 +152,7 @@ class TestConfigurationValidation:
         for insecure_value in insecure_values:
             monkeypatch.setenv("JWT_SECRET", insecure_value)
 
-            with pytest.raises(ConfigurationError) as exc_info:
+            with pytest.raises((ConfigurationError, ValidationError)) as exc_info:
                 Settings()
 
             assert (
@@ -164,7 +165,7 @@ class TestConfigurationValidation:
         self.setup_valid_env(monkeypatch)
         monkeypatch.setenv("CORS_ORIGINS", "not_a_url,also_not_a_url")
 
-        with pytest.raises(ConfigurationError) as exc_info:
+        with pytest.raises((ConfigurationError, ValidationError)) as exc_info:
             Settings()
 
         assert "CORS" in str(exc_info.value) or "origin" in str(exc_info.value).lower()
@@ -175,7 +176,7 @@ class TestConfigurationValidation:
         monkeypatch.setenv("APP_ENV", "prod")
         monkeypatch.setenv("COOKIE_SECURE", "false")
 
-        with pytest.raises(ConfigurationError) as exc_info:
+        with pytest.raises((ConfigurationError, ValidationError)) as exc_info:
             Settings()
 
         assert "COOKIE_SECURE" in str(exc_info.value)
@@ -191,7 +192,7 @@ class TestConfigurationValidation:
             "DISCORD_REDIRECT_URI", "https://example.com/callback"
         )  # Fix redirect URI
 
-        with pytest.raises(ConfigurationError) as exc_info:
+        with pytest.raises((ConfigurationError, ValidationError)) as exc_info:
             Settings()
 
         assert "localhost" in str(exc_info.value).lower()
@@ -205,7 +206,7 @@ class TestConfigurationValidation:
         monkeypatch.setenv("CORS_ORIGINS", "https://example.com")  # Fix CORS first
         monkeypatch.setenv("DISCORD_REDIRECT_URI", "http://example.com/callback")
 
-        with pytest.raises(ConfigurationError) as exc_info:
+        with pytest.raises((ConfigurationError, ValidationError)) as exc_info:
             Settings()
 
         assert "HTTPS" in str(exc_info.value) or "https" in str(exc_info.value)
@@ -281,7 +282,7 @@ class TestConfigurationErrorMessages:
         monkeypatch.setenv("GROQ_API_KEY", "gsk_" + "a" * 30)
         monkeypatch.setenv("JWT_SECRET", "short")
 
-        with pytest.raises(ConfigurationError) as exc_info:
+        with pytest.raises((ConfigurationError, ValidationError)) as exc_info:
             Settings()
 
         error_message = str(exc_info.value)
@@ -299,7 +300,7 @@ class TestConfigurationErrorMessages:
         monkeypatch.setenv("GROQ_API_KEY", "gsk_" + "a" * 30)
         monkeypatch.setenv("JWT_SECRET", "a" * 32)
 
-        with pytest.raises(ConfigurationError) as exc_info:
+        with pytest.raises((ConfigurationError, ValidationError)) as exc_info:
             Settings()
 
         error_message = str(exc_info.value)

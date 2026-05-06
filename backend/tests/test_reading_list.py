@@ -136,7 +136,7 @@ def test_p1_get_reading_list_only_returns_unread(unread_items, read_items):
             svc.client.databases.query = AsyncMock(return_value=mock_db_response)
             return await svc.get_reading_list()
 
-    items = asyncio.get_event_loop().run_until_complete(_run())
+    items = asyncio.run(_run())
     # Every returned item must have come from the unread_pages list
     returned_ids = {item.page_id for item in items}
     unread_ids = {p["id"] for p in unread_pages}
@@ -283,7 +283,7 @@ def test_p4_mark_as_read_roundtrip(items, target_index):
             remaining = await svc.get_reading_list()
             return remaining
 
-    remaining = asyncio.get_event_loop().run_until_complete(_run())
+    remaining = asyncio.run(_run())
     returned_ids = {item.page_id for item in remaining}
     assert (
         target_id not in returned_ids
@@ -387,7 +387,7 @@ def test_p6_rate_article_roundtrip(items, target_index, rating):
             all_items = await svc.get_reading_list()
             return all_items
 
-    all_items = asyncio.get_event_loop().run_until_complete(_run())
+    all_items = asyncio.run(_run())
     item_map = {item.page_id: item for item in all_items}
 
     assert target_id in item_map, f"Article {target_id!r} not found after rating"
@@ -434,7 +434,7 @@ def test_p7_get_highly_rated_articles_only_above_threshold(items, threshold):
             svc.client.databases.query = AsyncMock(return_value={"results": qualifying_pages})
             return await svc.get_highly_rated_articles(threshold=threshold)
 
-    result = asyncio.get_event_loop().run_until_complete(_run())
+    result = asyncio.run(_run())
 
     for item in result:
         assert (
@@ -480,7 +480,7 @@ def test_p8_unrated_articles_have_none_rating(items):
             svc.client.databases.query = AsyncMock(return_value={"results": null_rated_pages})
             return await svc.get_reading_list()
 
-    result = asyncio.get_event_loop().run_until_complete(_run())
+    result = asyncio.run(_run())
 
     for item in result:
         assert (

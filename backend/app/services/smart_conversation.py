@@ -109,7 +109,7 @@ class RelatedConversation:
 
 
 from app.services._sc_analyse_mixin import AnalyseMixin
-from app.services._sc_llm_mixin import LlmMixin, _build_transcript
+from app.services._sc_llm_mixin import LlmMixin, _build_transcript, _extract_keywords
 
 
 class SmartConversationService(AnalyseMixin, LlmMixin):

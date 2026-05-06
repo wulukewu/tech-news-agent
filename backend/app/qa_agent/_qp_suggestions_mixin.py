@@ -1,6 +1,6 @@
 """Mixin extracted from app/qa_agent/query_processor.py."""
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 from app.qa_agent.constants import ErrorCodes, PerformanceLimits

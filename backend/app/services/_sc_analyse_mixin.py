@@ -8,6 +8,7 @@ from uuid import UUID
 from app.core.errors import ExternalServiceError
 from app.core.logger import get_logger
 from app.repositories.conversation import ConversationFilters
+from app.services._sc_llm_mixin import _extract_keywords
 
 logger = get_logger(__name__)
 

@@ -1,7 +1,10 @@
 """Satisfaction analysis mixin for UserProfileManager."""
 import logging
+from datetime import timedelta
 from typing import Any, Dict
 from uuid import UUID
+
+from app.qa_agent.user_profile_manager import UserProfileManagerError
 
 logger = logging.getLogger(__name__)
 
