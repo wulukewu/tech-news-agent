@@ -11,6 +11,8 @@ import pytest
 from app.core.exceptions import NotionServiceError
 from app.schemas.article import AIAnalysis, ArticleSchema
 
+pytestmark = pytest.mark.xdist_group("scheduler")
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------

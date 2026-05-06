@@ -167,7 +167,7 @@ class LLMService:
                 is_hardcore=False,
                 reason="Evaluation failed",
                 actionable_takeaway="",
-                tinkering_index=0,
+                tinkering_index=1,
             )
 
     async def generate_summary(self, article: ArticleSchema) -> str | None:

@@ -10,6 +10,8 @@ import pytest
 
 from app.tasks.scheduler import _scheduler_health, get_scheduler_health
 
+pytestmark = pytest.mark.xdist_group("scheduler")
+
 
 class TestSchedulerHealthCheck:
     """Unit tests for scheduler health check functionality."""

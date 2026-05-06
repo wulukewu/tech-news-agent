@@ -61,8 +61,8 @@ def create_access_token(
     payload = {
         "sub": str(user_id),  # Subject: user UUID
         "discord_id": discord_id,
-        "exp": expire,  # Expiration time
-        "iat": now,  # Issued at
+        "exp": int(expire.timestamp()),  # Expiration time as Unix timestamp
+        "iat": int(now.timestamp()),  # Issued at as Unix timestamp
     }
 
     if username:

@@ -14,6 +14,8 @@ import pytest
 from app.schemas.article import RSSSource
 from app.tasks.scheduler import _last_feed_urls, background_fetch_job
 
+pytestmark = pytest.mark.xdist_group("scheduler")
+
 
 @pytest.fixture
 def mock_feeds():

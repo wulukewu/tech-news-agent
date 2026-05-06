@@ -21,6 +21,8 @@ import pytest
 from app.core.exceptions import SupabaseServiceError
 from app.tasks.scheduler import background_fetch_job
 
+pytestmark = pytest.mark.xdist_group("scheduler")
+
 
 class TestSchedulerErrorHandling:
     """測試排程器錯誤處理 (Task 4.4)"""

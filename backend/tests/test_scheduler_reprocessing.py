@@ -18,6 +18,8 @@ import pytest
 from app.schemas.article import BatchResult, RSSSource
 from app.tasks.scheduler import background_fetch_job
 
+pytestmark = pytest.mark.xdist_group("scheduler")
+
 
 class TestSchedulerReprocessing:
     """測試排程器重新處理邏輯"""

@@ -13,6 +13,8 @@ import pytest
 
 from app.schemas.article import ArticleSchema, BatchResult, RSSSource
 
+pytestmark = pytest.mark.xdist_group("scheduler")
+
 
 def make_test_article(title="Test Article", url="https://example.com/test", feed_id=None):
     """Helper to create a test article."""

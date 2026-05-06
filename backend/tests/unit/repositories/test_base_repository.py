@@ -63,6 +63,26 @@ def mock_supabase_client():
     """Create a mock Supabase client."""
     client = Mock()
     client.table = Mock(return_value=client)
+    # Chain all query builder methods back to client
+    for method in (
+        "select",
+        "insert",
+        "update",
+        "delete",
+        "eq",
+        "neq",
+        "gt",
+        "lt",
+        "gte",
+        "lte",
+        "is_",
+        "in_",
+        "order",
+        "limit",
+        "offset",
+        "not_",
+    ):
+        setattr(client, method, Mock(return_value=client))
     return client
 
 
