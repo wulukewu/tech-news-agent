@@ -1,5 +1,7 @@
 # 技術新聞代理 — 文件
 
+> 📖 [Back to English Version](en/README.md)
+
 技術新聞代理專案的完整文件。請使用以下各節進行導覽。
 
 ---

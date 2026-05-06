@@ -1,5 +1,7 @@
 # Tech News Agent — Documentation
 
+> 📖 此文件另有 [繁體中文版本](zh-TW/README.md)
+
 Complete documentation for the Tech News Agent project. Use the sections below to navigate.
 
 ---
