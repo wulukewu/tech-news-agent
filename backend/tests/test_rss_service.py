@@ -99,7 +99,7 @@ class TestProcessSingleFeed:
             patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")),
             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed),
         ):
-            result = await service._process_single_feed(source, mock_client)
+            result, _ = await service._process_single_feed(source, mock_client)
 
         assert len(result) == 1
         assert result[0].title == "Recent"
@@ -114,7 +114,7 @@ class TestProcessSingleFeed:
         with patch.object(
             service, "_fetch_feed_content", AsyncMock(side_effect=Exception("network error"))
         ):
-            result = await service._process_single_feed(source, mock_client)
+            result, _ = await service._process_single_feed(source, mock_client)
 
         assert result == []
 
@@ -140,7 +140,7 @@ class TestProcessSingleFeed:
             patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")),
             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed),
         ):
-            result = await service._process_single_feed(source, AsyncMock())
+            result, _ = await service._process_single_feed(source, AsyncMock())
 
         assert result[0].feed_name == "MyFeed"
         assert result[0].category == "DevOps"
@@ -168,7 +168,7 @@ class TestProcessSingleFeed:
             patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")),
             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed),
         ):
-            result = await service._process_single_feed(source, AsyncMock())
+            result, _ = await service._process_single_feed(source, AsyncMock())
 
         # content_preview field was removed in schema update, so just verify article was created
         assert len(result) == 1
@@ -220,7 +220,7 @@ class TestProcessSingleFeed:
             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed),
             patch("app.services.rss_service.logger") as mock_logger,
         ):
-            result = await service._process_single_feed(source, mock_client)
+            result, _ = await service._process_single_feed(source, mock_client)
 
         # Should only return the recent article
         assert len(result) == 1
@@ -270,7 +270,7 @@ class TestProcessSingleFeed:
             patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")),
             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed),
         ):
-            result = await service._process_single_feed(source, mock_client)
+            result, _ = await service._process_single_feed(source, mock_client)
 
         # Should only return article within 3 days
         assert len(result) == 1
@@ -298,7 +298,7 @@ class TestProcessSingleFeed:
             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed),
         ):
             before = datetime.now(UTC)
-            result = await service._process_single_feed(source, mock_client)
+            result, _ = await service._process_single_feed(source, mock_client)
             after = datetime.now(UTC)
 
         # Should return the article (since current time is within 7 days)

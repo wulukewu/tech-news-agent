@@ -162,9 +162,13 @@ class LLMService:
             logger.warning(
                 f"Failed to evaluate article '{article.title}', defaulting to not hardcore. Error: {e}"
             )
-            # Fallback defensively - return None to indicate failure
-            # This will be handled by the caller (evaluate_batch)
-            return None
+            # Return safe fallback AIAnalysis
+            return AIAnalysis(
+                is_hardcore=False,
+                reason="Evaluation failed",
+                actionable_takeaway="",
+                tinkering_index=0,
+            )
 
     async def generate_summary(self, article: ArticleSchema) -> str | None:
         """

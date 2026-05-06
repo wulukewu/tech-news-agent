@@ -341,8 +341,13 @@ class MarkReadView(discord.ui.View):
         # Discord limit: max 25 components per view
         # articles must have id field populated
         for article in articles[:25]:
-            if article.id:
-                self.add_item(MarkReadButton(article.id, article.title, self.supabase_service))
+            article_id = (
+                getattr(article, "id", None)
+                or getattr(article, "article_id", None)
+                or getattr(article, "page_id", None)
+            )
+            if article_id:
+                self.add_item(MarkReadButton(article_id, article.title, self.supabase_service))
 
 
 class InteractionsCog(commands.Cog):

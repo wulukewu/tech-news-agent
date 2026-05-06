@@ -74,7 +74,7 @@ class TestRSSServiceDefaults:
             patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")),
             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed),
         ):
-            result = await service._process_single_feed(source, mock_client)
+            result, _ = await service._process_single_feed(source, mock_client)
 
         # Assert - should only return the recent article (within default 7 days)
         assert len(result) == 1
@@ -190,7 +190,7 @@ class TestTimeWindowConfiguration:
             patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")),
             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed),
         ):
-            result = await service._process_single_feed(source, mock_client)
+            result, _ = await service._process_single_feed(source, mock_client)
 
         # Assert - should only return article within 1 day
         assert len(result) == 1
@@ -242,7 +242,7 @@ class TestTimeWindowConfiguration:
             patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")),
             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed),
         ):
-            result = await service._process_single_feed(source, mock_client)
+            result, _ = await service._process_single_feed(source, mock_client)
 
         # Assert - should only return article within 30 days
         assert len(result) == 1
@@ -312,7 +312,7 @@ class TestPublishedAtHandling:
             patch.object(service, "_fetch_feed_content", AsyncMock(return_value="<xml/>")),
             patch("app.services.rss_service.feedparser.parse", return_value=mock_feed),
         ):
-            result = await service._process_single_feed(source, mock_client)
+            result, _ = await service._process_single_feed(source, mock_client)
 
         # Assert - should include the article (current time is within 7 days)
         assert len(result) == 1
