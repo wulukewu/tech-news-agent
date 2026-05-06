@@ -125,7 +125,7 @@ async def test_property_2_article_deduplication_correctness(
     new_urls = all_urls - existing_urls
 
     # Mock fetch_all_feeds to return our generated articles
-    with patch.object(service, "fetch_all_feeds", AsyncMock(return_value=fetched_articles)):
+    with patch.object(service, "fetch_all_feeds", AsyncMock(return_value=(fetched_articles, []))):
         # Mock supabase service to return existence based on our existing_urls set
         mock_supabase = AsyncMock()
         mock_supabase.check_article_exists = AsyncMock(side_effect=lambda url: url in existing_urls)
@@ -199,7 +199,7 @@ async def test_property_2_all_articles_new(num_articles):
         fetched_articles.append(article)
 
     # Mock fetch_all_feeds
-    with patch.object(service, "fetch_all_feeds", AsyncMock(return_value=fetched_articles)):
+    with patch.object(service, "fetch_all_feeds", AsyncMock(return_value=(fetched_articles, []))):
         # Mock supabase: no articles exist
         mock_supabase = AsyncMock()
         mock_supabase.check_article_exists = AsyncMock(return_value=False)
@@ -254,7 +254,7 @@ async def test_property_2_all_articles_existing(num_articles):
         fetched_articles.append(article)
 
     # Mock fetch_all_feeds
-    with patch.object(service, "fetch_all_feeds", AsyncMock(return_value=fetched_articles)):
+    with patch.object(service, "fetch_all_feeds", AsyncMock(return_value=(fetched_articles, []))):
         # Mock supabase: all articles exist
         mock_supabase = AsyncMock()
         mock_supabase.check_article_exists = AsyncMock(return_value=True)
@@ -319,7 +319,7 @@ async def test_property_2_deduplication_with_check_failures(num_articles, num_ch
     new_urls = set(remaining_urls[mid_point:])
 
     # Mock fetch_all_feeds
-    with patch.object(service, "fetch_all_feeds", AsyncMock(return_value=fetched_articles)):
+    with patch.object(service, "fetch_all_feeds", AsyncMock(return_value=(fetched_articles, []))):
         # Mock supabase with mixed behavior
         mock_supabase = AsyncMock()
 
@@ -379,7 +379,7 @@ async def test_property_2_empty_fetch_result(num_existing_in_db):
     sources = [RSSSource(name="Test Feed", url="https://example.com/feed", category="AI")]
 
     # Mock fetch_all_feeds to return empty list
-    with patch.object(service, "fetch_all_feeds", AsyncMock(return_value=[])):
+    with patch.object(service, "fetch_all_feeds", AsyncMock(return_value=([], []))):
         # Mock supabase
         mock_supabase = AsyncMock()
         mock_supabase.check_article_exists = AsyncMock(return_value=True)

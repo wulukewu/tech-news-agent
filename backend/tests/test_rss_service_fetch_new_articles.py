@@ -55,7 +55,7 @@ class TestFetchNewArticles:
 
         # Mock fetch_all_feeds to return 3 articles
         with patch.object(
-            service, "fetch_all_feeds", AsyncMock(return_value=[article1, article2, article3])
+            service, "fetch_all_feeds", AsyncMock(return_value=([article1, article2, article3], []))
         ):
             # Mock supabase service: article2 exists, others don't
             mock_supabase = AsyncMock()
@@ -83,7 +83,7 @@ class TestFetchNewArticles:
         sources = [make_source()]
 
         # Mock fetch_all_feeds to return empty list
-        with patch.object(service, "fetch_all_feeds", AsyncMock(return_value=[])):
+        with patch.object(service, "fetch_all_feeds", AsyncMock(return_value=([], []))):
             mock_supabase = AsyncMock()
 
             # Act
@@ -105,7 +105,9 @@ class TestFetchNewArticles:
         article2 = make_article("https://example.com/article2", "Article 2")
 
         # Mock fetch_all_feeds to return 2 articles
-        with patch.object(service, "fetch_all_feeds", AsyncMock(return_value=[article1, article2])):
+        with patch.object(
+            service, "fetch_all_feeds", AsyncMock(return_value=([article1, article2], []))
+        ):
             # Mock supabase service: no articles exist
             mock_supabase = AsyncMock()
             mock_supabase.check_article_exists = AsyncMock(return_value=False)
@@ -131,7 +133,7 @@ class TestFetchNewArticles:
 
         # Mock fetch_all_feeds to return 3 articles
         with patch.object(
-            service, "fetch_all_feeds", AsyncMock(return_value=[article1, article2, article3])
+            service, "fetch_all_feeds", AsyncMock(return_value=([article1, article2, article3], []))
         ):
             # Mock supabase service: article2 check fails, others succeed
             mock_supabase = AsyncMock()
@@ -165,7 +167,7 @@ class TestFetchNewArticles:
 
         # Mock fetch_all_feeds to return 3 articles
         with patch.object(
-            service, "fetch_all_feeds", AsyncMock(return_value=[article1, article2, article3])
+            service, "fetch_all_feeds", AsyncMock(return_value=([article1, article2, article3], []))
         ):
             # Mock supabase service: article2 exists
             mock_supabase = AsyncMock()

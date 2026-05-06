@@ -5,6 +5,7 @@ from discord import app_commands
 from discord.ext import commands
 
 from app.bot.utils.decorators import ensure_user_registered
+from app.core.config import settings as settings  # noqa: F401
 from app.core.exceptions import SupabaseServiceError
 from app.core.logger import get_logger
 from app.services.llm_service import LLMService

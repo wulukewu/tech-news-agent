@@ -452,7 +452,8 @@ async def get_scheduler_health() -> dict:
 
     Validates: Requirements 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7
     """
-    from app.core.config import settings
+    # Check if scheduler is enabled
+    is_enabled = getattr(settings, "enable_scheduler", True)
 
     last_execution = _scheduler_health["last_execution_time"]
     articles_processed = _scheduler_health["last_articles_processed"]
@@ -472,16 +473,13 @@ async def get_scheduler_health() -> dict:
                 .limit(1)
                 .execute()
             )
-            if result.data and len(result.data) > 0:
+            if result.data and isinstance(result.data, list) and len(result.data) > 0:
                 last_article_time = datetime.fromisoformat(
                     result.data[0]["created_at"].replace("Z", "+00:00")
                 )
                 last_execution = last_article_time
         except Exception as e:
             logger.warning(f"Failed to check database for last execution: {e}")
-
-    # Check if scheduler is enabled
-    is_enabled = getattr(settings, "enable_scheduler", True)
 
     # Check if scheduler is running
     is_running = _scheduler is not None and _scheduler.running
