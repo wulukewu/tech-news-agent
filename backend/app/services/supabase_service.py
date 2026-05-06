@@ -27,11 +27,6 @@ class SupabaseService(UserMixin, FeedMixin, ArticleMixin, ReadingListMixin, Noti
     """
 
     def __init__(self, client: Client | None = None, validate_connection: bool = True):
-        import os
-
-        # Skip validation in test environment
-        if os.getenv("APP_ENV") == "test":
-            validate_connection = False
         """初始化 Supabase 服務
 
         Args:
@@ -42,6 +37,12 @@ class SupabaseService(UserMixin, FeedMixin, ArticleMixin, ReadingListMixin, Noti
             SupabaseServiceError: 當配置缺失或連線失敗時
         """
         logger.info("Initializing SupabaseService")
+
+        # Skip network connection validation in test environment
+        import os
+
+        if os.getenv("APP_ENV") == "test":
+            validate_connection = False
 
         # 驗證配置存在
         if not settings.supabase_url or not settings.supabase_key:

@@ -391,7 +391,7 @@ class TestRSSParsing:
         feed_id_map = {str(source.url): feed_id}
 
         # Act
-        articles = await service._process_single_feed(source, mock_client, feed_id_map)
+        articles, _ = await service._process_single_feed(source, mock_client, feed_id_map)
 
         # Assert
         assert len(articles) == 2
@@ -443,7 +443,7 @@ class TestRSSParsing:
         feed_id_map = {str(source.url): feed_id}
 
         # Act
-        articles = await service._process_single_feed(source, mock_client, feed_id_map)
+        articles, _ = await service._process_single_feed(source, mock_client, feed_id_map)
 
         # Assert
         assert len(articles) == 1

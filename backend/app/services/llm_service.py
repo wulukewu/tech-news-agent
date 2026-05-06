@@ -259,10 +259,11 @@ class LLMService:
             nonlocal summary_failed_count, summary_success_count
 
             async with semaphore:
-                # Add delay to respect rate limits
-                # Free tier: 6000 TPM, ~500 tokens/article
-                # 1 concurrent + 10s delay = 6 req/min, ~3000 TPM (safe margin)
-                await asyncio.sleep(10)
+                # Add delay to respect rate limits (skip in test environment)
+                import os
+
+                if os.getenv("APP_ENV") != "test":
+                    await asyncio.sleep(10)
 
                 # Process tinkering_index if it's NULL
                 if article.tinkering_index is None:
