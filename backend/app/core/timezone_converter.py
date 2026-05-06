@@ -8,7 +8,6 @@ based on user preferences.
 Requirements: 5.3
 """
 
-import time
 import zoneinfo
 from datetime import datetime, time, timedelta
 from typing import Optional

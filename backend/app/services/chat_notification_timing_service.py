@@ -17,7 +17,6 @@ Validates: Requirements 10.2, 10.3, 10.5
 
 from __future__ import annotations
 
-import time
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta, timezone
 from typing import Any, Optional
