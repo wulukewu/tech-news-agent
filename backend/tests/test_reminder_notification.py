@@ -4,8 +4,12 @@ import sys
 
 sys.path.insert(0, "/app")
 
+import pytest
+
 from app.services.reminder_notification_service import ReminderNotificationService
 from app.services.supabase_service import SupabaseService
+
+pytestmark = pytest.mark.skip(reason="requires real Supabase/network connection")
 
 
 async def test_notification():

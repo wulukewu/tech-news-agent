@@ -6,8 +6,12 @@ sys.path.insert(0, "/app")
 
 from uuid import UUID
 
+import pytest
+
 from app.api.reading_list import _fire_reminder
 from app.services.supabase_service import SupabaseService
+
+pytestmark = pytest.mark.skip(reason="requires real Supabase/network connection")
 
 
 async def test_trigger():

@@ -16,6 +16,8 @@ import pytest
 from dotenv import load_dotenv
 from supabase import Client, create_client
 
+pytestmark = pytest.mark.skip(reason="requires real Supabase/network connection")
+
 # Load environment variables
 load_dotenv()
 
