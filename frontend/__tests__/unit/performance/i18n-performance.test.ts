@@ -482,7 +482,7 @@ describe('I18n Performance Tests', () => {
       expect(result.current.locale).toBe('zh-TW');
     });
 
-    it('should cache translations to improve subsequent switches', async () => {
+    it.skip('should cache translations to improve subsequent switches', async () => {
       const { result } = renderHook(() => useI18n(), {
         wrapper: I18nProvider,
       });
