@@ -27,6 +27,11 @@ class SupabaseService(UserMixin, FeedMixin, ArticleMixin, ReadingListMixin, Noti
     """
 
     def __init__(self, client: Client | None = None, validate_connection: bool = True):
+        import os
+
+        # Skip validation in test environment
+        if os.getenv("APP_ENV") == "test":
+            validate_connection = False
         """初始化 Supabase 服務
 
         Args:

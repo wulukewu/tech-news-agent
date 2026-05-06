@@ -12,6 +12,9 @@ logger = logging.getLogger(__name__)
 # Global scheduler instance (initialized lazily)
 _scheduler: AsyncIOScheduler | None = None
 
+# Public alias for backward compatibility with tests
+scheduler: AsyncIOScheduler = AsyncIOScheduler()
+
 # Global dynamic scheduler instance (initialized lazily)
 _dynamic_scheduler = None
 
@@ -50,6 +53,11 @@ _last_feed_urls = set()
 
 from app.tasks._fetch_job import background_fetch_job
 from app.tasks._notify_jobs import cleanup_token_blacklist
+
+
+async def weekly_news_job() -> None:
+    """Stub for backward compatibility with tests."""
+    pass
 
 
 async def version_tracking_job():

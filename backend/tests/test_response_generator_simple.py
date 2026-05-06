@@ -268,7 +268,7 @@ async def test_response_generator():
         ArticleMatch(
             article_id=str(uuid4()),
             title="Introduction to Machine Learning",
-            content_preview="Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed. This comprehensive guide covers the fundamentals of ML algorithms, supervised and unsupervised learning, and practical applications in various industries. We'll explore different types of learning algorithms and their use cases.",
+            ai_summary="Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed. This comprehensive guide covers the fundamentals of ML algorithms, supervised and unsupervised learning, and practical applications in various industries. We'll explore different types of learning algorithms and their use cases.",
             similarity_score=0.95,
             metadata={"category": "AI", "topics": ["machine learning", "algorithms"]},
             url="https://example.com/ml-intro",
@@ -276,7 +276,7 @@ async def test_response_generator():
         ArticleMatch(
             article_id=str(uuid4()),
             title="Python for Data Science",
-            content_preview="Python has become the go-to language for data science due to its simplicity and powerful libraries. Learn how to use pandas for data manipulation, numpy for numerical computing, and scikit-learn for machine learning implementations. This tutorial covers practical examples and best practices for data analysis workflows.",
+            ai_summary="Python has become the go-to language for data science due to its simplicity and powerful libraries. Learn how to use pandas for data manipulation, numpy for numerical computing, and scikit-learn for machine learning implementations. This tutorial covers practical examples and best practices for data analysis workflows.",
             similarity_score=0.88,
             metadata={"category": "Programming", "topics": ["python", "data science"]},
             url="https://example.com/python-data-science",
@@ -284,7 +284,7 @@ async def test_response_generator():
         ArticleMatch(
             article_id=str(uuid4()),
             title="Deep Learning with Neural Networks",
-            content_preview="Deep learning represents a significant advancement in machine learning, using neural networks with multiple layers to model and understand complex patterns in data. This article explores the architecture of deep neural networks, backpropagation algorithms, and applications in computer vision and natural language processing.",
+            ai_summary="Deep learning represents a significant advancement in machine learning, using neural networks with multiple layers to model and understand complex patterns in data. This article explores the architecture of deep neural networks, backpropagation algorithms, and applications in computer vision and natural language processing.",
             similarity_score=0.82,
             metadata={"category": "AI", "topics": ["deep learning", "neural networks"]},
             url="https://example.com/deep-learning",

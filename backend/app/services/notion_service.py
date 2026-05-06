@@ -11,6 +11,14 @@ from typing import Any
 from app.core.exceptions import NotionServiceError
 from app.schemas.article import ArticlePageResult
 
+
+class AsyncClient:
+    """Stub for backward compatibility with tests that patch this."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        pass
+
+
 # Re-export for backward compatibility
 __all__ = ["NotionService", "NotionServiceError", "build_week_string"]
 

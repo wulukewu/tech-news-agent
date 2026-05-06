@@ -61,7 +61,7 @@ def create_test_articles() -> List[ArticleMatch]:
         ArticleMatch(
             article_id=uuid4(),
             title="Advanced Machine Learning Deployment Strategies",
-            content_preview="This article explores sophisticated approaches to deploying ML models in production environments, covering containerization, monitoring, and scaling strategies...",
+            ai_summary="This article explores sophisticated approaches to deploying ML models in production environments, covering containerization, monitoring, and scaling strategies...",
             similarity_score=0.92,
             url="https://example.com/ml-deployment",
             published_at=datetime.utcnow() - timedelta(days=5),
@@ -76,7 +76,7 @@ def create_test_articles() -> List[ArticleMatch]:
         ArticleMatch(
             article_id=uuid4(),
             title="Python Async Programming: Complete Guide",
-            content_preview="A comprehensive guide to asynchronous programming in Python, covering asyncio, coroutines, and best practices for concurrent applications...",
+            ai_summary="A comprehensive guide to asynchronous programming in Python, covering asyncio, coroutines, and best practices for concurrent applications...",
             similarity_score=0.88,
             url="https://example.com/python-async",
             published_at=datetime.utcnow() - timedelta(days=15),
@@ -91,7 +91,7 @@ def create_test_articles() -> List[ArticleMatch]:
         ArticleMatch(
             article_id=uuid4(),
             title="API Security Best Practices for 2024",
-            content_preview="Essential security practices for modern APIs, including authentication, authorization, rate limiting, and vulnerability prevention...",
+            ai_summary="Essential security practices for modern APIs, including authentication, authorization, rate limiting, and vulnerability prevention...",
             similarity_score=0.85,
             url="https://example.com/api-security",
             published_at=datetime.utcnow() - timedelta(days=3),
@@ -106,7 +106,7 @@ def create_test_articles() -> List[ArticleMatch]:
         ArticleMatch(
             article_id=uuid4(),
             title="Introduction to Blockchain Development",
-            content_preview="A beginner-friendly introduction to blockchain technology and smart contract development using Solidity...",
+            ai_summary="A beginner-friendly introduction to blockchain technology and smart contract development using Solidity...",
             similarity_score=0.65,
             url="https://example.com/blockchain-intro",
             published_at=datetime.utcnow() - timedelta(days=30),
@@ -121,7 +121,7 @@ def create_test_articles() -> List[ArticleMatch]:
         ArticleMatch(
             article_id=uuid4(),
             title="Cloud Architecture Patterns and Microservices",
-            content_preview="Exploring modern cloud architecture patterns, microservices design, and distributed system best practices...",
+            ai_summary="Exploring modern cloud architecture patterns, microservices design, and distributed system best practices...",
             similarity_score=0.78,
             url="https://example.com/cloud-architecture",
             published_at=datetime.utcnow() - timedelta(days=8),

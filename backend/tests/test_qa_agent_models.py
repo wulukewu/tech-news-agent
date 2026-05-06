@@ -141,7 +141,7 @@ class TestArticleMatch:
         article = ArticleMatch(
             article_id=uuid4(),
             title="Test Article",
-            content_preview="This is a test article about AI developments.",
+            ai_summary="This is a test article about AI developments.",
             similarity_score=0.85,
             keyword_score=0.7,
             url="https://example.com/article",
@@ -160,7 +160,7 @@ class TestArticleMatch:
         article = ArticleMatch(
             article_id=uuid4(),
             title="Test Article",
-            content_preview="Test content",
+            ai_summary="Test content",
             similarity_score=0.8,
             keyword_score=0.6,
             url="https://example.com/article",
@@ -177,7 +177,7 @@ class TestArticleMatch:
         high_relevance = ArticleMatch(
             article_id=uuid4(),
             title="Highly Relevant",
-            content_preview="Very relevant content",
+            ai_summary="Very relevant content",
             similarity_score=0.9,
             keyword_score=0.8,
             url="https://example.com/high",
@@ -188,7 +188,7 @@ class TestArticleMatch:
         low_relevance = ArticleMatch(
             article_id=uuid4(),
             title="Low Relevance",
-            content_preview="Not very relevant",
+            ai_summary="Not very relevant",
             similarity_score=0.3,
             keyword_score=0.2,
             url="https://example.com/low",
@@ -204,7 +204,7 @@ class TestArticleMatch:
         article = ArticleMatch(
             article_id=uuid4(),
             title="Test Article",
-            content_preview="This is a test preview with about twenty words to estimate reading time properly.",
+            ai_summary="This is a test preview with about twenty words to estimate reading time properly.",
             similarity_score=0.8,
             url="https://example.com/article",
             feed_name="Test Feed",
@@ -657,7 +657,7 @@ class TestValidators:
         valid_article = ArticleMatch(
             article_id=uuid4(),
             title="Test Article",
-            content_preview="Valid content preview",
+            ai_summary="Valid content preview",
             similarity_score=0.8,
             url="https://example.com/test",
             feed_name="Test Feed",

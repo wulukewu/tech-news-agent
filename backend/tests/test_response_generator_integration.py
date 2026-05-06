@@ -28,7 +28,7 @@ async def test_response_generator_integration():
         ArticleMatch(
             article_id=str(uuid4()),
             title="Introduction to Machine Learning",
-            content_preview="Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed. This comprehensive guide covers the fundamentals of ML algorithms, supervised and unsupervised learning, and practical applications in various industries.",
+            ai_summary="Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed. This comprehensive guide covers the fundamentals of ML algorithms, supervised and unsupervised learning, and practical applications in various industries.",
             similarity_score=0.95,
             metadata={"category": "AI", "topics": ["machine learning", "algorithms"]},
             url="https://example.com/ml-intro",
@@ -36,7 +36,7 @@ async def test_response_generator_integration():
         ArticleMatch(
             article_id=str(uuid4()),
             title="Python for Data Science",
-            content_preview="Python has become the go-to language for data science due to its simplicity and powerful libraries. Learn how to use pandas for data manipulation, numpy for numerical computing, and scikit-learn for machine learning implementations.",
+            ai_summary="Python has become the go-to language for data science due to its simplicity and powerful libraries. Learn how to use pandas for data manipulation, numpy for numerical computing, and scikit-learn for machine learning implementations.",
             similarity_score=0.88,
             metadata={"category": "Programming", "topics": ["python", "data science"]},
             url="https://example.com/python-data-science",

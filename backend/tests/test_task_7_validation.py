@@ -23,7 +23,7 @@ def create_test_articles():
         ArticleMatch(
             article_id=uuid4(),
             title="Introduction to Machine Learning",
-            content_preview="Machine learning is a subset of artificial intelligence that enables systems to learn and improve from experience. This article covers the fundamentals of ML algorithms, including supervised and unsupervised learning techniques.",
+            ai_summary="Machine learning is a subset of artificial intelligence that enables systems to learn and improve from experience. This article covers the fundamentals of ML algorithms, including supervised and unsupervised learning techniques.",
             similarity_score=0.95,
             keyword_score=0.85,
             url="https://example.com/ml-intro",
@@ -39,7 +39,7 @@ def create_test_articles():
         ArticleMatch(
             article_id=uuid4(),
             title="Deep Learning Neural Networks",
-            content_preview="Deep learning uses neural networks with multiple layers to process complex patterns. This comprehensive guide explores convolutional neural networks, recurrent networks, and transformer architectures.",
+            ai_summary="Deep learning uses neural networks with multiple layers to process complex patterns. This comprehensive guide explores convolutional neural networks, recurrent networks, and transformer architectures.",
             similarity_score=0.88,
             keyword_score=0.75,
             url="https://example.com/deep-learning",
@@ -55,7 +55,7 @@ def create_test_articles():
         ArticleMatch(
             article_id=uuid4(),
             title="Practical Machine Learning with Python",
-            content_preview="Learn how to implement machine learning algorithms using Python and popular libraries like scikit-learn and TensorFlow. This tutorial provides hands-on examples and best practices.",
+            ai_summary="Learn how to implement machine learning algorithms using Python and popular libraries like scikit-learn and TensorFlow. This tutorial provides hands-on examples and best practices.",
             similarity_score=0.82,
             keyword_score=0.90,
             url="https://example.com/ml-python",

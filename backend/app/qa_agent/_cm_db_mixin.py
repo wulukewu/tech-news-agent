@@ -4,6 +4,7 @@ from uuid import UUID
 
 from asyncpg import Connection
 
+from app.qa_agent.database import get_db_connection
 from app.qa_agent.models import ConversationContext
 
 logger = logging.getLogger(__name__)

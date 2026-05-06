@@ -204,7 +204,7 @@ class TestEnhancedErrorHandling:
             ArticleMatch(
                 article_id=str(uuid4()),
                 title="Test Article",
-                content_preview="Test content",
+                ai_summary="Test content",
                 similarity_score=0.7,
                 url="http://example.com",
                 metadata={"category": "test"},
@@ -252,7 +252,7 @@ class TestEnhancedErrorHandling:
             ArticleMatch(
                 article_id=str(uuid4()),
                 title="Test Article 1",
-                content_preview="Test content 1",
+                ai_summary="Test content 1",
                 similarity_score=0.9,
                 url="http://example.com/1",
                 metadata={"category": "test"},
@@ -260,7 +260,7 @@ class TestEnhancedErrorHandling:
             ArticleMatch(
                 article_id=str(uuid4()),
                 title="Test Article 2",
-                content_preview="Test content 2",
+                ai_summary="Test content 2",
                 similarity_score=0.8,
                 url="http://example.com/2",
                 metadata={"category": "test"},
@@ -308,7 +308,7 @@ class TestEnhancedErrorHandling:
                 ArticleMatch(
                     article_id=str(uuid4()),
                     title="Test Article",
-                    content_preview="Test content",
+                    ai_summary="Test content",
                     similarity_score=0.8,
                     url="http://example.com",
                     metadata={"category": "test"},

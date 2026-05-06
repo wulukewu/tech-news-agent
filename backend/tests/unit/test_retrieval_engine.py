@@ -73,7 +73,7 @@ def make_article_match(
     return ArticleMatch(
         article_id=aid,
         title="Test Article",
-        content_preview="Content about Python and machine learning",
+        ai_summary="Content about Python and machine learning",
         similarity_score=similarity_score,
         keyword_score=keyword_score,
         url="https://example.com/article",

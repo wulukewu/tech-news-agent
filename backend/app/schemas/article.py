@@ -1,11 +1,11 @@
 from datetime import datetime
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_serializer
 
 
 class RSSSource(BaseModel):
-    id: UUID
+    id: UUID = Field(default_factory=uuid4)
     name: str
     url: HttpUrl
     category: str

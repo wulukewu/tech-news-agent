@@ -98,7 +98,7 @@ def article_match_strategy() -> st.SearchStrategy:
         ArticleMatch,
         article_id=st.just(uuid4()),
         title=st.text(min_size=10, max_size=200).filter(lambda s: s.strip() != ""),
-        content_preview=st.text(min_size=50, max_size=500).filter(lambda s: s.strip() != ""),
+        ai_summary=st.text(min_size=50, max_size=500).filter(lambda s: s.strip() != ""),
         similarity_score=st.floats(
             min_value=0.5, max_value=1.0, allow_nan=False, allow_infinity=False
         ),

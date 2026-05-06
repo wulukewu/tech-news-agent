@@ -12,6 +12,7 @@ logger = logging.getLogger(__name__)
 class PerformanceMetric:
     """Performance metric data point."""
 
+    metric_id: str
     operation: str
     duration_ms: float
     success: bool

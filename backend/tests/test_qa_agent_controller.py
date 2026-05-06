@@ -123,7 +123,7 @@ class MockRetrievalEngine:
         mock_article = ArticleMatch(
             article_id=uuid4(),
             title="Mock Article Title",
-            content_preview="This is a mock article content preview for testing purposes.",
+            ai_summary="This is a mock article content preview for testing purposes.",
             similarity_score=0.85,
             url="https://example.com/mock-article",
             published_at=datetime.utcnow(),
@@ -159,7 +159,7 @@ class MockRetrievalEngine:
         mock_article = ArticleMatch(
             article_id=uuid4(),
             title="Mock Semantic Search Article",
-            content_preview="This is a mock article from semantic search.",
+            ai_summary="This is a mock article from semantic search.",
             similarity_score=0.75,
             url="https://example.com/semantic-article",
             published_at=datetime.utcnow(),

@@ -22,11 +22,12 @@ def make_article_with_analysis(
 ):
     """Helper to create an ArticleSchema with AIAnalysis."""
     return ArticleSchema(
+        feed_id="00000000-0000-0000-0000-000000000001",
         title=title,
         url=url,
-        content_preview="preview",
-        source_category=category,
-        source_name="TestSource",
+        ai_summary="preview",
+        category=category,
+        feed_name="TestSource",
         ai_analysis=AIAnalysis(
             is_hardcore=True,
             reason=reason,
@@ -301,11 +302,12 @@ class TestCreateArticlePage:
     async def test_handles_article_without_ai_analysis(self):
         """create_article_page handles articles without ai_analysis gracefully."""
         article = ArticleSchema(
+            feed_id="00000000-0000-0000-0000-000000000001",
             title="No Analysis Article",
             url="https://example.com/article",
-            content_preview="preview",
-            source_category="AI",
-            source_name="TestSource",
+            ai_summary="preview",
+            category="AI",
+            feed_name="TestSource",
             ai_analysis=None,
         )
 

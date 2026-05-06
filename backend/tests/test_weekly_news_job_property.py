@@ -24,9 +24,9 @@ def article_strategy():
         ArticleSchema,
         title=st.text(min_size=1, max_size=200),
         url=st.from_regex(r"https://[a-z]{3,10}\.[a-z]{2,4}/[a-z]{0,20}", fullmatch=True),
-        content_preview=st.text(min_size=0, max_size=800),
-        source_category=st.sampled_from(["AI", "DevOps", "Security", "Web", "Cloud"]),
-        source_name=st.text(min_size=1, max_size=50),
+        ai_summary=st.text(min_size=0, max_size=800),
+        category=st.sampled_from(["AI", "DevOps", "Security", "Web", "Cloud"]),
+        feed_name=st.text(min_size=1, max_size=50),
         ai_analysis=st.builds(
             AIAnalysis,
             is_hardcore=st.just(True),

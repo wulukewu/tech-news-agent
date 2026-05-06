@@ -61,7 +61,7 @@ class TestCoreRetrievalSystemCheckpoint:
         article_match = ArticleMatch(
             article_id=uuid4(),
             title="AI Breakthrough",
-            content_preview="Recent advances in AI...",
+            ai_summary="Recent advances in AI...",
             similarity_score=0.92,
             metadata={"category": "tech"},
             url="https://example.com/ai-breakthrough",
@@ -205,7 +205,7 @@ class TestCoreRetrievalSystemCheckpoint:
                     ArticleMatch(
                         article_id=mock_vector_matches[0].article_id,
                         title="Advanced AI Research",
-                        content_preview="Advanced AI research shows...",
+                        ai_summary="Advanced AI research shows...",
                         similarity_score=0.95,
                         metadata={"category": "AI"},
                         url="https://example.com/ai-research",
@@ -214,7 +214,7 @@ class TestCoreRetrievalSystemCheckpoint:
                     ArticleMatch(
                         article_id=mock_vector_matches[1].article_id,
                         title="ML Applications",
-                        content_preview="Machine learning applications...",
+                        ai_summary="Machine learning applications...",
                         similarity_score=0.87,
                         metadata={"category": "ML"},
                         url="https://example.com/ml-apps",

@@ -18,13 +18,14 @@ from app.schemas.article import ArticleSchema
 # ---------------------------------------------------------------------------
 
 
-def make_article(title="Test Article", source_category="AI", source_name="TestSource"):
+def make_article(title="Test Article", category="AI", feed_name="TestSource"):
     return ArticleSchema(
+        feed_id="00000000-0000-0000-0000-000000000001",
         title=title,
         url="https://example.com",
-        content_preview="Some preview content",
-        source_category=source_category,
-        source_name=source_name,
+        ai_summary="Some preview content",
+        category=source_category,
+        feed_name=source_name,
     )
 
 
@@ -53,8 +54,8 @@ class TestFilterSelectShowAll:
     async def test_show_all_returns_all_articles(self):
         """Selecting '顯示全部' sends a message containing all articles."""
         articles = [
-            make_article(title="Article A", source_category="AI"),
-            make_article(title="Article B", source_category="Tech"),
+            make_article(title="Article A", category="AI"),
+            make_article(title="Article B", category="Tech"),
         ]
         select = FilterSelect(articles)
         select._values = ["__all__"]
@@ -72,7 +73,7 @@ class TestFilterSelectMissingCategory:
     @pytest.mark.asyncio
     async def test_nonexistent_category_returns_warning(self):
         """Selecting a category with no articles returns the warning message."""
-        articles = [make_article(source_category="AI")]
+        articles = [make_article(category="AI")]
         select = FilterSelect(articles)
         # Manually inject a value that doesn't match any article
         select._values = ["NonExistentCategory"]
@@ -86,13 +87,13 @@ class TestFilterSelectMissingCategory:
 class TestFilterSelectOptionLimit:
     def test_options_capped_at_25_with_more_than_24_categories(self):
         """With >24 categories, total options must not exceed 25 (24 categories + 1 show-all)."""
-        articles = [make_article(source_category=f"Category{i}") for i in range(30)]
+        articles = [make_article(category=f"Category{i}") for i in range(30)]
         select = FilterSelect(articles)
         assert len(select.options) <= 25
 
     def test_show_all_option_always_first(self):
         """'顯示全部' option with value '__all__' is always the first option."""
-        articles = [make_article(source_category=f"Cat{i}") for i in range(5)]
+        articles = [make_article(category=f"Cat{i}") for i in range(5)]
         select = FilterSelect(articles)
         assert select.options[0].value == "__all__"
 
@@ -109,9 +110,9 @@ def _article_strategy():
         ArticleSchema,
         title=st.text(min_size=1, max_size=80),
         url=st.just("https://example.com"),
-        content_preview=st.text(max_size=200),
-        source_category=st.text(min_size=1, max_size=40),
-        source_name=st.text(min_size=1, max_size=40),
+        ai_summary=st.text(max_size=200),
+        category=st.text(min_size=1, max_size=40),
+        feed_name=st.text(min_size=1, max_size=40),
         published_date=st.none(),
         ai_analysis=st.none(),
         raw_data=st.none(),

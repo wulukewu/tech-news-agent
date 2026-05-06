@@ -1,4 +1,5 @@
 """Mixin extracted from retrieval_engine.py."""
+import hashlib
 import logging
 from typing import Any, Dict, List, Optional
 

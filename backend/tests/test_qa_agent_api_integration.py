@@ -241,7 +241,7 @@ class MockRetrievalEngine:
                 ArticleMatch(
                     article_id=match.article_id,
                     title=f"Article {match.article_id}",
-                    content_preview=match.chunk_text or "Test content preview",
+                    ai_summary=match.chunk_text or "Test content preview",
                     similarity_score=match.similarity_score,
                     url=f"https://example.com/article/{match.article_id}",
                     published_at=datetime.utcnow(),
@@ -272,7 +272,7 @@ class MockRetrievalEngine:
                 ArticleMatch(
                     article_id=match.article_id,
                     title=f"Article {match.article_id}",
-                    content_preview=match.chunk_text or "Test content preview",
+                    ai_summary=match.chunk_text or "Test content preview",
                     similarity_score=match.similarity_score,
                     url=f"https://example.com/article/{match.article_id}",
                     published_at=datetime.utcnow(),

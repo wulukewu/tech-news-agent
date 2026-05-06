@@ -243,7 +243,22 @@ class DeepDiveView(discord.ui.View):
 
 
 class MarkReadButton(discord.ui.Button):
-    def __init__(self, article_id: UUID, article_title: str, supabase_service: SupabaseService):
+    def __init__(
+        self,
+        article_id_or_page: "UUID | Any",
+        article_title: str = "",
+        supabase_service: "SupabaseService | None" = None,
+    ):
+        from app.schemas.article import ArticlePageResult
+
+        if isinstance(article_id_or_page, ArticlePageResult):
+            page = article_id_or_page
+            article_id = getattr(page, "article_id", None) or getattr(
+                page, "page_id", str(id(page))
+            )
+            article_title = article_title or getattr(page, "title", "")
+        else:
+            article_id = article_id_or_page
         label_text = (
             f"✅ {article_title[:15]}..." if len(article_title) > 15 else f"✅ {article_title}"
         )

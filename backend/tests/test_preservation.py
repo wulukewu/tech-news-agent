@@ -35,11 +35,12 @@ class TestPreservation1AddToReadLater:
         from app.services.notion_service import NotionService
 
         article = ArticleSchema(
+            feed_id="00000000-0000-0000-0000-000000000001",
             title="Test Article",
             url="https://example.com/article",
-            content_preview="preview text",
-            source_category="AI",
-            source_name="TestSource",
+            ai_summary="preview text",
+            category="AI",
+            feed_name="TestSource",
         )
 
         mock_client = MagicMock()
@@ -59,11 +60,12 @@ class TestPreservation1AddToReadLater:
         from app.services.notion_service import NotionService
 
         article = ArticleSchema(
+            feed_id="00000000-0000-0000-0000-000000000001",
             title="Test Article",
             url="https://example.com/article",
-            content_preview="preview text",
-            source_category="AI",
-            source_name="TestSource",
+            ai_summary="preview text",
+            category="AI",
+            feed_name="TestSource",
         )
 
         mock_client = MagicMock()
@@ -134,11 +136,12 @@ class TestPreservation3ReadLaterButtonCallback:
         from app.schemas.article import ArticleSchema
 
         article = ArticleSchema(
+            feed_id="00000000-0000-0000-0000-000000000001",
             title="Test Article",
             url="https://example.com/article",
-            content_preview="preview",
-            source_category="AI",
-            source_name="TestSource",
+            ai_summary="preview",
+            category="AI",
+            feed_name="TestSource",
         )
 
         button = ReadLaterButton(article=article, index=0)
@@ -209,7 +212,7 @@ class TestPreservation5PBTAddToReadLater:
     @given(
         title=st.text(min_size=1, max_size=100),
         url=st.from_regex(r"https://[a-z]{3,10}\.[a-z]{2,4}/[a-z]{0,20}", fullmatch=True),
-        source_category=st.text(min_size=1, max_size=50),
+        category=st.text(min_size=1, max_size=50),
     )
     @h_settings(max_examples=5)
     async def test_parent_always_read_later_db_id(self, title, url, source_category):
@@ -218,11 +221,12 @@ class TestPreservation5PBTAddToReadLater:
         from app.services.notion_service import NotionService
 
         article = ArticleSchema(
+            feed_id="00000000-0000-0000-0000-000000000001",
             title=title,
             url=url,
-            content_preview="preview",
-            source_category=source_category,
-            source_name="TestSource",
+            ai_summary="preview",
+            category=source_category,
+            feed_name="TestSource",
         )
 
         mock_client = MagicMock()
@@ -265,11 +269,12 @@ class TestPreservation6DiscordShortDraft:
         from app.schemas.article import AIAnalysis, ArticleSchema
 
         article = ArticleSchema(
+            feed_id="00000000-0000-0000-0000-000000000001",
             title="Test Article",
             url="https://example.com/article",
-            content_preview="Preview",
-            source_category="AI",
-            source_name="TestSource",
+            ai_summary="Preview",
+            category="AI",
+            feed_name="TestSource",
             ai_analysis=AIAnalysis(
                 is_hardcore=True,
                 reason="Very hardcore",
@@ -352,9 +357,9 @@ def article_strategy():
         ArticleSchema,
         title=st.text(min_size=1, max_size=80),
         url=st.from_regex(r"https://[a-z]{3,10}\.[a-z]{2,4}/[a-z]{0,20}", fullmatch=True),
-        content_preview=st.text(min_size=0, max_size=200),
-        source_category=st.text(min_size=1, max_size=40),
-        source_name=st.text(min_size=1, max_size=40),
+        ai_summary=st.text(min_size=0, max_size=200),
+        category=st.text(min_size=1, max_size=40),
+        feed_name=st.text(min_size=1, max_size=40),
         published_date=st.none(),
         ai_analysis=st.none(),
         raw_data=st.none(),

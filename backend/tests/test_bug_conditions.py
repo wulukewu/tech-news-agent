@@ -270,11 +270,12 @@ class TestBug5ReadLaterViewNotPersistent:
         from app.schemas.article import ArticleSchema
 
         article = ArticleSchema(
+            feed_id="00000000-0000-0000-0000-000000000001",
             title="Test Article",
             url="https://example.com/article",
-            content_preview="preview",
-            source_category="AI",
-            source_name="TestSource",
+            ai_summary="preview",
+            category="AI",
+            feed_name="TestSource",
         )
 
         button = ReadLaterButton(article=article, index=0)
@@ -310,11 +311,12 @@ class TestBug6DiscordMessageLength:
         from app.schemas.article import AIAnalysis, ArticleSchema
 
         article = ArticleSchema(
+            feed_id="00000000-0000-0000-0000-000000000001",
             title="Test Article",
             url="https://example.com/article",
-            content_preview="Preview",
-            source_category="AI",
-            source_name="TestSource",
+            ai_summary="Preview",
+            category="AI",
+            feed_name="TestSource",
             ai_analysis=AIAnalysis(
                 is_hardcore=True,
                 reason="Very hardcore",
@@ -392,11 +394,12 @@ class TestBug7MarkdownFormatting:
         from app.schemas.article import AIAnalysis, ArticleSchema
 
         return ArticleSchema(
+            feed_id="00000000-0000-0000-0000-000000000001",
             title=title,
             url=url,
-            content_preview="Preview content",
-            source_category="AI",
-            source_name="TestSource",
+            ai_summary="Preview content",
+            category="AI",
+            feed_name="TestSource",
             ai_analysis=AIAnalysis(
                 is_hardcore=True,
                 reason="Very hardcore",
@@ -621,11 +624,12 @@ class TestBug8ReadLaterButtonMissing:
         # Create a minimal list of articles (3 articles)
         articles = [
             ArticleSchema(
+                feed_id="00000000-0000-0000-0000-000000000001",
                 title=f"Article {i}",
                 url=f"https://example.com/article-{i}",
-                content_preview=f"Preview {i}",
-                source_category="AI",
-                source_name="TestSource",
+                ai_summary=f"Preview {i}",
+                category="AI",
+                feed_name="TestSource",
             )
             for i in range(3)
         ]
@@ -649,11 +653,12 @@ class TestBug8ReadLaterButtonMissing:
 
         return [
             ArticleSchema(
+                feed_id="00000000-0000-0000-0000-000000000001",
                 title=f"Article {i}",
                 url=f"https://example.com/article-{i}",
-                content_preview=f"Preview {i}",
-                source_category="AI",
-                source_name="TestSource",
+                ai_summary=f"Preview {i}",
+                category="AI",
+                feed_name="TestSource",
             )
             for i in range(count)
         ]

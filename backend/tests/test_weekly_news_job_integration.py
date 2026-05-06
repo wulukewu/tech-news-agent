@@ -18,11 +18,12 @@ from app.schemas.article import AIAnalysis, ArticleSchema
 
 def make_hardcore_article(title="Article", tinkering_index=3, category="AI"):
     article = ArticleSchema(
+        feed_id="00000000-0000-0000-0000-000000000001",
         title=title,
         url="https://example.com/article",
-        content_preview="preview",
-        source_category=category,
-        source_name="TestSource",
+        ai_summary="preview",
+        category=category,
+        feed_name="TestSource",
     )
     article.ai_analysis = AIAnalysis(
         is_hardcore=True,

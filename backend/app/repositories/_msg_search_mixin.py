@@ -6,6 +6,7 @@ from typing import Any, Optional
 from uuid import UUID
 
 from app.core.database import ConversationMessage
+from app.core.errors import DatabaseError, ErrorCode
 from app.core.logger import get_logger
 
 logger = get_logger(__name__)

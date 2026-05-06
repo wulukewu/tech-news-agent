@@ -1,11 +1,28 @@
 """Mixin extracted from user_identity.py."""
 from __future__ import annotations
 
+import random
 import string
+from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+from app.core.errors import DatabaseError
 from app.core.logger import get_logger
+
+
+@dataclass
+class _AuditEntry:
+    """A single audit log entry for an identity binding operation."""
+
+    timestamp: datetime
+    action: str
+    user_id: str
+    platform: str
+    platform_user_id: str
+    success: bool
+    details: dict[str, Any] = field(default_factory=dict)
+
 
 logger = get_logger(__name__)
 

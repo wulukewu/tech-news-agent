@@ -36,7 +36,7 @@ class TestResponseGenerator:
             ArticleMatch(
                 article_id=str(uuid4()),
                 title="Introduction to Machine Learning",
-                content_preview="Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed. This article covers the basics of ML algorithms and their applications.",
+                ai_summary="Machine learning is a subset of artificial intelligence that enables computers to learn and improve from experience without being explicitly programmed. This article covers the basics of ML algorithms and their applications.",
                 similarity_score=0.95,
                 metadata={"category": "AI", "topics": ["machine learning", "algorithms"]},
                 url="https://example.com/ml-intro",
@@ -44,7 +44,7 @@ class TestResponseGenerator:
             ArticleMatch(
                 article_id=str(uuid4()),
                 title="Deep Learning Fundamentals",
-                content_preview="Deep learning is a machine learning technique that teaches computers to do what comes naturally to humans: learn by example. This comprehensive guide explores neural networks and their applications.",
+                ai_summary="Deep learning is a machine learning technique that teaches computers to do what comes naturally to humans: learn by example. This comprehensive guide explores neural networks and their applications.",
                 similarity_score=0.88,
                 metadata={"category": "AI", "topics": ["deep learning", "neural networks"]},
                 url="https://example.com/deep-learning",
@@ -52,7 +52,7 @@ class TestResponseGenerator:
             ArticleMatch(
                 article_id=str(uuid4()),
                 title="Python for Data Science",
-                content_preview="Python has become the go-to language for data science due to its simplicity and powerful libraries. Learn how to use pandas, numpy, and scikit-learn for data analysis.",
+                ai_summary="Python has become the go-to language for data science due to its simplicity and powerful libraries. Learn how to use pandas, numpy, and scikit-learn for data analysis.",
                 similarity_score=0.82,
                 metadata={"category": "Programming", "topics": ["python", "data science"]},
                 url="https://example.com/python-data-science",
@@ -318,7 +318,7 @@ class TestResponseGenerator:
                 ArticleMatch(
                     article_id=str(uuid4()),
                     title=f"Article {i}",
-                    content_preview=f"Content for article {i}",
+                    ai_summary=f"Content for article {i}",
                     similarity_score=0.9 - (i * 0.05),  # Decreasing scores
                     metadata={},
                     url=f"https://example.com/article-{i}",

@@ -14,11 +14,12 @@ from app.services.notion_service import NotionService
 
 def make_article(title="Test Article", url="https://example.com/article", category="AI"):
     return ArticleSchema(
+        feed_id="00000000-0000-0000-0000-000000000001",
         title=title,
         url=url,
-        content_preview="preview",
-        source_category=category,
-        source_name="TestSource",
+        ai_summary="preview",
+        category=category,
+        feed_name="TestSource",
     )
 
 

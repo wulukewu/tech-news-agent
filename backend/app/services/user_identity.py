@@ -18,7 +18,7 @@ Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.5
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any, Optional
 
@@ -97,35 +97,11 @@ class _VerificationEntry:
     expires_at: datetime
 
 
-@dataclass
-class _AuditEntry:
-    """A single audit log entry for an identity binding operation.
-
-    Attributes:
-        timestamp: UTC timestamp of the operation.
-        action: Operation type (``"link"``, ``"unlink"``, ``"verify"``).
-        user_id: System user identifier.
-        platform: Platform involved.
-        platform_user_id: Platform-side user identifier.
-        success: Whether the operation succeeded.
-        details: Optional extra context.
-    """
-
-    timestamp: datetime
-    action: str
-    user_id: str
-    platform: str
-    platform_user_id: str
-    success: bool
-    details: dict[str, Any] = field(default_factory=dict)
-
-
 # ---------------------------------------------------------------------------
 # Service
 # ---------------------------------------------------------------------------
 
-
-from app.services._ui_verification_mixin import VerificationMixin
+from app.services._ui_verification_mixin import VerificationMixin, _AuditEntry
 
 
 class UserIdentityManager(VerificationMixin):

@@ -44,7 +44,7 @@ def _make_article_match(
     return ArticleMatch(
         article_id=uuid4(),
         title=title,
-        content_preview="This is a test article content preview for performance testing.",
+        ai_summary="This is a test article content preview for performance testing.",
         similarity_score=similarity_score,
         url="https://example.com/article",
         published_at=datetime.utcnow(),
