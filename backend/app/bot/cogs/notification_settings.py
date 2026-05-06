@@ -14,6 +14,7 @@ from app.core.timezone_converter import TimezoneConverter
 from app.repositories.user_notification_preferences import UserNotificationPreferencesRepository
 from app.schemas.user_notification_preferences import UpdateUserNotificationPreferencesRequest
 from app.services.preference_service import PreferenceService
+from app.services.quiet_hours_service import QuietHoursService as QuietHoursService  # noqa: F401
 from app.services.supabase_service import SupabaseService
 from app.tasks.scheduler import get_dynamic_scheduler
 

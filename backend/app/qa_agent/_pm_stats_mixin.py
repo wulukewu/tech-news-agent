@@ -18,6 +18,8 @@ class PerformanceMetric:
     success: bool
     timestamp: datetime = field(default_factory=datetime.now)
     metadata: Dict[str, Any] = field(default_factory=dict)
+    user_id: Optional[str] = None
+    error: Optional[str] = None
 
 
 class PerfStatsMixin:

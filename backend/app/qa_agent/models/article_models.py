@@ -21,13 +21,17 @@ class ArticleMatch(BaseModel):
     Requirements: 2.2, 2.3
     """
 
-    model_config = ConfigDict(validate_assignment=True, extra="forbid")
+    model_config = ConfigDict(validate_assignment=True, extra="ignore")
 
     article_id: UUID = Field(..., description="Unique article identifier")
 
     title: str = Field(..., min_length=1, max_length=2000, description="Article title")
 
-    content_preview: str = Field(..., max_length=1000, description="Preview of article content")
+    content_preview: str = Field(
+        default="",
+        max_length=5000,
+        description="Preview of article content (also accepts ai_summary)",
+    )
 
     similarity_score: float = Field(..., ge=0.0, le=1.0, description="Vector similarity score")
 
@@ -50,7 +54,11 @@ class ArticleMatch(BaseModel):
     category: str = Field(..., description="Article category")
 
     def __init__(self, **data):
-        """Initialize ArticleMatch and calculate combined score."""
+        """Initialize ArticleMatch, mapping ai_summary → content_preview if needed."""
+        if "ai_summary" in data and not data.get("content_preview"):
+            data["content_preview"] = data.pop("ai_summary")
+        elif "ai_summary" in data:
+            data.pop("ai_summary")
         super().__init__(**data)
         # Calculate combined score after initialization
         self.combined_score = self.similarity_score * 0.7 + self.keyword_score * 0.3

@@ -69,7 +69,9 @@ class NotionService:
         """
         raise NotImplementedError("NotionService is deprecated. Use SupabaseService instead.")
 
-    async def create_article_page(self, article: Any) -> tuple[str, str]:
+    async def create_article_page(
+        self, article: Any, week_string: str | None = None
+    ) -> tuple[str, str]:
         """
         Create an article page.
 

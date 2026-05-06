@@ -9,6 +9,8 @@ from typing import Any, Optional
 from app.core.errors import ErrorCode, ExternalServiceError
 from app.core.logger import get_logger
 
+_MAX_RETRIES = 2
+
 logger = get_logger(__name__)
 
 

@@ -132,7 +132,7 @@ class TestFilterSelectOptionsProperty:
     def test_all_categories_represented_up_to_24(self, articles):
         """Property 1: All unique source_categories appear in options (up to 24)."""
         select = FilterSelect(articles)
-        unique_categories = {a.source_category for a in articles}
+        unique_categories = {a.category for a in articles}
         option_values = {opt.value for opt in select.options if opt.value != "__all__"}
 
         # If there are ≤24 unique categories, all must be present
@@ -202,19 +202,19 @@ class TestFilterCategoryConsistencyProperty:
     @settings(max_examples=5)
     def test_filtered_articles_all_match_selected_category(self, articles, category):
         """Property 3: Every article in filtered results has source_category == selected category."""
-        filtered = [a for a in articles if a.source_category == category]
+        filtered = [a for a in articles if a.category == category]
         for article in filtered:
-            assert article.source_category == category
+            assert article.category == category
 
     @given(articles=st.lists(_article_strategy(), min_size=2, max_size=50))
     @settings(max_examples=5)
     def test_filter_excludes_other_categories(self, articles):
         """Property 3: Filtering by one category excludes all articles from other categories."""
         # Pick the first article's category as the filter
-        selected_category = articles[0].source_category
-        filtered = [a for a in articles if a.source_category == selected_category]
+        selected_category = articles[0].category
+        filtered = [a for a in articles if a.category == selected_category]
         for article in filtered:
-            assert article.source_category == selected_category
+            assert article.category == selected_category
 
 
 # ---------------------------------------------------------------------------

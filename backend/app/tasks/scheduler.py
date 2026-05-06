@@ -5,6 +5,12 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
 from app.core.config import settings
+from app.services.notion_service import (
+    NotionService as NotionService,
+)
+
+# noqa: F401 - re-export for tests
+from app.services.rss_service import RSSService as RSSService  # noqa: F401 - re-export for tests
 from app.services.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
@@ -470,7 +476,7 @@ async def get_scheduler_health() -> dict:
             logger.warning(f"Failed to check database for last execution: {e}")
 
     # Check if scheduler is enabled
-    is_enabled = settings.enable_scheduler
+    is_enabled = getattr(settings, "enable_scheduler", True)
 
     # Check if scheduler is running
     is_running = _scheduler is not None and _scheduler.running

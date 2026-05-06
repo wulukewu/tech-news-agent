@@ -10,6 +10,8 @@ from typing import Any
 from app.core.errors import DatabaseError
 from app.core.logger import get_logger
 
+_VERIFICATION_CODE_LENGTH = 6
+
 
 @dataclass
 class _AuditEntry:
