@@ -64,7 +64,7 @@ class TestFetchNewArticles:
             )
 
             # Act
-            result = await service.fetch_new_articles(sources, mock_supabase)
+            result, _ = await service.fetch_new_articles(sources, mock_supabase)
 
         # Assert
         assert len(result) == 2
@@ -87,7 +87,7 @@ class TestFetchNewArticles:
             mock_supabase = AsyncMock()
 
             # Act
-            result = await service.fetch_new_articles(sources, mock_supabase)
+            result, _ = await service.fetch_new_articles(sources, mock_supabase)
 
         # Assert
         assert result == []
@@ -111,7 +111,7 @@ class TestFetchNewArticles:
             mock_supabase.check_article_exists = AsyncMock(return_value=False)
 
             # Act
-            result = await service.fetch_new_articles(sources, mock_supabase)
+            result, _ = await service.fetch_new_articles(sources, mock_supabase)
 
         # Assert
         assert len(result) == 2
@@ -144,7 +144,7 @@ class TestFetchNewArticles:
             mock_supabase.check_article_exists = AsyncMock(side_effect=check_side_effect)
 
             # Act
-            result = await service.fetch_new_articles(sources, mock_supabase)
+            result, _ = await service.fetch_new_articles(sources, mock_supabase)
 
         # Assert - should include all 3 articles (failed check assumes new)
         assert len(result) == 3
@@ -175,7 +175,7 @@ class TestFetchNewArticles:
 
             # Act
             with patch("app.services.rss_service.logger") as mock_logger:
-                result = await service.fetch_new_articles(sources, mock_supabase)
+                result, _ = await service.fetch_new_articles(sources, mock_supabase)
 
             # Assert - verify logging calls
             # Should log: starting, fetched count, and final statistics

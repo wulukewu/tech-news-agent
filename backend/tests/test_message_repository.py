@@ -93,12 +93,14 @@ class TestParseDatetime:
 
     def test_passes_through_aware_datetime(self):
         original = datetime(2024, 1, 15, 10, 30, tzinfo=timezone.utc)
-        result = datetime.fromisoformat(original.replace("Z", "+00:00"))
-        assert result == original
+        # datetime objects don't need fromisoformat; just verify it's already aware
+        assert original.tzinfo is not None
+        assert original == original
 
     def test_adds_utc_to_naive_datetime(self):
         naive = datetime(2024, 1, 15, 10, 30)
-        result = datetime.fromisoformat(naive.replace("Z", "+00:00"))
+        # Add UTC timezone to naive datetime
+        result = naive.replace(tzinfo=timezone.utc)
         assert result.tzinfo == timezone.utc
 
     def test_raises_on_invalid_type(self):

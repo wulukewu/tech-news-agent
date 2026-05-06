@@ -131,7 +131,7 @@ async def test_property_2_article_deduplication_correctness(
         mock_supabase.check_article_exists = AsyncMock(side_effect=lambda url: url in existing_urls)
 
         # Act: Call fetch_new_articles
-        result = await service.fetch_new_articles(sources, mock_supabase)
+        result, _ = await service.fetch_new_articles(sources, mock_supabase)
 
     # Assert: Verify deduplication properties
 
@@ -205,7 +205,7 @@ async def test_property_2_all_articles_new(num_articles):
         mock_supabase.check_article_exists = AsyncMock(return_value=False)
 
         # Act
-        result = await service.fetch_new_articles(sources, mock_supabase)
+        result, _ = await service.fetch_new_articles(sources, mock_supabase)
 
     # Assert: All articles should be returned
     assert (
@@ -260,7 +260,7 @@ async def test_property_2_all_articles_existing(num_articles):
         mock_supabase.check_article_exists = AsyncMock(return_value=True)
 
         # Act
-        result = await service.fetch_new_articles(sources, mock_supabase)
+        result, _ = await service.fetch_new_articles(sources, mock_supabase)
 
     # Assert: No articles should be returned
     assert len(result) == 0, f"Expected 0 articles when all exist, got {len(result)}"
@@ -331,7 +331,7 @@ async def test_property_2_deduplication_with_check_failures(num_articles, num_ch
         mock_supabase.check_article_exists = AsyncMock(side_effect=check_side_effect)
 
         # Act
-        result = await service.fetch_new_articles(sources, mock_supabase)
+        result, _ = await service.fetch_new_articles(sources, mock_supabase)
 
     # Assert: Result should include new URLs and failed check URLs (fail-safe)
     result_urls = {str(article.url) for article in result}
@@ -385,7 +385,7 @@ async def test_property_2_empty_fetch_result(num_existing_in_db):
         mock_supabase.check_article_exists = AsyncMock(return_value=True)
 
         # Act
-        result = await service.fetch_new_articles(sources, mock_supabase)
+        result, _ = await service.fetch_new_articles(sources, mock_supabase)
 
     # Assert: Result should be empty
     assert len(result) == 0, f"Expected empty result when no articles fetched, got {len(result)}"

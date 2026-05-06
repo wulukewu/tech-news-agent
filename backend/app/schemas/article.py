@@ -71,14 +71,15 @@ class ArticlePageResult(BaseModel):
 
 
 class ReadingListItem(BaseModel):
-    article_id: UUID  # 文章 UUID（更新自 page_id）
+    article_id: UUID | None = None  # 文章 UUID（更新自 page_id）
+    page_id: str | None = None  # 舊欄位名稱（向後相容）
     title: str  # 文章標題
     url: HttpUrl  # 文章 URL
     category: str  # 分類（重新命名自 source_category）
-    status: str  # 閱讀狀態（Unread, Read, Archived）
+    status: str = "Unread"  # 閱讀狀態（Unread, Read, Archived）
     rating: int | None = None  # 評分（1–5，未評分為 None）
-    added_at: datetime  # 新增時間
-    updated_at: datetime  # 更新時間
+    added_at: datetime | None = None  # 新增時間
+    updated_at: datetime | None = None  # 更新時間
     source: str = "web"  # 來源平台（discord, web）
 
 

@@ -41,7 +41,8 @@ class SupabaseService(UserMixin, FeedMixin, ArticleMixin, ReadingListMixin, Noti
         # Skip network connection validation in test environment
         import os
 
-        if os.getenv("APP_ENV") == "test":
+        _test_env = os.getenv("APP_ENV") == "test"
+        if _test_env:
             validate_connection = False
 
         # 驗證配置存在
@@ -59,8 +60,8 @@ class SupabaseService(UserMixin, FeedMixin, ArticleMixin, ReadingListMixin, Noti
         if client is not None:
             self.client = client
             logger.info("Using provided Supabase client for testing")
-        elif os.getenv("APP_ENV") == "test":
-            # In test environment, use a mock client to avoid SSL/network issues
+        elif _test_env and not hasattr(create_client, "_mock_name"):
+            # In test environment without a patched create_client, use MagicMock
             from unittest.mock import MagicMock
 
             self.client = MagicMock()

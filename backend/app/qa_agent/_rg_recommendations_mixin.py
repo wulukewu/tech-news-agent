@@ -1,5 +1,6 @@
 """Mixin extracted from app/qa_agent/response_generator.py."""
 import logging
+from datetime import datetime
 from typing import List, Optional
 
 from app.qa_agent.models import (
