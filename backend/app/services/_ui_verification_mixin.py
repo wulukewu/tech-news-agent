@@ -15,6 +15,14 @@ _VERIFICATION_CODE_TTL_MINUTES = 10
 
 
 @dataclass
+class _VerificationEntry:
+    """Internal storage for a pending verification code."""
+
+    code: str
+    expires_at: datetime
+
+
+@dataclass
 class _AuditEntry:
     """A single audit log entry for an identity binding operation."""
 

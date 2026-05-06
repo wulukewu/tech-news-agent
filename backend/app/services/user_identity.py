@@ -101,7 +101,7 @@ class _VerificationEntry:
 # Service
 # ---------------------------------------------------------------------------
 
-from app.services._ui_verification_mixin import VerificationMixin, _AuditEntry
+from app.services._ui_verification_mixin import VerificationMixin, _AuditEntry, _VerificationEntry
 
 
 class UserIdentityManager(VerificationMixin):

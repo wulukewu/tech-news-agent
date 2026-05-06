@@ -22,6 +22,9 @@ _scheduler: AsyncIOScheduler | None = None
 # Public alias for backward compatibility with tests
 scheduler: AsyncIOScheduler = AsyncIOScheduler()
 
+# Bot instance re-export for backward compatibility with tests
+bot = None  # noqa: F841
+
 # Global dynamic scheduler instance (initialized lazily)
 _dynamic_scheduler = None
 

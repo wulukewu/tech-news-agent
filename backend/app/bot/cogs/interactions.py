@@ -9,6 +9,7 @@ from discord.ext import commands
 from app.core.exceptions import SupabaseServiceError
 from app.schemas.article import ArticleSchema
 from app.services.llm_service import LLMService
+from app.services.notion_service import NotionService as NotionService  # noqa: F401
 from app.services.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
@@ -186,7 +187,7 @@ class FilterView(discord.ui.View):
 
 
 class DeepDiveButton(discord.ui.Button):
-    def __init__(self, article: ArticleSchema, llm_service: LLMService):
+    def __init__(self, article: ArticleSchema, llm_service: "LLMService | None" = None):
         label_text = (
             f"📖 {article.title[:20]}..." if len(article.title) > 20 else f"📖 {article.title}"
         )

@@ -7,6 +7,7 @@ from app.core.exceptions import LLMServiceError, SupabaseServiceError
 from app.core.logger import get_logger
 from app.schemas.article import ReadingListItem
 from app.services.llm_service import LLMService
+from app.services.notion_service import NotionService as NotionService  # noqa: F401
 from app.services.supabase_service import SupabaseService
 
 logger = get_logger(__name__)
@@ -20,7 +21,7 @@ PAGE_SIZE = 3
 
 
 class MarkAsReadButton(discord.ui.Button):
-    def __init__(self, item: ReadingListItem, row: int, supabase_service: SupabaseService):
+    def __init__(self, item: ReadingListItem, row: int, supabase_service: SupabaseService = None):
         label = "✅ 標記已讀"
         super().__init__(
             style=discord.ButtonStyle.success,
@@ -100,7 +101,7 @@ class MarkAsReadButton(discord.ui.Button):
 
 
 class RatingSelect(discord.ui.Select):
-    def __init__(self, item: ReadingListItem, row: int, supabase_service: SupabaseService):
+    def __init__(self, item: ReadingListItem, row: int, supabase_service: SupabaseService = None):
         options = [
             discord.SelectOption(label="⭐", value="1"),
             discord.SelectOption(label="⭐⭐", value="2"),

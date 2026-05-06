@@ -1,6 +1,7 @@
 """Fallback response methods for QAAgentController."""
 import logging
 from typing import List, Optional
+from uuid import UUID, uuid4
 
 from app.qa_agent.models import (
     ArticleMatch,

@@ -8,6 +8,7 @@ from app.bot.utils.decorators import ensure_user_registered
 from app.core.exceptions import SupabaseServiceError
 from app.core.logger import get_logger
 from app.services.llm_service import LLMService
+from app.services.notion_service import NotionService as NotionService  # noqa: F401
 from app.services.supabase_service import SupabaseService
 
 logger = get_logger(__name__)

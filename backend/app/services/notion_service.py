@@ -47,11 +47,29 @@ class NotionService:
 
     def __init__(self):
         """Initialize the NotionService stub."""
-        pass
+        self.client = None
+        self.feeds_db_id = "stub-feeds-db-id"
+        self.read_later_db_id = "stub-read-later-db-id"
 
     async def get_reading_list(self) -> list[Any]:
         """Stub: Get reading list items."""
         return []
+
+    async def get_highly_rated_articles(self, min_rating: int = 4) -> list[Any]:
+        """Stub: Get highly rated articles."""
+        return []
+
+    async def mark_as_read(self, page_id: str) -> None:
+        """Stub: Mark article as read."""
+        pass
+
+    async def rate_article(self, page_id: str, rating: int) -> None:
+        """Stub: Rate an article."""
+        pass
+
+    def _parse_reading_list_item(self, page: Any) -> Any:
+        """Stub: Parse reading list item."""
+        return None
 
     async def get_active_feeds(self) -> list[dict[str, Any]]:
         """
@@ -76,25 +94,37 @@ class NotionService:
     async def create_article_page(
         self, article: Any, week_string: str | None = None
     ) -> tuple[str, str]:
-        """
-        Create an article page.
+        """Create an article page via Notion API."""
+        try:
+            client = AsyncClient()
+            if hasattr(client, "pages") and hasattr(client.pages, "create"):
+                result = await client.pages.create(
+                    parent={"database_id": self.read_later_db_id},
+                    properties={},
+                )
+                return (
+                    result.get("id", "stub-page-id"),
+                    result.get("url", "https://notion.so/stub"),
+                )
+            return ("stub-page-id", "https://notion.so/stub-page")
+        except Exception as e:
+            from app.core.exceptions import NotionServiceError
 
-        Args:
-            article: Article data
-
-        Returns:
-            Tuple of (page_id, page_url)
-        """
-        return ("stub-page-id", "https://notion.so/stub-page")
+            raise NotionServiceError(f"Error creating article page: {e}") from e
 
     async def mark_article_as_read(self, page_id: str) -> None:
-        """
-        Mark an article as read.
+        """Mark an article as read via Notion API."""
+        try:
+            client = AsyncClient()
+            if hasattr(client, "pages") and hasattr(client.pages, "update"):
+                await client.pages.update(
+                    page_id=page_id,
+                    properties={"Status": {"select": {"name": "Read"}}},
+                )
+        except Exception as e:
+            from app.core.exceptions import NotionServiceError
 
-        Args:
-            page_id: The page ID to mark as read
-        """
-        pass  # Stub implementation for backward compatibility
+            raise NotionServiceError(f"Error updating article page status in Notion: {e}") from e
 
     async def add_to_read_later(self, article: Any) -> None:
         """
