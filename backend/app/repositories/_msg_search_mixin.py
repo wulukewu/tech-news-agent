@@ -202,6 +202,8 @@ class MsgSearchMixin:
                 first_message_at = _parse_datetime(rows[0]["created_at"])
                 last_message_at = _parse_datetime(rows[-1]["created_at"])
 
+            from app.repositories.message import MessageStats  # local import to avoid circular
+
             stats = MessageStats(
                 total_count=total_count,
                 user_count=user_count,

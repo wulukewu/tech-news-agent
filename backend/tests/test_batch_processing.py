@@ -45,6 +45,8 @@ async def test_batch_processing_splits_large_article_sets():
     ):
         # Setup mocks
         mock_supabase = AsyncMock()
+        mock_supabase.get_unanalyzed_articles = AsyncMock(return_value=[])
+        mock_supabase.update_feeds_last_fetched = AsyncMock()
         mock_supabase_class.return_value = mock_supabase
 
         mock_rss = AsyncMock()
@@ -122,6 +124,8 @@ async def test_batch_processing_handles_small_article_sets():
     ):
         # Setup mocks
         mock_supabase = AsyncMock()
+        mock_supabase.get_unanalyzed_articles = AsyncMock(return_value=[])
+        mock_supabase.update_feeds_last_fetched = AsyncMock()
         mock_supabase_class.return_value = mock_supabase
 
         mock_rss = AsyncMock()
@@ -198,6 +202,8 @@ async def test_batch_processing_aggregates_results():
     ):
         # Setup mocks
         mock_supabase = AsyncMock()
+        mock_supabase.get_unanalyzed_articles = AsyncMock(return_value=[])
+        mock_supabase.update_feeds_last_fetched = AsyncMock()
         mock_supabase_class.return_value = mock_supabase
 
         mock_rss = AsyncMock()
@@ -283,6 +289,8 @@ async def test_batch_processing_logs_timing():
     ):
         # Setup mocks
         mock_supabase = AsyncMock()
+        mock_supabase.get_unanalyzed_articles = AsyncMock(return_value=[])
+        mock_supabase.update_feeds_last_fetched = AsyncMock()
         mock_supabase_class.return_value = mock_supabase
 
         mock_rss = AsyncMock()

@@ -66,7 +66,7 @@ class TestSchedulerLogging:
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
             caplog.at_level(logging.INFO, logger="app.tasks.scheduler"),
         ):
             await background_fetch_job()
@@ -101,18 +101,20 @@ class TestSchedulerLogging:
         mock_supabase = MagicMock()
         mock_supabase.get_active_feeds = AsyncMock(return_value=test_feeds)
         mock_supabase.insert_articles = AsyncMock(return_value=batch_result)
+        mock_supabase.get_unanalyzed_articles = AsyncMock(return_value=[])
+        mock_supabase.update_feeds_last_fetched = AsyncMock()
 
         mock_rss = MagicMock()
-        mock_rss.fetch_new_articles = AsyncMock(return_value=test_articles)
+        mock_rss.fetch_new_articles = AsyncMock(return_value=(test_articles, []))
 
         mock_llm = MagicMock()
         mock_llm.evaluate_batch = AsyncMock(return_value=test_articles)
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
-            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
-            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.RSSService", return_value=mock_rss),
+            patch("app.tasks._fetch_job.LLMService", return_value=mock_llm),
             caplog.at_level(logging.INFO, logger="app.tasks.scheduler"),
         ):
             await background_fetch_job()
@@ -153,18 +155,20 @@ class TestSchedulerLogging:
         mock_supabase = MagicMock()
         mock_supabase.get_active_feeds = AsyncMock(return_value=test_feeds)
         mock_supabase.insert_articles = AsyncMock(return_value=batch_result)
+        mock_supabase.get_unanalyzed_articles = AsyncMock(return_value=[])
+        mock_supabase.update_feeds_last_fetched = AsyncMock()
 
         mock_rss = MagicMock()
-        mock_rss.fetch_new_articles = AsyncMock(return_value=test_articles)
+        mock_rss.fetch_new_articles = AsyncMock(return_value=(test_articles, []))
 
         mock_llm = MagicMock()
         mock_llm.evaluate_batch = AsyncMock(return_value=test_articles)
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
-            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
-            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.RSSService", return_value=mock_rss),
+            patch("app.tasks._fetch_job.LLMService", return_value=mock_llm),
             caplog.at_level(logging.INFO, logger="app.tasks.scheduler"),
         ):
             await background_fetch_job()
@@ -202,18 +206,20 @@ class TestSchedulerLogging:
         mock_supabase = MagicMock()
         mock_supabase.get_active_feeds = AsyncMock(return_value=test_feeds)
         mock_supabase.insert_articles = AsyncMock(return_value=batch_result)
+        mock_supabase.get_unanalyzed_articles = AsyncMock(return_value=[])
+        mock_supabase.update_feeds_last_fetched = AsyncMock()
 
         mock_rss = MagicMock()
-        mock_rss.fetch_new_articles = AsyncMock(return_value=test_articles)
+        mock_rss.fetch_new_articles = AsyncMock(return_value=(test_articles, []))
 
         mock_llm = MagicMock()
         mock_llm.evaluate_batch = AsyncMock(return_value=test_articles)
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
-            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
-            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.RSSService", return_value=mock_rss),
+            patch("app.tasks._fetch_job.LLMService", return_value=mock_llm),
             caplog.at_level(logging.INFO, logger="app.tasks.scheduler"),
         ):
             await background_fetch_job()
@@ -254,18 +260,20 @@ class TestSchedulerLogging:
         mock_supabase = MagicMock()
         mock_supabase.get_active_feeds = AsyncMock(return_value=test_feeds)
         mock_supabase.insert_articles = AsyncMock(return_value=batch_result)
+        mock_supabase.get_unanalyzed_articles = AsyncMock(return_value=[])
+        mock_supabase.update_feeds_last_fetched = AsyncMock()
 
         mock_rss = MagicMock()
-        mock_rss.fetch_new_articles = AsyncMock(return_value=test_articles)
+        mock_rss.fetch_new_articles = AsyncMock(return_value=(test_articles, []))
 
         mock_llm = MagicMock()
         mock_llm.evaluate_batch = AsyncMock(return_value=test_articles)
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
-            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
-            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.RSSService", return_value=mock_rss),
+            patch("app.tasks._fetch_job.LLMService", return_value=mock_llm),
             caplog.at_level(logging.INFO, logger="app.tasks.scheduler"),
         ):
             await background_fetch_job()
@@ -304,18 +312,20 @@ class TestSchedulerLogging:
         mock_supabase = MagicMock()
         mock_supabase.get_active_feeds = AsyncMock(return_value=test_feeds)
         mock_supabase.insert_articles = AsyncMock(return_value=batch_result)
+        mock_supabase.get_unanalyzed_articles = AsyncMock(return_value=[])
+        mock_supabase.update_feeds_last_fetched = AsyncMock()
 
         mock_rss = MagicMock()
-        mock_rss.fetch_new_articles = AsyncMock(return_value=test_articles)
+        mock_rss.fetch_new_articles = AsyncMock(return_value=(test_articles, []))
 
         mock_llm = MagicMock()
         mock_llm.evaluate_batch = AsyncMock(return_value=test_articles)
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
-            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
-            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.RSSService", return_value=mock_rss),
+            patch("app.tasks._fetch_job.LLMService", return_value=mock_llm),
             caplog.at_level(logging.INFO, logger="app.tasks.scheduler"),
         ):
             await background_fetch_job()
@@ -349,7 +359,7 @@ class TestSchedulerLogging:
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
             caplog.at_level(logging.ERROR, logger="app.tasks.scheduler"),
         ):
             await background_fetch_job()
@@ -392,18 +402,20 @@ class TestSchedulerLogging:
         mock_supabase = MagicMock()
         mock_supabase.get_active_feeds = AsyncMock(return_value=test_feeds)
         mock_supabase.insert_articles = AsyncMock(return_value=batch_result)
+        mock_supabase.get_unanalyzed_articles = AsyncMock(return_value=[])
+        mock_supabase.update_feeds_last_fetched = AsyncMock()
 
         mock_rss = MagicMock()
-        mock_rss.fetch_new_articles = AsyncMock(return_value=test_articles)
+        mock_rss.fetch_new_articles = AsyncMock(return_value=(test_articles, []))
 
         mock_llm = MagicMock()
         mock_llm.evaluate_batch = AsyncMock(return_value=test_articles)
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
-            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
-            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.RSSService", return_value=mock_rss),
+            patch("app.tasks._fetch_job.LLMService", return_value=mock_llm),
             caplog.at_level(logging.WARNING, logger="app.tasks.scheduler"),
         ):
             await background_fetch_job()
@@ -444,18 +456,20 @@ class TestSchedulerLogging:
         mock_supabase = MagicMock()
         mock_supabase.get_active_feeds = AsyncMock(return_value=test_feeds)
         mock_supabase.insert_articles = AsyncMock(return_value=batch_result)
+        mock_supabase.get_unanalyzed_articles = AsyncMock(return_value=[])
+        mock_supabase.update_feeds_last_fetched = AsyncMock()
 
         mock_rss = MagicMock()
-        mock_rss.fetch_new_articles = AsyncMock(return_value=test_articles)
+        mock_rss.fetch_new_articles = AsyncMock(return_value=(test_articles, []))
 
         mock_llm = MagicMock()
         mock_llm.evaluate_batch = AsyncMock(return_value=test_articles)
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
-            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
-            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.RSSService", return_value=mock_rss),
+            patch("app.tasks._fetch_job.LLMService", return_value=mock_llm),
             caplog.at_level(logging.WARNING, logger="app.tasks.scheduler"),
         ):
             await background_fetch_job()
