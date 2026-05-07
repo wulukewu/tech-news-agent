@@ -8,6 +8,9 @@ from app.api.notifications.proactive import router as proactive_router
 from app.api.notifications.quiet_hours import router as quiet_hours_router
 from app.api.notifications.settings import router as settings_router
 from app.api.notifications.tech_depth import router as tech_depth_router
+from app.repositories.user_notification_preferences import (
+    UserNotificationPreferencesRepository as UserNotificationPreferencesRepository,  # noqa: F401
+)
 from app.services.notification_settings_service import (
     NotificationSettingsService as NotificationSettingsService,  # noqa: F401
 )
