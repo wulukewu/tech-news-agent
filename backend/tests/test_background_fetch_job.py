@@ -79,9 +79,9 @@ class TestBackgroundFetchJob:
 
         # Execute job with mocks
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
-            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
-            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.RSSService", return_value=mock_rss),
+            patch("app.tasks._fetch_job.LLMService", return_value=mock_llm),
         ):
             await background_fetch_job()
 
@@ -124,9 +124,9 @@ class TestBackgroundFetchJob:
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
-            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
-            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.RSSService", return_value=mock_rss),
+            patch("app.tasks._fetch_job.LLMService", return_value=mock_llm),
         ):
             await background_fetch_job()
 
@@ -157,9 +157,9 @@ class TestBackgroundFetchJob:
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
-            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
-            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.RSSService", return_value=mock_rss),
+            patch("app.tasks._fetch_job.LLMService", return_value=mock_llm),
         ):
             await background_fetch_job()
 
@@ -187,7 +187,7 @@ class TestBackgroundFetchJob:
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
             caplog.at_level(logging.ERROR, logger="app.tasks.scheduler"),
         ):
             await background_fetch_job()
@@ -233,9 +233,9 @@ class TestBackgroundFetchJob:
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
-            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
-            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.RSSService", return_value=mock_rss),
+            patch("app.tasks._fetch_job.LLMService", return_value=mock_llm),
             caplog.at_level(logging.WARNING, logger="app.tasks.scheduler"),
         ):
             await background_fetch_job()

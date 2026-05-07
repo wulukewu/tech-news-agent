@@ -129,9 +129,9 @@ class TestSchedulerEmptyFeedHandling:
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
-            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
-            patch("app.tasks.scheduler.LLMService", return_value=mock_llm),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.RSSService", return_value=mock_rss),
+            patch("app.tasks._fetch_job.LLMService", return_value=mock_llm),
             caplog.at_level(logging.WARNING),
         ):
             await background_fetch_job()
@@ -167,7 +167,7 @@ class TestSchedulerDatabaseFailureHandling:
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
             caplog.at_level(logging.ERROR),
         ):
             # Job should not crash
@@ -195,7 +195,7 @@ class TestSchedulerDatabaseFailureHandling:
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
             caplog.at_level(logging.INFO),
         ):
             await background_fetch_job()
@@ -260,8 +260,8 @@ class TestSchedulerDiscordDecoupling:
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
-            patch("app.tasks.scheduler.RSSService", return_value=mock_rss),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.RSSService", return_value=mock_rss),
         ):
             # Even if Discord client exists, it should not be used
             with patch.dict("sys.modules", {"app.bot.client": MagicMock(bot=mock_discord_client)}):
@@ -386,7 +386,7 @@ class TestSchedulerRobustness:
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
             caplog.at_level(logging.CRITICAL),
         ):
             # Job should not crash
@@ -412,7 +412,7 @@ class TestSchedulerRobustness:
 
         # Execute job
         with (
-            patch("app.tasks.scheduler.SupabaseService", return_value=mock_supabase),
+            patch("app.tasks._fetch_job.SupabaseService", return_value=mock_supabase),
             caplog.at_level(logging.ERROR),
         ):
             await background_fetch_job()

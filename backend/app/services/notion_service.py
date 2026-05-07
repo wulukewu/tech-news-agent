@@ -78,7 +78,7 @@ class NotionService:
         Returns:
             List of active feed configurations
         """
-        pass  # Stub implementation for backward compatibility
+        return []  # Stub implementation for backward compatibility
 
     async def add_feed(self, name: str, url: str, category: str) -> None:
         """

@@ -39,9 +39,9 @@ async def test_batch_processing_splits_large_article_sets():
 
     # Mock dependencies
     with (
-        patch("app.tasks.scheduler.SupabaseService") as mock_supabase_class,
-        patch("app.tasks.scheduler.RSSService") as mock_rss_class,
-        patch("app.tasks.scheduler.LLMService") as mock_llm_class,
+        patch("app.tasks._fetch_job.SupabaseService") as mock_supabase_class,
+        patch("app.tasks._fetch_job.RSSService") as mock_rss_class,
+        patch("app.tasks._fetch_job.LLMService") as mock_llm_class,
     ):
         # Setup mocks
         mock_supabase = AsyncMock()
@@ -59,7 +59,7 @@ async def test_batch_processing_splits_large_article_sets():
         ]
 
         # Mock fetch_new_articles to return 120 articles
-        mock_rss.fetch_new_articles.return_value = mock_articles
+        mock_rss.fetch_new_articles.return_value = (mock_articles, [str(uuid4())])
 
         # Mock evaluate_batch to return articles with analysis
         def mock_evaluate_batch(articles):
@@ -116,9 +116,9 @@ async def test_batch_processing_handles_small_article_sets():
 
     # Mock dependencies
     with (
-        patch("app.tasks.scheduler.SupabaseService") as mock_supabase_class,
-        patch("app.tasks.scheduler.RSSService") as mock_rss_class,
-        patch("app.tasks.scheduler.LLMService") as mock_llm_class,
+        patch("app.tasks._fetch_job.SupabaseService") as mock_supabase_class,
+        patch("app.tasks._fetch_job.RSSService") as mock_rss_class,
+        patch("app.tasks._fetch_job.LLMService") as mock_llm_class,
     ):
         # Setup mocks
         mock_supabase = AsyncMock()
@@ -136,7 +136,7 @@ async def test_batch_processing_handles_small_article_sets():
         ]
 
         # Mock fetch_new_articles to return 30 articles
-        mock_rss.fetch_new_articles.return_value = mock_articles
+        mock_rss.fetch_new_articles.return_value = (mock_articles, [str(uuid4())])
 
         # Mock evaluate_batch to return articles with analysis
         def mock_evaluate_batch(articles):
@@ -191,9 +191,9 @@ async def test_batch_processing_aggregates_results():
 
     # Mock dependencies
     with (
-        patch("app.tasks.scheduler.SupabaseService") as mock_supabase_class,
-        patch("app.tasks.scheduler.RSSService") as mock_rss_class,
-        patch("app.tasks.scheduler.LLMService") as mock_llm_class,
+        patch("app.tasks._fetch_job.SupabaseService") as mock_supabase_class,
+        patch("app.tasks._fetch_job.RSSService") as mock_rss_class,
+        patch("app.tasks._fetch_job.LLMService") as mock_llm_class,
         patch("app.tasks.scheduler.logger") as mock_logger,
     ):
         # Setup mocks
@@ -212,7 +212,7 @@ async def test_batch_processing_aggregates_results():
         ]
 
         # Mock fetch_new_articles to return 100 articles
-        mock_rss.fetch_new_articles.return_value = mock_articles
+        mock_rss.fetch_new_articles.return_value = (mock_articles, [str(uuid4())])
 
         # Mock evaluate_batch to return articles with analysis
         def mock_evaluate_batch(articles):
@@ -276,9 +276,9 @@ async def test_batch_processing_logs_timing():
 
     # Mock dependencies
     with (
-        patch("app.tasks.scheduler.SupabaseService") as mock_supabase_class,
-        patch("app.tasks.scheduler.RSSService") as mock_rss_class,
-        patch("app.tasks.scheduler.LLMService") as mock_llm_class,
+        patch("app.tasks._fetch_job.SupabaseService") as mock_supabase_class,
+        patch("app.tasks._fetch_job.RSSService") as mock_rss_class,
+        patch("app.tasks._fetch_job.LLMService") as mock_llm_class,
         patch("app.tasks.scheduler.logger") as mock_logger,
     ):
         # Setup mocks
@@ -297,7 +297,7 @@ async def test_batch_processing_logs_timing():
         ]
 
         # Mock fetch_new_articles to return 60 articles
-        mock_rss.fetch_new_articles.return_value = mock_articles
+        mock_rss.fetch_new_articles.return_value = (mock_articles, [str(uuid4())])
 
         # Mock evaluate_batch to return articles with analysis
         def mock_evaluate_batch(articles):

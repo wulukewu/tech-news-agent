@@ -57,12 +57,14 @@ def create_access_token(
     # 構建 payload
     now = datetime.utcnow()
     expire = now + expires_delta
+    now_ts = int(now.timestamp())
+    expire_ts = int(expire.timestamp())
 
     payload = {
         "sub": str(user_id),  # Subject: user UUID
         "discord_id": discord_id,
-        "exp": int(expire.timestamp()),  # Expiration time as Unix timestamp
-        "iat": int(now.timestamp()),  # Issued at as Unix timestamp
+        "exp": expire_ts,  # Expiration time as Unix timestamp
+        "iat": now_ts,  # Issued at as Unix timestamp
     }
 
     if username:
