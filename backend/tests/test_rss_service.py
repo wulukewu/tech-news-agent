@@ -320,8 +320,8 @@ class TestFetchAllFeeds:
         service = RSSService()
         sources = [make_source(name=f"Feed{i}", url=f"https://feed{i}.com/rss") for i in range(3)]
 
-        async def fake_process(source, client):
-            return [MagicMock(title=f"Article from {source.name}")]
+        async def fake_process(source, client, feed_id_map=None):
+            return ([MagicMock(title=f"Article from {source.name}")], source.id)
 
         with (
             patch.object(service, "_process_single_feed", side_effect=fake_process),
