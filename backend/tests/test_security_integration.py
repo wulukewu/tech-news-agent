@@ -13,6 +13,8 @@ import pytest
 from app.qa_agent.database import get_db_connection
 from app.qa_agent.security_manager import AccessDeniedError, SecurityManager
 
+pytestmark = pytest.mark.skip(reason="integration test - requires real database")
+
 
 @pytest.fixture
 async def setup_database():

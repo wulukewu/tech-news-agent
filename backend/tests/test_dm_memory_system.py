@@ -15,7 +15,11 @@ Usage:
 import asyncio
 import sys
 
+import pytest
+
 from app.services.supabase_service import SupabaseService
+
+pytestmark = pytest.mark.skip(reason="manual integration test script - not a unit test")
 
 
 class Colors:

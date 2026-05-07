@@ -16,8 +16,7 @@ from uuid import uuid4
 import pytest
 
 from app.qa_agent.embedding_service import EmbeddingError
-
-from .models import (
+from app.qa_agent.models import (
     ArticleMatch,
     ParsedQuery,
     QueryIntent,
@@ -25,9 +24,9 @@ from .models import (
     ResponseType,
     StructuredResponse,
 )
-from .qa_agent_controller import CircuitBreaker, QAAgentController, RetryMechanism
-from .response_generator import ResponseGeneratorError
-from .vector_store import VectorStoreError
+from app.qa_agent.qa_agent_controller import CircuitBreaker, QAAgentController, RetryMechanism
+from app.qa_agent.response_generator import ResponseGeneratorError
+from app.qa_agent.vector_store import VectorStoreError
 
 
 class TestRetryMechanism:

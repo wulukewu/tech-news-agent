@@ -23,8 +23,13 @@ def mock_supabase_client():
 
 @pytest.fixture
 def subscription_service(mock_supabase_client):
-    """Create a SubscriptionService instance with mock client"""
-    return SubscriptionService(mock_supabase_client)
+    """Create a SubscriptionService instance with mock repositories"""
+    from app.repositories.feed import FeedRepository
+    from app.repositories.user_subscription import UserSubscriptionRepository
+
+    feed_repo = MagicMock(spec=FeedRepository)
+    user_sub_repo = MagicMock(spec=UserSubscriptionRepository)
+    return SubscriptionService(feed_repo, user_sub_repo)
 
 
 class TestBatchSubscribe:
