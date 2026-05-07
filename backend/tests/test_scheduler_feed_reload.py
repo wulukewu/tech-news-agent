@@ -30,9 +30,9 @@ def mock_feeds():
 def mock_services():
     """Mock all service dependencies."""
     with (
-        patch("app.tasks.scheduler.SupabaseService") as mock_supabase,
-        patch("app.tasks.scheduler.RSSService") as mock_rss,
-        patch("app.tasks.scheduler.LLMService") as mock_llm,
+        patch("app.tasks._fetch_job.SupabaseService") as mock_supabase,
+        patch("app.tasks._fetch_job.RSSService") as mock_rss,
+        patch("app.tasks._fetch_job.LLMService") as mock_llm,
     ):
         # Setup mock instances
         supabase_instance = AsyncMock()
@@ -46,7 +46,8 @@ def mock_services():
         # Default return values
         supabase_instance.get_active_feeds.return_value = []
         supabase_instance.get_unanalyzed_articles.return_value = []
-        rss_instance.fetch_new_articles.return_value = []
+        rss_instance.fetch_new_articles.return_value = ([], [])
+        supabase_instance.update_feeds_last_fetched = AsyncMock()
         llm_instance.evaluate_batch.return_value = []
 
         yield {"supabase": supabase_instance, "rss": rss_instance, "llm": llm_instance}
