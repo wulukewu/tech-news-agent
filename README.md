@@ -1,56 +1,56 @@
 # Tech News Agent
 
-An automated technical information curation system combining FastAPI backend, Next.js web interface, Discord Bot, and Groq LLM. It automatically fetches RSS feeds, analyzes articles with AI, and delivers personalized tech news through both a web dashboard and Discord DMs — with a full conversational AI layer, intelligent reminders, learning paths, and weekly insights.
+An automated technical information curation system combining FastAPI backend, Next.js web interface, Discord Bot, and Groq LLM. It automatically fetches RSS feeds, analyzes articles with AI, and delivers personalized tech news through both a web dashboard and Discord DMs with a full conversational AI layer, intelligent reminders, learning paths, and weekly insights.
 
-## 🌟 Core Features
+## Core Features
 
-### 📱 Multi-Platform Access
+### Multi-Platform Access
 
-- **Web Dashboard**: Modern Next.js interface with dark mode, i18n (EN/ZH), and full responsive design
-- **Discord Bot**: Slash commands, DM notifications, and interactive UI components
-- **REST API**: Full-featured API with Swagger/ReDoc documentation
+- Web Dashboard: Modern Next.js interface with dark mode, i18n (EN/ZH), and full responsive design
+- Discord Bot: Slash commands, DM notifications, and interactive UI components
+- REST API: Full-featured API with Swagger/ReDoc documentation
 
-### 🤖 AI-Powered Intelligence
+### AI-Powered Intelligence
 
-- **Smart Scoring**: Evaluates technical depth using Groq (Llama 3.1 8B)
-- **AI Summaries**: Generates concise summaries with Llama 3.3 70B
-- **Personalized Recommendations**: Learns from your ratings to suggest relevant content
-- **Deep Dive Analysis**: On-demand detailed technical breakdowns
-- **QA Agent**: Full conversational Q&A over your subscribed articles with vector search, multi-turn memory, and user profile learning
-- **Weekly Insights**: AI-generated weekly digest with trend detection and theme clustering
-- **Intelligent Reminders**: Context-aware reminders based on reading behavior and interests
-- **Learning Paths**: Skill tree, goal tracking, and adaptive content recommendations
+- Smart Scoring: Evaluates technical depth using Groq (Llama 3.1 8B)
+- AI Summaries: Generates concise summaries with Llama 3.3 70B
+- Personalized Recommendations: Learns from your ratings to suggest relevant content
+- Deep Dive Analysis: On-demand detailed technical breakdowns
+- QA Agent: Full conversational Q&A over your subscribed articles with vector search, multi-turn memory, and user profile learning
+- Weekly Insights: AI-generated weekly digest with trend detection and theme clustering
+- Intelligent Reminders: Context-aware reminders based on reading behavior and interests
+- Learning Paths: Skill tree, goal tracking, and adaptive content recommendations
 
-### 👥 Multi-Tenant Architecture
+### Multi-Tenant Architecture
 
-- **Personal Subscriptions**: Each user manages their own RSS feeds
-- **Private Reading Lists**: Rate and organize articles independently
-- **Custom Notifications**: Granular control over frequency, timing, quiet hours, and content type thresholds
-- **Data Isolation**: Complete privacy between users
+- Personal Subscriptions: Each user manages their own RSS feeds
+- Private Reading Lists: Rate and organize articles independently
+- Custom Notifications: Granular control over frequency, timing, quiet hours, and content type thresholds
+- Data Isolation: Complete privacy between users
 
-### ⚡ Flexible Scheduling
+### Flexible Scheduling
 
-- **Automated Fetching**: Configurable background scheduler (default: every 6 hours)
-- **Per-User Dynamic Scheduling**: Each user's notifications follow their own schedule and timezone
-- **Manual Triggers**: Instant article refresh via web, Discord, or API
-- **Smart Notifications**: DM delivery with duplicate prevention and quiet hours support
+- Automated Fetching: Configurable background scheduler (default: every 6 hours)
+- Per-User Dynamic Scheduling: Each user's notifications follow their own schedule and timezone
+- Manual Triggers: Instant article refresh via web, Discord, or API
+- Smart Notifications: DM delivery with duplicate prevention and quiet hours support
 
-### 🗄️ Robust Data Layer
+### Robust Data Layer
 
-- **Supabase/PostgreSQL**: Reliable data storage with pgvector support
-- **Semantic Search**: Vector embeddings for AI-powered article search
-- **Conversation Persistence**: Full chat history with search and export
-- **Knowledge Graph**: Article dependency and concept linking
+- Supabase/PostgreSQL: Reliable data storage with pgvector support
+- Semantic Search: Vector embeddings for AI-powered article search
+- Conversation Persistence: Full chat history with search and export
+- Knowledge Graph: Article dependency and concept linking
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
-1. **Supabase Account** — [supabase.com](https://supabase.com)
-2. **Discord Bot** (optional) — [Discord Developer Portal](https://discord.com/developers/applications)
-3. **Groq API Key** — [console.groq.com](https://console.groq.com)
+1. Supabase Account — https://supabase.com
+2. Discord Bot (optional) — https://discord.com/developers/applications
+3. Groq API Key — https://console.groq.com
 
 ### Installation
 
@@ -93,10 +93,10 @@ npm run dev
 
 ### First Steps
 
-1. **Web Interface**: Visit http://localhost:3000 and sign in with Discord OAuth
-2. **Subscribe to Feeds**: Add your favorite RSS feeds from the Subscriptions page
-3. **Trigger Fetch**: Click "Fetch New Articles" or use `/trigger_fetch` in Discord
-4. **Explore**: Browse articles, save to reading list, rate content, and chat with the AI
+1. Web Interface: Visit http://localhost:3000 and sign in with Discord OAuth
+2. Subscribe to Feeds: Add your favorite RSS feeds from the Subscriptions page
+3. Trigger Fetch: Click "Fetch New Articles" or use /trigger_fetch in Discord
+4. Explore: Browse articles, save to reading list, rate content, and chat with the AI
 
 ---
 
@@ -104,7 +104,7 @@ npm run dev
 
 ### Method 1: Docker Compose (Recommended)
 
-#### 🔧 Development (with Hot Reloading)
+#### Development (with Hot Reloading)
 
 ```bash
 make dev
@@ -112,7 +112,7 @@ make dev
 docker-compose up -d
 ```
 
-#### 🚀 Production
+#### Production
 
 ```bash
 make prod
@@ -129,7 +129,7 @@ python -m app.main
 
 ---
 
-## ⚙️ Environment Variables
+## Environment Variables
 
 ### Required
 
@@ -175,73 +175,73 @@ LOG_LEVEL=INFO
 
 ---
 
-## 💬 Discord Bot Commands
+## Discord Bot Commands
 
 ### Scheduler
 
 | Command | Description |
 |---------|-------------|
-| `/trigger_fetch` | Manually trigger article fetching |
-| `/scheduler_status` | Check scheduler health and status |
+| /trigger_fetch | Manually trigger article fetching |
+| /scheduler_status | Check scheduler health and status |
 
 ### Feed Management
 
 | Command | Description |
 |---------|-------------|
-| `/add_feed name: url: category:` | Subscribe to an RSS/Atom feed |
-| `/list_feeds` | View all subscribed feeds |
-| `/unsubscribe_feed feed_identifier:` | Unsubscribe from a feed |
+| /add_feed name: url: category: | Subscribe to an RSS/Atom feed |
+| /list_feeds | View all subscribed feeds |
+| /unsubscribe_feed feed_identifier: | Unsubscribe from a feed |
 
 ### Article Discovery
 
 | Command | Description |
 |---------|-------------|
-| `/news_now` | Latest articles with category filter, deep dive, and save buttons |
-| `/ask question:` | Ask a natural language question about your articles |
+| /news_now | Latest articles with category filter, deep dive, and save buttons |
+| /ask question: | Ask a natural language question about your articles |
 
 ### Reading List
 
 | Command | Description |
 |---------|-------------|
-| `/reading_list view` | Browse with pagination, mark read, and rate (1–5 stars) |
-| `/reading_list remove article_id:` | Remove an article by ID |
-| `/reading_list recommend` | AI recommendations based on 4+ star ratings |
+| /reading_list view | Browse with pagination, mark read, and rate (1–5 stars) |
+| /reading_list remove article_id: | Remove an article by ID |
+| /reading_list recommend | AI recommendations based on 4+ star ratings |
 
 ### Conversations
 
 | Command | Description |
 |---------|-------------|
-| `/conversations` | List past DM conversations |
-| `/continue id:` | Continue a past conversation |
-| `/search query:` | Search conversation history |
+| /conversations | List past DM conversations |
+| /continue id: | Continue a past conversation |
+| /search query: | Search conversation history |
 
 ### Profile & Recommendations
 
 | Command | Description |
 |---------|-------------|
-| `/my_profile` | View preference summary and category weights |
-| `/update_profile` | Rebuild preference summary from DM history |
-| `/recommend_now` | Trigger personalized recommendation to DM |
-| `/stats` | Reading statistics: saved, read/unread, avg rating, top categories |
-| `/export` | Export reading list as CSV |
+| /my_profile | View preference summary and category weights |
+| /update_profile | Rebuild preference summary from DM history |
+| /recommend_now | Trigger personalized recommendation to DM |
+| /stats | Reading statistics: saved, read/unread, avg rating, top categories |
+| /export | Export reading list as CSV |
 
 ### Notification Settings
 
 | Command | Description |
 |---------|-------------|
-| `/notifications enabled:` | Toggle DM notifications on/off |
-| `/notification_status` | Check current notification settings |
-| `/set-notification-frequency frequency:` | Set daily/weekly frequency |
-| `/set-notification-time hour: minute:` | Set delivery time |
-| `/set-timezone timezone:` | Set your timezone |
-| `/toggle-notifications` | Quick toggle |
-| `/quiet-hours` | View quiet hours settings |
-| `/set-quiet-hours start_time: end_time: enabled:` | Configure quiet hours |
-| `/toggle-quiet-hours` | Quick toggle quiet hours |
+| /notifications enabled: | Toggle DM notifications on/off |
+| /notification_status | Check current notification settings |
+| /set-notification-frequency frequency: | Set daily/weekly frequency |
+| /set-notification-time hour: minute: | Set delivery time |
+| /set-timezone timezone: | Set your timezone |
+| /toggle-notifications | Quick toggle |
+| /quiet-hours | View quiet hours settings |
+| /set-quiet-hours start_time: end_time: enabled: | Configure quiet hours |
+| /toggle-quiet-hours | Quick toggle quiet hours |
 
 ---
 
-## 🌐 Web API Endpoints
+## Web API Endpoints
 
 ### Authentication
 ```
@@ -324,11 +324,11 @@ GET  /health
 GET  /health/scheduler
 ```
 
-Full interactive docs at `/docs` (Swagger) or `/redoc` when running the backend.
+Full interactive docs at /docs (Swagger) or /redoc when running the backend.
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Before pushing — run CI checks locally
@@ -359,103 +359,30 @@ npm run test:e2e         # Playwright E2E
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 tech-news-agent/
 ├── backend/
 │   ├── app/
 │   │   ├── api/               # REST API endpoints
-│   │   │   ├── auth.py
-│   │   │   ├── articles.py
-│   │   │   ├── feeds.py
-│   │   │   ├── reading_list.py
-│   │   │   ├── scheduler.py
-│   │   │   ├── qa.py
-│   │   │   ├── conversations/  # conversation CRUD, messages, AI, insights, share, export
-│   │   │   ├── notifications/  # preferences, quiet_hours, history, settings, proactive
-│   │   │   ├── learning_path/  # goals, progress, evaluation
-│   │   │   ├── weekly_insights.py
-│   │   │   ├── intelligent_reminder.py
-│   │   │   ├── knowledge_graph.py
-│   │   │   ├── analytics.py
-│   │   │   └── ...
-│   │   ├── bot/
-│   │   │   ├── cogs/
-│   │   │   │   ├── news_commands.py
-│   │   │   │   ├── reading_list.py
-│   │   │   │   ├── subscription_commands.py
-│   │   │   │   ├── notification_settings.py
-│   │   │   │   ├── quiet_hours_settings.py
-│   │   │   │   ├── conversation_commands.py
-│   │   │   │   ├── qa_commands.py
-│   │   │   │   ├── proactive_dm.py
-│   │   │   │   ├── dm_conversation_listener.py
-│   │   │   │   ├── conversation_auto_manager.py
-│   │   │   │   ├── persistent_views.py
-│   │   │   │   ├── interactions.py
-│   │   │   │   └── admin_commands.py
-│   │   │   └── client.py
-│   │   ├── services/          # ~50 service files (mixin pattern)
-│   │   │   ├── supabase_service.py
-│   │   │   ├── llm_service.py
-│   │   │   ├── rss_service.py
-│   │   │   ├── dynamic_scheduler.py
-│   │   │   ├── smart_conversation.py
-│   │   │   ├── enhanced_recommendation_engine.py
-│   │   │   ├── intelligent_reminder_generator.py
-│   │   │   ├── cross_platform_sync.py
-│   │   │   └── _mixins/       # article, feed, reading_list, notification, user
-│   │   ├── qa_agent/          # Full QA subsystem
-│   │   │   ├── qa_agent_controller.py
-│   │   │   ├── query_processor.py
-│   │   │   ├── retrieval_engine.py
-│   │   │   ├── response_generator.py
-│   │   │   ├── conversation_manager.py
-│   │   │   ├── user_profile_manager.py
-│   │   │   ├── knowledge_graph/
-│   │   │   ├── intelligent_reminder/
-│   │   │   ├── weekly_insights/
-│   │   │   ├── proactive_learning/
-│   │   │   └── learning_path/
-│   │   ├── core/              # config, exceptions, logger, validators
-│   │   ├── repositories/      # data access layer
+│   │   ├── bot/               # Discord bot implementation
+│   │   ├── services/          # Service layer (mixin pattern)
+│   │   ├── qa_agent/          # QA subsystem
+│   │   ├── core/              # Config, logger, validators
+│   │   ├── repositories/      # Data access layer
 │   │   ├── schemas/           # Pydantic models
 │   │   └── tasks/             # APScheduler jobs
-│   ├── scripts/               # DB scripts, migrations, utilities
-│   ├── tests/                 # pytest test suite
-│   └── requirements.txt
-│
+│   ├── scripts/               # DB scripts, migrations
+│   └── tests/                 # pytest test suite
 ├── frontend/
-│   ├── app/
-│   │   ├── (public)/          # /, /login, /auth/callback, /chat, /conversations, /demo
-│   │   └── app/               # authenticated routes
-│   │       ├── articles/
-│   │       ├── reading-list/
-│   │       ├── subscriptions/
-│   │       ├── recommendations/
-│   │       ├── chat/
-│   │       ├── learning/
-│   │       ├── insights/
-│   │       ├── knowledge-graph/
-│   │       ├── reminders/
-│   │       ├── analytics/
-│   │       └── settings/      # notifications, reminders, preferences, appearance, account
-│   ├── features/              # feature-sliced components
-│   │   ├── articles/
-│   │   ├── ai-analysis/
-│   │   ├── notifications/
-│   │   ├── recommendations/
-│   │   ├── subscriptions/
-│   │   └── system-monitor/
-│   ├── components/            # shared UI components (shadcn/ui)
+│   ├── app/                   # Next.js app router
+│   ├── features/              # Feature-sliced components
+│   ├── components/            # Shared UI components
 │   ├── lib/                   # API client, hooks, utils
-│   ├── locales/               # i18n (EN/ZH)
-│   └── package.json
-│
+│   └── locales/               # i18n
 ├── docs/                      # All documentation
 ├── scripts/                   # Dev, CI, migration scripts
-├── .github/workflows/ci.yml
 ├── docker-compose.yml         # Development
 ├── docker-compose.prod.yml    # Production
 ├── Makefile
@@ -464,7 +391,7 @@ tech-news-agent/
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 ```
 ┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
@@ -481,15 +408,15 @@ tech-news-agent/
 
 ### Tech Stack
 
-**Frontend**: Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS, shadcn/ui, React Query, next-intl, Playwright
+Frontend: Next.js 14 (App Router), React 18, TypeScript, Tailwind CSS, shadcn/ui, React Query, next-intl, Playwright
 
-**Backend**: Python 3.11+, FastAPI, discord.py 2.4+, APScheduler 3.10+, Supabase Python client
+Backend: Python 3.11+, FastAPI, discord.py 2.4+, APScheduler 3.10+, Supabase Python client
 
-**Infrastructure**: Supabase (PostgreSQL + pgvector), Docker + Docker Compose, Groq Cloud (Llama 3.1 8B / 3.3 70B)
+Infrastructure: Supabase (PostgreSQL + pgvector), Docker + Docker Compose, Groq Cloud (Llama 3.1 8B / 3.3 70B)
 
 ---
 
-## 📊 Database Schema
+## Database Schema
 
 ```
 users                    feeds                   articles
@@ -516,51 +443,51 @@ knowledge_graph         └── content             └── quiet_hours_*
 
 ---
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
-**Database errors / missing tables:**
+Database errors / missing tables:
 ```bash
 cd backend
 python3 scripts/verify_bot_health.py
 python3 scripts/apply_missing_migration.py
 ```
 
-**Discord bot not responding:** Check `DISCORD_TOKEN`, bot permissions, and OAuth scopes.
+Discord bot not responding: Check DISCORD_TOKEN, bot permissions, and OAuth scopes.
 
-**Articles not fetching:** Check scheduler logs (`docker-compose logs -f backend`), verify RSS feeds are valid, and confirm Groq API key has credits.
+Articles not fetching: Check scheduler logs (docker-compose logs -f backend), verify RSS feeds are valid, and confirm Groq API key has credits.
 
-For more, see [docs/troubleshooting/](./docs/troubleshooting/).
-
----
-
-## 📚 Documentation
-
-- [Quick Start Guide](./docs/guides/quick-start.md)
-- [Environment Setup](./docs/setup/env-setup-guide.md)
-- [Docker Guide](./docs/docker/docker-guide.md)
-- [User Guide](./docs/guides/user-guide.md)
-- [Developer Guide](./docs/development/developer-guide.md)
-- [Architecture Overview](./docs/architecture/architecture-overview.md)
-- [Deployment Guide](./docs/deployment/deployment-guide.md)
-- [Complete Docs Index](./docs/README.md)
+For more, see docs/troubleshooting/.
 
 ---
 
-## 🤝 Contributing
+## Documentation
+
+- Quick Start Guide: docs/guides/quick-start.md
+- Environment Setup: docs/setup/env-setup-guide.md
+- Docker Guide: docs/docker/docker-guide.md
+- User Guide: docs/guides/user-guide.md
+- Developer Guide: docs/development/developer-guide.md
+- Architecture Overview: docs/architecture/architecture-overview.md
+- Deployment Guide: docs/deployment/deployment-guide.md
+- Complete Docs Index: docs/README.md
+
+---
+
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
+2. Create a feature branch: git checkout -b feature/amazing-feature
 3. Make changes and add tests
-4. Run checks: `./scripts/ci-fix.sh && ./scripts/ci-local-test.sh`
-5. Commit: `git commit -m 'feat(scope): add amazing feature'`
+4. Run checks: ./scripts/ci-fix.sh && ./scripts/ci-local-test.sh
+5. Commit: git commit -m 'feat(scope): add amazing feature'
 6. Push and open a Pull Request
 
 ---
 
-## 📝 License
+## License
 
-MIT License — see [LICENSE](LICENSE) for details.
+MIT License — see LICENSE for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
-[Supabase](https://supabase.com) · [Groq](https://groq.com) · [Discord](https://discord.com) · [Vercel/Next.js](https://nextjs.org) · [shadcn/ui](https://ui.shadcn.com)
+Supabase · Groq · Discord · Vercel/Next.js · shadcn/ui
