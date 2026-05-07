@@ -86,14 +86,12 @@ jobs:
           }
 
       - name: Run tests with coverage
-        continue-on-error: true
         working-directory: backend
         run: |
-          echo "🧪 Running backend tests (informational — pre-existing failures)..."
-          python -m pytest tests/ --tb=no --cov=app --cov-report=term \
+          echo "🧪 Running backend tests..."
+          python -m pytest tests/ --tb=short --cov=app --cov-report=term \
             --continue-on-collection-errors --timeout=30 \
-            -n 4 --dist=loadfile -q || \
-            echo "⚠️ Backend tests have failures (non-blocking)"
+            -n 4 --dist=loadfile -q
 
   # ============================================
   # Frontend Quality & Tests
