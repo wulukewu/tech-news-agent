@@ -2,6 +2,8 @@ import logging
 from typing import Optional
 from uuid import UUID
 
+from app.core.exceptions import SupabaseServiceError  # noqa: F401
+
 logger = logging.getLogger(__name__)
 
 

@@ -68,11 +68,15 @@ class TestBackgroundFetchJob:
 
         # Mock services
         mock_supabase = MagicMock()
+        mock_supabase.get_unanalyzed_articles = AsyncMock(return_value=[])
+        mock_supabase.update_feeds_last_fetched = AsyncMock()
         mock_supabase.get_active_feeds = AsyncMock(return_value=test_feeds)
         mock_supabase.insert_articles = AsyncMock(return_value=batch_result)
+        mock_supabase.get_unanalyzed_articles = AsyncMock(return_value=[])
+        mock_supabase.update_feeds_last_fetched = AsyncMock()
 
         mock_rss = MagicMock()
-        mock_rss.fetch_new_articles = AsyncMock(return_value=test_articles)
+        mock_rss.fetch_new_articles = AsyncMock(return_value=(test_articles, []))
 
         mock_llm = MagicMock()
         mock_llm.evaluate_batch = AsyncMock(return_value=test_articles)
@@ -114,10 +118,12 @@ class TestBackgroundFetchJob:
 
         # Mock services
         mock_supabase = MagicMock()
+        mock_supabase.get_unanalyzed_articles = AsyncMock(return_value=[])
+        mock_supabase.update_feeds_last_fetched = AsyncMock()
         mock_supabase.get_active_feeds = AsyncMock(return_value=[])
 
         mock_rss = MagicMock()
-        mock_rss.fetch_new_articles = AsyncMock()
+        mock_rss.fetch_new_articles = AsyncMock(return_value=([], []))
 
         mock_llm = MagicMock()
         mock_llm.evaluate_batch = AsyncMock()
@@ -147,10 +153,12 @@ class TestBackgroundFetchJob:
 
         # Mock services
         mock_supabase = MagicMock()
+        mock_supabase.get_unanalyzed_articles = AsyncMock(return_value=[])
+        mock_supabase.update_feeds_last_fetched = AsyncMock()
         mock_supabase.get_active_feeds = AsyncMock(return_value=test_feeds)
 
         mock_rss = MagicMock()
-        mock_rss.fetch_new_articles = AsyncMock(return_value=[])  # No new articles
+        mock_rss.fetch_new_articles = AsyncMock(return_value=([], []))  # No new articles
 
         mock_llm = MagicMock()
         mock_llm.evaluate_batch = AsyncMock()
@@ -181,6 +189,8 @@ class TestBackgroundFetchJob:
 
         # Mock services
         mock_supabase = MagicMock()
+        mock_supabase.get_unanalyzed_articles = AsyncMock(return_value=[])
+        mock_supabase.update_feeds_last_fetched = AsyncMock()
         mock_supabase.get_active_feeds = AsyncMock(
             side_effect=SupabaseServiceError("Database connection failed")
         )
@@ -222,11 +232,15 @@ class TestBackgroundFetchJob:
 
         # Mock services
         mock_supabase = MagicMock()
+        mock_supabase.get_unanalyzed_articles = AsyncMock(return_value=[])
+        mock_supabase.update_feeds_last_fetched = AsyncMock()
         mock_supabase.get_active_feeds = AsyncMock(return_value=test_feeds)
         mock_supabase.insert_articles = AsyncMock(return_value=batch_result)
+        mock_supabase.get_unanalyzed_articles = AsyncMock(return_value=[])
+        mock_supabase.update_feeds_last_fetched = AsyncMock()
 
         mock_rss = MagicMock()
-        mock_rss.fetch_new_articles = AsyncMock(return_value=test_articles)
+        mock_rss.fetch_new_articles = AsyncMock(return_value=(test_articles, []))
 
         mock_llm = MagicMock()
         mock_llm.evaluate_batch = AsyncMock(return_value=test_articles)

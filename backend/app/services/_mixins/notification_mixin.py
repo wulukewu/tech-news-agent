@@ -1,5 +1,7 @@
 import logging
 
+from app.core.exceptions import SupabaseServiceError  # noqa: F401
+
 logger = logging.getLogger(__name__)
 
 
