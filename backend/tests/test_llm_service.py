@@ -74,7 +74,7 @@ class TestEvaluateArticle:
         result = await service.evaluate_article(make_article())
 
         assert result.is_hardcore is False
-        assert result.tinkering_index == 0
+        assert result.tinkering_index == 1  # fallback value (0 is out of range 1-5)
 
     @pytest.mark.asyncio
     async def test_returns_fallback_on_exception(self):

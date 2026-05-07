@@ -25,6 +25,8 @@ from app.core.exceptions import SupabaseServiceError
 from app.schemas.article import ArticleSchema, BatchResult, RSSSource
 from app.tasks.scheduler import background_fetch_job
 
+pytestmark = pytest.mark.xdist_group("scheduler")
+
 # Hypothesis strategies for generating test data
 
 
