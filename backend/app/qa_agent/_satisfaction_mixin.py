@@ -4,6 +4,8 @@ from datetime import timedelta
 from typing import Any, Dict
 from uuid import UUID
 
+from app.qa_agent.database import get_db_connection
+
 logger = logging.getLogger(__name__)
 
 

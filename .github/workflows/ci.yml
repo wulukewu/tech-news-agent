@@ -96,7 +96,7 @@ jobs:
           EXIT_CODE=${PIPESTATUS[0]}
           set -e
           # Check if there are actual test failures (not just collection errors)
-          if grep -qP "^\d+ failed" /tmp/pytest_output.txt; then
+          if grep -qP "\d+ failed" /tmp/pytest_output.txt; then
             echo "❌ Test failures detected"
             exit 1
           elif [ $EXIT_CODE -ne 0 ]; then
