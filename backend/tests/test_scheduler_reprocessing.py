@@ -29,9 +29,9 @@ class TestSchedulerReprocessing:
         """測試排程器查詢未分析的文章"""
         # Arrange
         with (
-            patch("app.tasks.scheduler.SupabaseService") as mock_supabase_class,
-            patch("app.tasks.scheduler.RSSService") as mock_rss_class,
-            patch("app.tasks.scheduler.LLMService") as mock_llm_class,
+            patch("app.tasks._fetch_job.SupabaseService") as mock_supabase_class,
+            patch("app.tasks._fetch_job.RSSService") as mock_rss_class,
+            patch("app.tasks._fetch_job.LLMService") as mock_llm_class,
         ):
             mock_supabase = AsyncMock()
             mock_supabase_class.return_value = mock_supabase
@@ -44,9 +44,10 @@ class TestSchedulerReprocessing:
             # Mock no new articles
             mock_rss = AsyncMock()
             mock_rss_class.return_value = mock_rss
-            mock_rss.fetch_new_articles.return_value = []
+            mock_rss.fetch_new_articles.return_value = ([], [])
 
             # Mock unanalyzed articles
+            mock_supabase.update_feeds_last_fetched = AsyncMock()
             mock_supabase.get_unanalyzed_articles.return_value = [
                 {
                     "id": str(uuid4()),
@@ -77,9 +78,9 @@ class TestSchedulerReprocessing:
         """測試排程器對未分析文章呼叫 LLM"""
         # Arrange
         with (
-            patch("app.tasks.scheduler.SupabaseService") as mock_supabase_class,
-            patch("app.tasks.scheduler.RSSService") as mock_rss_class,
-            patch("app.tasks.scheduler.LLMService") as mock_llm_class,
+            patch("app.tasks._fetch_job.SupabaseService") as mock_supabase_class,
+            patch("app.tasks._fetch_job.RSSService") as mock_rss_class,
+            patch("app.tasks._fetch_job.LLMService") as mock_llm_class,
         ):
             mock_supabase = AsyncMock()
             mock_supabase_class.return_value = mock_supabase
@@ -92,10 +93,11 @@ class TestSchedulerReprocessing:
             # Mock no new articles
             mock_rss = AsyncMock()
             mock_rss_class.return_value = mock_rss
-            mock_rss.fetch_new_articles.return_value = []
+            mock_rss.fetch_new_articles.return_value = ([], [])
 
             # Mock unanalyzed articles
             feed_id = uuid4()
+            mock_supabase.update_feeds_last_fetched = AsyncMock()
             mock_supabase.get_unanalyzed_articles.return_value = [
                 {
                     "id": str(uuid4()),
@@ -142,9 +144,9 @@ class TestSchedulerReprocessing:
         """測試重新處理後更新資料庫"""
         # Arrange
         with (
-            patch("app.tasks.scheduler.SupabaseService") as mock_supabase_class,
-            patch("app.tasks.scheduler.RSSService") as mock_rss_class,
-            patch("app.tasks.scheduler.LLMService") as mock_llm_class,
+            patch("app.tasks._fetch_job.SupabaseService") as mock_supabase_class,
+            patch("app.tasks._fetch_job.RSSService") as mock_rss_class,
+            patch("app.tasks._fetch_job.LLMService") as mock_llm_class,
         ):
             mock_supabase = AsyncMock()
             mock_supabase_class.return_value = mock_supabase
@@ -157,10 +159,11 @@ class TestSchedulerReprocessing:
             # Mock no new articles
             mock_rss = AsyncMock()
             mock_rss_class.return_value = mock_rss
-            mock_rss.fetch_new_articles.return_value = []
+            mock_rss.fetch_new_articles.return_value = ([], [])
 
             # Mock unanalyzed articles
             feed_id = uuid4()
+            mock_supabase.update_feeds_last_fetched = AsyncMock()
             mock_supabase.get_unanalyzed_articles.return_value = [
                 {
                     "id": str(uuid4()),
@@ -209,9 +212,9 @@ class TestSchedulerReprocessing:
         """測試重新處理記錄文章數量"""
         # Arrange
         with (
-            patch("app.tasks.scheduler.SupabaseService") as mock_supabase_class,
-            patch("app.tasks.scheduler.RSSService") as mock_rss_class,
-            patch("app.tasks.scheduler.LLMService") as mock_llm_class,
+            patch("app.tasks._fetch_job.SupabaseService") as mock_supabase_class,
+            patch("app.tasks._fetch_job.RSSService") as mock_rss_class,
+            patch("app.tasks._fetch_job.LLMService") as mock_llm_class,
         ):
             mock_supabase = AsyncMock()
             mock_supabase_class.return_value = mock_supabase
@@ -224,10 +227,11 @@ class TestSchedulerReprocessing:
             # Mock no new articles
             mock_rss = AsyncMock()
             mock_rss_class.return_value = mock_rss
-            mock_rss.fetch_new_articles.return_value = []
+            mock_rss.fetch_new_articles.return_value = ([], [])
 
             # Mock unanalyzed articles
             feed_id = uuid4()
+            mock_supabase.update_feeds_last_fetched = AsyncMock()
             mock_supabase.get_unanalyzed_articles.return_value = [
                 {
                     "id": str(uuid4()),
@@ -273,9 +277,9 @@ class TestSchedulerReprocessing:
         """測試沒有未分析文章時的處理"""
         # Arrange
         with (
-            patch("app.tasks.scheduler.SupabaseService") as mock_supabase_class,
-            patch("app.tasks.scheduler.RSSService") as mock_rss_class,
-            patch("app.tasks.scheduler.LLMService") as mock_llm_class,
+            patch("app.tasks._fetch_job.SupabaseService") as mock_supabase_class,
+            patch("app.tasks._fetch_job.RSSService") as mock_rss_class,
+            patch("app.tasks._fetch_job.LLMService") as mock_llm_class,
         ):
             mock_supabase = AsyncMock()
             mock_supabase_class.return_value = mock_supabase
@@ -288,9 +292,10 @@ class TestSchedulerReprocessing:
             # Mock no new articles
             mock_rss = AsyncMock()
             mock_rss_class.return_value = mock_rss
-            mock_rss.fetch_new_articles.return_value = []
+            mock_rss.fetch_new_articles.return_value = ([], [])
 
             # Mock no unanalyzed articles
+            mock_supabase.update_feeds_last_fetched = AsyncMock()
             mock_supabase.get_unanalyzed_articles.return_value = []
 
             # Mock LLM service
@@ -312,9 +317,9 @@ class TestSchedulerReprocessing:
         """測試解析失敗時繼續處理其他文章"""
         # Arrange
         with (
-            patch("app.tasks.scheduler.SupabaseService") as mock_supabase_class,
-            patch("app.tasks.scheduler.RSSService") as mock_rss_class,
-            patch("app.tasks.scheduler.LLMService") as mock_llm_class,
+            patch("app.tasks._fetch_job.SupabaseService") as mock_supabase_class,
+            patch("app.tasks._fetch_job.RSSService") as mock_rss_class,
+            patch("app.tasks._fetch_job.LLMService") as mock_llm_class,
         ):
             mock_supabase = AsyncMock()
             mock_supabase_class.return_value = mock_supabase
@@ -327,10 +332,11 @@ class TestSchedulerReprocessing:
             # Mock no new articles
             mock_rss = AsyncMock()
             mock_rss_class.return_value = mock_rss
-            mock_rss.fetch_new_articles.return_value = []
+            mock_rss.fetch_new_articles.return_value = ([], [])
 
             # Mock unanalyzed articles with one invalid entry
             feed_id = uuid4()
+            mock_supabase.update_feeds_last_fetched = AsyncMock()
             mock_supabase.get_unanalyzed_articles.return_value = [
                 {
                     "id": str(uuid4()),
@@ -395,9 +401,9 @@ class TestReprocessingEdgeCases:
         """
         # Arrange
         with (
-            patch("app.tasks.scheduler.SupabaseService") as mock_supabase_class,
-            patch("app.tasks.scheduler.RSSService") as mock_rss_class,
-            patch("app.tasks.scheduler.LLMService") as mock_llm_class,
+            patch("app.tasks._fetch_job.SupabaseService") as mock_supabase_class,
+            patch("app.tasks._fetch_job.RSSService") as mock_rss_class,
+            patch("app.tasks._fetch_job.LLMService") as mock_llm_class,
         ):
             mock_supabase = AsyncMock()
             mock_supabase_class.return_value = mock_supabase
@@ -410,7 +416,7 @@ class TestReprocessingEdgeCases:
             # Mock no new articles
             mock_rss = AsyncMock()
             mock_rss_class.return_value = mock_rss
-            mock_rss.fetch_new_articles.return_value = []
+            mock_rss.fetch_new_articles.return_value = ([], [])
 
             # Mock article with NULL ai_summary
             feed_id = uuid4()
@@ -423,6 +429,7 @@ class TestReprocessingEdgeCases:
                 "tinkering_index": 3,  # Has index but missing summary
             }
 
+            mock_supabase.update_feeds_last_fetched = AsyncMock()
             mock_supabase.get_unanalyzed_articles.return_value = [article_with_null_summary]
 
             # Mock LLM service
@@ -465,9 +472,9 @@ class TestReprocessingEdgeCases:
         """
         # Arrange
         with (
-            patch("app.tasks.scheduler.SupabaseService") as mock_supabase_class,
-            patch("app.tasks.scheduler.RSSService") as mock_rss_class,
-            patch("app.tasks.scheduler.LLMService") as mock_llm_class,
+            patch("app.tasks._fetch_job.SupabaseService") as mock_supabase_class,
+            patch("app.tasks._fetch_job.RSSService") as mock_rss_class,
+            patch("app.tasks._fetch_job.LLMService") as mock_llm_class,
         ):
             mock_supabase = AsyncMock()
             mock_supabase_class.return_value = mock_supabase
@@ -480,10 +487,11 @@ class TestReprocessingEdgeCases:
             # Mock no new articles
             mock_rss = AsyncMock()
             mock_rss_class.return_value = mock_rss
-            mock_rss.fetch_new_articles.return_value = []
+            mock_rss.fetch_new_articles.return_value = ([], [])
 
             # Mock no unanalyzed articles (all have ai_summary)
             # In real implementation, get_unanalyzed_articles filters these out
+            mock_supabase.update_feeds_last_fetched = AsyncMock()
             mock_supabase.get_unanalyzed_articles.return_value = []
 
             # Mock LLM service
@@ -505,9 +513,9 @@ class TestReprocessingEdgeCases:
         """
         # Arrange
         with (
-            patch("app.tasks.scheduler.SupabaseService") as mock_supabase_class,
-            patch("app.tasks.scheduler.RSSService") as mock_rss_class,
-            patch("app.tasks.scheduler.LLMService") as mock_llm_class,
+            patch("app.tasks._fetch_job.SupabaseService") as mock_supabase_class,
+            patch("app.tasks._fetch_job.RSSService") as mock_rss_class,
+            patch("app.tasks._fetch_job.LLMService") as mock_llm_class,
         ):
             mock_supabase = AsyncMock()
             mock_supabase_class.return_value = mock_supabase
@@ -520,7 +528,7 @@ class TestReprocessingEdgeCases:
             # Mock no new articles
             mock_rss = AsyncMock()
             mock_rss_class.return_value = mock_rss
-            mock_rss.fetch_new_articles.return_value = []
+            mock_rss.fetch_new_articles.return_value = ([], [])
 
             # Mock articles with partial NULL fields
             feed_id = uuid4()
@@ -594,9 +602,9 @@ class TestReprocessingEdgeCases:
         """
         # Arrange
         with (
-            patch("app.tasks.scheduler.SupabaseService") as mock_supabase_class,
-            patch("app.tasks.scheduler.RSSService") as mock_rss_class,
-            patch("app.tasks.scheduler.LLMService") as mock_llm_class,
+            patch("app.tasks._fetch_job.SupabaseService") as mock_supabase_class,
+            patch("app.tasks._fetch_job.RSSService") as mock_rss_class,
+            patch("app.tasks._fetch_job.LLMService") as mock_llm_class,
         ):
             mock_supabase = AsyncMock()
             mock_supabase_class.return_value = mock_supabase
@@ -609,7 +617,7 @@ class TestReprocessingEdgeCases:
             # Mock no new articles
             mock_rss = AsyncMock()
             mock_rss_class.return_value = mock_rss
-            mock_rss.fetch_new_articles.return_value = []
+            mock_rss.fetch_new_articles.return_value = ([], [])
 
             # Mock article needing re-processing
             feed_id = uuid4()
@@ -622,6 +630,7 @@ class TestReprocessingEdgeCases:
                 "tinkering_index": None,
             }
 
+            mock_supabase.update_feeds_last_fetched = AsyncMock()
             mock_supabase.get_unanalyzed_articles.return_value = [article_to_reprocess]
 
             # Mock LLM service

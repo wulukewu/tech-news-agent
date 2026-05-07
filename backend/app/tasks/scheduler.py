@@ -4,7 +4,6 @@ from datetime import UTC, datetime, timedelta
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 
-from app.bot.cogs.interactions import MarkReadView as MarkReadView  # noqa: F401
 from app.core.config import settings
 from app.services.llm_service import LLMService as LLMService  # noqa: F401 - re-export for tests
 from app.services.notion_service import (
