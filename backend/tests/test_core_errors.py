@@ -30,7 +30,6 @@ from app.core.errors import (
     generic_exception_handler,
     http_exception_handler,
     validation_exception_handler,
-    with_retry,
 )
 
 # ============================================================================
@@ -468,6 +467,7 @@ async def test_fallback_strategy_only_catches_specified_exceptions():
 
 @pytest.mark.asyncio
 @pytest.mark.skip(reason="RetryStrategy/FallbackStrategy not implemented")
+@pytest.mark.skip(reason="with_retry not implemented")
 async def test_with_retry_decorator():
     """@with_retry decorator should add retry logic."""
     call_count = 0

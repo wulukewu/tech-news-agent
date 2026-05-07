@@ -15,7 +15,8 @@ from uuid import uuid4
 
 import pytest
 
-from .embedding_service import EmbeddingError
+from app.qa_agent.embedding_service import EmbeddingError
+
 from .models import (
     ArticleMatch,
     ParsedQuery,

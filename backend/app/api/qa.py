@@ -23,6 +23,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from app.api.auth import get_current_user
+from app.qa_agent.qa_agent_controller import QAAgentController  # noqa: F401 - used by tests
 from app.schemas.responses import SuccessResponse, success_response
 
 logger = logging.getLogger(__name__)

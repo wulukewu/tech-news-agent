@@ -4,8 +4,6 @@ from datetime import timedelta
 from typing import Any, Dict
 from uuid import UUID
 
-from app.qa_agent.user_profile_manager import UserProfileManagerError
-
 logger = logging.getLogger(__name__)
 
 
@@ -144,6 +142,8 @@ class SatisfactionMixin:
 
         except Exception as e:
             logger.error(f"Failed to analyze satisfaction trends: {e}", exc_info=True)
+            from app.qa_agent.user_profile_manager import UserProfileManagerError  # local import
+
             raise UserProfileManagerError(
                 f"Failed to analyze satisfaction trends: {e}", original_error=e
             )
