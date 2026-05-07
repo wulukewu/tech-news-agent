@@ -11,8 +11,12 @@ import time
 from typing import List
 from uuid import uuid4
 
+import pytest
+
 from app.qa_agent.database import close_database_manager, get_database_manager
 from app.qa_agent.vector_store import VectorStore, get_vector_store
+
+pytestmark = pytest.mark.skip(reason="manual performance test script")
 
 
 async def create_test_embeddings(vector_store: VectorStore, num_embeddings: int = 100) -> List[str]:
