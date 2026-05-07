@@ -216,6 +216,7 @@ class TestArticleSchemaUpdate:
             is_hardcore=True,
             reason="Great technical content",
             actionable_takeaway="Learn about new tech",
+            tinkering_index=3,
         )
 
         data = {

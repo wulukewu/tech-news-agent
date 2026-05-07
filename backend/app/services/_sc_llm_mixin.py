@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import asyncio
 import json
+
+_SMART_MODEL = "llama-3.3-70b-versatile"
 from collections import Counter
 from typing import Any, Optional
 

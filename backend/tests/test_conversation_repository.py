@@ -72,6 +72,12 @@ def _make_client(response_data: list[dict] | None = None) -> MagicMock:
         "update",
         "delete",
         "contains",
+        "is_",
+        "neq",
+        "gte",
+        "lte",
+        "not_",
+        "in_",
     ):
         getattr(table_mock, method).return_value = table_mock
 
