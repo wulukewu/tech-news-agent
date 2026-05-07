@@ -351,12 +351,12 @@ class TestFetchAllFeeds:
 
         call_count = 0
 
-        async def fake_process(source, client):
+        async def fake_process(source, client, feed_id_map=None):
             nonlocal call_count
             call_count += 1
             if call_count == 1:
                 raise Exception("broken feed")
-            return [MagicMock(title="Good Article")]
+            return ([MagicMock(title="Good Article")], "feed-id-2")
 
         with (
             patch.object(service, "_process_single_feed", side_effect=fake_process),
@@ -364,7 +364,7 @@ class TestFetchAllFeeds:
         ):
             mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=MagicMock())
             mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)
-            result = await service.fetch_all_feeds(sources)
+            articles, feed_ids = await service.fetch_all_feeds(sources)
 
         # The exception is caught by gather(return_exceptions=True), result from good feed is kept
-        assert len(result) == 1
+        assert len(articles) == 1

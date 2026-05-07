@@ -60,13 +60,13 @@ class TestUserRepository:
         """Test successful user creation."""
         # Arrange
         user_id = uuid4()
-        data = {"discord_id": "123456789"}
+        data = {"discord_id": "123456789012345678"}
 
         mock_response = Mock()
         mock_response.data = [
             {
                 "id": str(user_id),
-                "discord_id": "123456789",
+                "discord_id": "123456789012345678",
                 "dm_notifications_enabled": True,
                 "created_at": datetime.utcnow().isoformat(),
             }
@@ -80,7 +80,7 @@ class TestUserRepository:
 
         # Assert
         assert isinstance(result, User)
-        assert result.discord_id == "123456789"
+        assert result.discord_id == "123456789012345678"
         assert result.dm_notifications_enabled is True
 
     @pytest.mark.asyncio
@@ -118,7 +118,7 @@ class TestUserRepository:
         mock_response.data = [
             {
                 "id": str(user_id),
-                "discord_id": "123456789",
+                "discord_id": "123456789012345678",
                 "dm_notifications_enabled": True,
                 "created_at": datetime.utcnow().isoformat(),
             }
@@ -130,11 +130,11 @@ class TestUserRepository:
         mock_supabase_client.execute = Mock(return_value=mock_response)
 
         # Act
-        result = await user_repository.get_by_discord_id("123456789")
+        result = await user_repository.get_by_discord_id("123456789012345678")
 
         # Assert
         assert result is not None
-        assert result.discord_id == "123456789"
+        assert result.discord_id == "123456789012345678"
 
 
 class TestArticleRepository:
@@ -454,7 +454,7 @@ class TestUserRepositoryDatabaseFailures:
     async def test_create_user_database_error(self, user_repository, mock_supabase_client):
         """Test user creation with database error."""
         # Arrange
-        data = {"discord_id": "123456789"}
+        data = {"discord_id": "123456789012345678"}
 
         mock_supabase_client.insert = Mock(return_value=mock_supabase_client)
         mock_supabase_client.execute = Mock(side_effect=Exception("connection timeout"))
@@ -485,7 +485,11 @@ class TestUserRepositoryDatabaseFailures:
 
         mock_response = Mock()
         mock_response.data = [
-            {"id": str(user_id), "discord_id": "123456789", "dm_notifications_enabled": True}
+            {
+                "id": str(user_id),
+                "discord_id": "123456789012345678",
+                "dm_notifications_enabled": True,
+            }
         ]
 
         mock_supabase_client.select = Mock(return_value=mock_supabase_client)
@@ -494,7 +498,7 @@ class TestUserRepositoryDatabaseFailures:
         mock_supabase_client.execute = Mock(return_value=mock_response)
 
         # Act
-        result = await user_repository.exists_by_discord_id("123456789")
+        result = await user_repository.exists_by_discord_id("123456789012345678")
 
         # Assert
         assert result is True

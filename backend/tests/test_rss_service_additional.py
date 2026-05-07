@@ -125,7 +125,9 @@ class TestFetchNewArticlesErrorHandling:
         )
 
         # Mock fetch_all_feeds to return one article
-        with patch.object(service, "fetch_all_feeds", AsyncMock(return_value=[article1])):
+        with patch.object(
+            service, "fetch_all_feeds", AsyncMock(return_value=([article1], ["feed-id-1"]))
+        ):
             # Mock supabase service to fail
             mock_supabase = AsyncMock()
             mock_supabase.check_article_exists = AsyncMock(side_effect=Exception("Database error"))
