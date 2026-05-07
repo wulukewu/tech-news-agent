@@ -329,7 +329,7 @@ class TestFetchAllFeeds:
         ):
             mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=MagicMock())
             mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)
-            result = await service.fetch_all_feeds(sources)
+            result, _ = await service.fetch_all_feeds(sources)
 
         assert len(result) == 3
 
@@ -340,7 +340,7 @@ class TestFetchAllFeeds:
         with patch("app.services.rss_service.httpx.AsyncClient") as mock_client_cls:
             mock_client_cls.return_value.__aenter__ = AsyncMock(return_value=MagicMock())
             mock_client_cls.return_value.__aexit__ = AsyncMock(return_value=False)
-            result = await service.fetch_all_feeds([])
+            result, _ = await service.fetch_all_feeds([])
         assert result == []
 
     @pytest.mark.asyncio

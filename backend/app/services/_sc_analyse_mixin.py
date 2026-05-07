@@ -13,6 +13,13 @@ from app.services._sc_llm_mixin import _SMART_MODEL, _extract_keywords, _safe_pa
 logger = get_logger(__name__)
 
 
+def _get_conversation_insights_class():
+    """Lazy import to avoid circular dependency."""
+    from app.services.smart_conversation import ConversationInsights  # noqa: PLC0415
+
+    return ConversationInsights
+
+
 class AnalyseMixin:
     async def analyse_conversations(
         self,
@@ -20,7 +27,7 @@ class AnalyseMixin:
         *,
         days: int = 30,
         max_conversations: int = 100,
-    ) -> ConversationInsights:
+    ) -> "ConversationInsights":
         """Analyse a user's conversation history and generate insights.
 
         Fetches recent conversations and their messages, then:
@@ -64,7 +71,7 @@ class AnalyseMixin:
 
         if not conversations:
             self.logger.info("No conversations found for analysis", user_id=str(user_id))
-            return ConversationInsights()
+            return _get_conversation_insights_class()()
 
         # Filter to the look-back window
         cutoff = datetime.now(timezone.utc) - timedelta(days=days)
@@ -148,6 +155,7 @@ class AnalyseMixin:
                 user_id=str(user_id),
             )
 
+        ConversationInsights = _get_conversation_insights_class()
         insights = ConversationInsights(
             topic_distribution=topic_distribution,
             active_days=active_days,
