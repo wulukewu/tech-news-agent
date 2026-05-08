@@ -13,6 +13,25 @@
 CREATE EXTENSION IF NOT EXISTS vector;
 
 -- ---------------------------------------------------------------------------
+-- PRE-PATCH: Add columns to any pre-existing tables before CREATE TABLE runs
+-- (CREATE TABLE IF NOT EXISTS skips entirely if the table already exists)
+-- ---------------------------------------------------------------------------
+
+ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS dm_notifications_enabled BOOLEAN DEFAULT true;
+ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS last_proactive_dm_at TIMESTAMPTZ;
+ALTER TABLE IF EXISTS users ADD COLUMN IF NOT EXISTS proactive_dm_frequency_hours INTEGER DEFAULT 20;
+
+ALTER TABLE IF EXISTS feeds ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES users(id) ON DELETE CASCADE;
+ALTER TABLE IF EXISTS feeds ADD COLUMN IF NOT EXISTS last_fetched_at TIMESTAMPTZ;
+
+ALTER TABLE IF EXISTS user_subscriptions ADD COLUMN IF NOT EXISTS notification_enabled BOOLEAN NOT NULL DEFAULT true;
+
+ALTER TABLE IF EXISTS articles ADD COLUMN IF NOT EXISTS category TEXT;
+ALTER TABLE IF EXISTS articles ADD COLUMN IF NOT EXISTS content_type VARCHAR(20);
+
+ALTER TABLE IF EXISTS reading_list ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'web';
+
+-- ---------------------------------------------------------------------------
 -- SHARED TRIGGER FUNCTION
 -- ---------------------------------------------------------------------------
 
@@ -38,6 +57,11 @@ CREATE TABLE IF NOT EXISTS users (
     proactive_dm_frequency_hours INTEGER DEFAULT 20
 );
 
+-- Patch pre-existing tables BEFORE CREATE TABLE IF NOT EXISTS (which skips if table exists)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS dm_notifications_enabled BOOLEAN DEFAULT true;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_proactive_dm_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS proactive_dm_frequency_hours INTEGER DEFAULT 20;
+
 -- feeds
 CREATE TABLE IF NOT EXISTS feeds (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -50,14 +74,8 @@ CREATE TABLE IF NOT EXISTS feeds (
     last_fetched_at TIMESTAMPTZ
 );
 
--- Ensure columns added by migrations exist (safe for pre-existing tables)
 ALTER TABLE feeds ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES users(id) ON DELETE CASCADE;
 ALTER TABLE feeds ADD COLUMN IF NOT EXISTS last_fetched_at TIMESTAMPTZ;
-
--- Ensure columns added by migrations exist (safe for pre-existing tables)
-ALTER TABLE users ADD COLUMN IF NOT EXISTS dm_notifications_enabled BOOLEAN DEFAULT true;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS last_proactive_dm_at TIMESTAMPTZ;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS proactive_dm_frequency_hours INTEGER DEFAULT 20;
 
 CREATE INDEX IF NOT EXISTS idx_feeds_is_active ON feeds(is_active);
 CREATE INDEX IF NOT EXISTS idx_feeds_category ON feeds(category);
