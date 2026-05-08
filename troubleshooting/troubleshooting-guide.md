@@ -182,6 +182,28 @@ print('Connected:', c.table('users').select('count').execute())
 - Use the **service role key** (not the anon key) for `SUPABASE_KEY`
 - Check that RLS policies allow service role access
 
+### Row-Level Security (RLS) Blocking Inserts
+
+**Symptoms:** `new row violates row-level security policy for table "users"`, login fails with "Failed to register user"
+
+**Cause:** New Supabase projects have RLS enabled by default with no policies, blocking all writes even with the service role key via the PostgREST API.
+
+**Fix:** Disable RLS on the affected tables in Supabase SQL Editor:
+
+```sql
+ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+```
+
+If you want to keep RLS enabled, add a permissive policy instead:
+
+```sql
+CREATE POLICY "Service role bypass" ON users
+  USING (true)
+  WITH CHECK (true);
+```
+
+> **Note:** This typically happens when migrating to a new Supabase project. Run `init_complete.sql` which already includes `ALTER TABLE ... DISABLE ROW LEVEL SECURITY` for all tables.
+
 ---
 
 ## Discord Bot Issues
@@ -295,6 +317,7 @@ docker volume prune -f
 | `relation "X" does not exist` | Missing DB table | Run `init_supabase.sql` or `apply_missing_migration.py` |
 | `401 Unauthorized` | Bad/expired JWT or Discord token | Re-login or check `JWT_SECRET_KEY` |
 | `403 Forbidden` | Missing permissions or RLS policy | Check Supabase RLS, bot permissions |
+| `row-level security policy` violation | RLS enabled on new Supabase project | `ALTER TABLE users DISABLE ROW LEVEL SECURITY;` |
 | `404 Not Found` | Wrong endpoint or missing resource | Check URL, verify data exists |
 | `500 Internal Server Error` | Unhandled exception | Check `make logs-dev` |
 | `Port already in use` | Port conflict | `kill -9 $(lsof -t -i:PORT)` |
