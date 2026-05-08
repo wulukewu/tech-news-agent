@@ -1009,6 +1009,55 @@ INSERT INTO feeds (name, url, category, is_active) VALUES
 ON CONFLICT (url) DO NOTHING;
 
 -- ---------------------------------------------------------------------------
+-- DISABLE ROW LEVEL SECURITY
+-- The backend uses the service role key which should bypass RLS, but
+-- PostgREST enforces RLS even for service role unless explicitly disabled.
+-- ---------------------------------------------------------------------------
+
+ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+ALTER TABLE feeds DISABLE ROW LEVEL SECURITY;
+ALTER TABLE articles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE user_subscriptions DISABLE ROW LEVEL SECURITY;
+ALTER TABLE reading_list DISABLE ROW LEVEL SECURITY;
+ALTER TABLE conversations DISABLE ROW LEVEL SECURITY;
+ALTER TABLE conversation_messages DISABLE ROW LEVEL SECURITY;
+ALTER TABLE conversation_tags DISABLE ROW LEVEL SECURITY;
+ALTER TABLE dm_conversations DISABLE ROW LEVEL SECURITY;
+ALTER TABLE dm_sent_articles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE feed_categories DISABLE ROW LEVEL SECURITY;
+ALTER TABLE user_notification_preferences DISABLE ROW LEVEL SECURITY;
+ALTER TABLE user_quiet_hours DISABLE ROW LEVEL SECURITY;
+ALTER TABLE notification_history DISABLE ROW LEVEL SECURITY;
+ALTER TABLE notification_locks DISABLE ROW LEVEL SECURITY;
+ALTER TABLE user_profiles DISABLE ROW LEVEL SECURITY;
+ALTER TABLE user_platform_links DISABLE ROW LEVEL SECURITY;
+ALTER TABLE preference_model DISABLE ROW LEVEL SECURITY;
+ALTER TABLE user_behavior_patterns DISABLE ROW LEVEL SECURITY;
+ALTER TABLE user_behavior_events DISABLE ROW LEVEL SECURITY;
+ALTER TABLE article_embeddings DISABLE ROW LEVEL SECURITY;
+ALTER TABLE article_classifications DISABLE ROW LEVEL SECURITY;
+ALTER TABLE article_graph DISABLE ROW LEVEL SECURITY;
+ALTER TABLE content_feedback DISABLE ROW LEVEL SECURITY;
+ALTER TABLE content_quality_metrics DISABLE ROW LEVEL SECURITY;
+ALTER TABLE knowledge_nodes DISABLE ROW LEVEL SECURITY;
+ALTER TABLE node_dependencies DISABLE ROW LEVEL SECURITY;
+ALTER TABLE query_logs DISABLE ROW LEVEL SECURITY;
+ALTER TABLE weekly_insights DISABLE ROW LEVEL SECURITY;
+ALTER TABLE reminder_settings DISABLE ROW LEVEL SECURITY;
+ALTER TABLE reminder_log DISABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_goals DISABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_progress DISABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_paths DISABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_conversations DISABLE ROW LEVEL SECURITY;
+ALTER TABLE learning_stages DISABLE ROW LEVEL SECURITY;
+ALTER TABLE skill_tree DISABLE ROW LEVEL SECURITY;
+ALTER TABLE user_node_progress DISABLE ROW LEVEL SECURITY;
+ALTER TABLE user_achievements DISABLE ROW LEVEL SECURITY;
+ALTER TABLE user_learning_preferences DISABLE ROW LEVEL SECURITY;
+ALTER TABLE technical_domains DISABLE ROW LEVEL SECURITY;
+ALTER TABLE technology_registry DISABLE ROW LEVEL SECURITY;
+
+-- ---------------------------------------------------------------------------
 -- VERIFICATION
 -- ---------------------------------------------------------------------------
 
