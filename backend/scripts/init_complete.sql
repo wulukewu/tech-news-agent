@@ -50,6 +50,15 @@ CREATE TABLE IF NOT EXISTS feeds (
     last_fetched_at TIMESTAMPTZ
 );
 
+-- Ensure columns added by migrations exist (safe for pre-existing tables)
+ALTER TABLE feeds ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES users(id) ON DELETE CASCADE;
+ALTER TABLE feeds ADD COLUMN IF NOT EXISTS last_fetched_at TIMESTAMPTZ;
+
+-- Ensure columns added by migrations exist (safe for pre-existing tables)
+ALTER TABLE users ADD COLUMN IF NOT EXISTS dm_notifications_enabled BOOLEAN DEFAULT true;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_proactive_dm_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS proactive_dm_frequency_hours INTEGER DEFAULT 20;
+
 CREATE INDEX IF NOT EXISTS idx_feeds_is_active ON feeds(is_active);
 CREATE INDEX IF NOT EXISTS idx_feeds_category ON feeds(category);
 CREATE INDEX IF NOT EXISTS idx_feeds_created_by ON feeds(created_by);
@@ -63,6 +72,9 @@ CREATE TABLE IF NOT EXISTS user_subscriptions (
     notification_enabled BOOLEAN NOT NULL DEFAULT true,
     UNIQUE(user_id, feed_id)
 );
+
+-- Ensure columns added by migrations exist (safe for pre-existing tables)
+ALTER TABLE user_subscriptions ADD COLUMN IF NOT EXISTS notification_enabled BOOLEAN NOT NULL DEFAULT true;
 
 CREATE INDEX IF NOT EXISTS idx_user_subscriptions_user_id ON user_subscriptions(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_subscriptions_feed_id ON user_subscriptions(feed_id);
@@ -81,6 +93,10 @@ CREATE TABLE IF NOT EXISTS articles (
     category TEXT,
     content_type VARCHAR(20) CHECK (content_type IN ('tutorial', 'guide', 'news', 'reference', 'project', 'opinion'))
 );
+
+-- Ensure columns added by migrations exist (safe for pre-existing tables)
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS category TEXT;
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS content_type VARCHAR(20) CHECK (content_type IN ('tutorial', 'guide', 'news', 'reference', 'project', 'opinion'));
 
 CREATE INDEX IF NOT EXISTS idx_articles_feed_id ON articles(feed_id);
 CREATE INDEX IF NOT EXISTS idx_articles_published_at ON articles(published_at);
@@ -102,6 +118,9 @@ CREATE TABLE IF NOT EXISTS reading_list (
     source TEXT CHECK (source IN ('discord', 'web')) DEFAULT 'web',
     UNIQUE(user_id, article_id)
 );
+
+-- Ensure columns added by migrations exist (safe for pre-existing tables)
+ALTER TABLE reading_list ADD COLUMN IF NOT EXISTS source TEXT CHECK (source IN ('discord', 'web')) DEFAULT 'web';
 
 CREATE INDEX IF NOT EXISTS idx_reading_list_user_id ON reading_list(user_id);
 CREATE INDEX IF NOT EXISTS idx_reading_list_status ON reading_list(user_id, status);
