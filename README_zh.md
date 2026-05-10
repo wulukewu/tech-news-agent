@@ -462,13 +462,11 @@ Discord Bot 沒有回應：檢查 DISCORD_TOKEN、Bot 權限和 OAuth 範圍。
 
 ## 文件
 
+- 架構概覽: docs/README.md
 - 快速開始指南: docs/guides/quick-start.md
-- 環境設定: docs/setup/env-setup-guide.md
 - Docker 指南: docs/docker/docker-guide.md
-- 用戶指南: docs/guides/user-guide.md
 - 開發者指南: docs/development/developer-guide.md
-- 架構概覽: docs/architecture/architecture-overview.md
-- 部署指南: docs/deployment/deployment-guide.md
+- API 參考: docs/api/README.md
 - 完整文件索引: docs/README.md
 
 ---

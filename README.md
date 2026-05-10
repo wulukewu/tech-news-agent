@@ -462,13 +462,11 @@ For more, see docs/troubleshooting/.
 
 ## Documentation
 
+- Architecture Overview: docs/README.md
 - Quick Start Guide: docs/guides/quick-start.md
-- Environment Setup: docs/setup/env-setup-guide.md
 - Docker Guide: docs/docker/docker-guide.md
-- User Guide: docs/guides/user-guide.md
 - Developer Guide: docs/development/developer-guide.md
-- Architecture Overview: docs/architecture/architecture-overview.md
-- Deployment Guide: docs/deployment/deployment-guide.md
+- API Reference: docs/api/README.md
 - Complete Docs Index: docs/README.md
 
 ---
