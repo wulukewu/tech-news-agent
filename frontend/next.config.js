@@ -18,9 +18,10 @@ const nextConfig = {
     ignoreBuildErrors: process.env.DOCKER_BUILD === 'true',
   },
 
-  // Enable ESLint during build (but ignore in Docker to prevent build failures)
+  // ESLint runs separately in CI via 'npm run lint' — skip during next build to avoid
+  // warnings failing the build. Errors are still caught by the separate lint step.
   eslint: {
-    ignoreDuringBuilds: process.env.DOCKER_BUILD === 'true',
+    ignoreDuringBuilds: true,
   },
 
   // Enable App Router and experimental features
