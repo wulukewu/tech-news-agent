@@ -149,10 +149,10 @@ jobs:
             exit 1
           }
 
-          echo "🔍 Running ESLint (warnings allowed)..."
-          npm run lint || {
-            echo "⚠️ ESLint warnings found, but continuing..."
-            echo "Run 'npm run lint:fix' to fix auto-fixable issues."
+          echo "🔍 Running ESLint (errors fail, warnings allowed)..."
+          npm run lint -- --max-warnings -1 || {
+            echo "❌ ESLint errors found. Run 'npm run lint:fix' to fix auto-fixable issues."
+            exit 1
           }
 
       - name: Build verification
