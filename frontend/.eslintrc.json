@@ -74,7 +74,9 @@
         "lib/utils/performance-monitoring.ts",
         "lib/utils/bundle-optimization.ts",
         "lib/debug/**/*",
-        "lib/logger.ts"
+        "lib/logger.ts",
+        "lib/api/logger.ts",
+        "lib/api/logger.ts"
       ],
       "rules": {
         "no-console": "off"
