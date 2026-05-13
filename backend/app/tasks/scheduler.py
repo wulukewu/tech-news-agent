@@ -1,3 +1,9 @@
+"""Scheduler setup, health tracking, and public API.
+
+Job implementations live in app.tasks._jobs to keep this file focused on
+scheduler lifecycle and configuration.
+"""
+
 import logging
 from datetime import UTC, datetime, timedelta
 
@@ -13,40 +19,24 @@ from app.services.notion_service import (
 # noqa: F401 - re-export for tests
 from app.services.rss_service import RSSService as RSSService  # noqa: F401 - re-export for tests
 from app.services.supabase_service import SupabaseService
+from app.tasks._jobs import (
+    daily_digest_job,
+    intelligent_reminder_job,
+    preference_summary_job,
+    proactive_learning_job,
+    send_reminder_notifications_job,
+    version_tracking_job,
+    weekly_insights_job,
+)
 
 logger = logging.getLogger(__name__)
 
-# Global scheduler instance (initialized lazily)
+# Global scheduler instances (initialized lazily in setup_scheduler)
 _scheduler: AsyncIOScheduler | None = None
-
-# Public alias for backward compatibility with tests
-scheduler: AsyncIOScheduler = AsyncIOScheduler()
-
-# Bot instance re-export for backward compatibility with tests
-
-# Global dynamic scheduler instance (initialized lazily)
 _dynamic_scheduler = None
 
-
-def get_scheduler() -> AsyncIOScheduler | None:
-    """Get the global scheduler instance."""
-    return _scheduler
-
-
-def get_dynamic_scheduler():
-    """Get the global dynamic scheduler instance."""
-    return _dynamic_scheduler
-
-
-def __getattr__(name: str):
-    """
-    Dynamic attribute access for backward compatibility.
-    Allows 'from app.tasks.scheduler import scheduler' to work correctly.
-    """
-    if name == "scheduler":
-        return _scheduler
-    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
-
+# Public alias kept for backward compatibility with tests
+scheduler: AsyncIOScheduler = AsyncIOScheduler()
 
 # Global health tracking
 _scheduler_health = {
@@ -59,171 +49,30 @@ _scheduler_health = {
 # Track feed changes between executions (Requirement 16.5)
 _last_feed_urls = set()
 
-
-from app.tasks._fetch_job import background_fetch_job
-from app.tasks._notify_jobs import cleanup_token_blacklist
-
-
-async def weekly_news_job() -> None:
-    """Stub for backward compatibility with tests."""
-    pass
+from app.tasks._fetch_job import background_fetch_job  # noqa: E402
+from app.tasks._notify_jobs import cleanup_token_blacklist  # noqa: E402
 
 
-async def version_tracking_job():
-    """
-    Background job to check for technology version updates.
-    Runs every 6 hours to monitor technology frameworks and create reminders.
-    """
-    logger.info("Starting version tracking job...")
-
-    try:
-        from app.qa_agent.intelligent_reminder import IntelligentReminderAgent
-
-        # Initialize the intelligent reminder agent
-        reminder_agent = IntelligentReminderAgent()
-
-        # Check for version updates
-        await reminder_agent.check_version_updates()
-
-        logger.info("Version tracking job completed successfully")
-
-    except Exception as e:
-        logger.error(f"Version tracking job failed: {e}", exc_info=True)
+def get_scheduler() -> AsyncIOScheduler | None:
+    """Return the global scheduler instance."""
+    return _scheduler
 
 
-async def daily_digest_job():
-    """
-    Scheduled job: send daily article digest DM to all users with notifications enabled.
-    Runs daily at 09:00 in the configured timezone.
-    """
-    logger.info("Starting daily digest DM job...")
-    try:
-        from app.bot.client import bot
-        from app.services.dm_notification_service import DMNotificationService
-
-        if not bot.is_ready():
-            logger.warning("Bot is not ready, skipping daily digest")
-            return
-
-        service = DMNotificationService(bot)
-        stats = await service.send_weekly_digest_to_all_users()
-        logger.info(
-            "Daily digest job completed: %d sent, %d failed",
-            stats.get("successful", 0),
-            stats.get("failed", 0),
-        )
-    except Exception as exc:
-        logger.error("Daily digest job failed: %s", exc, exc_info=True)
+def get_dynamic_scheduler():
+    """Return the global dynamic scheduler instance."""
+    return _dynamic_scheduler
 
 
-async def weekly_insights_job():
-    """
-    Scheduled job: generate weekly insights report every Monday at 09:00.
-    Generates a personalized report for each active user, plus a global fallback.
-    Requirements: 7.2, 7.4
-    """
-    logger.info("Starting weekly insights report generation job...")
-    try:
-        from app.qa_agent.weekly_insights.report_generator import InsightReportGenerator
-
-        supabase = SupabaseService()
-        generator = InsightReportGenerator(supabase)
-
-        # Fetch users who have rated at least one article
-        resp = (
-            supabase.client.table("reading_list")
-            .select("user_id")
-            .not_.is_("rating", "null")
-            .execute()
-        )
-        user_ids = list({row["user_id"] for row in (resp.data or [])})
-
-        if user_ids:
-            for user_id in user_ids:
-                try:
-                    await generator.generate(days=7, user_id=user_id)
-                    logger.info("Weekly insights generated for user %s", user_id)
-                except Exception as exc:
-                    logger.error("Weekly insights failed for user %s: %s", user_id, exc)
-        else:
-            # No users with ratings yet — generate global report as fallback
-            report = await generator.generate(days=7)
-            logger.info(
-                "Weekly insights global report generated (id=%s, articles=%d)",
-                report.get("id"),
-                report.get("article_count", 0),
-            )
-    except Exception as exc:
-        logger.error("Weekly insights job failed: %s", exc, exc_info=True)
-
-
-async def preference_summary_job():
-    """
-    Daily job: condense DM conversations into preference summaries.
-    Requirements: dm-conversation-memory §2
-    """
-    logger.info("Starting preference summary job...")
-    try:
-        from app.services.preference_summary_service import update_preference_summary
-
-        supabase = SupabaseService()
-        resp = supabase.client.table("dm_conversations").select("user_id").execute()
-        user_ids = list({r["user_id"] for r in (resp.data or [])})
-
-        updated = 0
-        for user_id in user_ids:
-            result = await update_preference_summary(user_id, supabase)
-            if result:
-                updated += 1
-
-        logger.info("Preference summary job complete: %d summaries updated", updated)
-    except Exception as exc:
-        logger.error("Preference summary job failed: %s", exc, exc_info=True)
-
-
-async def proactive_learning_job():
-    """
-    Scheduled job: run behavior analysis for all active users daily at 10:00.
-    Triggers learning conversations where warranted.
-    Requirements: 2.1
-    """
-    logger.info("Starting proactive learning behavior analysis job...")
-    try:
-        from app.qa_agent.proactive_learning.conversation_manager import ConversationManager
-        from app.qa_agent.proactive_learning.learning_trigger import LearningTrigger
-        from app.services.supabase_service import SupabaseService
-
-        supabase = SupabaseService()
-        # Fetch users who have learning enabled
-        resp = (
-            supabase.client.table("preference_model")
-            .select("user_id")
-            .eq("learning_enabled", True)
-            .execute()
-        )
-        user_rows = resp.data or []
-        trigger = LearningTrigger(supabase)
-        mgr = ConversationManager(supabase)
-
-        triggered = 0
-        for row in user_rows:
-            uid = row.get("user_id")
-            if not uid:
-                continue
-            should, context = await trigger.should_trigger(uid)
-            if should:
-                await mgr.create_conversation(uid, context)
-                await trigger.increment_conversation_count(uid)
-                triggered += 1
-
-        logger.info("Proactive learning job complete: %d conversations created", triggered)
-    except Exception as exc:
-        logger.error("Proactive learning job failed: %s", exc, exc_info=True)
+def __getattr__(name: str):
+    """Dynamic attribute access for backward compatibility."""
+    if name == "scheduler":
+        return _scheduler
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")
 
 
 def setup_scheduler():
     """
-    Register jobs to the scheduler with configurable CRON expression.
+    Register all jobs to the APScheduler with configurable CRON expression.
 
     Reads configuration from environment variables:
     - SCHEDULER_CRON: CRON expression (default: "0 */6 * * *")
@@ -232,159 +81,100 @@ def setup_scheduler():
     Raises:
         ValueError: If CRON expression is invalid
         RuntimeError: If settings is not loaded
-
-    Validates: Requirements 6.1, 6.2, 6.3, 6.4, 6.5, 6.6
     """
     global _scheduler, _dynamic_scheduler
 
     logger.info("Setting up scheduler...")
 
-    # Ensure settings is loaded
     if settings is None:
-        error_msg = (
-            "Settings not loaded. Ensure environment variables are properly configured. "
-            "Check .env file and required variables."
+        raise RuntimeError(
+            "Settings not loaded. Ensure environment variables are properly configured."
         )
-        logger.error(error_msg)
-        raise RuntimeError(error_msg)
 
     logger.info(f"Settings loaded successfully. Timezone: {settings.timezone}")
 
-    # Initialize scheduler if not already done
     if _scheduler is None:
-        logger.info("Initializing AsyncIOScheduler...")
         _scheduler = AsyncIOScheduler(timezone=settings.timezone)
-        logger.info(f"Scheduler initialized: {_scheduler}")
-    else:
-        logger.info(f"Scheduler already initialized: {_scheduler}")
 
-    # Initialize dynamic scheduler if not already done
     if _dynamic_scheduler is None:
-        logger.info("Initializing DynamicScheduler...")
         from app.services.dynamic_scheduler import DynamicScheduler
 
         _dynamic_scheduler = DynamicScheduler(_scheduler)
-        logger.info("DynamicScheduler initialized successfully")
 
-    # Get CRON expression from settings
     cron_expression = settings.scheduler_cron
-
-    # Get timezone (use scheduler_timezone if set, otherwise fall back to general timezone)
     scheduler_tz = settings.scheduler_timezone or settings.timezone
 
-    # Validate CRON expression by attempting to create CronTrigger
     try:
         trigger = CronTrigger.from_crontab(cron_expression, timezone=scheduler_tz)
     except (ValueError, TypeError) as e:
-        error_msg = f"Invalid CRON expression '{cron_expression}': {e}"
-        logger.error(error_msg)
-        raise ValueError(error_msg) from e
+        raise ValueError(f"Invalid CRON expression '{cron_expression}': {e}") from e
 
-    # Register the background job
-    _scheduler.add_job(
-        background_fetch_job,
-        trigger=trigger,
-        id="background_fetch",
-        name="Background Article Fetch and Analysis",
-        replace_existing=True,
-    )
+    jobs = [
+        (
+            background_fetch_job,
+            trigger,
+            "background_fetch",
+            "Background Article Fetch and Analysis",
+        ),
+        (
+            cleanup_token_blacklist,
+            CronTrigger(hour="*", timezone=scheduler_tz),
+            "token_blacklist_cleanup",
+            "Token Blacklist Cleanup",
+        ),
+        (
+            _dynamic_scheduler.cleanup_expired_jobs,
+            CronTrigger(hour="*/6", timezone=scheduler_tz),
+            "dynamic_scheduler_cleanup",
+            "Dynamic Scheduler Cleanup",
+        ),
+        (
+            version_tracking_job,
+            CronTrigger(hour="*/6", timezone=scheduler_tz),
+            "version_tracking",
+            "Technology Version Tracking",
+        ),
+        (
+            daily_digest_job,
+            CronTrigger(hour=9, minute=0, timezone=scheduler_tz),
+            "daily_digest",
+            "Daily Article Digest DM",
+        ),
+        (
+            weekly_insights_job,
+            CronTrigger(day_of_week="mon", hour=9, minute=0, timezone=scheduler_tz),
+            "weekly_insights",
+            "Weekly Insights Report Generation",
+        ),
+        (
+            preference_summary_job,
+            CronTrigger(hour=11, minute=0, timezone=scheduler_tz),
+            "preference_summary",
+            "Preference Summary Update",
+        ),
+        (
+            proactive_learning_job,
+            CronTrigger(hour=10, minute=0, timezone=scheduler_tz),
+            "proactive_learning",
+            "Proactive Learning Behavior Analysis",
+        ),
+        (
+            intelligent_reminder_job,
+            CronTrigger(hour=8, minute=0, timezone=scheduler_tz),
+            "intelligent_reminders",
+            "Intelligent Reminder Generation",
+        ),
+        (
+            send_reminder_notifications_job,
+            CronTrigger(hour="*", timezone=scheduler_tz),
+            "reminder_notifications",
+            "Reminder Notification Delivery",
+        ),
+    ]
 
-    # Register token blacklist cleanup job (runs every hour)
-    _scheduler.add_job(
-        cleanup_token_blacklist,
-        trigger=CronTrigger(hour="*", timezone=scheduler_tz),  # Every hour
-        id="token_blacklist_cleanup",
-        name="Token Blacklist Cleanup",
-        replace_existing=True,
-    )
+    for func, job_trigger, job_id, name in jobs:
+        _scheduler.add_job(func, trigger=job_trigger, id=job_id, name=name, replace_existing=True)
 
-    # Register dynamic scheduler cleanup job (runs every 6 hours)
-    _scheduler.add_job(
-        _dynamic_scheduler.cleanup_expired_jobs,
-        trigger=CronTrigger(hour="*/6", timezone=scheduler_tz),  # Every 6 hours
-        id="dynamic_scheduler_cleanup",
-        name="Dynamic Scheduler Cleanup",
-        replace_existing=True,
-    )
-
-    # Register intelligent reminder version tracking job (runs every 6 hours)
-    _scheduler.add_job(
-        version_tracking_job,
-        trigger=CronTrigger(hour="*/6", timezone=scheduler_tz),  # Every 6 hours
-        id="version_tracking",
-        name="Technology Version Tracking",
-        replace_existing=True,
-    )
-
-    # Register daily article digest DM job (every day at 09:00)
-    _scheduler.add_job(
-        daily_digest_job,
-        trigger=CronTrigger(hour=9, minute=0, timezone=scheduler_tz),
-        id="daily_digest",
-        name="Daily Article Digest DM",
-        replace_existing=True,
-    )
-    logger.info(f"Daily digest job registered: Runs daily at 09:00 in timezone '{scheduler_tz}'")
-
-    # Register weekly insights generation job (every Monday at 09:00)
-    _scheduler.add_job(
-        weekly_insights_job,
-        trigger=CronTrigger(day_of_week="mon", hour=9, minute=0, timezone=scheduler_tz),
-        id="weekly_insights",
-        name="Weekly Insights Report Generation",
-        replace_existing=True,
-    )
-    logger.info(
-        f"Weekly insights job registered: Runs every Monday at 09:00 in timezone '{scheduler_tz}'"
-    )
-
-    # Register preference summary job (daily at 11:00)
-    _scheduler.add_job(
-        preference_summary_job,
-        trigger=CronTrigger(hour=11, minute=0, timezone=scheduler_tz),
-        id="preference_summary",
-        name="Preference Summary Update",
-        replace_existing=True,
-    )
-    logger.info("Preference summary job registered: Runs daily at 11:00")
-
-    # Register proactive learning behavior analysis job (daily at 10:00)
-    _scheduler.add_job(
-        proactive_learning_job,
-        trigger=CronTrigger(hour=10, minute=0, timezone=scheduler_tz),
-        id="proactive_learning",
-        name="Proactive Learning Behavior Analysis",
-        replace_existing=True,
-    )
-    logger.info(
-        f"Proactive learning job registered: Runs daily at 10:00 in timezone '{scheduler_tz}'"
-    )
-
-    # Register intelligent reminder generation job (daily at 08:00)
-    _scheduler.add_job(
-        intelligent_reminder_job,
-        trigger=CronTrigger(hour=8, minute=0, timezone=scheduler_tz),
-        id="intelligent_reminders",
-        name="Intelligent Reminder Generation",
-        replace_existing=True,
-    )
-    logger.info(
-        f"Intelligent reminder job registered: Runs daily at 08:00 in timezone '{scheduler_tz}'"
-    )
-
-    # Register reminder notification delivery job (every hour)
-    _scheduler.add_job(
-        send_reminder_notifications_job,
-        trigger=CronTrigger(hour="*", timezone=scheduler_tz),
-        id="reminder_notifications",
-        name="Reminder Notification Delivery",
-        replace_existing=True,
-    )
-    logger.info(
-        f"Reminder notification job registered: Runs every hour in timezone '{scheduler_tz}'"
-    )
-
-    # Register learning stagnation check job (daily at 10:00)
     from app.tasks.learning_stagnation import learning_stagnation_check_job
 
     _scheduler.add_job(
@@ -394,63 +184,21 @@ def setup_scheduler():
         name="Learning Stagnation Check",
         replace_existing=True,
     )
-    logger.info(
-        f"Learning stagnation check job registered: Runs daily at 10:05 in timezone '{scheduler_tz}'"
-    )
 
-    # Log the configured schedule
     logger.info(
-        f"Scheduler configured successfully: "
-        f"CRON='{cron_expression}', "
-        f"Timezone='{scheduler_tz}', "
-        f"Job='background_fetch_job'"
+        f"Scheduler configured: CRON='{cron_expression}', Timezone='{scheduler_tz}', "
+        f"{len(jobs) + 1} jobs registered"
     )
-    logger.info(
-        f"Token blacklist cleanup job registered: " f"Runs every hour in timezone '{scheduler_tz}'"
-    )
-    logger.info(
-        f"Dynamic scheduler cleanup job registered: "
-        f"Runs every 6 hours in timezone '{scheduler_tz}'"
-    )
-
-    # Note: User notification schedule restoration is done in the lifespan function
-    # after the scheduler is started, since it requires async context
-
-    # Verify scheduler was initialized
-    if _scheduler is None:
-        error_msg = "CRITICAL: Scheduler is still None after setup_scheduler()"
-        logger.error(error_msg)
-        raise RuntimeError(error_msg)
-
-    logger.info(f"Scheduler setup completed successfully. Scheduler instance: {_scheduler}")
     return _scheduler
 
 
 async def get_scheduler_health() -> dict:
     """
-    Health check endpoint for monitoring scheduler status.
+    Health check for the scheduler.
 
-    Returns a dictionary containing:
-    - last_execution_time: ISO timestamp of last execution (or None if never run)
-    - articles_processed: Count of articles processed in last execution
-    - failed_operations: Count of failed operations in last execution
-    - total_operations: Total operations attempted in last execution
-    - status_code: HTTP status code (200 for healthy, 503 for unhealthy)
-    - is_healthy: Boolean indicating overall health
-    - is_enabled: Boolean indicating if scheduler is enabled
-    - is_running: Boolean indicating if scheduler is currently running
-    - next_execution_time: ISO timestamp of next scheduled execution (or None)
-    - issues: List of health issues detected
-
-    Health criteria:
-    - Disabled if ENABLE_SCHEDULER=false
-    - Unhealthy (503) if scheduler has not run in the last 12 hours
-    - Unhealthy (503) if last execution had more than 50% failures
-    - Healthy (200) otherwise
-
-    Validates: Requirements 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7
+    Returns status including last execution time, article counts, failure rates,
+    and next scheduled run. Returns 503 if stale (>12h) or high failure rate (>50%).
     """
-    # Check if scheduler is enabled
     is_enabled = getattr(settings, "enable_scheduler", True)
 
     last_execution = _scheduler_health["last_execution_time"]
@@ -458,11 +206,8 @@ async def get_scheduler_health() -> dict:
     failed_operations = _scheduler_health["last_failed_operations"]
     total_operations = _scheduler_health["last_total_operations"]
 
-    # If no in-memory record, check database for recent articles
     if last_execution is None:
         try:
-            from app.services.supabase_service import SupabaseService
-
             supabase = SupabaseService()
             result = (
                 supabase.client.table("articles")
@@ -471,40 +216,31 @@ async def get_scheduler_health() -> dict:
                 .limit(1)
                 .execute()
             )
-            if result.data and isinstance(result.data, list) and len(result.data) > 0:
-                last_article_time = datetime.fromisoformat(
+            if result.data:
+                last_execution = datetime.fromisoformat(
                     result.data[0]["created_at"].replace("Z", "+00:00")
                 )
-                last_execution = last_article_time
         except Exception as e:
             logger.warning(f"Failed to check database for last execution: {e}")
 
-    # Check if scheduler is running
     is_running = _scheduler is not None and _scheduler.running
-
-    # Get next execution time
     next_execution_time = None
     if _scheduler and is_running:
         job = _scheduler.get_job("background_fetch")
         if job and job.next_run_time:
             next_execution_time = job.next_run_time.isoformat()
 
-    # Determine health status
     is_healthy = True
     issues = []
     status_code = 200
 
     if not is_enabled:
-        is_healthy = True
-        status_code = 200
         issues.append(
             {"type": "disabled", "message": "Scheduler is disabled (ENABLE_SCHEDULER=false)"}
         )
     else:
         if last_execution is None:
             if is_running and next_execution_time:
-                is_healthy = True
-                status_code = 200
                 issues.append(
                     {
                         "type": "waiting",
@@ -520,13 +256,13 @@ async def get_scheduler_health() -> dict:
             if time_since_last_run > timedelta(hours=12):
                 is_healthy = False
                 status_code = 503
-                hours_since = time_since_last_run.total_seconds() / 3600
+                hours_since = int(time_since_last_run.total_seconds() / 3600)
                 issues.append(
                     {
                         "type": "stale",
-                        "hours": int(hours_since),
+                        "hours": hours_since,
                         "threshold": 12,
-                        "message": f"Scheduler has not run in {int(hours_since)} hours (threshold: 12 hours)",
+                        "message": f"Scheduler has not run in {hours_since} hours (threshold: 12 hours)",
                     }
                 )
 
@@ -556,104 +292,3 @@ async def get_scheduler_health() -> dict:
         "next_execution_time": next_execution_time,
         "issues": issues,
     }
-
-
-async def intelligent_reminder_job():
-    """
-    Scheduled job: Generate intelligent reminders for all active users.
-    Runs daily to analyze reading habits and create personalized reminders.
-    """
-    logger.info("Starting intelligent reminder generation job...")
-    try:
-        from app.services.intelligent_reminder_generator import IntelligentReminderGenerator
-        from app.services.supabase_service import SupabaseService
-
-        supabase = SupabaseService()
-        generator = IntelligentReminderGenerator()
-
-        # Get all users with reminders enabled
-        settings_result = (
-            supabase.client.table("reminder_settings")
-            .select("user_id, enabled")
-            .eq("enabled", True)
-            .execute()
-        )
-
-        # If no settings exist, get all users (default enabled)
-        if not settings_result.data:
-            users_result = supabase.client.table("users").select("id").execute()
-            user_ids = [str(user["id"]) for user in users_result.data]
-        else:
-            user_ids = [row["user_id"] for row in settings_result.data]
-
-        total_reminders = 0
-        successful_users = 0
-        failed_users = 0
-
-        for user_id in user_ids:
-            try:
-                reminders = await generator.generate_reminders_for_user(user_id)
-                if reminders:
-                    total_reminders += len(reminders)
-                    successful_users += 1
-                    logger.info(f"Generated {len(reminders)} reminders for user {user_id}")
-            except Exception as e:
-                failed_users += 1
-                logger.error(f"Failed to generate reminders for user {user_id}: {e}")
-
-        logger.info(
-            f"Intelligent reminder job complete: {total_reminders} reminders for {successful_users} users ({failed_users} failed)"
-        )
-
-    except Exception as exc:
-        logger.error(f"Intelligent reminder job failed: {exc}", exc_info=True)
-
-
-async def send_reminder_notifications_job():
-    """
-    Scheduled job: Send pending reminders to users via Discord DM.
-    Runs every hour to deliver generated reminders.
-    """
-    logger.info("Starting reminder notification delivery job...")
-    try:
-        from app.services.reminder_notification_service import ReminderNotificationService
-        from app.services.supabase_service import SupabaseService
-
-        supabase = SupabaseService()
-        notification_service = ReminderNotificationService()
-
-        # Get all users with pending reminders
-        pending_result = (
-            supabase.client.table("reminder_log")
-            .select("user_id")
-            .eq("status", "pending")
-            .execute()
-        )
-
-        if not pending_result.data:
-            logger.info("No pending reminders to send")
-            return
-
-        # Get unique user IDs
-        user_ids = list(set(row["user_id"] for row in pending_result.data))
-
-        total_sent = 0
-        successful_users = 0
-        failed_users = 0
-
-        for user_id in user_ids:
-            try:
-                sent_count = await notification_service.send_pending_reminders(user_id)
-                if sent_count > 0:
-                    total_sent += sent_count
-                    successful_users += 1
-            except Exception as e:
-                failed_users += 1
-                logger.error(f"Failed to send reminders to user {user_id}: {e}")
-
-        logger.info(
-            f"Reminder notification job complete: {total_sent} reminders sent to {successful_users} users ({failed_users} failed)"
-        )
-
-    except Exception as exc:
-        logger.error(f"Reminder notification job failed: {exc}", exc_info=True)
