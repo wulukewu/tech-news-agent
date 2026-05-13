@@ -16,6 +16,7 @@ import { useAddToReadingList } from '@/lib/hooks/useReadingList';
 import { toast } from '@/lib/toast';
 import { useTheme } from 'next-themes';
 import { useI18n } from '@/contexts/I18nContext';
+import { TinkeringIndexStars } from '@/components/TinkeringIndexStars';
 
 interface ArticleCardProps {
   article: Article;
@@ -441,84 +442,5 @@ export function ArticleCard({
         </CardContent>
       </Card>
     </article>
-  );
-}
-
-/**
- * Tinkering Index Stars Component
- * Displays 1-5 stars with color coding and tooltip:
- * - 1-2 stars: gray (beginner)
- * - 3 stars: yellow (intermediate)
- * - 4-5 stars: orange (advanced)
- *
- * Requirements:
- * - 25.1: Display tinkering index using 1-5 star icons with color coding
- * - 25.2: Use gray for 1-2 stars, yellow for 3 stars, orange for 4-5 stars
- * - 25.3: Display filled stars for rating value, outlined for remaining
- * - 25.6: Ensure 24px minimum size on mobile viewport
- * - 25.7: Include tooltip showing numeric value and description
- * - 25.8: Use consistent star icon sizing (20px standard view)
- */
-function TinkeringIndexStars({ index }: { index: number }) {
-  const { t } = useI18n();
-  // Clamp index to valid range (1-5)
-  const clampedIndex = Math.max(1, Math.min(5, index || 1));
-
-  // Get description based on index
-  const getDescription = (idx: number): string => {
-    if (idx <= 2) return 'Beginner';
-    if (idx === 3) return 'Intermediate';
-    return 'Advanced';
-  };
-
-  // Determine color based on index
-  const getStarColor = (starIndex: number) => {
-    if (starIndex >= clampedIndex) {
-      return 'text-gray-300 dark:text-gray-600'; // Outlined/unfilled stars
-    }
-    if (clampedIndex <= 2) {
-      return 'fill-gray-400 text-gray-400'; // Beginner (1-2)
-    }
-    if (clampedIndex === 3) {
-      return 'fill-yellow-400 text-yellow-400'; // Intermediate (3)
-    }
-    return 'fill-orange-400 text-orange-400'; // Advanced (4-5)
-  };
-
-  const description = getDescription(clampedIndex);
-  const tooltipContent = `${clampedIndex} - ${description}`;
-
-  return (
-    <TooltipProvider delayDuration={300}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div
-            className="flex items-center gap-1 cursor-help group/stars"
-            aria-label={t('article-card.tinkering-aria', { index: clampedIndex, description })}
-            role="img"
-          >
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star
-                key={i}
-                className={cn(
-                  'h-5 w-5 min-h-[20px] min-w-[20px]', // 20px standard, 24px on mobile via min-h/w
-                  'md:h-5 md:w-5', // 20px on desktop
-                  'transition-all duration-300 hover:scale-[1.05]',
-                  'group-hover/stars:animate-pulse',
-                  getStarColor(i)
-                )}
-                style={{
-                  animationDelay: `${i * 50}ms`,
-                }}
-                aria-hidden="true"
-              />
-            ))}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent side="top" align="center">
-          <p className="text-sm font-medium">{tooltipContent}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
   );
 }
