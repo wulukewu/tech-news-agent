@@ -154,7 +154,7 @@ export function CriticalResourcePreloader() {
         } catch (error) {
           // Silently fail - resource doesn't exist
           if (process.env.NODE_ENV === 'development') {
-            console.debug(`Skipping preload for missing resource: ${url}`);
+            logger.debug(`Skipping preload for missing resource: ${url}`);
           }
         }
       };

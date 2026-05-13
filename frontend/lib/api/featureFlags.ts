@@ -103,10 +103,9 @@ export function getFeatureFlagsConfig(): Record<FeatureFlagKey, boolean> {
  */
 export function logFeatureFlags(): void {
   if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-    console.group('🚩 API Feature Flags');
+    logger.debug('🚩 API Feature Flags');
     Object.entries(API_FEATURE_FLAGS).forEach(([key, value]) => {
       logger.debug(`${key}: ${value ? '✅ Enabled' : '❌ Disabled'}`);
     });
-    console.groupEnd();
   }
 }

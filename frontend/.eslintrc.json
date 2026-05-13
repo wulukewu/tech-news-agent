@@ -68,7 +68,14 @@
   },
   "overrides": [
     {
-      "files": ["scripts/**/*", "lib/utils/error-tracking.ts", "lib/logger.ts"],
+      "files": [
+        "scripts/**/*",
+        "lib/utils/error-tracking.ts",
+        "lib/utils/performance-monitoring.ts",
+        "lib/utils/bundle-optimization.ts",
+        "lib/debug/**/*",
+        "lib/logger.ts"
+      ],
       "rules": {
         "no-console": "off"
       }

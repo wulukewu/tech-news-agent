@@ -257,7 +257,7 @@ class PerformanceMonitor {
     if (typeof window === 'undefined') return;
 
     const stats = this.getStats();
-    console.group('📊 API Performance Statistics');
+    logger.debug('📊 API Performance Statistics');
     logger.debug(`Total Requests: ${stats.totalRequests}`);
     logger.debug(
       `Success Rate: ${((stats.successfulRequests / stats.totalRequests) * 100).toFixed(1)}%`
@@ -269,7 +269,7 @@ class PerformanceMonitor {
     logger.debug(`Slow Requests (>1s): ${stats.slowRequestsCount}`);
 
     if (Object.keys(stats.byEndpoint).length > 0) {
-      console.group('By Endpoint:');
+      logger.debug('By Endpoint:');
       Object.entries(stats.byEndpoint)
         .sort((a, b) => b[1].averageTime - a[1].averageTime)
         .slice(0, 10) // Top 10 slowest
@@ -280,9 +280,7 @@ class PerformanceMonitor {
             } errors`
           );
         });
-      console.groupEnd();
     }
-    console.groupEnd();
   }
 
   /**
