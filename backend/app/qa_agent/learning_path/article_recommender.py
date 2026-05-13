@@ -5,6 +5,7 @@ Recommends relevant articles based on current learning stage and user preference
 Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 9.1, 9.2, 9.3, 9.4, 9.5
 """
 
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, List, Optional
@@ -12,6 +13,10 @@ from typing import Dict, List, Optional
 from app.qa_agent.learning_path.path_generator import LearningPath, LearningStage
 from app.schemas.article import ArticleSchema
 from app.services.supabase_service import SupabaseService
+
+logger = logging.getLogger(__name__)
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -90,8 +95,8 @@ class ArticleRecommender:
                             if isinstance(record.get("embedding"), str):
                                 record["embedding"] = None
                             candidate_articles.append(ArticleSchema(**record))
-                        except Exception:
-                            pass
+                        except Exception as exc:
+                            logger.warning("Skipping malformed article record: %s", exc)
 
         # Score and rank articles; completed articles always pass the threshold
         scored_articles = []
@@ -146,7 +151,8 @@ class ArticleRecommender:
                     preferences["avg_rating"] = sum(ratings) / len(ratings)
 
             return preferences
-        except Exception:
+        except Exception as exc:
+            logger.warning("Failed to fetch user preferences: %s", exc)
             return {
                 "avg_rating": 0,
                 "preferred_categories": [],
@@ -174,10 +180,11 @@ class ArticleRecommender:
                     if isinstance(record.get("embedding"), str):
                         record["embedding"] = None
                     articles.append(ArticleSchema(**record))
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logger.warning("Skipping malformed article record: %s", exc)
             return articles[:20]
-        except Exception:
+        except Exception as exc:
+            logger.warning("Failed to fetch articles for learning path: %s", exc)
             return []
 
     async def _get_read_articles(self, user_id: str, goal_id: str = "") -> set:
@@ -193,7 +200,8 @@ class ArticleRecommender:
                 query = query.eq("goal_id", goal_id)
             response = query.execute()
             return {str(record["article_id"]) for record in response.data}
-        except Exception:
+        except Exception as exc:
+            logger.warning("Failed to fetch read articles for user %s: %s", user_id, exc)
             return set()
 
     async def _find_relevant_articles(
@@ -214,8 +222,8 @@ class ArticleRecommender:
                             if isinstance(record.get("embedding"), str):
                                 record["embedding"] = None
                             articles.append(ArticleSchema(**record))
-                        except Exception:
-                            pass
+                        except Exception as exc:
+                            logger.warning("Skipping malformed article record: %s", exc)
 
             select_fields = "id, feed_id, title, url, published_at, tinkering_index, ai_summary, created_at, category, content_type"
             skill_names = [skill.name.replace("-", " ") for skill in stage.skills]
@@ -282,7 +290,8 @@ class ArticleRecommender:
                 add_articles(resp.data or [])
 
             return articles[:50]
-        except Exception:
+        except Exception as exc:
+            logger.warning("Failed to find relevant articles for stage: %s", exc)
             return []
 
     async def _score_article(
@@ -370,7 +379,8 @@ class ArticleRecommender:
                 stage_name=stage.stage_name,
             )
 
-        except Exception:
+        except Exception as exc:
+            logger.warning("Failed to score article: %s", exc)
             return None
 
     def _generate_recommendation_reason(

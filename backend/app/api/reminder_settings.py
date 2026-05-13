@@ -44,8 +44,8 @@ async def _get_prefs_row(supabase: SupabaseService, user_id: str) -> dict:
         )
         if r.data:
             return {k: r.data.get(k, v) for k, v in _DEFAULTS.items()}
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("Failed to load reminder settings for user %s: %s", user_id, exc)
     return dict(_DEFAULTS)
 
 

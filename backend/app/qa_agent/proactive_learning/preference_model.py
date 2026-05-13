@@ -40,8 +40,8 @@ class PreferenceModel:
                 if isinstance(row.get("category_weights"), str):
                     row["category_weights"] = json.loads(row["category_weights"])
                 return row
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("Failed to fetch preference_model for user %s: %s", user_id, exc)
         # Create default
         return await self._create_default(user_id)
 

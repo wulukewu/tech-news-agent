@@ -61,8 +61,8 @@ async def update_preference_summary(user_id: str, supabase: SupabaseService) -> 
             .execute()
         )
         existing_summary = (pref_resp.data or [{}])[0].get("preference_summary") or ""
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("Failed to fetch preference_summary for user %s: %s", user_id, exc)
 
     messages = "\n".join(f"- {r['content']}" for r in reversed(rows))
 

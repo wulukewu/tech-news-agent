@@ -36,8 +36,8 @@ async def _get_reminder_settings(supabase: SupabaseService, user_id: str) -> dic
         )
         if r.data:
             return {k: r.data.get(k, v) for k, v in _DEFAULTS.items()}
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("Failed to load reminder settings for user %s: %s", user_id, exc)
     return dict(_DEFAULTS)
 
 
@@ -57,7 +57,8 @@ async def _check_cooldown(supabase: SupabaseService, user_id: str, cooldown_hour
         last_dt = datetime.fromisoformat(last_dm.replace("Z", "+00:00"))
         elapsed = (datetime.now(timezone.utc) - last_dt).total_seconds() / 3600
         return elapsed < cooldown_hours
-    except Exception:
+    except Exception as exc:
+        logger.warning("Failed to check cooldown for user %s: %s", user_id, exc)
         return False
 
 
@@ -66,8 +67,8 @@ async def _update_last_dm(supabase: SupabaseService, user_id: str) -> None:
         supabase.client.table("users").update(
             {"last_proactive_dm_at": datetime.now(timezone.utc).isoformat()}
         ).eq("id", user_id).execute()
-    except Exception:
-        pass
+    except Exception as exc:
+        logger.warning("Failed to update last_proactive_dm_at for user %s: %s", user_id, exc)
 
 
 async def send_similar_articles_reminder(
@@ -255,7 +256,8 @@ async def _check_smart_timing(supabase: SupabaseService, user_id: str) -> bool:
             return False
 
         return True
-    except Exception:
+    except Exception as exc:
+        logger.warning("Failed to check send eligibility for user %s: %s", user_id, exc)
         return True  # 默認允許發送
 
 
@@ -281,7 +283,8 @@ async def _filter_already_seen(
         filtered = [s for s in suggestions if s["id"] not in recommended_ids]
         return filtered
 
-    except Exception:
+    except Exception as exc:
+        logger.warning("Failed to filter seen suggestions for user %s: %s", user_id, exc)
         return suggestions
 
 

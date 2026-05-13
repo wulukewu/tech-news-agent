@@ -86,8 +86,8 @@ class LearningTrigger:
                         ).eq("user_id", user_id).execute()
                         row["conversations_this_week"] = 0
                 return row
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("Failed to fetch preference_model row for user %s: %s", user_id, exc)
         # Create default row
         try:
             self.supabase.client.table("preference_model").upsert(
@@ -107,7 +107,10 @@ class LearningTrigger:
             self.supabase.client.rpc(
                 "increment_conversations_this_week", {"uid": user_id}
             ).execute()
-        except Exception:
+        except Exception as exc:
+            logger.warning(
+                "RPC increment_conversations_this_week failed for user %s: %s", user_id, exc
+            )
             # Fallback: manual increment
             try:
                 pref = await self._get_preference(user_id)

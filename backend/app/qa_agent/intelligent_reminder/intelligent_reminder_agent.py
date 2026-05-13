@@ -446,8 +446,8 @@ class IntelligentReminderAgent:
                     f"switching to '{fallback}'"
                 )
                 return fallback
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("Failed to check channel failures for user %s: %s", user_id, exc)
         return preferred_channel
 
     async def _record_channel_result(self, user_id: str, channel: str, success: bool) -> None:

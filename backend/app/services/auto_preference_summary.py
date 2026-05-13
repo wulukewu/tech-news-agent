@@ -35,15 +35,16 @@ async def maybe_update_preference_summary(user_id: str) -> None:
             .execute()
         )
         last_update_str = (resp.data or [{}])[0].get("summary_updated_at")
-    except Exception:
+    except Exception as exc:
+        logger.warning("Failed to fetch summary_updated_at for user %s: %s", user_id, exc)
         last_update_str = None
 
     last_update = None
     if last_update_str:
         try:
             last_update = datetime.fromisoformat(last_update_str.replace("Z", "+00:00"))
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("Failed to parse summary_updated_at '%s': %s", last_update_str, exc)
 
     # Count new messages since last update
     try:
@@ -51,7 +52,8 @@ async def maybe_update_preference_summary(user_id: str) -> None:
         if last_update:
             q = q.gte("created_at", last_update.isoformat())
         new_count = len((q.execute().data) or [])
-    except Exception:
+    except Exception as exc:
+        logger.warning("Failed to count new messages for user %s: %s", user_id, exc)
         new_count = 0
 
     hours_since = (datetime.now(UTC) - last_update).total_seconds() / 3600 if last_update else 999

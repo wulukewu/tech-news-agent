@@ -115,8 +115,10 @@ class GraphDatabase:
 
                 text = f"{node_data.get('display_name', node_data['name'])} {node_data.get('description', '')} {' '.join(node_data.get('tags', []))}"
                 embedding = await embed_text(text.strip())
-            except Exception:
-                pass
+            except Exception as exc:
+                logger.warning(
+                    "Failed to generate embedding for node %s: %s", node_data.get("name"), exc
+                )
 
         data: Dict[str, Any] = {
             "domain_id": str(domain_id),
