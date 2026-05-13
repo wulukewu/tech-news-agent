@@ -68,6 +68,12 @@
   },
   "overrides": [
     {
+      "files": ["scripts/**/*", "lib/utils/error-tracking.ts", "lib/logger.ts"],
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
       "files": ["__tests__/**/*.ts", "__tests__/**/*.tsx"],
       "rules": {
         "no-console": "off",

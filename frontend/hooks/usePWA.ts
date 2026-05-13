@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { logger } from '@/lib/utils/logger';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -70,7 +71,7 @@ export function usePWA() {
     };
 
     const handleAppInstalled = () => {
-      console.log('PWA was installed');
+      logger.info('PWA was installed');
       localStorage.setItem('pwa-installed', 'true');
       setDeferredPrompt(null);
 
@@ -118,7 +119,7 @@ export function usePWA() {
   // Install the PWA
   const installPWA = useCallback(async () => {
     if (!deferredPrompt) {
-      console.log('No install prompt available');
+      logger.info('No install prompt available');
       return false;
     }
 
@@ -127,11 +128,11 @@ export function usePWA() {
       const choiceResult = await deferredPrompt.userChoice;
 
       if (choiceResult.outcome === 'accepted') {
-        console.log('User accepted the install prompt');
+        logger.info('User accepted the install prompt');
         localStorage.setItem('pwa-installed', 'true');
         return true;
       } else {
-        console.log('User dismissed the install prompt');
+        logger.info('User dismissed the install prompt');
         return false;
       }
     } catch (error) {
@@ -152,7 +153,7 @@ export function usePWA() {
     if ('serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js');
-        console.log('Service Worker registered:', registration);
+        logger.info('Service Worker registered:', registration);
 
         // Listen for updates
         registration.addEventListener('updatefound', () => {
@@ -161,7 +162,7 @@ export function usePWA() {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
                 // New content is available
-                console.log('New content available, please refresh');
+                logger.info('New content available, please refresh');
               }
             });
           }
