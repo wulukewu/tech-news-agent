@@ -73,10 +73,12 @@
         "lib/utils/error-tracking.ts",
         "lib/utils/performance-monitoring.ts",
         "lib/utils/bundle-optimization.ts",
+        "lib/utils/logger.ts",
         "lib/debug/**/*",
         "lib/logger.ts",
         "lib/api/logger.ts",
-        "lib/api/logger.ts"
+        "features/articles/components/*.example.tsx",
+        "features/articles/components/*.demo.tsx"
       ],
       "rules": {
         "no-console": "off"
