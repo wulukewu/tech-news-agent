@@ -7,7 +7,6 @@ from pydantic import BaseModel
 from app.api.auth import get_current_user
 
 from ..services.content_classification_service import ContentClassificationService
-from ..services.educational_rss_manager import EducationalRSSManager, FeedType
 from ..services.enhanced_recommendation_engine import EnhancedRecommendationEngine
 from ..services.llm_service import LLMService
 from ..services.quality_assurance_system import ContentFeedback, QualityAssuranceSystem
@@ -45,11 +44,6 @@ class UserPreferencesRequest(BaseModel):
 
 
 # Dependency injection
-def get_educational_rss_manager() -> EducationalRSSManager:
-    supabase_service = SupabaseService()
-    return EducationalRSSManager(supabase_service)
-
-
 def get_content_classifier() -> ContentClassificationService:
     llm_service = LLMService()
     supabase_service = SupabaseService()
@@ -69,21 +63,9 @@ def get_quality_system() -> QualityAssuranceSystem:
 
 # Feed Management Endpoints
 @router.get("/feeds/categories")
-async def get_feed_categories(
-    feed_type: Optional[str] = None,
-    rss_manager: EducationalRSSManager = Depends(get_educational_rss_manager),
-):
-    """Get all feed categories, optionally filtered by type."""
-    try:
-        if feed_type:
-            feeds = await rss_manager.get_feeds_by_type(FeedType(feed_type))
-            return {"feeds": feeds}
-        else:
-            educational_feeds = await rss_manager.get_educational_feeds()
-            return {"feeds": educational_feeds}
-    except Exception as e:
-        logger.error(f"Failed to get feed categories: {e}")
-        raise HTTPException(status_code=500, detail="Failed to get feed categories")
+async def get_feed_categories(feed_type: Optional[str] = None):
+    """Get all feed categories. (Educational RSS manager removed — returns empty list.)"""
+    return {"feeds": []}
 
 
 @router.post("/feeds/{feed_id}/categorize")
@@ -91,16 +73,9 @@ async def categorize_feed(
     feed_id: str,
     category_data: FeedCategoryRequest,
     current_user: dict = Depends(get_current_user),
-    rss_manager: EducationalRSSManager = Depends(get_educational_rss_manager),
 ):
     """Categorize an existing feed as educational content."""
-    try:
-        # This would update an existing feed's category
-        # Implementation would depend on specific requirements
-        return {"message": "Feed categorized successfully", "feed_id": feed_id}
-    except Exception as e:
-        logger.error(f"Failed to categorize feed {feed_id}: {e}")
-        raise HTTPException(status_code=500, detail="Failed to categorize feed")
+    return {"message": "Feed categorized successfully", "feed_id": feed_id}
 
 
 # Content Classification Endpoints
