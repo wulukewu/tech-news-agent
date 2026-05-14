@@ -184,6 +184,36 @@ class DsSendMixin:
                     )
                     # Release lock as completed
                     await lock_manager.release_lock(lock.id, "completed")
+
+                    # P4: Schedule engagement check 24 hours after digest
+                    try:
+                        from datetime import timedelta
+
+                        from apscheduler.triggers.date import DateTrigger
+
+                        check_time = datetime.utcnow() + timedelta(hours=24)
+                        check_job_id = f"engagement_check_{user_id}"
+                        if self.scheduler.get_job(check_job_id):
+                            self.scheduler.remove_job(check_job_id)
+                        self.scheduler.add_job(
+                            func=self._check_digest_engagement,
+                            trigger=DateTrigger(run_date=check_time),
+                            id=check_job_id,
+                            name=f"Engagement Check - {user_id}",
+                            args=[user_id],
+                            replace_existing=True,
+                        )
+                        self.logger.info(
+                            "Scheduled engagement check",
+                            user_id=str(user_id),
+                            check_time=check_time.isoformat(),
+                        )
+                    except Exception as check_err:
+                        self.logger.warning(
+                            "Failed to schedule engagement check",
+                            user_id=str(user_id),
+                            error=str(check_err),
+                        )
                 else:
                     self.logger.warning(
                         "Failed to send notification to user",
@@ -236,3 +266,86 @@ class DsSendMixin:
                 user_id=str(user_id),
                 exc_info=True,
             )
+
+    async def _check_digest_engagement(self, user_id: UUID) -> None:
+        """
+        P4: Check if user interacted with articles in the 24 hours after a digest was sent.
+        Tracks consecutive no-engagement counts and logs a warning when threshold is reached.
+        """
+        try:
+            from datetime import timedelta
+
+            from app.services.supabase_service import SupabaseService
+
+            supabase = SupabaseService()
+            cutoff = (datetime.utcnow() - timedelta(hours=24)).isoformat()
+
+            response = (
+                supabase.client.table("reading_list")
+                .select("id", count="exact")
+                .eq("user_id", str(user_id))
+                .gte("created_at", cutoff)
+                .execute()
+            )
+            interactions = response.count or 0
+
+            if interactions > 0:
+                self.logger.info(
+                    "Digest engagement detected",
+                    user_id=str(user_id),
+                    interactions=interactions,
+                )
+                # Reset consecutive no-engagement counter
+                await self._update_no_engagement_streak(supabase, user_id, reset=True)
+            else:
+                streak = await self._update_no_engagement_streak(supabase, user_id, reset=False)
+                self.logger.warning(
+                    "No engagement after digest",
+                    user_id=str(user_id),
+                    consecutive_no_engagement=streak,
+                )
+                if streak >= 3:
+                    self.logger.warning(
+                        "User has not engaged with last 3 digests — consider reducing frequency or count",
+                        user_id=str(user_id),
+                        streak=streak,
+                    )
+
+        except Exception as e:
+            self.logger.error(
+                "Engagement check failed",
+                user_id=str(user_id),
+                error=str(e),
+            )
+
+    async def _update_no_engagement_streak(self, supabase, user_id: UUID, reset: bool) -> int:
+        """
+        Read/write the no-engagement streak counter stored in
+        user_notification_preferences.metadata (JSONB).
+        Returns the current streak value after update.
+        Falls back gracefully if metadata column does not exist yet.
+        """
+        try:
+            response = (
+                supabase.client.table("user_notification_preferences")
+                .select("metadata")
+                .eq("user_id", str(user_id))
+                .execute()
+            )
+            row = (response.data or [{}])[0]
+            metadata: dict = row.get("metadata") or {}
+            streak = 0 if reset else (metadata.get("no_engagement_streak", 0) + 1)
+            metadata["no_engagement_streak"] = streak
+
+            supabase.client.table("user_notification_preferences").update(
+                {"metadata": metadata}
+            ).eq("user_id", str(user_id)).execute()
+
+            return streak
+        except Exception as e:
+            self.logger.warning(
+                "Could not update no_engagement_streak (metadata column may not exist yet — run migration 026)",
+                user_id=str(user_id),
+                error=str(e),
+            )
+            return 0

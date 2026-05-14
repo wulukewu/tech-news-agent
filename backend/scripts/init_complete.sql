@@ -193,6 +193,7 @@ CREATE TABLE IF NOT EXISTS user_notification_preferences (
     reminder_on_rate BOOLEAN DEFAULT true,
     reminder_cooldown_hours INTEGER DEFAULT 4,
     reminder_min_similarity FLOAT DEFAULT 0.72,
+    metadata JSONB DEFAULT '{}',
     UNIQUE(user_id)
 );
 

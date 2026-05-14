@@ -80,6 +80,93 @@ class DMNotificationService:
             logger.error(f"Unexpected error in send_weekly_digest_to_all_users: {e}", exc_info=True)
             return stats
 
+    async def _get_user_category_weights(
+        self, supabase: SupabaseService, user_id: str
+    ) -> dict[str, float]:
+        """Get category weights from user's reading list ratings (4+ stars)."""
+        try:
+            response = (
+                supabase.client.table("reading_list")
+                .select("rating, articles(feeds(category))")
+                .eq("user_id", user_id)
+                .gte("rating", 4)
+                .execute()
+            )
+            weights: dict[str, float] = {}
+            for row in response.data or []:
+                cat = ((row.get("articles") or {}).get("feeds") or {}).get("category", "")
+                if cat:
+                    weights[cat] = weights.get(cat, 0) + (row.get("rating") or 0)
+            # Normalize to 0-1
+            if weights:
+                max_w = max(weights.values())
+                weights = {k: v / max_w for k, v in weights.items()}
+            return weights
+        except Exception as e:
+            logger.warning(f"Could not load category weights for user {user_id}: {e}")
+            return {}
+
+    async def _get_recent_engagement(self, supabase: SupabaseService, user_id: str) -> int:
+        """Count user interactions (ratings/saves) in the last 7 days."""
+        try:
+            from datetime import timedelta
+
+            cutoff = (datetime.now(UTC) - timedelta(days=7)).isoformat()
+            response = (
+                supabase.client.table("reading_list")
+                .select("id", count="exact")
+                .eq("user_id", user_id)
+                .gte("created_at", cutoff)
+                .execute()
+            )
+            return response.count or 0
+        except Exception as e:
+            logger.warning(f"Could not get engagement for user {user_id}: {e}")
+            return 0
+
+    def _rank_articles(
+        self,
+        articles: list[ArticleSchema],
+        category_weights: dict[str, float],
+    ) -> list[tuple[ArticleSchema, str]]:
+        """
+        Re-rank articles with a blended score and attach a reason string.
+        Score = 40% tinkering_index + 40% category_affinity + 20% recency
+        Returns list of (article, reason) sorted by score desc.
+        """
+        now = datetime.now(UTC)
+        scored: list[tuple[float, ArticleSchema, str]] = []
+
+        for article in articles:
+            # Tinkering score (1-5 → 0-1)
+            tinkering = (article.tinkering_index or 3) / 5.0
+
+            # Category affinity (0-1)
+            affinity = category_weights.get(article.category or "", 0.0)
+
+            # Recency score (0-1, decays over 7 days)
+            recency = 0.5
+            if article.published_at:
+                age_hours = (now - article.published_at).total_seconds() / 3600
+                recency = max(0.0, 1.0 - age_hours / (7 * 24))
+
+            score = 0.4 * tinkering + 0.4 * affinity + 0.2 * recency
+
+            # Build reason string
+            if affinity >= 0.7:
+                reason = f"💡 符合你偏好的 {article.category} 類別"
+            elif tinkering >= 0.8:
+                reason = "🔬 高技術深度文章"
+            elif recency >= 0.8:
+                reason = "🆕 最新發布"
+            else:
+                reason = f"📂 來自你訂閱的 {article.category} 頻道"
+
+            scored.append((score, article, reason))
+
+        scored.sort(key=lambda x: x[0], reverse=True)
+        return [(a, r) for _, a, r in scored]
+
     async def send_personalized_digest(self, discord_id: str) -> bool:
         """發送個人化的文章摘要給單一使用者
 
@@ -196,8 +283,42 @@ class DMNotificationService:
                 )
                 return True  # No articles after filtering is not a failure
 
+            # P1 + P2 + P3: Smart ranking, dynamic count, and recommendation reasons
+            ranked_articles_with_reasons: list[tuple[ArticleSchema, str]] = []
+            send_limit = 5  # default
+            try:
+                if user_data and user_data.get("id"):
+                    user_id_str = user_data["id"]
+                    # P1: Get category weights from user's rating history
+                    category_weights = await self._get_user_category_weights(supabase, user_id_str)
+                    # P2: Dynamic count based on recent engagement
+                    engagement = await self._get_recent_engagement(supabase, user_id_str)
+                    if engagement == 0:
+                        send_limit = 2
+                    elif engagement >= 5:
+                        send_limit = 7
+                    else:
+                        send_limit = 5
+                    logger.info(
+                        f"Smart digest for {discord_id}: engagement={engagement}, limit={send_limit}, "
+                        f"category_weights={list(category_weights.keys())}"
+                    )
+                    # P1+P3: Re-rank and attach reasons
+                    ranked_articles_with_reasons = self._rank_articles(articles, category_weights)
+                else:
+                    ranked_articles_with_reasons = [
+                        (a, f"📂 來自你訂閱的 {a.category or '技術'} 頻道") for a in articles
+                    ]
+            except Exception as rank_error:
+                logger.warning(f"Smart ranking failed for {discord_id}, falling back: {rank_error}")
+                ranked_articles_with_reasons = [(a, "") for a in articles]
+
+            # Apply dynamic limit
+            ranked_articles_with_reasons = ranked_articles_with_reasons[:send_limit]
+            articles = [a for a, _ in ranked_articles_with_reasons]
+
             # 建立 DM 訊息
-            embed = self._create_digest_embed(articles)
+            embed = self._create_digest_embed(ranked_articles_with_reasons)
 
             # 發送 DM
             try:
@@ -307,85 +428,62 @@ class DMNotificationService:
             )
             return False
 
-    def _create_digest_embed(self, articles: list[ArticleSchema]) -> discord.Embed:
+    def _create_digest_embed(
+        self, articles_with_reasons: list[tuple[ArticleSchema, str]]
+    ) -> discord.Embed:
         """建立文章摘要 Embed
 
         Args:
-            articles: 文章列表
+            articles_with_reasons: List of (article, reason) tuples, pre-ranked.
 
         Returns:
             Discord Embed 物件
         """
+        count = len(articles_with_reasons)
         embed = discord.Embed(
-            title="📰 本週技術文章精選",
-            description=f"為你精選了 {len(articles)} 篇新技術文章",
+            title="📰 今日技術文章精選",
+            description=f"根據你的閱讀偏好，為你精選了 **{count}** 篇文章",
             color=discord.Color.blue(),
             timestamp=datetime.now(UTC),
         )
 
-        # 按類別分組
-        categories = {}
-        for article in articles:
-            category = article.category or "其他"
-            if category not in categories:
-                categories[category] = []
-            categories[category].append(article)
+        now = datetime.now(UTC)
+        for article, reason in articles_with_reasons:
+            title = article.title[:90] if len(article.title) > 90 else article.title
+            tinkering = "⭐" * (article.tinkering_index or 3)
 
-        # 每個類別最多顯示 3 篇，避免超過 Discord 1024 字元限制
-        for category, cat_articles in list(categories.items())[:5]:
-            articles_text = ""
-            for article in cat_articles[:3]:  # 限制每個分類最多 3 篇
-                # 完整標題（但限制長度避免過長）
-                title = article.title[:100] if len(article.title) > 100 else article.title
+            lines = [f"{tinkering} **{title}**"]
+            lines.append(f"🔗 {article.url}")
 
-                # 星星評分
-                tinkering = "⭐" * (article.tinkering_index or 3)
+            if article.ai_summary:
+                summary = (
+                    article.ai_summary[:80] + "..."
+                    if len(article.ai_summary) > 80
+                    else article.ai_summary
+                )
+                lines.append(f"📝 {summary}")
 
-                # 文章摘要（前 80 字）
-                summary = ""
-                if article.ai_summary:
-                    summary = (
-                        article.ai_summary[:80] + "..."
-                        if len(article.ai_summary) > 80
-                        else article.ai_summary
-                    )
+            if article.published_at:
+                delta = now - article.published_at
+                if delta.days > 0:
+                    lines.append(f"🗓️ {delta.days} 天前")
+                elif delta.seconds >= 3600:
+                    lines.append(f"🗓️ {delta.seconds // 3600} 小時前")
 
-                # 發布時間（相對時間）
-                time_ago = ""
-                if article.published_at:
-                    now = datetime.now(UTC)
-                    delta = now - article.published_at
-                    if delta.days > 0:
-                        time_ago = f"🗓️ {delta.days} 天前"
-                    elif delta.seconds >= 3600:
-                        hours = delta.seconds // 3600
-                        time_ago = f"🗓️ {hours} 小時前"
-                    else:
-                        minutes = delta.seconds // 60
-                        time_ago = f"🗓️ {minutes} 分鐘前"
+            if reason:
+                lines.append(reason)
 
-                # 組合文章資訊（精簡版，確保不超過 1024 字元）
-                articles_text += f"{tinkering} **{title}**\n"
-                articles_text += f"🔗 {article.url}\n"
-                if summary:
-                    articles_text += f"📝 {summary}\n"
-                if time_ago:
-                    articles_text += f"{time_ago}\n"
-                articles_text += "\n"
+            field_value = "\n".join(lines)
+            if len(field_value) > 1024:
+                field_value = field_value[:1020] + "..."
 
-                # 檢查長度，如果接近 1024 就停止添加
-                if len(articles_text) > 900:  # 留一些緩衝空間
-                    break
-
-            # 添加分類欄位，顯示文章數量
-            field_name = f"📂 {category} ({len(cat_articles)} 篇)"
-            # 確保 field value 不超過 1024 字元
-            if len(articles_text) > 1024:
-                articles_text = articles_text[:1020] + "..."
-            embed.add_field(name=field_name, value=articles_text or "無文章", inline=False)
+            embed.add_field(
+                name=f"📄 {article.category or '技術'}",
+                value=field_value,
+                inline=False,
+            )
 
         embed.set_footer(text="💡 使用 /news_now 查看完整列表 | 使用 /notifications 管理通知設定")
-
         return embed
 
     async def send_test_dm(self, discord_id: str) -> bool:
