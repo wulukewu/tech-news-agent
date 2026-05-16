@@ -20,12 +20,9 @@ from app.services.notion_service import (
 from app.services.rss_service import RSSService as RSSService  # noqa: F401 - re-export for tests
 from app.services.supabase_service import SupabaseService
 from app.tasks._jobs import (
-    daily_digest_job,
-    monthly_digest_job,
     preference_summary_job,
     proactive_learning_job,
     version_tracking_job,
-    weekly_digest_job,
     weekly_insights_job,
 )
 
@@ -134,24 +131,8 @@ def setup_scheduler():
             "version_tracking",
             "Technology Version Tracking",
         ),
-        (
-            daily_digest_job,
-            CronTrigger(hour=9, minute=0, timezone=scheduler_tz),
-            "daily_digest",
-            "Daily Article Digest DM (daily-frequency users only)",
-        ),
-        (
-            weekly_digest_job,
-            CronTrigger(day_of_week="mon", hour=9, minute=0, timezone=scheduler_tz),
-            "weekly_digest",
-            "Weekly Article Digest DM (weekly-frequency users only)",
-        ),
-        (
-            monthly_digest_job,
-            CronTrigger(day=1, hour=9, minute=0, timezone=scheduler_tz),
-            "monthly_digest",
-            "Monthly Article Digest DM (monthly-frequency users only)",
-        ),
+        # daily_digest_job, weekly_digest_job, monthly_digest_job removed —
+        # DynamicScheduler handles per-user digest scheduling with custom notification_time
         (
             weekly_insights_job,
             CronTrigger(day_of_week="mon", hour=9, minute=0, timezone=scheduler_tz),
