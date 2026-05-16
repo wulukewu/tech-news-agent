@@ -24,7 +24,6 @@ from app.tasks._jobs import (
     intelligent_reminder_job,
     preference_summary_job,
     proactive_learning_job,
-    send_reminder_notifications_job,
     version_tracking_job,
     weekly_insights_job,
 )
@@ -164,12 +163,7 @@ def setup_scheduler():
             "intelligent_reminders",
             "Intelligent Reminder Generation",
         ),
-        (
-            send_reminder_notifications_job,
-            CronTrigger(hour="*", timezone=scheduler_tz),
-            "reminder_notifications",
-            "Reminder Notification Delivery",
-        ),
+        # send_reminder_notifications_job disabled — too noisy, overlaps with digest
     ]
 
     for func, job_trigger, job_id, name in jobs:
