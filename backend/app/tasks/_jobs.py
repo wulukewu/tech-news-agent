@@ -30,25 +30,91 @@ async def version_tracking_job() -> None:
 
 
 async def daily_digest_job() -> None:
-    """Send daily article digest DM to all users with notifications enabled (09:00)."""
+    """Send daily article digest DM — only to users with frequency='daily' (09:00 every day)."""
     logger.info("Starting daily digest DM job...")
     try:
         from app.bot.client import bot
         from app.services.dm_notification_service import DMNotificationService
+        from app.services.supabase_service import SupabaseService
 
         if not bot.is_ready():
             logger.warning("Bot is not ready, skipping daily digest")
             return
 
-        service = DMNotificationService(bot)
-        stats = await service.send_weekly_digest_to_all_users()
-        logger.info(
-            "Daily digest job completed: %d sent, %d failed",
-            stats.get("successful", 0),
-            stats.get("failed", 0),
+        supabase = SupabaseService()
+        prefs = (
+            supabase.client.table("user_notification_preferences")
+            .select("user_id")
+            .eq("frequency", "daily")
+            .eq("dm_enabled", True)
+            .execute()
         )
+        user_ids = [row["user_id"] for row in (prefs.data or [])]
+        if not user_ids:
+            logger.info("No daily-frequency users to notify")
+            return
+
+        discord_ids = []
+        for uid in user_ids:
+            user = await supabase.get_user_by_id(uid)
+            if user and user.get("discord_id"):
+                discord_ids.append(user["discord_id"])
+
+        service = DMNotificationService(bot)
+        successful = failed = 0
+        for discord_id in discord_ids:
+            if await service.send_personalized_digest(discord_id):
+                successful += 1
+            else:
+                failed += 1
+
+        logger.info("Daily digest job completed: %d sent, %d failed", successful, failed)
     except Exception as exc:
         logger.error("Daily digest job failed: %s", exc, exc_info=True)
+
+
+async def weekly_digest_job() -> None:
+    """Send weekly article digest DM — only to users with frequency='weekly' (Monday 09:00)."""
+    logger.info("Starting weekly digest DM job...")
+    try:
+        from app.bot.client import bot
+        from app.services.dm_notification_service import DMNotificationService
+        from app.services.supabase_service import SupabaseService
+
+        if not bot.is_ready():
+            logger.warning("Bot is not ready, skipping weekly digest")
+            return
+
+        supabase = SupabaseService()
+        prefs = (
+            supabase.client.table("user_notification_preferences")
+            .select("user_id")
+            .eq("frequency", "weekly")
+            .eq("dm_enabled", True)
+            .execute()
+        )
+        user_ids = [row["user_id"] for row in (prefs.data or [])]
+        if not user_ids:
+            logger.info("No weekly-frequency users to notify")
+            return
+
+        discord_ids = []
+        for uid in user_ids:
+            user = await supabase.get_user_by_id(uid)
+            if user and user.get("discord_id"):
+                discord_ids.append(user["discord_id"])
+
+        service = DMNotificationService(bot)
+        successful = failed = 0
+        for discord_id in discord_ids:
+            if await service.send_personalized_digest(discord_id):
+                successful += 1
+            else:
+                failed += 1
+
+        logger.info("Weekly digest job completed: %d sent, %d failed", successful, failed)
+    except Exception as exc:
+        logger.error("Weekly digest job failed: %s", exc, exc_info=True)
 
 
 async def weekly_insights_job() -> None:

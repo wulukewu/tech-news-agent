@@ -25,6 +25,7 @@ from app.tasks._jobs import (
     preference_summary_job,
     proactive_learning_job,
     version_tracking_job,
+    weekly_digest_job,
     weekly_insights_job,
 )
 
@@ -137,7 +138,13 @@ def setup_scheduler():
             daily_digest_job,
             CronTrigger(hour=9, minute=0, timezone=scheduler_tz),
             "daily_digest",
-            "Daily Article Digest DM",
+            "Daily Article Digest DM (daily-frequency users only)",
+        ),
+        (
+            weekly_digest_job,
+            CronTrigger(day_of_week="mon", hour=9, minute=0, timezone=scheduler_tz),
+            "weekly_digest",
+            "Weekly Article Digest DM (weekly-frequency users only)",
         ),
         (
             weekly_insights_job,
