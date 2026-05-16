@@ -22,6 +22,7 @@ from app.services.supabase_service import SupabaseService
 from app.tasks._jobs import (
     daily_digest_job,
     intelligent_reminder_job,
+    monthly_digest_job,
     preference_summary_job,
     proactive_learning_job,
     version_tracking_job,
@@ -145,6 +146,12 @@ def setup_scheduler():
             CronTrigger(day_of_week="mon", hour=9, minute=0, timezone=scheduler_tz),
             "weekly_digest",
             "Weekly Article Digest DM (weekly-frequency users only)",
+        ),
+        (
+            monthly_digest_job,
+            CronTrigger(day=1, hour=9, minute=0, timezone=scheduler_tz),
+            "monthly_digest",
+            "Monthly Article Digest DM (monthly-frequency users only)",
         ),
         (
             weekly_insights_job,

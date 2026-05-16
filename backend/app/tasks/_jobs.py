@@ -289,3 +289,47 @@ async def send_reminder_notifications_job() -> None:
         )
     except Exception as exc:
         logger.error(f"Reminder notification job failed: {exc}", exc_info=True)
+
+
+async def monthly_digest_job() -> None:
+    """Send monthly article digest DM — only to users with frequency='monthly' (1st of month 09:00)."""
+    logger.info("Starting monthly digest DM job...")
+    try:
+        from app.bot.client import bot
+        from app.services.dm_notification_service import DMNotificationService
+        from app.services.supabase_service import SupabaseService
+
+        if not bot.is_ready():
+            logger.warning("Bot is not ready, skipping monthly digest")
+            return
+
+        supabase = SupabaseService()
+        prefs = (
+            supabase.client.table("user_notification_preferences")
+            .select("user_id")
+            .eq("frequency", "monthly")
+            .eq("dm_enabled", True)
+            .execute()
+        )
+        user_ids = [row["user_id"] for row in (prefs.data or [])]
+        if not user_ids:
+            logger.info("No monthly-frequency users to notify")
+            return
+
+        discord_ids = []
+        for uid in user_ids:
+            user = await supabase.get_user_by_id(uid)
+            if user and user.get("discord_id"):
+                discord_ids.append(user["discord_id"])
+
+        service = DMNotificationService(bot)
+        successful = failed = 0
+        for discord_id in discord_ids:
+            if await service.send_personalized_digest(discord_id):
+                successful += 1
+            else:
+                failed += 1
+
+        logger.info("Monthly digest job completed: %d sent, %d failed", successful, failed)
+    except Exception as exc:
+        logger.error("Monthly digest job failed: %s", exc, exc_info=True)

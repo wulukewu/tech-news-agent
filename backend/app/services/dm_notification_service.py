@@ -318,7 +318,7 @@ class DMNotificationService:
             articles = [a for a, _ in ranked_articles_with_reasons]
 
             # 建立 DM 訊息
-            embed = self._create_digest_embed(ranked_articles_with_reasons)
+            embed = self._create_digest_embed(ranked_articles_with_reasons, frequency)
 
             # 發送 DM
             try:
@@ -429,19 +429,19 @@ class DMNotificationService:
             return False
 
     def _create_digest_embed(
-        self, articles_with_reasons: list[tuple[ArticleSchema, str]]
+        self,
+        articles_with_reasons: list[tuple[ArticleSchema, str]],
+        frequency: str = "daily",
     ) -> discord.Embed:
-        """建立文章摘要 Embed
-
-        Args:
-            articles_with_reasons: List of (article, reason) tuples, pre-ranked.
-
-        Returns:
-            Discord Embed 物件
-        """
+        """建立文章摘要 Embed"""
         count = len(articles_with_reasons)
+        title_map = {
+            "daily": "📰 今日技術文章精選",
+            "weekly": "📰 本週技術文章精選",
+            "monthly": "📰 本月技術文章精選",
+        }
         embed = discord.Embed(
-            title="📰 今日技術文章精選",
+            title=title_map.get(frequency, "📰 技術文章精選"),
             description=f"根據你的閱讀偏好，為你精選了 **{count}** 篇文章",
             color=discord.Color.blue(),
             timestamp=datetime.now(UTC),
