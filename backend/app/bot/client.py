@@ -36,6 +36,7 @@ class TechNewsBot(commands.Bot):
         try:
             from app.bot.cogs.persistent_views import (
                 PersistentDeepDiveButton,
+                PersistentDigestRatingSelect,
                 PersistentMarkReadButton,
                 PersistentRatingSelect,
                 PersistentReadLaterButton,
@@ -59,7 +60,11 @@ class TechNewsBot(commands.Bot):
             deep_dive_view.add_item(PersistentDeepDiveButton())
             self.add_view(deep_dive_view)
 
-            logger.info("Successfully registered 4 persistent view types")
+            digest_rating_view = discord.ui.View(timeout=None)
+            digest_rating_view.add_item(PersistentDigestRatingSelect())
+            self.add_view(digest_rating_view)
+
+            logger.info("Successfully registered 5 persistent view types")
         except Exception as e:
             logger.error(f"Failed to register persistent views: {e}", exc_info=True)
 

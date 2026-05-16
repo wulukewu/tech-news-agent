@@ -6,6 +6,7 @@ DM 通知服務
 
 import logging
 from datetime import UTC, datetime
+from uuid import UUID
 
 import discord
 
@@ -14,6 +15,48 @@ from app.schemas.article import ArticleSchema
 from app.services.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
+
+
+class DigestRatingSelect(discord.ui.Select):
+    """Per-article rating select attached to digest DMs."""
+
+    def __init__(self, article_id: UUID, article_title: str, index: int):
+        short_title = article_title[:20] + "…" if len(article_title) > 20 else article_title
+        options = [
+            discord.SelectOption(label=f"{'⭐' * i} {i} 星", value=str(i)) for i in range(1, 6)
+        ]
+        super().__init__(
+            placeholder=f"評分：{short_title}",
+            options=options,
+            custom_id=f"digest_rate_{article_id}_{index}",
+        )
+        self.article_id = article_id
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(ephemeral=True)
+        try:
+            from app.services.supabase_service import SupabaseService
+
+            supabase = SupabaseService()
+            discord_id = str(interaction.user.id)
+            rating = int(self.values[0])
+            # Ensure article is in reading list before rating
+            await supabase.save_to_reading_list(discord_id, self.article_id, source="discord")
+            await supabase.update_article_rating(discord_id, self.article_id, rating)
+            await interaction.followup.send(f"✅ 已評為 {'⭐' * rating}（{rating} 星）", ephemeral=True)
+        except Exception as e:
+            logger.error(f"DigestRatingSelect callback error: {e}")
+            await interaction.followup.send("❌ 評分失敗，請稍後再試", ephemeral=True)
+
+
+class DigestRatingView(discord.ui.View):
+    """View with one rating select per article, attached to digest DMs."""
+
+    def __init__(self, articles: list[ArticleSchema]):
+        super().__init__(timeout=None)
+        for i, article in enumerate(articles):
+            if article.id:
+                self.add_item(DigestRatingSelect(article.id, article.title, i))
 
 
 class DMNotificationService:
@@ -319,10 +362,11 @@ class DMNotificationService:
 
             # 建立 DM 訊息
             embed = self._create_digest_embed(ranked_articles_with_reasons, frequency)
+            rating_view = DigestRatingView(articles)
 
             # 發送 DM
             try:
-                await user.send(embed=embed)
+                await user.send(embed=embed, view=rating_view)
 
                 # Record notification history
                 try:

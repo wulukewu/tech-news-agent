@@ -510,3 +510,40 @@ class PersistentInteractionView(discord.ui.View):
         self.add_item(PersistentMarkReadButton(self.supabase_service))
         self.add_item(PersistentRatingSelect(self.supabase_service))
         self.add_item(PersistentDeepDiveButton(self.supabase_service, self.llm_service))
+
+
+class PersistentDigestRatingSelect(discord.ui.Select):
+    """
+    Persistent handler for digest rating selects (custom_id: digest_rate_{uuid}_{index}).
+    Registered at bot startup to handle interactions after restart.
+    """
+
+    def __init__(self, supabase_service: SupabaseService = None):
+        options = [
+            discord.SelectOption(label=f"{'⭐' * i} {i} 星", value=str(i)) for i in range(1, 6)
+        ]
+        super().__init__(
+            placeholder="評分文章",
+            options=options,
+            custom_id="digest_rate_persistent",
+        )
+        self.supabase_service = supabase_service or SupabaseService()
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(ephemeral=True)
+        custom_id = interaction.data.get("custom_id", "")
+        discord_id = str(interaction.user.id)
+        try:
+            # custom_id format: digest_rate_{uuid}_{index}
+            parts = custom_id.split("_")
+            # uuid is parts[2], index is parts[3]
+            article_id = UUID(parts[2])
+            rating = int(self.values[0])
+            await self.supabase_service.save_to_reading_list(
+                discord_id, article_id, source="discord"
+            )
+            await self.supabase_service.update_article_rating(discord_id, article_id, rating)
+            await interaction.followup.send(f"✅ 已評為 {'⭐' * rating}（{rating} 星）", ephemeral=True)
+        except Exception as e:
+            logger.error(f"PersistentDigestRatingSelect error: {e}")
+            await interaction.followup.send("❌ 評分失敗，請稍後再試", ephemeral=True)
