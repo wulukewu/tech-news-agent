@@ -21,7 +21,6 @@ from app.services.rss_service import RSSService as RSSService  # noqa: F401 - re
 from app.services.supabase_service import SupabaseService
 from app.tasks._jobs import (
     daily_digest_job,
-    intelligent_reminder_job,
     monthly_digest_job,
     preference_summary_job,
     proactive_learning_job,
@@ -171,12 +170,7 @@ def setup_scheduler():
             "proactive_learning",
             "Proactive Learning Behavior Analysis",
         ),
-        (
-            intelligent_reminder_job,
-            CronTrigger(hour=8, minute=0, timezone=scheduler_tz),
-            "intelligent_reminders",
-            "Intelligent Reminder Generation",
-        ),
+        # intelligent_reminder_job disabled — generates reminder_log entries that are never sent
         # send_reminder_notifications_job disabled — too noisy, overlaps with digest
     ]
 
