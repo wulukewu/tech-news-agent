@@ -11,9 +11,11 @@ from uuid import UUID
 
 import discord
 
+from app.bot.utils.thread_utils import ensure_discussion_thread
 from app.core.exceptions import SupabaseServiceError
 from app.services.llm_service import LLMService
 from app.services.supabase_service import SupabaseService
+from app.services.thread_memory_service import ThreadMemoryService
 
 logger = logging.getLogger(__name__)
 
@@ -452,12 +454,33 @@ class PersistentDeepDiveButton(discord.ui.Button):
                 feed_name=article_data.get("feed_name", ""),
             )
 
+            thread, created = await ensure_discussion_thread(
+                interaction=interaction,
+                thread_name=f"deep-dive-{article.title[:40]}",
+            )
+            if created:
+                await interaction.followup.send(
+                    f"✅ 已建立深度分析討論串：{thread.mention}",
+                    ephemeral=True,
+                )
+            else:
+                await interaction.followup.send("✅ 已在此討論串提供深度分析。", ephemeral=True)
+
+            await thread.send(f"📖 **深度分析標的**：{article.title}")
             # Generate deep dive via service layer
             result = await self.llm_service.generate_deep_dive(article)
-            if len(result) > 2000:
-                result = result[:1997] + "..."
+            await thread.send(result[:2000])
 
-            await interaction.followup.send(result, ephemeral=True)
+            user = await self.supabase_service.get_user_by_discord_id(discord_id)
+            if user:
+                memory_service = ThreadMemoryService(supabase_service=self.supabase_service)
+                conversation = await memory_service.get_or_create_thread_conversation(
+                    user_id=str(user["id"]),
+                    thread_id=str(thread.id),
+                    title=f"Deep Dive: {article.title}",
+                    article_id=str(article.id) if article.id else None,
+                )
+                await memory_service.save_assistant_message(conversation.id, str(thread.id), result)
 
             # Log successful post-restart interaction
             log_persistent_interaction(

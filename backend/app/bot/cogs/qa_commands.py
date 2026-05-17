@@ -7,88 +7,43 @@ Provides slash command for querying the intelligent Q&A agent:
 
 from __future__ import annotations
 
-from typing import Optional
-
 import discord
 from discord import app_commands
 from discord.ext import commands
 
 from app.bot.utils.decorators import ensure_user_registered
+from app.bot.utils.thread_utils import ensure_discussion_thread
 from app.core.exceptions import SupabaseServiceError
 from app.core.logger import get_logger
-from app.qa_agent import QAAgentController
+from app.services.thread_memory_service import ThreadMemoryService
 
 logger = get_logger(__name__)
 
 _DISCORD_CHAR_LIMIT = 2000
 
 
-def _format_response(response, conversation_id: str | None = None) -> str:
-    """Format a StructuredResponse into a Discord message."""
-    lines = []
-
-    if response.articles:
-        lines.append("📚 **相關文章**")
-        for i, article in enumerate(response.articles[:5], 1):
-            title = article.title[:60] + "..." if len(article.title) > 60 else article.title
-            lines.append(f"{i}. **{title}**")
-            lines.append(f"   🔗 {article.url}")
-            if article.summary:
-                snippet = (
-                    article.summary[:120] + "..." if len(article.summary) > 120 else article.summary
-                )
-                lines.append(f"   _{snippet}_")
-        lines.append("")
-
-    if response.insights:
-        lines.append("💡 **洞察**")
-        for insight in response.insights[:3]:
-            lines.append(f"• {insight}")
-        lines.append("")
-
-    if response.recommendations:
-        lines.append("📖 **延伸閱讀建議**")
-        for rec in response.recommendations[:3]:
-            lines.append(f"• {rec}")
-
-    if not lines:
-        lines.append("🔍 找不到相關文章，請嘗試換個問法或訂閱更多 RSS 來源。")
-
-    # Show conversation ID for follow-up
-    cid = conversation_id or (
-        str(response.conversation_id) if getattr(response, "conversation_id", None) else None
-    )
-    if cid:
-        lines.append(f"\n💬 追問請用：`/ask question:... conversation_id:{cid}`")
-
-    content = "\n".join(lines)
-    if len(content) > _DISCORD_CHAR_LIMIT:
-        content = content[: _DISCORD_CHAR_LIMIT - 3] + "..."
-    return content
+def _chunk_content(content: str, max_len: int = _DISCORD_CHAR_LIMIT) -> list[str]:
+    if len(content) <= max_len:
+        return [content]
+    chunks: list[str] = []
+    remaining = content
+    while remaining:
+        chunks.append(remaining[:max_len])
+        remaining = remaining[max_len:]
+    return chunks
 
 
 class QACommands(commands.Cog):
     """Intelligent Q&A commands cog."""
 
-    def __init__(self, bot: commands.Bot, qa_controller: Optional[QAAgentController] = None):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
-        self._qa_controller = qa_controller
-
-    def _get_controller(self) -> QAAgentController:
-        if self._qa_controller is None:
-            self._qa_controller = QAAgentController()
-        return self._qa_controller
 
     @app_commands.command(name="ask", description="用自然語言詢問你訂閱文章庫中的問題")
-    @app_commands.describe(
-        question="你想問的問題（支援中文和英文）",
-        conversation_id="（選填）對話 ID，填入後可追問上一次的問題",
-    )
-    async def ask(
-        self, interaction: discord.Interaction, question: str, conversation_id: Optional[str] = None
-    ):
+    @app_commands.describe(question="你想問的問題（支援中文和英文）")
+    async def ask(self, interaction: discord.Interaction, question: str):
         logger.info("Command /ask triggered", user_id=str(interaction.user.id), query=question[:50])
-        await interaction.response.defer(thinking=True)
+        await interaction.response.defer(thinking=True, ephemeral=True)
 
         try:
             user_uuid = await ensure_user_registered(interaction)
@@ -98,14 +53,30 @@ class QACommands(commands.Cog):
             return
 
         try:
-            controller = self._get_controller()
-            response = await controller.process_query(
-                user_id=str(user_uuid),
-                query=question,
-                conversation_id=conversation_id,
+            thread, created = await ensure_discussion_thread(
+                interaction=interaction,
+                thread_name=f"ask-{question[:40]}",
             )
-            content = _format_response(response, conversation_id)
-            await interaction.followup.send(content=content)
+
+            if created:
+                await interaction.followup.send(
+                    f"✅ 已建立問答討論串：{thread.mention}\n我會在討論串內回覆你。",
+                    ephemeral=True,
+                )
+            else:
+                await interaction.followup.send("✅ 已在此討論串處理你的問題。", ephemeral=True)
+
+            await thread.send(f"❓ **問題**：{question}")
+            memory_service = ThreadMemoryService()
+            result = await memory_service.process_thread_query(
+                user_id=str(user_uuid),
+                thread_id=str(thread.id),
+                query=question,
+                title=thread.name or f"Ask {question[:30]}",
+            )
+
+            for chunk in _chunk_content(result["answer"]):
+                await thread.send(chunk)
 
         except Exception as e:
             logger.error(
