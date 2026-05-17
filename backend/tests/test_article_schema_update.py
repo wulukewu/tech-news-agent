@@ -167,7 +167,7 @@ class TestArticleSchemaUpdate:
         assert "ai_summary" in str(exc_info.value)
 
     def test_removed_fields_not_accepted(self):
-        """ArticleSchema does not accept removed fields (content_preview, raw_data)."""
+        """ArticleSchema does not accept truly removed fields (raw_data)."""
         feed_id = uuid4()
 
         # This should work without the removed fields
@@ -182,9 +182,9 @@ class TestArticleSchemaUpdate:
         article = ArticleSchema(**data)
 
         # Verify removed fields don't exist
-        assert not hasattr(article, "content_preview")
         assert not hasattr(article, "raw_data")
         assert not hasattr(article, "published_date")  # renamed to published_at
+        # content_preview is retained for RSS/scraped content storage
 
     def test_renamed_fields(self):
         """ArticleSchema uses renamed fields (category, feed_name instead of source_category, source_name)."""

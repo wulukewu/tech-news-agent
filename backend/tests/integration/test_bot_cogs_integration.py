@@ -220,8 +220,8 @@ class TestSubscriptionCommandsIntegration:
         with patch(
             "app.bot.cogs.subscription_commands.ensure_user_registered", return_value=user_uuid
         ):
-            await cog.add_feed.callback(
-                cog, mock_interaction, "Test Feed", "https://example.com/feed", "AI"
+            await cog._add_feed_impl(
+                mock_interaction, "Test Feed", "https://example.com/feed", "AI"
             )
 
         # Assert - Verify service layer methods were called
@@ -322,8 +322,8 @@ class TestSubscriptionCommandsIntegration:
             "app.bot.cogs.subscription_commands.ensure_user_registered",
             side_effect=SupabaseServiceError("Database error"),
         ):
-            await cog.add_feed.callback(
-                cog, mock_interaction, "Test Feed", "https://example.com/feed", "AI"
+            await cog._add_feed_impl(
+                mock_interaction, "Test Feed", "https://example.com/feed", "AI"
             )
 
         # Assert - Verify error message

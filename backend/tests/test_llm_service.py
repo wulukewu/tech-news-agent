@@ -968,7 +968,7 @@ class TestGenerateDeepDiveProperty:
         mock_client.chat.completions.create = fake_create
         service.client = mock_client
 
-        asyncio.get_event_loop().run_until_complete(service.generate_deep_dive(article))
+        asyncio.run(service.generate_deep_dive(article))
 
         assert article.title in captured["user"]
 

@@ -156,10 +156,8 @@ def test_property_1_article_schema_structure_validation(article_data):
         article.created_at, datetime
     ), f"created_at must be datetime, got {type(article.created_at)}"
 
-    # Requirement 2.7: THE Article_Schema SHALL remove the content_preview field
-    assert not hasattr(
-        article, "content_preview"
-    ), "ArticleSchema must not have content_preview field (removed)"
+    # Requirement 2.7: content_preview is retained for RSS/scraped content storage
+    # (previously removed, re-added for web scraping enrichment feature)
 
     # Requirement 2.8: THE Article_Schema SHALL remove the raw_data field
     assert not hasattr(article, "raw_data"), "ArticleSchema must not have raw_data field (removed)"
