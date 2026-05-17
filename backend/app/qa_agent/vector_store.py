@@ -543,6 +543,82 @@ class VectorStore:
 
         return health_status
 
+    async def hybrid_search_rpc(
+        self,
+        query_text: str,
+        query_vector: List[float],
+        user_id: UUID,
+        limit: int = 10,
+        fts_weight: float = 1.0,
+        vec_weight: float = 1.0,
+    ) -> List["VectorMatch"]:
+        """
+        Hybrid search via the hybrid_search_articles Supabase RPC.
+
+        Uses Reciprocal Rank Fusion (RRF) to merge full-text and vector
+        rankings, improving recall for exact terms like 'Next.js 14'.
+
+        Args:
+            query_text: Raw query string for full-text search
+            query_vector: Embedding vector for semantic search
+            user_id: UUID for user-scoped article access
+            limit: Maximum results to return
+            fts_weight: Weight applied to full-text rank (default 1.0)
+            vec_weight: Weight applied to vector rank (default 1.0)
+
+        Returns:
+            List of VectorMatch objects sorted by RRF score (descending)
+        """
+        if not query_vector or len(query_vector) != self._embedding_dimension:
+            raise ValueError(
+                f"Invalid query vector dimension. Expected {self._embedding_dimension}, "
+                f"got {len(query_vector) if query_vector else 0}"
+            )
+
+        try:
+            async with get_db_connection() as conn:
+                query_vector_str = f"[{','.join(str(x) for x in query_vector)}]"
+                rows = await conn.fetch(
+                    """
+                    SELECT id AS article_id, title, url, ai_summary, category,
+                           published_at, rrf_score
+                    FROM hybrid_search_articles(
+                        $1, $2::vector, $3,
+                        match_count => $4,
+                        fts_weight  => $5,
+                        vec_weight  => $6
+                    )
+                    """,
+                    query_text,
+                    query_vector_str,
+                    user_id,
+                    limit,
+                    fts_weight,
+                    vec_weight,
+                )
+
+            return [
+                VectorMatch(
+                    article_id=row["article_id"],
+                    similarity_score=float(row["rrf_score"]),
+                    metadata={
+                        "title": row["title"],
+                        "url": row["url"],
+                        "ai_summary": row["ai_summary"],
+                        "category": row["category"] or "",
+                        "published_at": row["published_at"],
+                        "feed_name": "",
+                    },
+                    chunk_index=0,
+                    chunk_text=row["ai_summary"] or "",
+                )
+                for row in rows
+            ]
+
+        except Exception as e:
+            logger.error(f"hybrid_search_rpc failed for user {user_id}: {e}", exc_info=True)
+            raise VectorStoreError(f"Hybrid search RPC failed: {e}", original_error=e)
+
 
 # Convenience function for getting a VectorStore instance
 def get_vector_store() -> VectorStore:

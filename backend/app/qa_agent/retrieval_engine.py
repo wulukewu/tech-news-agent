@@ -264,30 +264,29 @@ class RetrievalEngine(ReCacheMixin, ReExpandMixin, ReUtilsMixin):
         use_cache: bool = True,
     ) -> List[ArticleMatch]:
         """
-        Combine semantic vector search with keyword matching for hybrid results.
-        Includes caching for performance optimization.
+        Combine full-text search and vector search via the hybrid_search_articles
+        Supabase RPC, fusing results with Reciprocal Rank Fusion (RRF).
 
-        Combined score formula: similarity_score * 0.7 + keyword_score * 0.3
+        Falls back to the original semantic-only path if the RPC is unavailable.
 
         Args:
-            query: Raw query text for keyword matching
+            query: Raw query text for full-text search
             query_vector: Embedding vector for semantic search
             user_id: User identifier for access isolation
             limit: Maximum number of results to return
-            threshold: Minimum similarity threshold for semantic search
+            threshold: Minimum similarity threshold (used only in fallback path)
             use_cache: Whether to use caching (default: True)
 
         Returns:
-            List of ArticleMatch objects sorted by combined score (descending)
+            List of ArticleMatch objects sorted by RRF score (descending)
 
         Validates: Requirements 2.4, 6.1
         """
         user_uuid = self._parse_user_id(user_id)
 
-        # Check cache first if enabled
         if use_cache:
             cache_key = self._generate_cache_key(
-                "hybrid", query_vector, user_id, limit, threshold, query
+                "hybrid_rrf", query_vector, user_id, limit, threshold, query
             )
             cached_result = self._get_cached_result(cache_key)
             if cached_result is not None:
@@ -296,29 +295,27 @@ class RetrievalEngine(ReCacheMixin, ReExpandMixin, ReUtilsMixin):
 
         start_time = time.time()
 
-        # 1. Semantic search
         try:
+            vector_matches = await self._vector_store.hybrid_search_rpc(
+                query_text=query,
+                query_vector=query_vector,
+                user_id=user_uuid,
+                limit=limit,
+            )
+        except (VectorStoreError, Exception) as exc:
+            logger.warning(
+                f"hybrid_search_rpc unavailable ({exc}), falling back to semantic search"
+            )
+            # Fallback: pure vector search
             vector_matches = await self._vector_store.search_similar(
                 query_vector=query_vector,
                 user_id=user_uuid,
-                limit=limit * 2,  # Fetch more to allow re-ranking
+                limit=limit * 2,
                 threshold=threshold,
             )
-        except VectorStoreError as exc:
-            logger.error(f"Vector store error during hybrid search: {exc}")
-            raise RetrievalEngineError(
-                "Hybrid search failed at semantic stage", original_error=exc
-            ) from exc
-        except Exception as exc:
-            logger.error(f"Unexpected error during hybrid search: {exc}")
-            raise RetrievalEngineError(
-                "Hybrid search failed at semantic stage", original_error=exc
-            ) from exc
 
-        # 2. Compute keyword scores for each match
-        keywords = self._extract_keywords(query)
         article_matches: List[ArticleMatch] = []
-
+        keywords = self._extract_keywords(query)
         for vm in vector_matches:
             keyword_score = self._compute_keyword_score(
                 keywords=keywords,
@@ -329,11 +326,9 @@ class RetrievalEngine(ReCacheMixin, ReExpandMixin, ReUtilsMixin):
             if match is not None:
                 article_matches.append(match)
 
-        # 3. Sort by combined score descending and trim to limit
         article_matches.sort(key=lambda m: m.combined_score, reverse=True)
         result = article_matches[:limit]
 
-        # Cache the result if enabled
         if use_cache:
             self._cache_result(cache_key, result)
 
