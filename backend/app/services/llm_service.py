@@ -1,9 +1,15 @@
-import asyncio
 import json
 import logging
 from typing import Dict, List
 
-from openai import AsyncOpenAI
+from openai import APIConnectionError, APIStatusError, APITimeoutError, AsyncOpenAI, RateLimitError
+from tenacity import (
+    before_sleep_log,
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from app.core.config import settings
 from app.core.exceptions import LLMServiceError
@@ -15,10 +21,19 @@ logger = logging.getLogger(__name__)
 EVAL_MODEL = "llama-3.1-8b-instant"
 SUMMARIZE_MODEL = "llama-3.3-70b-versatile"
 
-# Retry configuration
-MAX_RETRIES = 2
-RETRY_DELAYS = [2, 4]  # seconds
+# Retry configuration (kept for reference; tenacity decorators use these values)
+MAX_RETRIES = 3
 API_TIMEOUT = 30  # seconds
+
+# Exceptions that are safe to retry (transient)
+_RETRYABLE_EXCEPTIONS = (RateLimitError, APIConnectionError, APITimeoutError)
+
+
+def _is_retryable_status(exc: BaseException) -> bool:
+    """Return True for 429 / 5xx APIStatusError responses."""
+    if isinstance(exc, APIStatusError):
+        return exc.status_code in (429, 500, 502, 503, 504)
+    return False
 
 
 class LLMService:
@@ -29,72 +44,32 @@ class LLMService:
             timeout=API_TIMEOUT,
         )
 
-    async def _call_api_with_retry(self, api_call_func, context: str):
+    @retry(
+        stop=stop_after_attempt(MAX_RETRIES),
+        wait=wait_exponential(multiplier=1, min=2, max=30),
+        retry=retry_if_exception_type(_RETRYABLE_EXCEPTIONS),
+        before_sleep=before_sleep_log(logger, logging.WARNING),
+        reraise=True,
+    )
+    async def _call_groq(self, api_call_func, context: str):
+        """Call Groq API with tenacity exponential-backoff retry.
+
+        Retries on:
+        - RateLimitError (HTTP 429)
+        - APIConnectionError (network issues)
+        - APITimeoutError (timeout)
+        - APIStatusError with 5xx status codes
+
+        Non-retryable errors (e.g. 400 Bad Request) are raised immediately.
         """
-        Call API with exponential backoff retry logic.
-
-        Args:
-            api_call_func: Async function that makes the API call
-            context: Description of the API call for logging
-
-        Returns:
-            API response
-
-        Raises:
-            Exception: If all retries fail
-        """
-        last_exception = None
-
-        for attempt in range(MAX_RETRIES + 1):  # 0, 1, 2 (total 3 attempts: initial + 2 retries)
-            try:
-                if attempt > 0:
-                    logger.info(f"Retry attempt {attempt}/{MAX_RETRIES} for {context}")
-
-                response = await api_call_func()
-                return response
-
-            except Exception as e:
-                last_exception = e
-
-                # Check if this is the last attempt
-                if attempt >= MAX_RETRIES:
-                    logger.error(
-                        f"All retry attempts exhausted for {context}. " f"Final error: {e!s}"
-                    )
-                    raise
-
-                # Check for Retry-After header (for rate limiting)
-                retry_after = None
-                if hasattr(e, "response") and hasattr(e.response, "headers"):
-                    retry_after = e.response.headers.get("Retry-After")
-
-                if retry_after:
-                    try:
-                        delay = float(retry_after)
-                        logger.warning(
-                            f"Rate limited for {context}. "
-                            f"Retry-After header indicates {delay}s delay. "
-                            f"Attempt {attempt + 1}/{MAX_RETRIES + 1}"
-                        )
-                    except (ValueError, TypeError):
-                        # If Retry-After is not a valid number, use exponential backoff
-                        delay = RETRY_DELAYS[attempt]
-                        logger.warning(
-                            f"API error for {context}: {e!s}. "
-                            f"Retrying in {delay}s. Attempt {attempt + 1}/{MAX_RETRIES + 1}"
-                        )
-                else:
-                    # Use exponential backoff delay
-                    delay = RETRY_DELAYS[attempt]
-                    logger.warning(
-                        f"API error for {context}: {e!s}. "
-                        f"Retrying in {delay}s. Attempt {attempt + 1}/{MAX_RETRIES + 1}"
-                    )
-
-                await asyncio.sleep(delay)
-
-        # This should never be reached, but just in case
-        raise last_exception if last_exception else Exception("Unknown error in retry logic")
+        try:
+            return await api_call_func()
+        except APIStatusError as exc:
+            if _is_retryable_status(exc):
+                logger.warning(f"Retryable HTTP {exc.status_code} from Groq for {context}: {exc}")
+                raise APIConnectionError(request=exc.request) from exc  # re-raise as retryable
+            logger.error(f"Non-retryable Groq API error ({exc.status_code}) for {context}: {exc}")
+            raise
 
     async def evaluate_article(self, article: ArticleSchema) -> AIAnalysis:
         """Evaluate if an article is hardcore using a fast LLM."""
@@ -147,7 +122,7 @@ class LLMService:
                     temperature=0.1,
                 )
 
-            response = await self._call_api_with_retry(
+            response = await self._call_groq(
                 make_api_call, context=f"evaluate_article('{article.title}')"
             )
 
@@ -221,7 +196,7 @@ class LLMService:
                     max_tokens=500,
                 )
 
-            response = await self._call_api_with_retry(
+            response = await self._call_groq(
                 make_api_call, context=f"generate_summary('{article.title}')"
             )
 
@@ -414,7 +389,7 @@ class LLMService:
                     max_tokens=600,
                 )
 
-            response = await self._call_api_with_retry(
+            response = await self._call_groq(
                 make_api_call, context=f"generate_deep_dive('{article.title}')"
             )
 
@@ -478,9 +453,7 @@ class LLMService:
                     max_tokens=2000,
                 )
 
-            response = await self._call_api_with_retry(
-                make_api_call, context="generate_weekly_newsletter"
-            )
+            response = await self._call_groq(make_api_call, context="generate_weekly_newsletter")
 
             final_text = response.choices[0].message.content
             if final_text:
@@ -529,7 +502,7 @@ class LLMService:
                     max_tokens=800,
                 )
 
-            response = await self._call_api_with_retry(
+            response = await self._call_groq(
                 make_api_call, context="generate_reading_recommendation"
             )
 
@@ -568,9 +541,7 @@ class LLMService:
                     max_tokens=400,
                 )
 
-            response = await self._call_api_with_retry(
-                make_api_call, context="summarize_conversation_buffer"
-            )
+            response = await self._call_groq(make_api_call, context="summarize_conversation_buffer")
             content = response.choices[0].message.content
             if not content:
                 raise LLMServiceError("Empty summary response")
@@ -612,9 +583,7 @@ class LLMService:
                     max_tokens=800,
                 )
 
-            response = await self._call_api_with_retry(
-                make_api_call, context="generate_thread_answer"
-            )
+            response = await self._call_groq(make_api_call, context="generate_thread_answer")
             content = response.choices[0].message.content
             if not content or not content.strip():
                 raise LLMServiceError("Empty thread answer response")

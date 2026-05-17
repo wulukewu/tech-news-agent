@@ -6,7 +6,12 @@ from typing import TYPE_CHECKING
 
 import feedparser
 import httpx
-from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
+from tenacity import (
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
 
 from app.schemas.article import ArticleSchema, RSSSource
 
@@ -88,16 +93,33 @@ class RSSService:
             logger.error(f"Unexpected error in _parse_date: {e}", exc_info=True)
             return datetime.now(UTC)
 
+    def _is_retryable_http_error(self, exc: BaseException) -> bool:
+        """Return True for transient HTTP errors (429, 5xx) that warrant a retry."""
+        if isinstance(exc, httpx.HTTPStatusError):
+            return exc.response.status_code in (429, 500, 502, 503, 504)
+        return isinstance(exc, (httpx.RequestError, httpx.TimeoutException))
+
     @retry(
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        stop=stop_after_attempt(3),
-        retry=retry_if_exception_type((httpx.RequestError, httpx.TimeoutException)),
+        wait=wait_exponential(multiplier=1, min=2, max=30),
+        stop=stop_after_attempt(4),
+        retry=retry_if_exception_type(
+            (httpx.RequestError, httpx.TimeoutException, httpx.HTTPStatusError)
+        ),
         reraise=True,
     )
     async def _fetch_feed_content(self, client: httpx.AsyncClient, url: str) -> str:
-        """Fetch XML content from URL with automatic retries."""
+        """Fetch XML content from URL with automatic retries.
+
+        Retries on:
+        - Network errors (RequestError, TimeoutException)
+        - Transient HTTP errors: 429 Too Many Requests, 5xx Server Errors
+        """
         logger.debug(f"Fetching RSS feed XML: {url}")
         response = await client.get(url, headers=BASE_HEADERS, timeout=15.0, follow_redirects=True)
+        # Raise for 4xx/5xx so tenacity can catch HTTPStatusError and retry on 429/5xx
+        if response.status_code in (429, 500, 502, 503, 504):
+            logger.warning(f"Retryable HTTP {response.status_code} for {url}")
+            response.raise_for_status()
         response.raise_for_status()
         return response.text
 

@@ -87,6 +87,11 @@ class SummariesMixin:
                     3. Is clear and engaging for technical readers
 
                     Focus on information that directly relates to: "{query}"
+
+                    CRITICAL CONSTRAINT: Base your summary EXCLUSIVELY on the article content provided below.
+                    If the article content does not contain sufficient information to answer the query,
+                    you MUST state: "此文章中未找到與查詢直接相關的技術細節。" (or in English: "No directly relevant technical details found in this article for the query.")
+                    Do NOT infer, extrapolate, or fabricate any information not present in the provided content.
                     """,
                 },
                 {
@@ -292,7 +297,11 @@ class SummariesMixin:
 
                     {user_context}{reading_patterns}{conversation_context}
 
-                    Cross-article patterns detected: {cross_insights}""",
+                    Cross-article patterns detected: {cross_insights}
+
+                    CRITICAL CONSTRAINT: Every insight MUST be grounded in the retrieved article content provided below.
+                    If the provided context does not contain sufficient information to support an insight, you MUST respond with:
+                    "未在您的訂閱源中找到相關技術細節。" and stop — do NOT use your own training knowledge to fill gaps or fabricate details.""",
                 },
                 {
                     "role": "user",
