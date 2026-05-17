@@ -6,11 +6,13 @@ from uuid import UUID
 import discord
 from discord.ext import commands
 
+from app.bot.utils.thread_utils import ensure_discussion_thread
 from app.core.exceptions import SupabaseServiceError
 from app.schemas.article import ArticleSchema
 from app.services.llm_service import LLMService
 from app.services.notion_service import NotionService as NotionService  # noqa: F401
 from app.services.supabase_service import SupabaseService
+from app.services.thread_memory_service import ThreadMemoryService
 
 logger = logging.getLogger(__name__)
 
@@ -187,7 +189,12 @@ class FilterView(discord.ui.View):
 
 
 class DeepDiveButton(discord.ui.Button):
-    def __init__(self, article: ArticleSchema, llm_service: "LLMService | None" = None):
+    def __init__(
+        self,
+        article: ArticleSchema,
+        llm_service: "LLMService | None" = None,
+        supabase_service: "SupabaseService | None" = None,
+    ):
         label_text = (
             f"📖 {article.title[:20]}..." if len(article.title) > 20 else f"📖 {article.title}"
         )
@@ -199,6 +206,7 @@ class DeepDiveButton(discord.ui.Button):
         super().__init__(style=discord.ButtonStyle.secondary, label=label_text, custom_id=custom_id)
         self.article = article
         self.llm_service = llm_service
+        self.supabase_service = supabase_service or SupabaseService()
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
@@ -208,27 +216,35 @@ class DeepDiveButton(discord.ui.Button):
         )
 
         try:
-            result = await self.llm_service.generate_deep_dive(self.article)
-
-            if len(result) > 2000:
-                result = result[:1997] + "..."
-
-            await interaction.followup.send(result, ephemeral=True)
-            logger.info(f"Successfully sent deep dive analysis to user {interaction.user.id}")
-
-        except LLMServiceError as e:
-            logger.error(
-                f"LLM error in DeepDiveButton for user {interaction.user.id}: {e}",
-                exc_info=True,
-                extra={
-                    "user_id": interaction.user.id,
-                    "article_id": str(self.article.id) if self.article.id else None,
-                    "article_title": self.article.title,
-                    "button": "DeepDiveButton",
-                    "error_type": "LLMServiceError",
-                },
+            thread, created = await ensure_discussion_thread(
+                interaction=interaction,
+                thread_name=f"deep-dive-{self.article.title[:40]}",
             )
-            await interaction.followup.send("❌ 生成深度摘要時發生錯誤，請稍後再試。", ephemeral=True)
+            if created:
+                await interaction.followup.send(
+                    f"✅ 已建立深度分析討論串：{thread.mention}",
+                    ephemeral=True,
+                )
+            else:
+                await interaction.followup.send("✅ 已在此討論串提供深度分析。", ephemeral=True)
+
+            await thread.send(f"📖 **深度分析標的**：{self.article.title}")
+            result = await self.llm_service.generate_deep_dive(self.article)
+            await thread.send(result[:2000])
+
+            user = await self.supabase_service.get_user_by_discord_id(str(interaction.user.id))
+            if user:
+                memory_service = ThreadMemoryService(supabase_service=self.supabase_service)
+                conversation = await memory_service.get_or_create_thread_conversation(
+                    user_id=str(user["id"]),
+                    thread_id=str(thread.id),
+                    title=f"Deep Dive: {self.article.title}",
+                    article_id=str(self.article.id) if self.article.id else None,
+                )
+                await memory_service.save_assistant_message(conversation.id, str(thread.id), result)
+            logger.info(
+                f"Successfully sent deep dive analysis in thread for user {interaction.user.id}"
+            )
         except Exception as e:
             logger.error(
                 f"Unexpected error in DeepDiveButton for user {interaction.user.id}: {e}",
@@ -245,11 +261,17 @@ class DeepDiveButton(discord.ui.Button):
 
 
 class DeepDiveView(discord.ui.View):
-    def __init__(self, articles: list[ArticleSchema], llm_service: LLMService = None):
+    def __init__(
+        self,
+        articles: list[ArticleSchema],
+        llm_service: LLMService = None,
+        supabase_service: SupabaseService = None,
+    ):
         super().__init__(timeout=None)
         self.llm_service = llm_service or LLMService()
+        self.supabase_service = supabase_service or SupabaseService()
         for article in articles[:5]:
-            self.add_item(DeepDiveButton(article, self.llm_service))
+            self.add_item(DeepDiveButton(article, self.llm_service, self.supabase_service))
 
 
 class MarkReadButton(discord.ui.Button):

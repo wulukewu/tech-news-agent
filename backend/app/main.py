@@ -413,6 +413,11 @@ app.include_router(platforms_api.router, prefix="/api/user/platforms", tags=["pl
 # NOTE: Conversation sync endpoint is now handled by conversations API
 # Removed duplicate router registration that was causing 405 errors
 
+# Internal endpoints (compression tasks, not exposed in public docs)
+from app.api import internal as internal_api
+
+app.include_router(internal_api.router)
+
 
 @app.get("/")
 @app.head("/")

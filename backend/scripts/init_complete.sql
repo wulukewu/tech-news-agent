@@ -319,7 +319,13 @@ CREATE TABLE IF NOT EXISTS conversations (
     is_favorite BOOLEAN DEFAULT FALSE,
     message_count INTEGER DEFAULT 0,
     last_message_at TIMESTAMPTZ DEFAULT now(),
-    metadata JSONB DEFAULT '{}'
+    metadata JSONB DEFAULT '{}',
+    -- Discord Thread + Summary Buffer Memory (migration 027)
+    thread_id TEXT,
+    summary_buffer TEXT,
+    summary_updated_at TIMESTAMPTZ,
+    summarized_until_message_at TIMESTAMPTZ,
+    approx_token_count INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_conversations_user_id ON conversations(user_id);
@@ -328,6 +334,10 @@ CREATE INDEX IF NOT EXISTS idx_conversations_tags ON conversations USING gin(tag
 CREATE INDEX IF NOT EXISTS idx_conversations_archived ON conversations(user_id, is_archived);
 CREATE INDEX IF NOT EXISTS idx_conversations_user_active_recent ON conversations(user_id, is_archived, last_message_at DESC);
 CREATE INDEX IF NOT EXISTS idx_conversations_user_platform_archived ON conversations(user_id, platform, is_archived);
+CREATE INDEX IF NOT EXISTS idx_conversations_thread_id ON conversations(thread_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_conversations_discord_thread_unique
+    ON conversations(thread_id)
+    WHERE platform = 'discord' AND thread_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_conversations_fulltext ON conversations USING gin(
     (setweight(to_tsvector('english', coalesce(title, '')), 'A') ||
      setweight(to_tsvector('english', coalesce(summary, '')), 'B'))
@@ -345,13 +355,21 @@ CREATE TABLE IF NOT EXISTS conversation_messages (
     content TEXT NOT NULL,
     platform VARCHAR(20) NOT NULL CHECK (platform IN ('web', 'discord')),
     metadata JSONB DEFAULT '{}',
-    created_at TIMESTAMPTZ DEFAULT now()
+    created_at TIMESTAMPTZ DEFAULT now(),
+    -- Discord Thread + Summary Buffer Memory (migration 027)
+    thread_id TEXT,
+    approx_tokens INTEGER NOT NULL DEFAULT 0,
+    is_summarized BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 CREATE INDEX IF NOT EXISTS idx_messages_conversation_id ON conversation_messages(conversation_id);
 CREATE INDEX IF NOT EXISTS idx_messages_created_at ON conversation_messages(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_messages_content_search ON conversation_messages USING gin(to_tsvector('english', content));
 CREATE INDEX IF NOT EXISTS idx_messages_conversation_created_desc ON conversation_messages(conversation_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_conversation_messages_thread_created
+    ON conversation_messages(thread_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_conversation_messages_thread_unsummarized
+    ON conversation_messages(thread_id, is_summarized, created_at);
 
 CREATE OR REPLACE FUNCTION update_conversation_stats()
 RETURNS TRIGGER LANGUAGE plpgsql AS $$
