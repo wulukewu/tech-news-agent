@@ -25,14 +25,47 @@ from app.api import (
     analytics,
     articles,
     auth,
+    debug,
     feeds,
+    learning_content,
+    learning_content_simple,
+    learning_path,
     logs,
+    notification_system,
+    notifications,
     onboarding,
     reading_list,
     recommendations,
 )
 from app.api import (
+    conversations as conversations_api,
+)
+from app.api import (
+    intelligent_reminder as intelligent_reminder_api,
+)
+from app.api import (
+    internal as internal_api,
+)
+from app.api import (
+    knowledge_graph as knowledge_graph_api,
+)
+from app.api import (
+    platforms as platforms_api,
+)
+from app.api import (
+    proactive_learning as proactive_learning_api,
+)
+from app.api import (
+    qa as qa_api,
+)
+from app.api import (
+    reminder_settings as reminder_settings_api,
+)
+from app.api import (
     scheduler as scheduler_api,
+)
+from app.api import (
+    weekly_insights as weekly_insights_api,
 )
 from app.bot.client import bot
 from app.core.config import settings
@@ -50,13 +83,6 @@ from app.tasks.scheduler import get_scheduler, get_scheduler_health, setup_sched
 logger = get_logger(__name__)
 
 
-def validate_configuration():
-    """Validate required configuration settings."""
-    # Supabase configuration is validated by Pydantic Settings (required fields)
-    # Discord and LLM configuration is validated at runtime when services are used
-    pass
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
@@ -64,10 +90,6 @@ async def lifespan(app: FastAPI):
     Starts the APScheduler and the Discord Bot.
     """
     logger.info("Initializing Tech News Agent lifespan...")
-
-    # Validate configuration before starting services
-    validate_configuration()
-    logger.info("Configuration validated successfully.")
 
     # 0. Initialize QA Agent Database Manager
     try:
@@ -341,81 +363,24 @@ app.include_router(onboarding.router, prefix="/api", tags=["onboarding"])
 app.include_router(recommendations.router, prefix="/api", tags=["recommendations"])
 app.include_router(analytics.router, prefix="/api", tags=["analytics"])
 app.include_router(logs.router, tags=["logs"])
-
-# Import and register notifications router
-from app.api import notifications
-
 app.include_router(notifications.router, prefix="/api/notifications", tags=["notifications"])
-
-# Import and register learning path router
-from app.api import learning_path
-
 app.include_router(learning_path.router, tags=["learning-path"])
-
-# Import and register notification system router
-from app.api import notification_system
-
 app.include_router(
     notification_system.router, prefix="/api/notification-system", tags=["notification-system"]
 )
-
-# Import and register learning content enhancement router
-from app.api import learning_content
-
 app.include_router(learning_content.router, tags=["learning-content"])
-
-# Import and register simplified learning content router
-from app.api import learning_content_simple
-
 app.include_router(learning_content_simple.router, tags=["learning-content-simple"])
-
-# Import and register debug router (for development)
-from app.api import debug
-
 app.include_router(debug.router, prefix="/api", tags=["debug"])
-
-# Import and register QA router
-from app.api import qa as qa_api
-
 app.include_router(qa_api.router, prefix="/api/qa", tags=["qa"])
-
-# Import and register Conversations router
-from app.api import conversations as conversations_api
-
 app.include_router(conversations_api.router, prefix="/api/conversations", tags=["conversations"])
-
-# Import and register Weekly Insights router
-from app.api import weekly_insights as weekly_insights_api
-
 app.include_router(weekly_insights_api.router, prefix="/api", tags=["weekly-insights"])
-
-# Import and register Proactive Learning router
-from app.api import proactive_learning as proactive_learning_api
-
 app.include_router(proactive_learning_api.router, prefix="/api", tags=["proactive-learning"])
-
-# Import and register Intelligent Reminder router
-from app.api import intelligent_reminder as intelligent_reminder_api
-from app.api import reminder_settings as reminder_settings_api
-
 app.include_router(reminder_settings_api.router, tags=["reminders"])
 app.include_router(intelligent_reminder_api.router, tags=["intelligent-reminders"])
-
-# Import and register Knowledge Graph router
-from app.api import knowledge_graph as knowledge_graph_api
-
 app.include_router(knowledge_graph_api.router, tags=["knowledge-graph"])
-
-# Import and register Platforms router (user platform linking + sync)
-from app.api import platforms as platforms_api
-
 app.include_router(platforms_api.router, prefix="/api/user/platforms", tags=["platforms"])
 # NOTE: Conversation sync endpoint is now handled by conversations API
 # Removed duplicate router registration that was causing 405 errors
-
-# Internal endpoints (compression tasks, not exposed in public docs)
-from app.api import internal as internal_api
-
 app.include_router(internal_api.router)
 
 
