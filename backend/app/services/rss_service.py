@@ -288,4 +288,28 @@ class RSSService:
             f"New articles: {new_count}"
         )
 
+        # Step 4: Enrich articles with short/missing content by scraping the full page
+        articles_to_scrape = [
+            a for a in new_articles if not a.content_preview or len(a.content_preview) < 200
+        ]
+        if articles_to_scrape:
+            logger.info(
+                f"Scraping full content for {len(articles_to_scrape)} articles with short/missing RSS description"
+            )
+            import asyncio
+
+            from app.services.web_scraper import scrape_article
+
+            async def _enrich(article):
+                scraped = await scrape_article(str(article.url))
+                if scraped:
+                    article.content_preview = scraped
+
+            await asyncio.gather(*[_enrich(a) for a in articles_to_scrape], return_exceptions=True)
+
+            enriched = sum(
+                1 for a in articles_to_scrape if a.content_preview and len(a.content_preview) >= 200
+            )
+            logger.info(f"Web scraping enriched {enriched}/{len(articles_to_scrape)} articles")
+
         return new_articles, successful_feed_ids
