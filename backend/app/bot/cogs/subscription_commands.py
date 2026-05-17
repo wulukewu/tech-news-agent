@@ -30,30 +30,23 @@ class SubscriptionCommands(commands.Cog):
         self.supabase_service = supabase_service or SupabaseService()
         logger.info("SubscriptionCommands cog initialized")
 
-    @app_commands.command(name="add_feed", description="訂閱一個 RSS 來源")
-    @app_commands.describe(name="訂閱源名稱", url="RSS/Atom 網址", category="分類（例如：AI、Web、Security）")
-    async def add_feed(self, interaction: discord.Interaction, name: str, url: str, category: str):
-        """
-        訂閱一個 RSS 來源
-
-        Args:
-            interaction: Discord interaction object
-            name: Feed name
-            url: RSS/Atom feed URL
-            category: Feed category
-
-        Validates: Requirements 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8
-        """
-        await interaction.response.defer(ephemeral=True)
+    @app_commands.command(name="add_feed", description="訂閱一個 RSS 來源（彈出表單）")
+    async def add_feed(self, interaction: discord.Interaction):
+        """開啟訂閱 RSS 來源表單"""
+        from app.bot.ui.modals import AddFeedModal
 
         logger.info(
-            "Command /add_feed triggered",
+            "Command /add_feed triggered (modal)",
             user_id=str(interaction.user.id),
             command="add_feed",
-            feed_name=name,
-            feed_url=url,
-            feed_category=category,
         )
+        await interaction.response.send_modal(AddFeedModal(self.supabase_service))
+
+    async def _add_feed_impl(
+        self, interaction: discord.Interaction, name: str, url: str, category: str
+    ):
+        """Internal implementation — original add_feed logic, now invoked by AddFeedModal."""
+        await interaction.response.defer(ephemeral=True)
 
         try:
             # 1. Validate and sanitize feed data
@@ -61,37 +54,16 @@ class SubscriptionCommands(commands.Cog):
                 name, url, category
             )
             if not is_valid:
-                logger.warning(
-                    "Feed data validation failed",
-                    user_id=str(interaction.user.id),
-                    error=error_msg,
-                    feed_name=name,
-                    feed_url=url,
-                )
-                await interaction.followup.send(
-                    f"❌ {error_msg}\n" f"💡 建議：請檢查輸入的資料格式是否正確。", ephemeral=True
-                )
+                await interaction.followup.send(f"❌ {error_msg}", ephemeral=True)
                 return
 
             # 2. Register user and get UUID
             user_uuid = await ensure_user_registered(interaction)
-            logger.info(
-                "User registered successfully",
-                user_id=str(interaction.user.id),
-                user_uuid=str(user_uuid),
-            )
 
             # 3. Use sanitized data
             validated_url = sanitized_data["url"]
             sanitized_name = sanitized_data["name"]
             sanitized_category = sanitized_data["category"]
-            logger.info(
-                "Feed data validated and sanitized",
-                user_id=str(interaction.user.id),
-                sanitized_name=sanitized_name,
-                validated_url=validated_url,
-                sanitized_category=sanitized_category,
-            )
 
             # 3. Check if feed exists in feeds table via service layer
             response = (
@@ -303,8 +275,29 @@ class SubscriptionCommands(commands.Cog):
                 ephemeral=True,
             )
 
+    async def _feed_autocomplete(
+        self, interaction: discord.Interaction, current: str
+    ) -> list[app_commands.Choice[str]]:
+        """Autocomplete: prefix-search user's subscribed feeds by name."""
+        try:
+            discord_id = str(interaction.user.id)
+            user_uuid = await self.supabase_service.get_or_create_user(discord_id)
+            resp = (
+                self.supabase_service.client.table("user_subscriptions")
+                .select("feeds(id, name)")
+                .eq("user_id", str(user_uuid))
+                .execute()
+            )
+            feeds = [row["feeds"] for row in (resp.data or []) if row.get("feeds")]
+            prefix = current.lower()
+            matches = [f for f in feeds if f["name"].lower().startswith(prefix)][:25]
+            return [app_commands.Choice(name=f["name"], value=f["id"]) for f in matches]
+        except Exception:
+            return []
+
     @app_commands.command(name="unsubscribe_feed", description="取消訂閱 RSS 來源")
-    @app_commands.describe(feed_identifier="訂閱源名稱或 ID")
+    @app_commands.describe(feed_identifier="訂閱源名稱（輸入可自動補全）")
+    @app_commands.autocomplete(feed_identifier=_feed_autocomplete)
     async def unsubscribe_feed(self, interaction: discord.Interaction, feed_identifier: str):
         """
         取消訂閱 RSS 來源
@@ -327,74 +320,45 @@ class SubscriptionCommands(commands.Cog):
         try:
             # 1. Register user and get UUID
             user_uuid = await ensure_user_registered(interaction)
-            logger.info(
-                "User registered successfully",
-                user_id=str(interaction.user.id),
-                user_uuid=str(user_uuid),
-            )
 
             # 2. Get user subscriptions to find the feed via service layer
             subscriptions = await self.supabase_service.get_user_subscriptions(
                 str(interaction.user.id)
             )
 
-            # 3. Handle empty subscriptions
             if not subscriptions:
-                logger.info("User has no subscriptions", user_id=str(interaction.user.id))
                 await interaction.followup.send("📭 你還沒有訂閱任何 RSS 來源！", ephemeral=True)
                 return
 
-            # 4. Find the feed by name or ID
+            # 3. Match by UUID (from autocomplete) or name (manual input fallback)
             feed_to_unsubscribe = None
-            feed_identifier_lower = feed_identifier.lower().strip()
-
-            # Try to match by UUID first
             try:
-                from uuid import UUID
-
                 feed_uuid = UUID(feed_identifier)
-                for sub in subscriptions:
-                    if sub.feed_id == feed_uuid:
-                        feed_to_unsubscribe = sub
-                        break
-            except ValueError:
-                # Not a valid UUID, try matching by name
-                for sub in subscriptions:
-                    if sub.name.lower() == feed_identifier_lower:
-                        feed_to_unsubscribe = sub
-                        break
-
-            # 5. Handle feed not found
-            if not feed_to_unsubscribe:
-                logger.info(
-                    "Feed not found in user subscriptions",
-                    user_id=str(interaction.user.id),
-                    feed_identifier=feed_identifier,
+                feed_to_unsubscribe = next(
+                    (s for s in subscriptions if s.feed_id == feed_uuid), None
                 )
+            except ValueError:
+                lower = feed_identifier.lower().strip()
+                feed_to_unsubscribe = next(
+                    (s for s in subscriptions if s.name.lower() == lower), None
+                )
+
+            if not feed_to_unsubscribe:
                 await interaction.followup.send(
-                    f"❌ 找不到訂閱源：**{feed_identifier}**\n" f"💡 建議：請使用 `/list_feeds` 查看你的訂閱清單。",
+                    f"❌ 找不到訂閱源：**{feed_identifier}**\n💡 建議：請使用 `/list_feeds` 查看你的訂閱清單。",
                     ephemeral=True,
                 )
                 return
 
-            # 6. Unsubscribe from feed via service layer
             await self.supabase_service.unsubscribe_from_feed(
                 str(interaction.user.id), feed_to_unsubscribe.feed_id
             )
-            logger.info(
-                "User unsubscribed from feed successfully",
-                user_id=str(interaction.user.id),
-                feed_id=str(feed_to_unsubscribe.feed_id),
-            )
-
-            # 7. Send confirmation message
             await interaction.followup.send(
                 f"✅ 已取消訂閱 **{feed_to_unsubscribe.name}** ({feed_to_unsubscribe.category})",
                 ephemeral=True,
             )
 
         except SupabaseServiceError as e:
-            # Database operation error
             logger.error(
                 "Database operation failed in /unsubscribe_feed",
                 user_id=str(interaction.user.id),
@@ -403,7 +367,7 @@ class SubscriptionCommands(commands.Cog):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 取消訂閱失敗，請稍後再試。\n" "💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
+                "❌ 取消訂閱失敗，請稍後再試。\n💡 建議：資料庫連線可能暫時中斷，請稍後再試或聯繫管理員。",
                 ephemeral=True,
             )
 

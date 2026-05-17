@@ -338,8 +338,34 @@ class ReadingListGroup(app_commands.Group):
                 ephemeral=True,
             )
 
+    async def _article_autocomplete(
+        self, interaction: discord.Interaction, current: str
+    ) -> list[app_commands.Choice[str]]:
+        """Autocomplete: prefix-search reading list articles by title."""
+        try:
+            discord_id = str(interaction.user.id)
+            user_uuid = await self.supabase_service.get_or_create_user(discord_id)
+            resp = (
+                self.supabase_service.client.table("reading_list")
+                .select("article_id, articles(id, title)")
+                .eq("user_id", str(user_uuid))
+                .ilike("articles.title", f"{current}%")
+                .limit(25)
+                .execute()
+            )
+            results = []
+            for row in resp.data or []:
+                art = row.get("articles")
+                if art:
+                    title = art["title"][:100]  # Choice name max 100 chars
+                    results.append(app_commands.Choice(name=title, value=str(art["id"])))
+            return results
+        except Exception:
+            return []
+
     @app_commands.command(name="remove", description="從待讀清單移除文章")
-    @app_commands.describe(article_id="文章 ID（從 /reading_list view 取得）")
+    @app_commands.describe(article_id="文章標題（輸入可自動補全）")
+    @app_commands.autocomplete(article_id=_article_autocomplete)
     async def remove(self, interaction: discord.Interaction, article_id: str):
         logger.info(
             "Command /reading_list remove triggered",

@@ -118,151 +118,17 @@ class QuietHoursSettings(commands.Cog):
                 ephemeral=True,
             )
 
-    @app_commands.command(name="set-quiet-hours", description="設定勿擾時段")
-    @app_commands.describe(
-        start_time="開始時間 (格式: HH:MM，例如 22:00)",
-        end_time="結束時間 (格式: HH:MM，例如 08:00)",
-        enabled="是否啟用勿擾時段",
-    )
-    @app_commands.choices(
-        enabled=[
-            app_commands.Choice(name="啟用", value=1),
-            app_commands.Choice(name="停用", value=0),
-        ]
-    )
-    async def set_quiet_hours(
-        self,
-        interaction: discord.Interaction,
-        start_time: str,
-        end_time: str,
-        enabled: app_commands.Choice[int],
-    ):
-        """設定勿擾時段的時間範圍和啟用狀態"""
-        await interaction.response.defer(ephemeral=True)
+    @app_commands.command(name="set-quiet-hours", description="設定勿擾時段（彈出表單）")
+    async def set_quiet_hours(self, interaction: discord.Interaction):
+        """開啟勿擾時段設定表單"""
+        from app.bot.ui.modals import SetQuietHoursModal
 
         logger.info(
-            "Command /set-quiet-hours triggered",
+            "Command /set-quiet-hours triggered (modal)",
             user_id=str(interaction.user.id),
             command="set-quiet-hours",
-            start_time=start_time,
-            end_time=end_time,
-            enabled=bool(enabled.value),
         )
-
-        try:
-            import re
-            from datetime import time
-
-            from app.services.quiet_hours_service import QuietHoursService
-
-            discord_id = str(interaction.user.id)
-            user_uuid = await self.supabase_service.get_or_create_user(discord_id)
-
-            # Validate time format
-            time_pattern = re.compile(r"^([01]?[0-9]|2[0-3]):([0-5][0-9])$")
-
-            if not time_pattern.match(start_time):
-                await interaction.followup.send(
-                    "❌ 開始時間格式錯誤。請使用 HH:MM 格式（例如：22:00）",
-                    ephemeral=True,
-                )
-                return
-
-            if not time_pattern.match(end_time):
-                await interaction.followup.send(
-                    "❌ 結束時間格式錯誤。請使用 HH:MM 格式（例如：08:00）",
-                    ephemeral=True,
-                )
-                return
-
-            # Parse times
-            start_hour, start_minute = map(int, start_time.split(":"))
-            end_hour, end_minute = map(int, end_time.split(":"))
-
-            start_time_obj = time(start_hour, start_minute)
-            end_time_obj = time(end_hour, end_minute)
-            is_enabled = bool(enabled.value)
-
-            # Update quiet hours
-            quiet_hours_service = QuietHoursService(self.supabase_service)
-            updated_quiet_hours = await quiet_hours_service.update_quiet_hours(
-                user_id=user_uuid,
-                start_time=start_time_obj,
-                end_time=end_time_obj,
-                enabled=is_enabled,
-            )
-
-            # Create response embed
-            embed = discord.Embed(
-                title="🌙 勿擾時段已更新",
-                color=discord.Color.green() if is_enabled else discord.Color.orange(),
-            )
-
-            status_text = "✅ 已啟用" if is_enabled else "❌ 已停用"
-            embed.add_field(
-                name="📊 設定狀態",
-                value=f"勿擾時段：{status_text}",
-                inline=False,
-            )
-
-            if is_enabled:
-                embed.add_field(
-                    name="⏰ 時間設定",
-                    value=f"• 開始時間：{start_time}\n• 結束時間：{end_time}\n• 時區：{updated_quiet_hours.timezone}",
-                    inline=False,
-                )
-
-                # Check if it's an overnight range
-                if start_time_obj > end_time_obj:
-                    embed.add_field(
-                        name="ℹ️ 跨夜設定",
-                        value=f"此設定為跨夜時段（{start_time} 到隔天 {end_time}）",
-                        inline=False,
-                    )
-
-                embed.add_field(
-                    name="📅 適用日期",
-                    value="每天（可使用網頁版設定特定日期）",
-                    inline=False,
-                )
-            else:
-                embed.add_field(
-                    name="ℹ️ 說明",
-                    value="勿擾時段已停用，你將正常接收所有通知。",
-                    inline=False,
-                )
-
-            await interaction.followup.send(embed=embed, ephemeral=True)
-            logger.info(
-                "Quiet hours updated successfully",
-                user_id=discord_id,
-                start_time=start_time,
-                end_time=end_time,
-                enabled=is_enabled,
-            )
-
-        except ValueError as e:
-            logger.warning(
-                "Invalid time format in set-quiet-hours",
-                user_id=str(interaction.user.id),
-                error=str(e),
-            )
-            await interaction.followup.send(
-                "❌ 時間格式錯誤。請使用 HH:MM 格式（例如：22:00）",
-                ephemeral=True,
-            )
-        except Exception as e:
-            logger.error(
-                "Failed to set quiet hours",
-                user_id=str(interaction.user.id),
-                command="set-quiet-hours",
-                error=str(e),
-                exc_info=True,
-            )
-            await interaction.followup.send(
-                "❌ 設定勿擾時段時發生錯誤，請稍後再試。",
-                ephemeral=True,
-            )
+        await interaction.response.send_modal(SetQuietHoursModal(self.supabase_service))
 
     @app_commands.command(name="toggle-quiet-hours", description="快速開啟或關閉勿擾時段")
     async def toggle_quiet_hours(self, interaction: discord.Interaction):
