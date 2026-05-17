@@ -96,6 +96,9 @@ class MessageRepository(MsgSearchMixin):
         content: str,
         platform: str = "web",
         metadata: Optional[dict[str, Any]] = None,
+        thread_id: Optional[str] = None,
+        approx_tokens: int = 0,
+        is_summarized: bool = False,
     ) -> ConversationMessage:
         """Insert a single message into a conversation.
 
@@ -133,6 +136,9 @@ class MessageRepository(MsgSearchMixin):
             "platform": platform,
             "metadata": metadata or {},
             "created_at": now,
+            "thread_id": thread_id,
+            "approx_tokens": approx_tokens,
+            "is_summarized": is_summarized,
         }
 
         try:
@@ -216,6 +222,9 @@ class MessageRepository(MsgSearchMixin):
                     "platform": msg.get("platform", "web"),
                     "metadata": msg.get("metadata") or {},
                     "created_at": msg.get("created_at", now),
+                    "thread_id": msg.get("thread_id"),
+                    "approx_tokens": msg.get("approx_tokens", 0),
+                    "is_summarized": msg.get("is_summarized", False),
                 }
             )
 
@@ -436,6 +445,47 @@ class MessageRepository(MsgSearchMixin):
                 f"Failed to fetch messages: {exc}",
                 error_code=ErrorCode.DB_QUERY_FAILED,
                 details={"conversation_id": str(conversation_id)},
+                original_error=exc,
+            ) from exc
+
+    async def get_messages_by_thread(
+        self,
+        thread_id: str,
+        limit: int = 50,
+        ascending: bool = False,
+        unsummarized_only: bool = False,
+    ) -> list[ConversationMessage]:
+        """Retrieve messages by Discord thread ID."""
+        self.logger.debug(
+            "Fetching messages by thread",
+            thread_id=thread_id,
+            limit=limit,
+            ascending=ascending,
+            unsummarized_only=unsummarized_only,
+        )
+        try:
+            query = (
+                self.client.table(self.TABLE)
+                .select("*")
+                .eq("thread_id", thread_id)
+                .order("created_at", desc=not ascending)
+                .limit(limit)
+            )
+            if unsummarized_only:
+                query = query.eq("is_summarized", False)
+            response = query.execute()
+            return [_map_to_message(row) for row in (response.data or [])]
+        except Exception as exc:
+            self.logger.error(
+                "Failed to fetch messages by thread",
+                exc_info=True,
+                thread_id=thread_id,
+                error=str(exc),
+            )
+            raise DatabaseError(
+                f"Failed to fetch messages by thread: {exc}",
+                error_code=ErrorCode.DB_QUERY_FAILED,
+                details={"thread_id": thread_id},
                 original_error=exc,
             ) from exc
 

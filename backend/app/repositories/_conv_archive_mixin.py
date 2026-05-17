@@ -107,6 +107,19 @@ class ConvArchiveMixin:
             last_message_at=_parse_datetime(row["last_message_at"]),
             message_count=row.get("message_count", 0),
             metadata=row.get("metadata") or {},
+            thread_id=row.get("thread_id"),
+            summary_buffer=row.get("summary_buffer"),
+            summary_updated_at=(
+                _parse_datetime(row["summary_updated_at"])
+                if row.get("summary_updated_at")
+                else None
+            ),
+            summarized_until_message_at=(
+                _parse_datetime(row["summarized_until_message_at"])
+                if row.get("summarized_until_message_at")
+                else None
+            ),
+            approx_token_count=row.get("approx_token_count", 0) or 0,
         )
 
     @staticmethod
@@ -133,6 +146,19 @@ class ConvArchiveMixin:
             is_favorite=row.get("is_favorite", False),
             is_archived=row.get("is_archived", False),
             metadata=row.get("metadata") or {},
+            thread_id=row.get("thread_id"),
+            summary_buffer=row.get("summary_buffer"),
+            summary_updated_at=(
+                _parse_datetime(row["summary_updated_at"])
+                if row.get("summary_updated_at")
+                else None
+            ),
+            summarized_until_message_at=(
+                _parse_datetime(row["summarized_until_message_at"])
+                if row.get("summarized_until_message_at")
+                else None
+            ),
+            approx_token_count=row.get("approx_token_count", 0) or 0,
         )
 
 

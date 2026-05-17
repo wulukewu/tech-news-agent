@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from typing import Dict, List
 
 from openai import AsyncOpenAI
 
@@ -542,3 +543,83 @@ class LLMService:
         except Exception as e:
             logger.error(f"Failed to generate reading recommendation: {e}")
             raise LLMServiceError(f"Reading recommendation generation error: {e}")
+
+    async def summarize_conversation_buffer(self, history_text: str) -> str:
+        """Compress long thread history into a compact summary."""
+        if not history_text.strip():
+            return ""
+
+        system_prompt = (
+            "你是對話記憶壓縮器。請將對話整理成可供後續問答使用的精簡摘要，"
+            "保留：使用者目標、已確認事實、未解決問題、限制與偏好。"
+            "請用繁體中文，避免冗語，控制在 300 字以內。"
+        )
+
+        try:
+
+            async def make_api_call():
+                return await self.client.chat.completions.create(
+                    model=EVAL_MODEL,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": history_text},
+                    ],
+                    temperature=0.2,
+                    max_tokens=400,
+                )
+
+            response = await self._call_api_with_retry(
+                make_api_call, context="summarize_conversation_buffer"
+            )
+            content = response.choices[0].message.content
+            if not content:
+                raise LLMServiceError("Empty summary response")
+            return content.strip()
+        except Exception as e:
+            logger.error(f"Failed to summarize conversation buffer: {e}")
+            raise LLMServiceError(f"Summary buffer generation error: {e}")
+
+    async def generate_thread_answer(
+        self,
+        system_prompt: str,
+        summary: str,
+        rag_context: str,
+        recent_messages: List[Dict[str, str]],
+        user_query: str,
+    ) -> str:
+        """Generate answer with System Prompt + Summary + RAG + Recent dialog."""
+        try:
+            messages: List[Dict[str, str]] = [{"role": "system", "content": system_prompt}]
+
+            if summary:
+                messages.append({"role": "system", "content": f"摘要記憶：\n{summary}"})
+            if rag_context:
+                messages.append({"role": "system", "content": f"RAG 內容：\n{rag_context}"})
+
+            for msg in recent_messages[-12:]:
+                role = msg.get("role")
+                content = (msg.get("content") or "").strip()
+                if role in {"user", "assistant"} and content:
+                    messages.append({"role": role, "content": content})
+
+            messages.append({"role": "user", "content": user_query})
+
+            async def make_api_call():
+                return await self.client.chat.completions.create(
+                    model=SUMMARIZE_MODEL,
+                    messages=messages,
+                    temperature=0.4,
+                    max_tokens=800,
+                )
+
+            response = await self._call_api_with_retry(
+                make_api_call, context="generate_thread_answer"
+            )
+            content = response.choices[0].message.content
+            if not content or not content.strip():
+                raise LLMServiceError("Empty thread answer response")
+            return content.strip()
+
+        except Exception as e:
+            logger.error(f"Failed to generate thread answer: {e}")
+            raise LLMServiceError(f"Thread answer generation error: {e}")

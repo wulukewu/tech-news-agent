@@ -1,7 +1,7 @@
 """Mixin extracted from repository."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Optional
 from uuid import UUID
 
@@ -307,6 +307,9 @@ def _map_to_message(row: dict[str, Any]) -> ConversationMessage:
         platform=row.get("platform", "web"),
         metadata=row.get("metadata") or {},
         created_at=_parse_datetime(row["created_at"]),
+        thread_id=row.get("thread_id"),
+        approx_tokens=row.get("approx_tokens", 0) or 0,
+        is_summarized=row.get("is_summarized", False),
     )
 
 

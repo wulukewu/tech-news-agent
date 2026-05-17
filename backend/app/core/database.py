@@ -35,6 +35,7 @@ logger = get_logger(__name__)
 MIGRATION_FILES: list[str] = [
     "001_chat_persistence.sql",
     "002_chat_persistence_indexes.sql",
+    "027_discord_thread_memory.sql",
 ]
 
 
@@ -63,6 +64,11 @@ class Conversation(BaseModel):
     last_message_at: datetime
     message_count: int = 0
     metadata: dict[str, Any] = Field(default_factory=dict)
+    thread_id: Optional[str] = None
+    summary_buffer: Optional[str] = None
+    summary_updated_at: Optional[datetime] = None
+    summarized_until_message_at: Optional[datetime] = None
+    approx_token_count: int = 0
 
     class Config:
         from_attributes = True
@@ -83,6 +89,9 @@ class ConversationMessage(BaseModel):
     platform: str = "web"
     metadata: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime
+    thread_id: Optional[str] = None
+    approx_tokens: int = 0
+    is_summarized: bool = False
 
     class Config:
         from_attributes = True

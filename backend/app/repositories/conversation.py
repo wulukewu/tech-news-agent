@@ -116,6 +116,7 @@ class ConversationRepository(ConvArchiveMixin, ConvMetadataMixin):
         platform: str = "web",
         tags: Optional[list[str]] = None,
         metadata: Optional[dict[str, Any]] = None,
+        thread_id: Optional[str] = None,
     ) -> Conversation:
         """Create a new conversation record.
 
@@ -150,6 +151,11 @@ class ConversationRepository(ConvArchiveMixin, ConvMetadataMixin):
             "message_count": 0,
             "created_at": now,
             "last_message_at": now,
+            "thread_id": thread_id,
+            "summary_buffer": None,
+            "summary_updated_at": None,
+            "summarized_until_message_at": None,
+            "approx_token_count": 0,
         }
 
         try:
@@ -280,7 +286,9 @@ class ConversationRepository(ConvArchiveMixin, ConvMetadataMixin):
                 self.client.table(self.TABLE)
                 .select(
                     "id, user_id, title, summary, platform, created_at, last_message_at, "
-                    "message_count, tags, is_favorite, is_archived, metadata"
+                    "message_count, tags, is_favorite, is_archived, metadata, "
+                    "thread_id, summary_buffer, summary_updated_at, "
+                    "summarized_until_message_at, approx_token_count"
                 )
                 .eq("user_id", str(user_id))
             )
@@ -324,6 +332,46 @@ class ConversationRepository(ConvArchiveMixin, ConvMetadataMixin):
                 f"Failed to list conversations: {exc}",
                 error_code=ErrorCode.DB_QUERY_FAILED,
                 details={"user_id": str(user_id)},
+                original_error=exc,
+            ) from exc
+
+    async def get_conversation_by_thread_id(
+        self,
+        user_id: UUID | str,
+        thread_id: str,
+    ) -> Optional[Conversation]:
+        """Retrieve a conversation by Discord thread ID, scoped to the user."""
+        self.logger.debug(
+            "Fetching conversation by thread",
+            user_id=str(user_id),
+            thread_id=thread_id,
+        )
+        try:
+            response = (
+                self.client.table(self.TABLE)
+                .select("*")
+                .eq("user_id", str(user_id))
+                .eq("platform", "discord")
+                .eq("thread_id", thread_id)
+                .order("last_message_at", desc=True)
+                .limit(1)
+                .execute()
+            )
+            if not response.data:
+                return None
+            return self._map_to_conversation(response.data[0])
+        except Exception as exc:
+            self.logger.error(
+                "Failed to fetch conversation by thread",
+                exc_info=True,
+                user_id=str(user_id),
+                thread_id=thread_id,
+                error=str(exc),
+            )
+            raise DatabaseError(
+                f"Failed to fetch conversation by thread: {exc}",
+                error_code=ErrorCode.DB_QUERY_FAILED,
+                details={"user_id": str(user_id), "thread_id": thread_id},
                 original_error=exc,
             ) from exc
 
