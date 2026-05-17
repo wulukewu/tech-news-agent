@@ -318,14 +318,15 @@ class RSSService:
             logger.info(
                 f"Scraping full content for {len(articles_to_scrape)} articles with short/missing RSS description"
             )
-            import asyncio
-
             from app.services.web_scraper import scrape_article
 
+            sem = asyncio.Semaphore(5)  # limit concurrent scrape requests to avoid OOM
+
             async def _enrich(article):
-                scraped = await scrape_article(str(article.url))
-                if scraped:
-                    article.content_preview = scraped
+                async with sem:
+                    scraped = await scrape_article(str(article.url))
+                    if scraped:
+                        article.content_preview = scraped
 
             await asyncio.gather(*[_enrich(a) for a in articles_to_scrape], return_exceptions=True)
 
