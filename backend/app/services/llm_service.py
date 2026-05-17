@@ -129,7 +129,9 @@ class LLMService:
             "}"
         )
 
-        user_prompt = f"文章標題：{article.title}\n" f"文章分類：{article.category}"
+        user_prompt = f"文章標題：{article.title}\n文章分類：{article.category}"
+        if article.content_preview:
+            user_prompt += f"\n\n文章內容摘錄：\n{article.content_preview}"
 
         try:
             # Use retry wrapper for API call
@@ -192,10 +194,12 @@ class LLMService:
             "請直接輸出摘要內容，不超過 200 字。"
         )
 
-        user_prompt = f"文章標題：{article.title}\n" f"文章分類：{article.category}"
+        user_prompt = f"文章標題：{article.title}\n文章分類：{article.category}"
 
-        # Add ai_analysis info if available
-        if article.ai_analysis:
+        # Add content if available (best source), else fall back to ai_analysis
+        if article.content_preview:
+            user_prompt += f"\n\n文章內容摘錄：\n{article.content_preview}"
+        elif article.ai_analysis:
             user_prompt += (
                 f"\n\nAI 初步評估：\n"
                 f"  推薦原因：{article.ai_analysis.reason}\n"

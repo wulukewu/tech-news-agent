@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from datetime import UTC, datetime, timedelta
+from html.parser import HTMLParser
 from typing import TYPE_CHECKING
 
 import feedparser
@@ -13,6 +14,27 @@ if TYPE_CHECKING:
     from app.services.supabase_service import SupabaseService
 
 logger = logging.getLogger(__name__)
+
+
+class _HTMLStripper(HTMLParser):
+    """Minimal HTML tag stripper."""
+
+    def __init__(self):
+        super().__init__()
+        self._parts: list[str] = []
+
+    def handle_data(self, d: str) -> None:
+        self._parts.append(d)
+
+    def get_text(self) -> str:
+        return " ".join(self._parts)
+
+
+def _strip_html(html: str) -> str:
+    s = _HTMLStripper()
+    s.feed(html)
+    return s.get_text().strip()
+
 
 # Headers to prevent getting blocked by anti-bot protections randomly
 BASE_HEADERS = {
@@ -112,6 +134,18 @@ class RSSService:
 
                 url = entry.get("link", str(source.url))
 
+                # Extract content from RSS entry (full content > summary > description)
+                content_preview = None
+                if entry.get("content"):
+                    raw = entry["content"][0].get("value", "")
+                    content_preview = _strip_html(raw) if raw else None
+                if not content_preview:
+                    raw = entry.get("summary") or entry.get("description") or ""
+                    if raw:
+                        content_preview = _strip_html(raw) if "<" in raw else raw.strip()
+                if content_preview:
+                    content_preview = content_preview[:3000]
+
                 articles.append(
                     ArticleSchema(
                         title=entry.get("title", "No Title"),
@@ -120,6 +154,7 @@ class RSSService:
                         feed_name=source.name,
                         category=source.category,
                         published_at=published_date,
+                        content_preview=content_preview,
                     )
                 )
 

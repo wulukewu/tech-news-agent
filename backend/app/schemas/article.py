@@ -57,6 +57,9 @@ class ArticleSchema(BaseModel):
     # 向量嵌入
     embedding: list[float] | None = None  # 新增：用於語義搜尋
 
+    # 文章內容（僅在處理流程中使用，不存 DB）
+    content_preview: str | None = None  # RSS description 或爬取的文章內容
+
     # 移除的欄位：
     # - content_preview: 不再需要，使用 ai_summary 替代
     # - raw_data: 不再需要，資料庫結構化儲存
