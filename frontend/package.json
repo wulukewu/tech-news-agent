@@ -17,6 +17,8 @@
     "test:unit": "vitest run __tests__/unit",
     "test:integration": "vitest run __tests__/integration",
     "test:property": "vitest run __tests__/property",
+    "test:gate": "vitest run __tests__/unit __tests__/integration --exclude \"**/*.property.test.*\"",
+    "test:extended": "vitest run __tests__/property",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:ci": "vitest run && playwright test",

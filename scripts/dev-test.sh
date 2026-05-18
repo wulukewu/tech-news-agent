@@ -37,6 +37,7 @@ show_usage() {
     echo "Usage: $0 [OPTIONS]"
     echo ""
     echo "Options:"
+    echo "  --docker            Run tests in Docker containers (default: local)"
     echo "  -f, --frontend     Run only frontend tests"
     echo "  -b, --backend      Run only backend tests"
     echo "  -u, --unit         Run only unit tests"
@@ -50,6 +51,7 @@ show_usage() {
     echo ""
     echo "Examples:"
     echo "  $0                 # Run all tests"
+    echo "  $0 --docker        # Run all tests in Docker containers"
     echo "  $0 -f -c           # Run frontend tests with coverage"
     echo "  $0 -b -u           # Run backend unit tests only"
     echo "  $0 -p -v           # Run property tests with verbose output"
@@ -65,6 +67,7 @@ RUN_E2E=true
 WITH_COVERAGE=false
 WATCH_MODE=false
 VERBOSE=false
+RUN_MODE="local"
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -72,6 +75,10 @@ while [[ $# -gt 0 ]]; do
         -f|--frontend)
             RUN_FRONTEND=true
             RUN_BACKEND=false
+            shift
+            ;;
+        --docker)
+            RUN_MODE="docker"
             shift
             ;;
         -b|--backend)
@@ -131,6 +138,24 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+ensure_docker_ready() {
+    local service_name=$1
+
+    if ! command_exists docker-compose; then
+        print_error "docker-compose not found. Install docker-compose or run without --docker."
+        return 1
+    fi
+
+    if ! docker-compose ps | grep -q "$service_name.*Up"; then
+        print_error "Docker service '$service_name' is not running. Start it first (e.g. make dev)."
+        return 1
+    fi
+}
+
 # Run backend tests
 run_backend_tests() {
     print_header "Running Backend Tests"
@@ -142,8 +167,13 @@ run_backend_tests() {
 
     cd backend
 
-    # Check if we're in Docker or local environment
-    if docker-compose ps | grep -q "backend.*Up"; then
+    # Run tests in explicitly requested mode
+    if [ "$RUN_MODE" = "docker" ]; then
+        if ! ensure_docker_ready "backend"; then
+            cd ..
+            return 1
+        fi
+
         print_status "Running tests in Docker container"
 
         # Build test command
@@ -164,6 +194,12 @@ run_backend_tests() {
             test_cmd="$test_cmd tests/integration/"
         elif [ "$RUN_PROPERTY" = true ] && [ "$RUN_UNIT" = false ] && [ "$RUN_INTEGRATION" = false ]; then
             test_cmd="$test_cmd tests/test_database_properties.py"
+        fi
+
+        if ! docker-compose exec backend test -d /app/tests; then
+            print_error "Backend tests directory (/app/tests) not found in container."
+            cd ..
+            return 1
         fi
 
         # Run tests in Docker
@@ -198,6 +234,12 @@ run_backend_tests() {
             test_cmd="$test_cmd tests/test_database_properties.py"
         fi
 
+        if ! command_exists pytest; then
+            print_error "pytest not found in local environment. Install backend dependencies first."
+            cd ..
+            return 1
+        fi
+
         # Run tests
         $test_cmd
     fi
@@ -224,8 +266,13 @@ run_frontend_tests() {
 
     cd frontend
 
-    # Check if we're in Docker or local environment
-    if docker-compose ps | grep -q "frontend.*Up"; then
+    # Run tests in explicitly requested mode
+    if [ "$RUN_MODE" = "docker" ]; then
+        if ! ensure_docker_ready "frontend"; then
+            cd ..
+            return 1
+        fi
+
         print_status "Running tests in Docker container"
 
         # Build test command
@@ -247,11 +294,23 @@ run_frontend_tests() {
             test_cmd="$test_cmd test"
         fi
 
+        if ! docker-compose exec frontend test -f /app/package.json; then
+            print_error "Frontend package.json not found in container."
+            cd ..
+            return 1
+        fi
+
         # Run tests in Docker
         docker-compose exec frontend $test_cmd
 
     else
         print_status "Running tests locally"
+
+        if ! command_exists npm; then
+            print_error "npm not found in local environment."
+            cd ..
+            return 1
+        fi
 
         # Check if node_modules exists
         if [ ! -d "node_modules" ]; then

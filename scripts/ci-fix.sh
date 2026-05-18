@@ -12,9 +12,23 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
+command_exists() {
+    command -v "$1" >/dev/null 2>&1
+}
+
 # Get project root
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+resolve_backend_python() {
+    if [ -x "$PROJECT_ROOT/backend/venv/bin/python" ]; then
+        echo "$PROJECT_ROOT/backend/venv/bin/python"
+    elif command_exists python3; then
+        echo "python3"
+    else
+        echo ""
+    fi
+}
 
 echo -e "${BLUE}╔════════════════════════════════════════════╗${NC}"
 echo -e "${BLUE}║         CI Auto-Fix Script                 ║${NC}"
@@ -30,9 +44,15 @@ echo -e "${BLUE}═════════════════════�
 echo ""
 
 cd "$PROJECT_ROOT/backend"
+BACKEND_PYTHON=$(resolve_backend_python)
+
+if [ -z "$BACKEND_PYTHON" ]; then
+    echo -e "${RED}❌ Python runtime not found (python3 or backend/venv/bin/python)${NC}"
+    exit 1
+fi
 
 echo "1️⃣ Fixing Black formatting..."
-if black app/ tests/; then
+if "$BACKEND_PYTHON" -m black app/ tests/; then
     echo -e "${GREEN}✅ Black formatting applied${NC}"
 else
     echo -e "${RED}❌ Black formatting failed${NC}"
@@ -40,7 +60,7 @@ fi
 echo ""
 
 echo "2️⃣ Fixing Ruff issues..."
-if ruff check --fix app/ tests/; then
+if "$BACKEND_PYTHON" -m ruff check --fix app/ tests/; then
     echo -e "${GREEN}✅ Ruff fixes applied${NC}"
 else
     echo -e "${YELLOW}⚠️  Some Ruff issues may need manual fixing${NC}"

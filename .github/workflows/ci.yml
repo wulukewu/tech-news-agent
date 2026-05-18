@@ -89,20 +89,8 @@ jobs:
         working-directory: backend
         run: |
           echo "🧪 Running backend tests..."
-          set +e
           python -m pytest tests/ --tb=short --cov=app --cov-report=term \
-            --continue-on-collection-errors --timeout=30 \
-            -n 4 --dist=loadfile -q 2>&1 | tee /tmp/pytest_output.txt
-          EXIT_CODE=${PIPESTATUS[0]}
-          set -e
-          # Check if there are actual test failures (not just collection errors)
-          if grep -qP "\d+ failed" /tmp/pytest_output.txt; then
-            echo "❌ Test failures detected"
-            exit 1
-          elif [ $EXIT_CODE -ne 0 ]; then
-            echo "⚠️ Collection errors present (pre-existing import issues) but all tests pass"
-            exit 0
-          fi
+            --timeout=30 -n 4 --dist=loadfile -q
 
   # ============================================
   # Frontend Quality & Tests
@@ -164,20 +152,19 @@ jobs:
             exit 1
           }
 
-      - name: Run tests with coverage
+      - name: Run gate tests (blocking)
         working-directory: frontend
         run: |
-          echo "🧪 Running frontend unit tests (blocking)..."
-          npm run test:coverage -- --run "__tests__/unit"
+          echo "🧪 Running frontend gate tests..."
+          npm run test:gate
 
-      - name: Run integration & property tests (non-blocking)
+      - name: Run extended tests (non-blocking)
         continue-on-error: true
         working-directory: frontend
         run: |
-          echo "🧪 Running integration & property tests (informational)..."
-          npx vitest run --reporter=dot "__tests__/integration" "__tests__/property" \
-            "features" "components" || \
-            echo "⚠️ Some integration/property tests failed (non-blocking)"
+          echo "🧪 Running frontend extended tests (informational)..."
+          npm run test:extended || \
+            echo "⚠️ Some extended tests failed (non-blocking)"
 
   # ============================================
   # Quality Gate
@@ -226,14 +213,10 @@ jobs:
           ### What's Checked (Blocking):
           - 🎨 Code formatting (Black, Prettier)
           - 🔍 Linting (Ruff, ESLint)
-          - 🔍 Type checking (TypeScript)
+          - 🔍 Type checking (mypy, TypeScript)
+          - 🧪 Stable test gate (backend pytest, frontend test:gate)
           - 🏗️ Build verification (Frontend)
 
           ### What's Checked (Non-blocking):
-          - 🧪 Tests (informational only)
-
-          ### Temporarily Disabled:
-          - Type checking (fixing i18n issues)
-          - Test coverage requirements
-          - Strict test passing
+          - 🧪 Extended frontend tests (test:extended)
           EOF

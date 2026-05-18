@@ -114,33 +114,33 @@ lint: ## 執行所有程式碼檢查 (frontend + backend)
 	@echo "🔍 Running frontend linting..."
 	cd frontend && npm run lint
 	@echo "🔍 Running backend linting..."
-	cd backend && make lint
+	$(MAKE) -C backend lint
 	@echo "✅ All linting checks passed!"
 
 lint-frontend: ## 執行 frontend 程式碼檢查
 	cd frontend && npm run lint
 
 lint-backend: ## 執行 backend 程式碼檢查
-	cd backend && make lint
+	$(MAKE) -C backend lint
 
 format: ## 格式化所有程式碼 (frontend + backend)
 	@echo "✨ Formatting frontend code..."
 	cd frontend && npm run format
 	@echo "✨ Formatting backend code..."
-	cd backend && make format
+	$(MAKE) -C backend format
 	@echo "✅ All code formatted!"
 
 format-frontend: ## 格式化 frontend 程式碼
 	cd frontend && npm run format
 
 format-backend: ## 格式化 backend 程式碼
-	cd backend && make format
+	$(MAKE) -C backend format
 
 format-check: ## 檢查程式碼格式 (不修改)
 	@echo "🔍 Checking frontend formatting..."
 	cd frontend && npm run format:check
 	@echo "🔍 Checking backend formatting..."
-	cd backend && make format-check
+	$(MAKE) -C backend format-check
 	@echo "✅ All formatting checks passed!"
 
 check: lint format-check ## 執行所有程式碼品質檢查

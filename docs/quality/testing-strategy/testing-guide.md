@@ -69,8 +69,14 @@ npm install
 ### Run Tests
 
 ```bash
-# Run unit tests (Jest)
+# Run all Vitest suites
 npm test
+
+# Run blocking gate suite (unit + stable integration)
+npm run test:gate
+
+# Run extended suite (property-heavy, non-blocking in CI)
+npm run test:extended
 
 # Run tests in watch mode
 npm run test:watch
@@ -93,10 +99,10 @@ npm run lint
 
 ## CI/CD
 
-GitHub Actions runs both test suites in parallel:
+GitHub Actions runs backend and frontend checks in parallel:
 
 - **Backend Job**: Python tests with pytest
-- **Frontend Job**: TypeScript checks, linting, unit tests, and build
+- **Frontend Job**: TypeScript checks, linting, build, blocking gate tests, and non-blocking extended tests
 
 ### CI Configuration
 
@@ -108,8 +114,8 @@ See `.github/workflows/ci.yml` for the complete CI pipeline.
 # Backend
 pytest --ignore-glob="*property*.py" --ignore=tests/integration/
 
-# Frontend
-npm test -- --passWithNoTests
+# Frontend (blocking)
+npm run test:gate
 ```
 
 ### Full Tests (Main/PR Only)
@@ -119,7 +125,7 @@ npm test -- --passWithNoTests
 pytest  # Includes property-based and integration tests
 
 # Frontend
-npm test && npm run build
+npm run test:gate && npm run test:extended && npm run build
 ```
 
 ## Environment Variables for Tests
@@ -156,7 +162,7 @@ async def test_async_example():
     assert result is not None
 ```
 
-### Frontend (Jest)
+### Frontend (Vitest)
 
 ```typescript
 // __tests__/example.test.tsx
