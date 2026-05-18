@@ -7,6 +7,7 @@ Documentation for the project's CI/CD pipeline.
 - [CI Guide](ci-guide.md) — Full CI/CD pipeline explanation, all checks, troubleshooting
 - [Quick CI Guide](quick-ci-guide.md) — Pre-push checklist and common fixes
 - [CI Analysis & Recommendations](ci-analysis-and-recommendations.md) — CI design analysis
+- [Quality Gate Stabilization Plan](quality-gate-stabilization-plan.md) — Remediation plan for lint/test reliability
 
 ## Quick Commands
 

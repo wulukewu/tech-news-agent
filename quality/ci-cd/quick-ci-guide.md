@@ -5,10 +5,10 @@
 Run this command to verify all CI checks will pass:
 
 ```bash
-./scripts/verify-ci.sh
+./scripts/ci-local-test.sh
 ```
 
-This will run all the same checks that GitHub Actions runs, so you can catch issues before pushing.
+This runs the same major checks used in GitHub Actions, so you can catch issues before pushing.
 
 ## 🔧 Quick Fixes
 
@@ -48,22 +48,24 @@ black app/ tests/
 ```bash
 # Frontend
 cd frontend
-npm run test:coverage -- --run
+npm run test:gate           # blocking suite
+npm run test:extended       # non-blocking suite
 
 # Backend
 cd backend
-pytest
+make test
 ```
 
 ## 📊 CI Workflow
 
 The CI runs these checks in order:
 
-1. **Backend Quality** → Black, Ruff, mypy, complexity
-2. **Backend Tests** → pytest with coverage (≥70%)
-3. **Frontend Quality** → Prettier, ESLint, TypeScript, complexity
-4. **Frontend Tests** → Vitest with coverage (≥70%)
-5. **Quality Gate** → All checks must pass
+1. **Backend Quality** → Black, Ruff, mypy
+2. **Backend Tests (blocking)** → pytest
+3. **Frontend Quality** → Prettier, ESLint, TypeScript
+4. **Frontend Tests (blocking)** → `npm run test:gate`
+5. **Frontend Extended Tests (non-blocking)** → `npm run test:extended`
+6. **Quality Gate** → Blocking checks must pass
 
 ## ❌ Common Errors
 
@@ -86,8 +88,9 @@ The CI runs these checks in order:
 ## 📝 CI Configuration
 
 - **File**: `.github/workflows/ci.yml`
-- **Coverage Thresholds**: 70% for both backend and frontend
-- **Test Timeout**: 300s for fast tests, 600s for full tests
+- **Blocking frontend test command**: `npm run test:gate`
+- **Non-blocking frontend test command**: `npm run test:extended`
+- **Backend local quality command**: `make -C backend lint`
 
 ## 🔍 View CI Results
 
@@ -98,11 +101,11 @@ After pushing, check CI status at:
 
 ## 💡 Tips
 
-1. Run `./scripts/verify-ci.sh` before every push
+1. Run `./scripts/ci-local-test.sh` before every push
 2. Fix linting/formatting issues first (they're easiest)
 3. Then fix TypeScript errors
-4. Finally, ensure tests pass
-5. Check coverage if tests pass but coverage is low
+4. Then fix blocking tests (`test:gate`)
+5. Treat `test:extended` failures as technical debt and track them
 
 ## 🆘 Need Help?
 

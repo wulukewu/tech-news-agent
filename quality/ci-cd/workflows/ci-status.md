@@ -96,25 +96,25 @@ Last updated: 2026-05-05
 - **Status**: `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` is set. Warning is cosmetic only.
 - **Fix needed**: Will auto-resolve when GitHub forces Node.js 24 (June 2026).
 
-#### Frontend coverage threshold not verified in CI
-- **Problem**: `vitest.config.ts` has 70% threshold but CI only runs unit tests.
-- **Fix needed**: After integration tests are fixed, run full coverage check.
+#### Frontend full-suite coverage threshold not verified in CI
+- **Problem**: CI blocks on `test:gate`; `test:extended` is informational, so full-suite coverage is not a merge gate yet.
+- **Fix needed**: Stabilize extended tests, then promote full coverage to blocking.
 
 ---
 
 ## How to Run Tests Locally
 
 ```bash
-# Frontend unit tests (mirrors CI blocking check)
+# Frontend gate tests (mirrors CI blocking check)
 cd frontend
-npm run test:coverage -- --run "__tests__/unit"
+npm run test:gate
 
-# Frontend all tests
-npm run test:coverage -- --run
+# Frontend extended tests (non-blocking in CI)
+npm run test:extended
 
 # Backend tests
 cd backend
-pytest tests/ -n 4 --timeout=30 -q
+python3 -m pytest tests/ --tb=short --cov=app --cov-report=term --timeout=30 -n 4 --dist=loadfile -q
 
 # Backend fast (skip slow property tests)
 cd backend
@@ -136,9 +136,10 @@ HYPOTHESIS_PROFILE=ci pytest tests/ -n 4 --timeout=10 -q
 |-------|------|------|
 | Code formatting | Black (backend), Prettier (frontend) | ~1min |
 | Linting | Ruff (backend), ESLint (frontend) | ~1min |
-| Type checking | TypeScript `tsc --noEmit` | ~15s |
+| Type checking | mypy (backend), TypeScript `tsc --noEmit` | ~30s |
 | Build verification | `next build` | ~2min |
-| Frontend unit tests | Vitest (`__tests__/unit`) | ~1min |
+| Backend tests | pytest (`tests/`, blocking) | ~2-6min |
+| Frontend gate tests | Vitest (`test:gate`, blocking) | ~1-3min |
 | i18n types sync | `generate:i18n-types` | ~5s |
 
 **Total CI time: ~8 minutes** (down from 58 minutes)
@@ -147,9 +148,7 @@ HYPOTHESIS_PROFILE=ci pytest tests/ -n 4 --timeout=10 -q
 
 | Check | Reason |
 |-------|--------|
-| Frontend integration tests | Pre-existing failures in i18n/locale switching tests |
-| Frontend property tests | Some pre-existing failures in AnalysisModal, CategoryFilter |
-| Backend tests | 2880 tests × Hypothesis = too slow; pre-existing import errors |
+| Frontend extended tests | Property-heavy and flaky tests are tracked separately as non-blocking |
 
 ---
 
@@ -222,29 +221,29 @@ HYPOTHESIS_PROFILE=ci pytest tests/ -n 4 --timeout=10 -q
 - **Status**: `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true` is set. Warning is cosmetic only.
 - **Fix needed**: Will auto-resolve when GitHub forces Node.js 24 (June 2026). No action required.
 
-#### Frontend coverage threshold not verified in CI
-- **Problem**: `vitest.config.ts` has 70% threshold but CI only runs unit tests (not full coverage).
-- **Fix needed**: After integration tests are fixed, run full coverage check.
+#### Frontend full-suite coverage threshold not verified in CI
+- **Problem**: CI blocks on `test:gate`; `test:extended` is informational, so full-suite coverage is not a merge gate yet.
+- **Fix needed**: Stabilize extended tests, then promote full coverage to blocking.
 
 ---
 
 ## How to Run Tests Locally
 
 ```bash
-# Frontend unit tests (mirrors CI blocking check)
+# Frontend gate tests (mirrors CI blocking check)
 cd frontend
-npm run test:coverage -- --run "__tests__/unit"
+npm run test:gate
 
-# Frontend all tests
-npm run test:coverage -- --run
+# Frontend extended tests (non-blocking in CI)
+npm run test:extended
 
 # Backend tests
 cd backend
-pytest tests/ -n 4 --timeout=30 -q
+python3 -m pytest tests/ --tb=short --cov=app --cov-report=term --timeout=30 -n 4 --dist=loadfile -q
 
 # Backend fast (skip slow property tests)
 cd backend
-pytest tests/ -n 4 --timeout=10 -q --ignore=tests/test_database_properties.py
+python3 -m pytest tests/ -n 4 --timeout=10 -q --ignore=tests/test_database_properties.py
 ```
 
 ## CI Workflow Files
