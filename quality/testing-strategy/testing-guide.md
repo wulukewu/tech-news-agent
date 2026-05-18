@@ -72,10 +72,10 @@ npm install
 # Run all Vitest suites
 npm test
 
-# Run blocking gate suite (unit + stable integration)
+# Run blocking gate suite (unit)
 npm run test:gate
 
-# Run extended suite (property-heavy, non-blocking in CI)
+# Run extended suite (integration + property, non-blocking in CI)
 npm run test:extended
 
 # Run tests in watch mode
