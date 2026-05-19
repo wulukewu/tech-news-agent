@@ -2,6 +2,7 @@
 Reminder Service - 基於 embedding 相似度的智能提醒
 當用戶加入文章到 reading list 或評高分時，找相似文章透過 Discord DM 通知
 """
+
 import json
 import logging
 from datetime import datetime, timedelta, timezone
@@ -333,9 +334,9 @@ async def get_reminder_stats(user_id: str) -> Dict:
             "week_click_count": total_clicked,
             "click_rate": round(click_rate, 1),
             "last_reminder_at": last_reminder.data.get("sent_at") if last_reminder.data else None,
-            "last_reminder_type": last_reminder.data.get("trigger_type")
-            if last_reminder.data
-            else None,
+            "last_reminder_type": (
+                last_reminder.data.get("trigger_type") if last_reminder.data else None
+            ),
         }
 
     except Exception as e:

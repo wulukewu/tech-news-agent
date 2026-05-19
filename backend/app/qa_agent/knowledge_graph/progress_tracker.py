@@ -2,6 +2,7 @@
 ProgressTracker - Tracks user learning progress in knowledge graphs.
 Requirements: 3.1-3.6, 4.1
 """
+
 import logging
 from typing import Optional
 from uuid import UUID

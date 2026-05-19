@@ -2,6 +2,7 @@
 REST API endpoints for the Knowledge Graph Agent.
 Requirements: 7.1-7.2, 6.1-6.6
 """
+
 import logging
 from typing import Any, Dict, List
 from uuid import UUID

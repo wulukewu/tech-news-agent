@@ -56,9 +56,11 @@ async def test_send_user_notification_no_name_error():
     # Patch all external service calls so the test stays unit-level
     with (
         patch("app.services._ds_send_mixin.SupabaseService", autospec=True),
-        patch("app.services._ds_send_mixin.LockManager", autospec=True)
-        if False
-        else patch("app.services.lock_manager.LockManager", autospec=True),
+        (
+            patch("app.services._ds_send_mixin.LockManager", autospec=True)
+            if False
+            else patch("app.services.lock_manager.LockManager", autospec=True)
+        ),
     ):
         # We only care that the function reaches past the `datetime.utcnow()` line
         # without NameError. It will fail later on missing services — that's fine.

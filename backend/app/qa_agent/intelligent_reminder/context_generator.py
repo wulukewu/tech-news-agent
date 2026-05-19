@@ -2,6 +2,7 @@
 Context Generator for the Intelligent Reminder Agent.
 Generates rich, contextual reminder content with personalized recommendations.
 """
+
 import logging
 from typing import Any, Dict, List, Optional
 from uuid import UUID

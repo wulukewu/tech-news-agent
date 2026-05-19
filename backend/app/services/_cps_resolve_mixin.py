@@ -1,4 +1,5 @@
 """Mixin from app/services/cross_platform_sync.py."""
+
 from __future__ import annotations
 
 import asyncio

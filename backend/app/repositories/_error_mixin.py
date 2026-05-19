@@ -1,4 +1,5 @@
 """Error handling mixin for BaseRepository."""
+
 import logging
 from typing import Any
 

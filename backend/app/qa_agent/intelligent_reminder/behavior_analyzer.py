@@ -2,6 +2,7 @@
 Behavior Analyzer for the Intelligent Reminder Agent.
 Analyzes user behavior patterns to optimize reminder timing.
 """
+
 import logging
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional

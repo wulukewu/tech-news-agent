@@ -274,9 +274,9 @@ class LearningEffectivenessEvaluator:
             estimated_minutes = stage.estimated_hours * 60
 
             stage_efficiency = EfficiencyMetrics(
-                time_efficiency=min(estimated_minutes / actual_minutes, 1.0)
-                if actual_minutes > 0
-                else 0,
+                time_efficiency=(
+                    min(estimated_minutes / actual_minutes, 1.0) if actual_minutes > 0 else 0
+                ),
                 completion_rate=stage.completion_percentage / 100,
                 retention_score=0.8,  # Simplified
                 consistency_score=0.7,  # Simplified

@@ -1,4 +1,5 @@
 """Conversations API package."""
+
 from fastapi import APIRouter
 
 from app.api.conversations.ai import router as ai_router

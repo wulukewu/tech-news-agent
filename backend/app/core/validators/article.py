@@ -1,4 +1,5 @@
 """Article entity business rule validator."""
+
 from datetime import datetime
 from typing import Any
 from uuid import UUID

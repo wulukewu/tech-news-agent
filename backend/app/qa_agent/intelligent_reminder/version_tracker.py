@@ -2,6 +2,7 @@
 Version Tracker for the Intelligent Reminder Agent.
 Monitors technology framework versions and detects updates.
 """
+
 import logging
 from datetime import datetime
 from typing import Any, Dict, List, Optional
@@ -138,9 +139,9 @@ class VersionTracker:
                     "previous_version": tech_version.previous_version,
                     "version_type": tech_version.version_type.value,
                     "importance_level": tech_version.importance_level,
-                    "release_date": tech_version.release_date.isoformat()
-                    if tech_version.release_date
-                    else None,
+                    "release_date": (
+                        tech_version.release_date.isoformat() if tech_version.release_date else None
+                    ),
                 },
                 reading_time_estimate=5,  # Assume 5 minutes to review update
                 priority_score=significance,
@@ -363,9 +364,9 @@ class VersionTracker:
                         "current_version": update.current_version,
                         "previous_version": update.previous_version,
                         "version_type": update.version_type.value,
-                        "release_date": update.release_date.isoformat()
-                        if update.release_date
-                        else None,
+                        "release_date": (
+                            update.release_date.isoformat() if update.release_date else None
+                        ),
                         "release_notes": update.release_notes,
                         "importance_level": update.importance_level,
                         "source_url": update.source_url,

@@ -1,4 +1,5 @@
 """Mixin from app/qa_agent/security_manager.py."""
+
 import logging
 from typing import Any, Dict, List, Optional
 from uuid import UUID

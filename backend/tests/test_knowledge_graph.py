@@ -3,6 +3,7 @@ E2E integration tests for Knowledge Graph Agent.
 Tests: domain creation → graph build → progress tracking → recommendations.
 Requirements: 1.1, 3.2, 4.2, 8.1
 """
+
 import sys
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4

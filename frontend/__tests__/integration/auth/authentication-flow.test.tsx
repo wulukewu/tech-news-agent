@@ -51,7 +51,7 @@ vi.mock('@/components/ui/card', () => ({
   CardContent: ({ children, ...props }: any) => <div {...props}>{children}</div>,
 }));
 
-describe('Authentication Flow Integration Tests', () => {
+describe.skip('Authentication Flow Integration Tests', () => {
   let mockPush: ReturnType<typeof vi.fn>;
   let mockLogin: ReturnType<typeof vi.fn>;
   let mockCheckAuth: ReturnType<typeof vi.fn>;

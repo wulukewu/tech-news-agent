@@ -1,4 +1,5 @@
 """Restore/hard-delete mixin for BaseRepository."""
+
 import logging
 from typing import Generic, TypeVar
 from uuid import UUID

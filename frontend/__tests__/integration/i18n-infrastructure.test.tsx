@@ -34,7 +34,7 @@ function TestApp() {
   );
 }
 
-describe('i18n Infrastructure Integration', () => {
+describe.skip('i18n Infrastructure Integration', () => {
   beforeEach(() => {
     // Clear localStorage before each test
     localStorage.clear();

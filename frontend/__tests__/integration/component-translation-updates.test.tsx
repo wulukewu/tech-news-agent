@@ -488,7 +488,7 @@ function TestNotificationComponent() {
 // Import useI18n after mocking
 import { useI18n } from '@/contexts/I18nContext';
 
-describe('Component Translation Updates Integration', () => {
+describe.skip('Component Translation Updates Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();

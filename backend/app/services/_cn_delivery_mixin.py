@@ -1,4 +1,5 @@
 """Mixin extracted from chat_notification_service.py."""
+
 from __future__ import annotations
 
 import asyncio

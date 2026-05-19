@@ -1,4 +1,5 @@
 """QA Agent models package — re-exports all model classes."""
+
 from app.qa_agent.models.article_models import ArticleMatch, ArticleSummary
 from app.qa_agent.models.conversation_models import (
     ConversationContext,

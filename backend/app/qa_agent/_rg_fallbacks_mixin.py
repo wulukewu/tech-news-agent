@@ -1,4 +1,5 @@
 """Mixin extracted from app/qa_agent/response_generator.py."""
+
 import logging
 from typing import List, Optional
 

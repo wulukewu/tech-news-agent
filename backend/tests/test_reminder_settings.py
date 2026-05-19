@@ -2,6 +2,7 @@
 """
 Test reminder settings API
 """
+
 import asyncio
 import sys
 

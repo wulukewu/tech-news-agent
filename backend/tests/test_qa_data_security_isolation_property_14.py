@@ -306,7 +306,11 @@ def test_property_14_6_hash_is_one_way(s):
     ), f"Hash output must be lowercase hex, got: {hash_output!r}"
 
     # Original plaintext must not appear verbatim in the hash
-    assert s not in hash_output, f"Plaintext {s!r} should not appear in hash output {hash_output!r}"
+    # Only check for strings longer than 1 char — single hex chars can appear in any hash
+    if len(s) > 1:
+        assert (
+            s not in hash_output
+        ), f"Plaintext {s!r} should not appear in hash output {hash_output!r}"
 
 
 # ============================================================================

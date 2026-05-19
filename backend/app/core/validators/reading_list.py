@@ -1,4 +1,5 @@
 """ReadingList entity business rule validator."""
+
 from typing import Any
 from uuid import UUID
 

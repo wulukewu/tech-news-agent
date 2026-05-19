@@ -1,4 +1,5 @@
 """Performance stats mixin for PerformanceMonitor."""
+
 import logging
 from collections import deque
 from dataclasses import dataclass, field

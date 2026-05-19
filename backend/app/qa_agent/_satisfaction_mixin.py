@@ -1,4 +1,5 @@
 """Satisfaction analysis mixin for UserProfileManager."""
+
 import logging
 from datetime import timedelta
 from typing import Any, Dict

@@ -1,4 +1,5 @@
 """Health/cleanup mixin for NotificationSystemIntegration."""
+
 from typing import Dict
 
 from app.core.logger import get_logger

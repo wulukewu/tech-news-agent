@@ -11,7 +11,9 @@ import pytest
 
 from app.core.exceptions import LLMServiceError
 from app.schemas.article import AIAnalysis, ArticleSchema
-from app.services.llm_service import MAX_RETRIES, RETRY_DELAYS, LLMService
+from app.services.llm_service import MAX_RETRIES, LLMService
+
+RETRY_DELAYS = None  # removed from llm_service
 
 pytestmark = pytest.mark.skip(reason="pre-existing test incompatibility")
 

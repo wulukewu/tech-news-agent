@@ -1,4 +1,5 @@
 """Health check methods for QAAgentController."""
+
 import logging
 from uuid import uuid4
 

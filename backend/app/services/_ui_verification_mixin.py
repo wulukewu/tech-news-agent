@@ -1,4 +1,5 @@
 """Mixin extracted from user_identity.py."""
+
 from __future__ import annotations
 
 import random

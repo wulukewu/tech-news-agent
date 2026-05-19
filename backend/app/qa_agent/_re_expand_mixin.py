@@ -1,4 +1,5 @@
 """Mixin extracted from retrieval_engine.py."""
+
 import logging
 from typing import List, Optional
 from uuid import UUID

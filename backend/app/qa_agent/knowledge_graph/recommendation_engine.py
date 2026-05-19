@@ -2,6 +2,7 @@
 RecommendationEngine - Suggests next nodes to learn based on user progress.
 Requirements: 4.1-4.6
 """
+
 import logging
 from typing import List, Optional
 from uuid import UUID

@@ -1,4 +1,5 @@
 """Notifications API package."""
+
 from fastapi import APIRouter
 
 from app.api.auth import get_current_user as get_current_user  # noqa: F401

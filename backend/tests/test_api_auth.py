@@ -2,6 +2,7 @@
 """
 Test actual API calls with authentication
 """
+
 import asyncio
 import sys
 from uuid import uuid4

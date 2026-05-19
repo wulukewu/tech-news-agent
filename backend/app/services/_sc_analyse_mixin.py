@@ -1,4 +1,5 @@
 """Mixin extracted from smart_conversation.py."""
+
 from __future__ import annotations
 
 from collections import Counter

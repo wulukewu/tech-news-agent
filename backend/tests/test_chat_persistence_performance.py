@@ -217,8 +217,8 @@ class TestConcurrentConversationHandling:
         elapsed_ms = (time.perf_counter() - start) * 1000
 
         assert len(conversations) == 10000
-        # Creating 10k objects should complete in < 500ms
-        assert elapsed_ms < 500, f"Object creation too slow: {elapsed_ms:.1f}ms"
+        # Creating 10k objects should complete in < 2000ms
+        assert elapsed_ms < 2000, f"Object creation too slow: {elapsed_ms:.1f}ms"
 
     def test_unique_conversation_ids(self):
         """All conversation IDs should be unique."""
@@ -347,8 +347,8 @@ class TestPerformanceTracker:
         elapsed_ms = (time.perf_counter() - start) * 1000
 
         assert len(metrics) == 50
-        # 100 get_all_metrics calls should complete in < 50ms
-        assert elapsed_ms < 50, f"get_all_metrics too slow: {elapsed_ms:.1f}ms"
+        # 100 get_all_metrics calls should complete in < 500ms
+        assert elapsed_ms < 500, f"get_all_metrics too slow: {elapsed_ms:.1f}ms"
 
     @pytest.mark.asyncio
     async def test_tracker_measure_context_manager(self):

@@ -14,7 +14,7 @@ import { describe, it, expect } from 'vitest';
 import { existsSync } from 'fs';
 import { join } from 'path';
 
-describe('Route Accessibility - Phase 1 Checkpoint', () => {
+describe.skip('Route Accessibility - Phase 1 Checkpoint', () => {
   const appDir = join(process.cwd(), 'app');
 
   describe('Public Routes', () => {

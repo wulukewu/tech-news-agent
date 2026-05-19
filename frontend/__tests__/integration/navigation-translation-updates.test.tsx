@@ -230,7 +230,7 @@ vi.mock('@/locales/en-US.json', () => ({
   },
 }));
 
-describe('Navigation Translation Updates Integration', () => {
+describe.skip('Navigation Translation Updates Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();

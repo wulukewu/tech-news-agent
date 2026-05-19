@@ -3,6 +3,7 @@ DependencyExtractor - Uses LLM to extract knowledge node dependencies from a dom
 Returns a list of nodes and edges that form the domain's skill tree.
 Requirements: 9.1-9.6, 1.1-1.5
 """
+
 import json
 import logging
 from typing import Any, Dict, List, Optional, Tuple

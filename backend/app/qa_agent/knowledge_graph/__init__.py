@@ -1,4 +1,5 @@
 """Knowledge Graph Agent package."""
+
 from .dependency_extractor import DependencyExtractor
 from .graph_builder import KnowledgeGraphBuilder
 from .graph_database import GraphDatabase

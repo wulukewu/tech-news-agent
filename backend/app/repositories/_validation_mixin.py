@@ -1,4 +1,5 @@
 """Validation mixin for BaseRepository."""
+
 from __future__ import annotations
 
 import logging

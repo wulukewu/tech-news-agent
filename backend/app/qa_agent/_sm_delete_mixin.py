@@ -1,4 +1,5 @@
 """Mixin from app/qa_agent/security_manager.py."""
+
 import logging
 import secrets
 from typing import Dict, List, Optional

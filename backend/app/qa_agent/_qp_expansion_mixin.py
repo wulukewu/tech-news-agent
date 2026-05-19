@@ -1,4 +1,5 @@
 """Mixin extracted from app/qa_agent/query_processor.py."""
+
 import logging
 
 from app.qa_agent.models import ConversationContext

@@ -1,4 +1,5 @@
 """Mixin from app/services/chat_notification_timing_service.py."""
+
 from __future__ import annotations
 
 import logging

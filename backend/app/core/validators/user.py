@@ -1,4 +1,5 @@
 """User entity business rule validator."""
+
 from typing import Any
 
 from app.core.errors import ErrorCode, ValidationError

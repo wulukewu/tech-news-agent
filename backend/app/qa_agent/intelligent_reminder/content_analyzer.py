@@ -2,6 +2,7 @@
 Content Analyzer for the Intelligent Reminder Agent.
 Analyzes article relationships and builds the article graph.
 """
+
 import asyncio
 import json
 import logging
@@ -140,9 +141,9 @@ class ContentAnalyzer:
                 description=description,
                 related_articles=related_articles[:3],  # Limit to top 3
                 reading_time_estimate=reading_time,
-                priority_score=min(related_articles[0]["confidence_score"], 1.0)
-                if related_articles
-                else 0.5,
+                priority_score=(
+                    min(related_articles[0]["confidence_score"], 1.0) if related_articles else 0.5
+                ),
                 action_url=f"/articles/{article_id}",
             )
 

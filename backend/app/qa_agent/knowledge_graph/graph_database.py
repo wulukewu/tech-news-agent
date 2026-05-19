@@ -2,6 +2,7 @@
 GraphDatabase - CRUD layer for knowledge graph tables.
 Handles nodes, edges, domains, and user progress.
 """
+
 import logging
 from typing import Any, Dict, List, Optional
 from uuid import UUID

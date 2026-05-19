@@ -2,6 +2,7 @@
 Timing Engine for the Intelligent Reminder Agent.
 Determines optimal timing for sending reminders based on user behavior patterns.
 """
+
 import logging
 from datetime import datetime, time, timedelta
 from typing import Any, Dict, Optional
@@ -170,12 +171,16 @@ class TimingEngine:
                     enabled=data["enabled"],
                     max_daily_reminders=data["max_daily_reminders"],
                     preferred_channels=data["preferred_channels"],
-                    quiet_hours_start=time.fromisoformat(data["quiet_hours_start"])
-                    if data["quiet_hours_start"]
-                    else None,
-                    quiet_hours_end=time.fromisoformat(data["quiet_hours_end"])
-                    if data["quiet_hours_end"]
-                    else None,
+                    quiet_hours_start=(
+                        time.fromisoformat(data["quiet_hours_start"])
+                        if data["quiet_hours_start"]
+                        else None
+                    ),
+                    quiet_hours_end=(
+                        time.fromisoformat(data["quiet_hours_end"])
+                        if data["quiet_hours_end"]
+                        else None
+                    ),
                     timezone=data["timezone"],
                     reminder_frequency=data["reminder_frequency"],
                     created_at=datetime.fromisoformat(data["created_at"]),

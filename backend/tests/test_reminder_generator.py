@@ -1,4 +1,5 @@
 """測試智能提醒生成器"""
+
 import asyncio
 import sys
 

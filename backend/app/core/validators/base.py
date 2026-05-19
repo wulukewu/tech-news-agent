@@ -1,4 +1,5 @@
 """Base business rule validator with common validation patterns."""
+
 from typing import Any
 
 from app.core.errors import ErrorCode, ValidationError

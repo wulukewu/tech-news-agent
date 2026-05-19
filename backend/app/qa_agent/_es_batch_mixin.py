@@ -1,4 +1,5 @@
 """Mixin from app/qa_agent/embedding_service.py."""
+
 import logging
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import UUID

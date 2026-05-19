@@ -20,7 +20,7 @@ from app.api.auth import create_access_token, get_token_blacklist, logout
 @pytest.fixture(autouse=True)
 def mock_settings():
     """Mock settings for JWT configuration"""
-    with patch("app.api.auth.settings") as mock_settings:
+    with patch("app.api.auth.endpoints.settings") as mock_settings:
         mock_settings.jwt_secret = "test_secret_at_least_32_characters_long_for_testing"
         mock_settings.jwt_algorithm = "HS256"
         mock_settings.jwt_expiration_days = 7

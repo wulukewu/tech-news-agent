@@ -2,6 +2,7 @@
 Intelligent Reminder Generator - 智能提醒生成服務
 分析用戶閱讀習慣，使用 LLM 生成個性化提醒
 """
+
 import logging
 from datetime import datetime, timezone
 from typing import Dict, List, Optional

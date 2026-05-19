@@ -3,6 +3,7 @@ KnowledgeGraphBuilder - Builds and manages domain skill trees.
 Orchestrates DependencyExtractor + GraphDatabase.
 Requirements: 3.1-3.2, 1.1-1.4, 8.5-8.6
 """
+
 import logging
 from typing import Optional
 from uuid import UUID
