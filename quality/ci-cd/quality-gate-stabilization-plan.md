@@ -85,7 +85,7 @@ fi
 
 把前端測試拆成：
 
-- **Gate 套件（阻擋合併）**：穩定 unit（先求穩定，再擴大）
+- **Gate 套件（阻擋合併）**：穩定 unit + 穩定 integration 子集
 - **Extended 套件（非阻擋）**：property、高波動 integration、e2e
 
 建議 `package.json` 新增：
@@ -93,8 +93,8 @@ fi
 ```json
 {
   "scripts": {
-    "test:gate": "vitest run __tests__/unit",
-    "test:extended": "vitest run __tests__/integration __tests__/property"
+    "test:gate": "vitest run __tests__/unit __tests__/integration --exclude **/*.property.test.*",
+    "test:extended": "vitest run __tests__/property"
   }
 }
 ```

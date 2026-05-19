@@ -48,8 +48,8 @@ black app/ tests/
 ```bash
 # Frontend
 cd frontend
-npm run test:gate           # blocking (unit)
-npm run test:extended       # non-blocking (integration + property)
+npm run test:gate           # blocking suite
+npm run test:extended       # non-blocking suite
 
 # Backend
 cd backend
@@ -63,8 +63,8 @@ The CI runs these checks in order:
 1. **Backend Quality** → Black, Ruff, mypy
 2. **Backend Tests (blocking)** → pytest
 3. **Frontend Quality** → Prettier, ESLint, TypeScript
-4. **Frontend Tests (blocking)** → `npm run test:gate` (unit)
-5. **Frontend Extended Tests (non-blocking)** → `npm run test:extended` (integration + property)
+4. **Frontend Tests (blocking)** → `npm run test:gate`
+5. **Frontend Extended Tests (non-blocking)** → `npm run test:extended`
 6. **Quality Gate** → Blocking checks must pass
 
 ## ❌ Common Errors
