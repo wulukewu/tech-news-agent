@@ -47,6 +47,7 @@ backend/lib64/
 # IDEs
 .vscode/
 .idea/
+.antigravitycli/
 *.swp
 *.swo
 

@@ -57,11 +57,24 @@ frontend/
 └── lib/          # API client, hooks, utils
 ```
 
----
+## Running Checks & Development
 
-## Running Checks
+Prefer using the root `Makefile` shortcuts for a smooth development workflow:
+- `make dev`          # Start development environment (hot reloading)
+- `make test`         # Run all unit/integration tests
+- `make check`        # Run code linting and formatting checks
+- `make format`       # Automatically format all files (frontend + backend)
 
+Or run these validation scripts directly:
 ```bash
 ./scripts/ci-fix.sh          # auto-fix formatting/linting
 ./scripts/ci-local-test.sh   # full CI check
 ```
+
+---
+
+## Internationalization (i18n)
+
+The application supports bilingual access (EN/ZH).
+- Translations are managed in `frontend/locales/` via `en-US.json` and `zh-TW.json`.
+- **Strict Sync Rule:** Any modification, addition, or deletion of UI/system texts MUST be synchronized in **both** translation files to ensure all keys remain identical and prevent translation omissions in production.
