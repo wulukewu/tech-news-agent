@@ -23,6 +23,7 @@ import {
 import { useAuth } from '@/lib/hooks/useAuth';
 import { useUser } from '@/contexts/UserContext';
 import { useI18n } from '@/contexts/I18nContext';
+import { getPendingRemindersCount } from '@/lib/api/reminders';
 import type { TranslationKey } from '@/types/i18n';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -66,6 +67,16 @@ export function Navigation() {
   const { t } = useI18n();
   const pathname = usePathname();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [pendingRemindersCount, setPendingRemindersCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    getPendingRemindersCount().then(setPendingRemindersCount);
+    const interval = setInterval(() => {
+      getPendingRemindersCount().then(setPendingRemindersCount);
+    }, 60_000);
+    return () => clearInterval(interval);
+  }, [user]);
 
   // Memoize translated navigation items to prevent re-translation on every render
   // Requirements: 8.6 - Performance optimization with useMemo
@@ -154,6 +165,11 @@ export function Navigation() {
                     <span className="text-sm font-medium whitespace-nowrap hidden xl:inline transition-transform duration-200 group-hover:scale-[1.02]">
                       {item.translatedLabel}
                     </span>
+                    {item.href === '/app/reminders' && pendingRemindersCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                        {pendingRemindersCount > 9 ? '9+' : pendingRemindersCount}
+                      </span>
+                    )}
                     {isActive && (
                       <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-primary-foreground rounded-full animate-in zoom-in-50 duration-300" />
                     )}
@@ -268,6 +284,11 @@ export function Navigation() {
                           aria-hidden="true"
                         />
                         <span className="text-sm font-medium">{item.translatedLabel}</span>
+                        {item.href === '/app/reminders' && pendingRemindersCount > 0 && (
+                          <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                            {pendingRemindersCount > 9 ? '9+' : pendingRemindersCount}
+                          </span>
+                        )}
                       </Link>
                     );
                   })}
