@@ -168,9 +168,17 @@ def setup_scheduler():
         replace_existing=True,
     )
 
+    _scheduler.add_job(
+        memory_cleanup_job,
+        trigger=CronTrigger(minute="0", timezone=scheduler_tz),
+        id="memory_cleanup",
+        name="Periodic Memory Cleanup and Trim",
+        replace_existing=True,
+    )
+
     logger.info(
         f"Scheduler configured: CRON='{cron_expression}', Timezone='{scheduler_tz}', "
-        f"{len(jobs) + 1} jobs registered"
+        f"{len(jobs) + 2} jobs registered"
     )
     return _scheduler
 
@@ -275,3 +283,30 @@ async def get_scheduler_health() -> dict:
         "next_execution_time": next_execution_time,
         "issues": issues,
     }
+
+
+def memory_cleanup_job():
+    """Periodic memory cleanup job to collect garbage and release unallocated virtual memory back to the OS.
+
+    Critical for low memory environments (like Render's 512MB RAM free tier).
+    """
+    import ctypes
+    import gc
+    import logging
+
+    logger = logging.getLogger(__name__)
+    logger.info("Starting memory optimization and GC trim...")
+    try:
+        # 1. Force python garbage collection
+        gc.collect()
+
+        # 2. Force memory release to OS via libc malloc_trim if available (Linux)
+        try:
+            libc = ctypes.CDLL("libc.so.6")
+            libc.malloc_trim(0)
+            logger.info("Successfully trimmed glibc memory arena back to the OS.")
+        except Exception as trim_err:
+            logger.warning(f"Could not trim memory using libc: {trim_err}")
+
+    except Exception as e:
+        logger.error(f"Error during memory cleanup: {e}", exc_info=True)

@@ -520,3 +520,9 @@ async def background_fetch_job():
         logger.info(
             "Background fetch job execution completed. Scheduler will continue to next scheduled execution."
         )
+        try:
+            from app.tasks.scheduler import memory_cleanup_job
+
+            memory_cleanup_job()
+        except Exception as cleanup_err:
+            logger.warning(f"Failed to run memory cleanup: {cleanup_err}")
