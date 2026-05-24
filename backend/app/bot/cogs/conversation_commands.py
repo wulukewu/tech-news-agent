@@ -187,7 +187,7 @@ class ConversationCommands(commands.Cog):
 
             if not conversations:
                 await interaction.followup.send(
-                    "📭 你還沒有任何對話記錄。\n" "💡 開始一個新對話，它將自動被記錄下來！",
+                    "📭 你還沒有任何對話記錄。\n💡 開始一個新對話，它將自動被記錄下來！",
                     ephemeral=True,
                 )
                 return
@@ -474,7 +474,7 @@ class ConversationCommands(commands.Cog):
             # Validate code format: must be exactly 6 digits
             if not code.isdigit() or len(code) != 6:
                 await interaction.followup.send(
-                    "❌ 驗證碼格式錯誤。\n" "💡 驗證碼應為 6 位數字，請從 Web 界面取得。",
+                    "❌ 驗證碼格式錯誤。\n💡 驗證碼應為 6 位數字，請從 Web 界面取得。",
                     ephemeral=True,
                 )
                 return

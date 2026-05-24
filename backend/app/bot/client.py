@@ -69,6 +69,94 @@ class TechNewsBot(commands.Bot):
         except Exception as e:
             logger.error(f"Failed to register persistent views: {e}", exc_info=True)
 
+    async def on_interaction(self, interaction: discord.Interaction):
+        """Intercept component interactions to route them to persistent handlers if the bot restarted."""
+        if interaction.type == discord.InteractionType.component:
+            custom_id = interaction.data.get("custom_id", "")
+            if custom_id:
+                # Check if there is an active view handling this interaction
+                view_store = self._connection._view_store
+                message_id = interaction.message.id if interaction.message else None
+
+                # If the message has an active view in memory, let discord.py handle it
+                if message_id and message_id in view_store._views:
+                    await super().on_interaction(interaction)
+                    return
+
+                # If the exact custom_id is registered as a persistent view, let discord.py handle it
+                if custom_id in view_store._synced_views:
+                    await super().on_interaction(interaction)
+                    return
+
+                # Route matching prefixes to persistent callbacks
+                if custom_id.startswith("read_later_") and not custom_id.endswith("persistent"):
+                    try:
+                        from app.bot.cogs.persistent_views import PersistentReadLaterButton
+
+                        btn = PersistentReadLaterButton()
+                        await btn.callback(interaction)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in intercepted PersistentReadLaterButton: {e}", exc_info=True
+                        )
+
+                elif custom_id.startswith("mark_read_") and not custom_id.endswith("persistent"):
+                    try:
+                        from app.bot.cogs.persistent_views import PersistentMarkReadButton
+
+                        btn = PersistentMarkReadButton()
+                        await btn.callback(interaction)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in intercepted PersistentMarkReadButton: {e}", exc_info=True
+                        )
+
+                elif (
+                    custom_id.startswith("rate_")
+                    and not custom_id.startswith("rate_persistent")
+                    and not custom_id.startswith("digest_rate_")
+                ):
+                    try:
+                        from app.bot.cogs.persistent_views import PersistentRatingSelect
+
+                        select = PersistentRatingSelect()
+                        select.values = interaction.data.get("values", [])
+                        await select.callback(interaction)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in intercepted PersistentRatingSelect: {e}", exc_info=True
+                        )
+
+                elif custom_id.startswith("deep_dive_") and not custom_id.endswith("persistent"):
+                    try:
+                        from app.bot.cogs.persistent_views import PersistentDeepDiveButton
+
+                        btn = PersistentDeepDiveButton()
+                        await btn.callback(interaction)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in intercepted PersistentDeepDiveButton: {e}", exc_info=True
+                        )
+
+                elif custom_id.startswith("digest_rate_") and not custom_id.endswith("persistent"):
+                    try:
+                        from app.bot.cogs.persistent_views import PersistentDigestRatingSelect
+
+                        select = PersistentDigestRatingSelect()
+                        select.values = interaction.data.get("values", [])
+                        await select.callback(interaction)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in intercepted PersistentDigestRatingSelect: {e}", exc_info=True
+                        )
+
+        await super().on_interaction(interaction)
+
     async def on_ready(self):
         logger.info(f"Logged in as {self.user} (ID: {self.user.id})")
         # Sync the command tree to Discord (makes slash commands visible)

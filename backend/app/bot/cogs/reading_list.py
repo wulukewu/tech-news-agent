@@ -95,7 +95,7 @@ class MarkAsReadButton(discord.ui.Button):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 發生未預期的錯誤，請稍後再試。\n" "💡 建議：如果問題持續發生，請聯繫管理員。",
+                "❌ 發生未預期的錯誤，請稍後再試。\n💡 建議：如果問題持續發生，請聯繫管理員。",
                 ephemeral=True,
             )
 
@@ -171,7 +171,7 @@ class RatingSelect(discord.ui.Select):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 評分時發生錯誤，請稍後再試。\n" "💡 建議：資料庫連線可能暫時中斷，請稍後再試。",
+                "❌ 評分時發生錯誤，請稍後再試。\n💡 建議：資料庫連線可能暫時中斷，請稍後再試。",
                 ephemeral=True,
             )
         except Exception as e:
@@ -186,7 +186,7 @@ class RatingSelect(discord.ui.Select):
                 exc_info=True,
             )
             await interaction.followup.send(
-                "❌ 發生未預期的錯誤，請稍後再試。\n" "💡 建議：如果問題持續發生，請聯繫管理員。",
+                "❌ 發生未預期的錯誤，請稍後再試。\n💡 建議：如果問題持續發生，請聯繫管理員。",
                 ephemeral=True,
             )
 

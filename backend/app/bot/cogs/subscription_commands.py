@@ -124,7 +124,7 @@ class SubscriptionCommands(commands.Cog):
 
             # 6. Send confirmation message
             await interaction.followup.send(
-                f"✅ 已成功訂閱 **{sanitized_name}** ({sanitized_category})\n" f"🔗 {validated_url}",
+                f"✅ 已成功訂閱 **{sanitized_name}** ({sanitized_category})\n🔗 {validated_url}",
                 ephemeral=True,
             )
 
@@ -137,7 +137,7 @@ class SubscriptionCommands(commands.Cog):
                 feed_url=url,
             )
             await interaction.followup.send(
-                f"❌ URL 格式無效：{e}\n" f"💡 建議：請確保 URL 以 http:// 或 https:// 開頭。",
+                f"❌ URL 格式無效：{e}\n💡 建議：請確保 URL 以 http:// 或 https:// 開頭。",
                 ephemeral=True,
             )
 
@@ -210,7 +210,7 @@ class SubscriptionCommands(commands.Cog):
             if not subscriptions:
                 logger.info("User has no subscriptions", user_id=str(interaction.user.id))
                 await interaction.followup.send(
-                    "📭 你還沒有訂閱任何 RSS 來源！\n" "使用 `/add_feed` 來訂閱感興趣的來源。",
+                    "📭 你還沒有訂閱任何 RSS 來源！\n使用 `/add_feed` 來訂閱感興趣的來源。",
                     ephemeral=True,
                 )
                 return

@@ -323,7 +323,7 @@ class NewsCommands(commands.Cog):
 
             if not subscriptions:
                 logger.info("User has no subscriptions", user_id=str(interaction.user.id))
-                await interaction.followup.send("📭 你還沒有訂閱任何 RSS 來源！\n" "使用 `/add_feed` 來訂閱感興趣的來源。")
+                await interaction.followup.send("📭 你還沒有訂閱任何 RSS 來源！\n使用 `/add_feed` 來訂閱感興趣的來源。")
                 return
 
             # 3. Query articles from subscribed feeds via service layer
@@ -337,7 +337,7 @@ class NewsCommands(commands.Cog):
                     user_id=str(interaction.user.id),
                     subscription_count=len(subscriptions),
                 )
-                await interaction.followup.send("📭 最近 7 天沒有新文章。\n" "背景排程器會定期抓取文章，請稍後再試。")
+                await interaction.followup.send("📭 最近 7 天沒有新文章。\n背景排程器會定期抓取文章，請稍後再試。")
                 return
 
             # 4. Enrich articles with feed names from subscriptions

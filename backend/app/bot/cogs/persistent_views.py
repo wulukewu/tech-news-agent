@@ -38,6 +38,8 @@ def parse_article_id_from_custom_id(custom_id: str, prefix: str) -> UUID:
         raise ValueError(f"Invalid custom_id format: expected prefix '{prefix}', got '{custom_id}'")
 
     article_id_str = custom_id[len(prefix) :]
+    if "_" in article_id_str:
+        article_id_str = article_id_str.split("_")[0]
     return UUID(article_id_str)
 
 
@@ -142,7 +144,7 @@ class PersistentReadLaterButton(discord.ui.Button):
             except discord.HTTPException as e:
                 # Other Discord API errors (rate limit, permissions, etc.)
                 logger.warning(
-                    f"Failed to edit message: {e} | " f"User: {discord_id} | Article: {article_id}"
+                    f"Failed to edit message: {e} | User: {discord_id} | Article: {article_id}"
                 )
 
             # Send confirmation
@@ -240,7 +242,7 @@ class PersistentMarkReadButton(discord.ui.Button):
                 )
             except discord.HTTPException as e:
                 logger.warning(
-                    f"Failed to edit message: {e} | " f"User: {discord_id} | Article: {article_id}"
+                    f"Failed to edit message: {e} | User: {discord_id} | Article: {article_id}"
                 )
 
             # Send confirmation
