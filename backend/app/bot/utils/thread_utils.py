@@ -13,14 +13,19 @@ def sanitize_thread_name(name: str, fallback: str = "tech-news-discussion") -> s
 async def ensure_discussion_thread(
     interaction: discord.Interaction,
     thread_name: str,
-) -> tuple[discord.Thread, bool]:
+) -> tuple[discord.Thread | discord.abc.Messageable, bool]:
     """Return current thread or create one from the current channel."""
     if isinstance(interaction.channel, discord.Thread):
         return interaction.channel, False
 
     channel = interaction.channel
-    if channel is None or not hasattr(channel, "create_thread"):
-        raise RuntimeError("Current channel does not support thread creation")
+    # If the channel is a DM or doesn't support threads, return the channel directly
+    if (
+        channel is None
+        or isinstance(channel, discord.DMChannel)
+        or not hasattr(channel, "create_thread")
+    ):
+        return channel, False
 
     cleaned_name = sanitize_thread_name(thread_name)
 
