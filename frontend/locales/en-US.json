@@ -1401,6 +1401,8 @@
     "delete-domain-title": "Delete \"{{name}}\"?",
     "delete-domain-desc": "This will permanently delete the domain and all its nodes. This action cannot be undone.",
     "delete-btn": "Delete",
-    "cancel-btn": "Cancel"
+    "cancel-btn": "Cancel",
+    "lock-interaction": "Lock Graph (Allow Page Scroll)",
+    "unlock-interaction": "Unlock Graph (Enable Zoom/Pan)"
   }
 }

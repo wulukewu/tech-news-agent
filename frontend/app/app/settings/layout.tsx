@@ -26,8 +26,14 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
 
   return (
     <div className="space-y-6">
-      <div className="border-b animate-in fade-in-50 slide-in-from-top-2 duration-500">
-        <nav className="flex space-x-8 overflow-x-auto" aria-label="Settings tabs">
+      <div className="border-b relative animate-in fade-in-50 slide-in-from-top-2 duration-500">
+        {/* Right fade-out indicator for horizontal scroll on mobile */}
+        <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none z-10 md:hidden" />
+
+        <nav
+          className="flex space-x-8 overflow-x-auto scrollbar-none pb-px"
+          aria-label="Settings tabs"
+        >
           {settingsNav.map((item, index) => {
             const Icon = item.icon;
             const isActive =

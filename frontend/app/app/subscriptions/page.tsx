@@ -44,18 +44,19 @@ export default function SubscriptionsPage() {
   const [toggling, setToggling] = useState<Set<string>>(new Set());
   const [batchLoading, setBatchLoading] = useState<string | null>(null); // label of current batch op
   const [currentTab, setCurrentTab] = useState<'subscriptions' | 'explore'>('subscriptions');
-  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(() => {
-    // Load collapsed state from localStorage
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('subscriptions-collapsed-categories');
-        return saved ? new Set(JSON.parse(saved)) : new Set();
-      } catch {
-        return new Set();
+  const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    // Load collapsed state from localStorage on client mount
+    try {
+      const saved = localStorage.getItem('subscriptions-collapsed-categories');
+      if (saved) {
+        setCollapsedCategories(new Set(JSON.parse(saved)));
       }
+    } catch {
+      // ignore
     }
-    return new Set();
-  });
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {

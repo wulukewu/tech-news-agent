@@ -246,8 +246,8 @@ export function Navigation() {
                   {/* Close button in drawer header */}
                   <Button
                     variant="ghost"
-                    size="sm"
-                    className="touch-target cursor-pointer transition-all duration-300 hover:scale-[1.05] active:scale-95"
+                    size="icon"
+                    className="h-11 w-11 cursor-pointer transition-all duration-300 hover:scale-[1.05] active:scale-95 flex items-center justify-center"
                     onClick={closeDrawer}
                     aria-label="Close navigation menu"
                   >

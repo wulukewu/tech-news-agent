@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
+import { Lock, Unlock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useI18n } from '@/contexts/I18nContext';
 import type { KnowledgeNode, GraphEdge } from '@/lib/api/knowledge-graph';
 
 interface GraphVisualizationProps {
@@ -40,6 +43,14 @@ export function GraphVisualization({
   const svgRef = useRef<SVGSVGElement>(null);
   const minimapRef = useRef<SVGSVGElement>(null);
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  const { t } = useI18n();
+  const [isInteractive, setIsInteractive] = useState(true);
+
+  useEffect(() => {
+    // Default to scroll-locked (non-interactive) on mobile/tablet touch screens
+    const isTouch = window.matchMedia('(max-width: 1024px)').matches;
+    setIsInteractive(!isTouch);
+  }, []);
 
   const [minimapReady, setMinimapReady] = useState(false);
   const simNodesRef = useRef<(KnowledgeNode & d3.SimulationNodeDatum)[]>([]);
@@ -152,8 +163,15 @@ export function GraphVisualization({
         g.attr('transform', event.transform);
         syncMinimap(event.transform);
       });
-    svg.call(zoom);
     zoomRef.current = zoom;
+
+    if (isInteractive) {
+      svg.call(zoom);
+      svg.style('cursor', 'grab');
+    } else {
+      svg.on('.zoom', null);
+      svg.style('cursor', 'default');
+    }
 
     svg
       .append('defs')
@@ -479,8 +497,42 @@ export function GraphVisualization({
       );
   }, [highlightNodeId]);
 
+  useEffect(() => {
+    if (!svgRef.current || !zoomRef.current) return;
+    const svg = d3.select(svgRef.current);
+    if (isInteractive) {
+      svg.call(zoomRef.current);
+      svg.style('cursor', 'grab');
+    } else {
+      svg.on('.zoom', null);
+      svg.style('cursor', 'default');
+    }
+  }, [isInteractive]);
+
   return (
     <div className="relative w-full h-full">
+      {/* Scroll lock toggle button for mobile/tablet */}
+      <div className="absolute top-4 left-4 z-10">
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => setIsInteractive(!isInteractive)}
+          className="shadow-md bg-background/90 backdrop-blur font-medium gap-1.5 min-h-[44px] min-w-[44px] sm:min-h-[36px] sm:min-w-0"
+        >
+          {isInteractive ? (
+            <>
+              <Lock className="h-4 w-4 text-primary animate-pulse" />
+              <span className="text-xs">{t('knowledge-graph.lock-interaction')}</span>
+            </>
+          ) : (
+            <>
+              <Unlock className="h-4 w-4 text-muted-foreground" />
+              <span className="text-xs">{t('knowledge-graph.unlock-interaction')}</span>
+            </>
+          )}
+        </Button>
+      </div>
+
       <svg
         ref={svgRef}
         className="w-full h-full"

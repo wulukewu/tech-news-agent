@@ -17,7 +17,7 @@ const mockArticles = [
     title: 'Next.js 15 Released with Revolutionary App Router Improvements',
     category: 'Frontend',
     tinkering_index: 4.2,
-    published_at: '2024-04-29T10:00:00Z',
+    displayDate: '2024/4/29',
     ai_summary: 'Major performance improvements and new caching strategies...',
   },
   {
@@ -25,7 +25,7 @@ const mockArticles = [
     title: 'OpenAI Announces GPT-5 with Multimodal Capabilities',
     category: 'AI/ML',
     tinkering_index: 4.8,
-    published_at: '2024-04-29T08:30:00Z',
+    displayDate: '2024/4/29',
     ai_summary: 'Breakthrough in reasoning and code generation...',
   },
 ];
@@ -126,7 +126,7 @@ export default function ModernLandingPage() {
                       <h4 className="font-semibold leading-tight">{article.title}</h4>
                       <p className="text-sm text-muted-foreground">{article.ai_summary}</p>
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{new Date(article.published_at).toLocaleDateString()}</span>
+                        <span>{article.displayDate}</span>
                         <span>AI Generated Summary</span>
                       </div>
                     </div>

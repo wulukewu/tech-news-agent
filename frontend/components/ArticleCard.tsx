@@ -117,7 +117,7 @@ export function ArticleCard({
       <article>
         <Card
           className={cn(
-            'group hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.02] hover:-translate-y-1',
+            'group transition-all duration-300 cursor-pointer overflow-hidden active-tap hover-pointer-fine',
             isRead && 'opacity-60 border-l-4 border-l-green-500'
           )}
         >
@@ -264,7 +264,7 @@ export function ArticleCard({
     <article>
       <Card
         className={cn(
-          'group hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden hover:scale-[1.01]',
+          'group transition-all duration-300 cursor-pointer overflow-hidden active-tap hover-pointer-fine',
           isRead && 'opacity-60 border-l-4 border-l-green-500'
         )}
       >
