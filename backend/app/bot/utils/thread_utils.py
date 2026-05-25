@@ -25,6 +25,11 @@ async def ensure_discussion_thread(
         or isinstance(channel, discord.DMChannel)
         or not hasattr(channel, "create_thread")
     ):
+        if channel is None:
+            try:
+                channel = await interaction.user.create_dm()
+            except Exception:
+                channel = interaction.user
         return channel, False
 
     cleaned_name = sanitize_thread_name(thread_name)

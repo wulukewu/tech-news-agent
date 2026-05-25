@@ -445,15 +445,19 @@ class PersistentDeepDiveButton(discord.ui.Button):
             from app.schemas.article import ArticleSchema
 
             article = ArticleSchema(
-                id=UUID(article_data["id"]),
+                id=UUID(article_data["id"]) if article_data.get("id") else None,
                 title=article_data["title"],
                 url=article_data["url"],
-                category=article_data.get("category", "Unknown"),
+                category=article_data.get("category") or "Unknown",
                 tinkering_index=article_data.get("tinkering_index"),
                 ai_summary=article_data.get("ai_summary"),
-                published_at=datetime.fromisoformat(article_data["published_at"]),
-                feed_id=UUID(article_data["feed_id"]),
-                feed_name=article_data.get("feed_name", ""),
+                published_at=(
+                    datetime.fromisoformat(article_data["published_at"].replace("Z", "+00:00"))
+                    if article_data.get("published_at")
+                    else None
+                ),
+                feed_id=UUID(article_data["feed_id"]) if article_data.get("feed_id") else None,
+                feed_name=article_data.get("feed_name") or "",
             )
 
             thread, created = await ensure_discussion_thread(
