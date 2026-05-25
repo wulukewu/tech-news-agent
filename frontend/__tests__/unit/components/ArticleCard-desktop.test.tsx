@@ -139,7 +139,7 @@ describe('ArticleCard - Desktop Horizontal Layout', () => {
       });
 
       const article = screen.getByRole('article');
-      const card = article.querySelector('.hover\\:-translate-y-1');
+      const card = article.querySelector('.hover-pointer-fine');
       expect(card).toBeInTheDocument();
     });
 
