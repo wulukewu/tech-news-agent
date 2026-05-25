@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshButton } from '@/components/ui/refresh-button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { RefreshCw, BookMarked, Rss, BarChart3, TrendingUp, Calendar, Target } from 'lucide-react';
+import { BookMarked, Rss, BarChart3, TrendingUp, Calendar, Target } from 'lucide-react';
 import { apiClient } from '@/lib/api/client';
 import { useI18n } from '@/contexts/I18nContext';
+import { AnimatedCounter } from '@/components/ui/animated-counter';
 
 interface UserStats {
   reading_list_count: number;
@@ -44,7 +45,7 @@ export default function AnalyticsSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between animate-in fade-in slide-in-from-top-4 duration-500">
+      <div className="flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
         <div>
           <h1 className="text-2xl font-bold">{t('pages.analytics.title')}</h1>
           <p className="text-muted-foreground text-sm">{t('pages.analytics.description')}</p>
@@ -59,8 +60,8 @@ export default function AnalyticsSettingsPage() {
           {[...Array(4)].map((_, i) => (
             <Card
               key={i}
-              className="animate-in fade-in duration-500"
-              style={{ animationDelay: `${i * 100}ms` }}
+              className="animate-in fade-in duration-300"
+              style={{ animationDelay: `${i * 50}ms` }}
             >
               <CardContent className="pt-6">
                 <Skeleton className="h-16 w-full" />
@@ -78,45 +79,49 @@ export default function AnalyticsSettingsPage() {
                 value: stats?.subscriptions_count || 0,
                 desc: t('pages.analytics.rss-sources'),
                 icon: Rss,
+                suffix: '',
               },
               {
                 title: t('pages.analytics.reading-list'),
                 value: stats?.reading_list_count || 0,
                 desc: t('pages.analytics.saved-articles'),
                 icon: BookMarked,
+                suffix: '',
               },
               {
                 title: t('pages.analytics.articles-read'),
                 value: stats?.articles_read_count || 0,
                 desc: t('pages.analytics.completed-reading'),
                 icon: BarChart3,
+                suffix: '',
               },
               {
                 title: t('pages.analytics.reading-completion-rate'),
-                value: `${readingRate}%`,
+                value: readingRate,
                 desc: t('pages.analytics.articles-progress', {
                   total: stats?.reading_list_count || 0,
                   read: stats?.articles_read_count || 0,
                 }),
                 icon: TrendingUp,
+                suffix: '%',
               },
             ].map((metric, index) => {
               const Icon = metric.icon;
               return (
                 <Card
                   key={index}
-                  className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-md hover:-translate-y-1 transition-all group"
-                  style={{ animationDelay: `${300 + index * 150}ms` }}
+                  className="animate-in fade-in slide-in-from-bottom-2 duration-300 hover-spring active-tap"
+                  style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-sm font-medium">{metric.title}</CardTitle>
-                    <div className="p-1 rounded-lg bg-primary/10 text-primary group-hover:scale-[1.05] transition-transform duration-200">
-                      <Icon className="h-4 w-4 animate-pulse" />
+                    <div className="p-1 rounded-lg bg-primary/10 text-primary transition-transform duration-200 group-hover:scale-[1.1]">
+                      <Icon className="h-4 w-4 animate-pulse [animation-duration:3s]" />
                     </div>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold transition-colors duration-200 group-hover:text-primary">
-                      {metric.value}
+                      <AnimatedCounter value={metric.value} suffix={metric.suffix} />
                     </div>
                     <p className="text-xs text-muted-foreground">{metric.desc}</p>
                   </CardContent>
@@ -127,10 +132,10 @@ export default function AnalyticsSettingsPage() {
 
           {/* Reading Insights */}
           <div className="grid gap-4 md:grid-cols-2">
-            <Card className="animate-in fade-in slide-in-from-left-4 duration-500 delay-700 hover:shadow-md transition-all">
+            <Card className="animate-in fade-in slide-in-from-bottom-2 duration-300 delay-75 hover-spring active-tap">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-800 hover:scale-[1.05] transition-transform">
+                  <div className="p-1 rounded-lg bg-primary/10 text-primary transition-transform duration-200 group-hover:scale-[1.1]">
                     <Target className="h-5 w-5" />
                   </div>
                   {t('pages.analytics.reading-goals')}
@@ -138,20 +143,22 @@ export default function AnalyticsSettingsPage() {
                 <CardDescription>{t('pages.analytics.reading-habits-analysis')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2 animate-in slide-in-from-bottom-2 duration-500 delay-900">
+                <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span>{t('pages.analytics.reading-progress')}</span>
-                    <span className="font-medium">{readingRate}%</span>
+                    <span className="font-medium">
+                      <AnimatedCounter value={readingRate} suffix="%" />
+                    </span>
                   </div>
                   <div className="w-full bg-secondary rounded-full h-2 overflow-hidden">
                     <div
-                      className="bg-primary h-2 rounded-full transition-all duration-1000 animate-in slide-in-from-left-full"
-                      style={{ width: `${Math.min(readingRate, 100)}%`, animationDelay: '1000ms' }}
+                      className="bg-primary h-2 rounded-full transition-all duration-1000 ease-out"
+                      style={{ width: `${Math.min(readingRate, 100)}%` }}
                     />
                   </div>
                 </div>
 
-                <div className="text-sm text-muted-foreground animate-in fade-in duration-500 delay-1100">
+                <div className="text-sm text-muted-foreground">
                   {readingRate >= 80 ? (
                     <p>{t('pages.analytics.excellent-completion')}</p>
                   ) : readingRate >= 50 ? (
@@ -165,10 +172,10 @@ export default function AnalyticsSettingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="animate-in fade-in slide-in-from-right-4 duration-500 delay-800 hover:shadow-md transition-all">
+            <Card className="animate-in fade-in slide-in-from-bottom-2 duration-300 delay-100 hover-spring active-tap">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <div className="p-1 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-900 hover:scale-[1.05] transition-transform">
+                  <div className="p-1 rounded-lg bg-primary/10 text-primary transition-transform duration-200 group-hover:scale-[1.1]">
                     <Calendar className="h-5 w-5" />
                   </div>
                   {t('pages.analytics.activity-summary')}
@@ -180,29 +187,30 @@ export default function AnalyticsSettingsPage() {
                   {[
                     {
                       label: t('pages.analytics.subscription-sources'),
-                      value: `${stats?.subscriptions_count || 0} ${t('pages.analytics.sources-unit')}`,
+                      value: stats?.subscriptions_count || 0,
+                      suffix: ` ${t('pages.analytics.sources-unit')}`,
                     },
                     {
                       label: t('pages.analytics.saved-articles-count'),
-                      value: `${stats?.reading_list_count || 0} ${t('pages.analytics.articles-unit')}`,
+                      value: stats?.reading_list_count || 0,
+                      suffix: ` ${t('pages.analytics.articles-unit')}`,
                     },
                     {
                       label: t('pages.analytics.completed-reading-count'),
-                      value: `${stats?.articles_read_count || 0} ${t('pages.analytics.articles-unit')}`,
+                      value: stats?.articles_read_count || 0,
+                      suffix: ` ${t('pages.analytics.articles-unit')}`,
                     },
                   ].map((item, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between animate-in slide-in-from-right-2 duration-300"
-                      style={{ animationDelay: `${1000 + index * 100}ms` }}
-                    >
+                    <div key={index} className="flex items-center justify-between">
                       <span className="text-sm">{item.label}</span>
-                      <span className="font-medium">{item.value}</span>
+                      <span className="font-medium">
+                        <AnimatedCounter value={item.value} suffix={item.suffix} />
+                      </span>
                     </div>
                   ))}
                 </div>
 
-                <div className="pt-2 border-t animate-in fade-in duration-500 delay-1300">
+                <div className="pt-2 border-t">
                   <p className="text-xs text-muted-foreground">
                     {t('pages.analytics.average-per-source', {
                       count: stats?.subscriptions_count
@@ -216,7 +224,7 @@ export default function AnalyticsSettingsPage() {
           </div>
 
           {/* Future Features */}
-          <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 delay-1000 hover:shadow-md transition-all">
+          <Card className="animate-in fade-in slide-in-from-bottom-2 duration-300 delay-150 hover-spring active-tap">
             <CardHeader>
               <CardTitle>{t('pages.analytics.advanced-features')}</CardTitle>
               <CardDescription>{t('pages.analytics.coming-soon-features')}</CardDescription>
@@ -233,8 +241,7 @@ export default function AnalyticsSettingsPage() {
                 ].map((feature, index) => (
                   <div
                     key={index}
-                    className="animate-in slide-in-from-left-2 duration-300 hover:text-foreground transition-colors cursor-default"
-                    style={{ animationDelay: `${1200 + index * 100}ms` }}
+                    className="hover:text-foreground transition-colors cursor-default"
                   >
                     • {feature}
                   </div>

@@ -480,3 +480,18 @@
   transform: scale(0.97) translateY(0) !important;
   box-shadow: none !important;
 }
+
+/* Premium Physical Spring transitions (Cubic-Bezier Easing) */
+.transition-spring {
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.1) !important;
+}
+
+@media (hover: hover) {
+  .hover-spring {
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+  }
+  .hover-spring:hover {
+    transform: translateY(-4px) scale(1.01) !important;
+    box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.15) !important;
+  }
+}

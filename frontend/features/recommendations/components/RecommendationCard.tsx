@@ -61,14 +61,14 @@ export function RecommendationCard({
 
   return (
     <Card
-      className="group relative hover:shadow-md transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:-translate-y-1"
+      className="group relative hover-spring active-tap cursor-pointer border-muted"
       onClick={handleClick}
     >
       {/* Dismiss button */}
       <Button
         variant="ghost"
         size="icon"
-        className="absolute top-2 right-2 h-8 w-8 rounded-full hover:bg-destructive/10 transition-all duration-300 hover:scale-[1.05] opacity-0 group-hover:opacity-100"
+        className="absolute top-2 right-2 h-8 w-8 rounded-full hover:bg-destructive/10 transition-all duration-300 hover:scale-[1.1] active-tap opacity-0 group-hover:opacity-100"
         onClick={handleDismiss}
         aria-label="忽略推薦"
       >
@@ -86,7 +86,7 @@ export function RecommendationCard({
               <span className="text-muted-foreground">•</span>
               <Badge
                 variant="secondary"
-                className="text-xs transition-all duration-300 hover:scale-[1.02]"
+                className="text-xs transition-all duration-300 hover:scale-[1.05]"
               >
                 {article.category}
               </Badge>
@@ -158,10 +158,10 @@ export function RecommendationCard({
             variant="outline"
             size="sm"
             onClick={handleOpenArticle}
-            className="gap-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-md"
+            className="gap-2 transition-all duration-300 hover:scale-[1.05] active-tap hover:shadow-sm"
           >
             閱讀文章
-            <ExternalLink className="h-3 w-3 transition-transform duration-300 hover:scale-[1.05]" />
+            <ExternalLink className="h-3 w-3 transition-transform duration-300 hover:scale-[1.1]" />
           </Button>
         </div>
       </CardContent>

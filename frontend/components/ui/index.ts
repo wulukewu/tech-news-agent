@@ -25,6 +25,7 @@ export * from './slider';
 export * from './sonner';
 export * from './switch';
 export * from './tooltip';
+export * from './animated-counter';
 
 // Enhanced Components (Task 12.1 - Advanced Filter Components)
 export * from './multi-select-filter';
