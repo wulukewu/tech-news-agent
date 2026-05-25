@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -68,6 +69,11 @@ export function Navigation() {
   const pathname = usePathname();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [pendingRemindersCount, setPendingRemindersCount] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -208,159 +214,164 @@ export function Navigation() {
       </nav>
 
       {/* Mobile drawer navigation (Req 23.2, 23.3, 23.4) */}
-      {isDrawerOpen && (
-        <div className="fixed inset-0 z-[100] md:hidden">
-          {/* Backdrop overlay (Req 23.3, 23.4) */}
-          <div
-            className="absolute inset-0 bg-black/50 animate-in fade-in-0 duration-300"
-            onClick={closeDrawer}
-            aria-hidden="true"
-          />
+      {isDrawerOpen &&
+        mounted &&
+        createPortal(
+          <div className="fixed inset-0 z-[100] md:hidden">
+            {/* Backdrop overlay (Req 23.3, 23.4) */}
+            <div
+              className="absolute inset-0 bg-black/50 animate-in fade-in-0 duration-300"
+              onClick={closeDrawer}
+              aria-hidden="true"
+            />
 
-          {/* Drawer panel - slides in from left (Req 23.2) */}
-          <nav
-            className="absolute left-0 top-0 bottom-0 w-[280px] sm:w-72 bg-background border-r shadow-xl animate-in slide-in-from-left-full duration-300 ease-out flex flex-col"
-            aria-label="Mobile navigation"
-          >
-            {/* User profile section at top (Req 23.7) */}
-            {user && (
-              <div className="flex items-center gap-3 p-4 border-b flex-shrink-0">
-                <Avatar className="h-10 w-10">
-                  {user.avatar && <AvatarImage src={user.avatar} alt={user.username || 'User'} />}
-                  <AvatarFallback>{user.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{user.username}</p>
-                  {user.email && (
-                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                  )}
-                </div>
-                {/* Close button in drawer header */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="touch-target cursor-pointer transition-all duration-300 hover:scale-[1.05] active:scale-95"
-                  onClick={closeDrawer}
-                  aria-label="Close navigation menu"
-                >
-                  <X className="h-5 w-5 transition-transform duration-300 hover:rotate-90" />
-                </Button>
-              </div>
-            )}
-
-            {/* Navigation items with full-width touch targets (Req 3.7, 23.6) */}
-            <div className="flex-1 py-2 overflow-y-auto">
-              {/* Main navigation section */}
-              <div className="px-2 py-2">
-                <p className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider animate-in fade-in-50 slide-in-from-left-2 duration-500">
-                  {t('nav.main-menu')}
-                </p>
-                <div className="space-y-1">
-                  {translatedMainNavItems.map((item, index) => {
-                    const Icon = item.icon;
-                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className={cn(
-                          'group flex items-center gap-3 px-3 py-3 min-h-[48px] w-full cursor-pointer transition-all duration-200 rounded-lg relative',
-                          'hover:bg-accent hover:text-accent-foreground hover:scale-[1.02] hover:shadow-sm',
-                          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                          'animate-in slide-in-from-left-4 fade-in-0',
-                          isActive
-                            ? 'bg-primary text-primary-foreground shadow-lg font-semibold border-l-4 border-l-primary-foreground/30'
-                            : 'hover:bg-muted/50'
-                        )}
-                        style={{
-                          animationDelay: `${index * 50}ms`,
-                          animationDuration: '400ms',
-                        }}
-                        onClick={closeDrawer}
-                        aria-current={isActive ? 'page' : undefined}
-                      >
-                        <Icon
-                          className="h-5 w-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-[1.05]"
-                          aria-hidden="true"
-                        />
-                        <span className="text-sm font-medium">{item.translatedLabel}</span>
-                        {item.href === '/app/reminders' && pendingRemindersCount > 0 && (
-                          <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
-                            {pendingRemindersCount > 9 ? '9+' : pendingRemindersCount}
-                          </span>
-                        )}
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div className="my-2 border-t" />
-
-              {/* Secondary navigation section */}
-              <div className="px-2 py-2">
-                <p className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                  {t('nav.more')}
-                </p>
-                <div className="space-y-1">
-                  {translatedSecondaryNavItems.map((item) => {
-                    const Icon = item.icon;
-                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className={cn(
-                          'flex items-center gap-3 px-3 py-3 min-h-[48px] w-full cursor-pointer transition-all duration-200 rounded-lg relative',
-                          'hover:bg-accent hover:text-accent-foreground',
-                          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                          isActive
-                            ? 'bg-primary text-primary-foreground shadow-lg font-semibold border-l-4 border-l-primary-foreground/30'
-                            : 'hover:bg-muted/50'
-                        )}
-                        onClick={closeDrawer}
-                        aria-current={isActive ? 'page' : undefined}
-                      >
-                        <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
-                        <span className="text-sm font-medium">{item.translatedLabel}</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom section with language switcher, theme toggle and logout */}
-            <div className="flex-shrink-0 p-4 border-t bg-background space-y-3">
-              <div className="flex flex-col gap-3">
-                <div className="flex items-center justify-between px-2">
-                  <span className="text-sm font-medium">{t('nav.language')}</span>
-                  <LanguageToggle />
-                </div>
-                <div className="flex items-center justify-between px-2">
-                  <span className="text-sm font-medium">{t('nav.theme')}</span>
-                  <ThemeCycleToggle />
-                </div>
-              </div>
+            {/* Drawer panel - slides in from left (Req 23.2) */}
+            <nav
+              className="absolute left-0 top-0 bottom-0 w-[280px] sm:w-72 bg-background border-r shadow-xl animate-in slide-in-from-left-full duration-300 ease-out flex flex-col"
+              aria-label="Mobile navigation"
+            >
+              {/* User profile section at top (Req 23.7) */}
               {user && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    handleLogout();
-                    closeDrawer();
-                  }}
-                  className="w-full justify-start touch-target cursor-pointer"
-                >
-                  <LogOut className="h-4 w-4 mr-2" aria-hidden="true" />
-                  {t('nav.logout')}
-                </Button>
+                <div className="flex items-center gap-3 p-4 border-b flex-shrink-0">
+                  <Avatar className="h-10 w-10">
+                    {user.avatar && <AvatarImage src={user.avatar} alt={user.username || 'User'} />}
+                    <AvatarFallback>{user.username?.[0]?.toUpperCase() || 'U'}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{user.username}</p>
+                    {user.email && (
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    )}
+                  </div>
+                  {/* Close button in drawer header */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="touch-target cursor-pointer transition-all duration-300 hover:scale-[1.05] active:scale-95"
+                    onClick={closeDrawer}
+                    aria-label="Close navigation menu"
+                  >
+                    <X className="h-5 w-5 transition-transform duration-300 hover:rotate-90" />
+                  </Button>
+                </div>
               )}
-            </div>
-          </nav>
-        </div>
-      )}
+
+              {/* Navigation items with full-width touch targets (Req 3.7, 23.6) */}
+              <div className="flex-1 py-2 overflow-y-auto">
+                {/* Main navigation section */}
+                <div className="px-2 py-2">
+                  <p className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider animate-in fade-in-50 slide-in-from-left-2 duration-500">
+                    {t('nav.main-menu')}
+                  </p>
+                  <div className="space-y-1">
+                    {translatedMainNavItems.map((item, index) => {
+                      const Icon = item.icon;
+                      const isActive =
+                        pathname === item.href || pathname.startsWith(item.href + '/');
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={cn(
+                            'group flex items-center gap-3 px-3 py-3 min-h-[48px] w-full cursor-pointer transition-all duration-200 rounded-lg relative',
+                            'hover:bg-accent hover:text-accent-foreground hover:scale-[1.02] hover:shadow-sm',
+                            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                            'animate-in slide-in-from-left-4 fade-in-0',
+                            isActive
+                              ? 'bg-primary text-primary-foreground shadow-lg font-semibold border-l-4 border-l-primary-foreground/30'
+                              : 'hover:bg-muted/50'
+                          )}
+                          style={{
+                            animationDelay: `${index * 50}ms`,
+                            animationDuration: '400ms',
+                          }}
+                          onClick={closeDrawer}
+                          aria-current={isActive ? 'page' : undefined}
+                        >
+                          <Icon
+                            className="h-5 w-5 flex-shrink-0 transition-transform duration-200 group-hover:scale-[1.05]"
+                            aria-hidden="true"
+                          />
+                          <span className="text-sm font-medium">{item.translatedLabel}</span>
+                          {item.href === '/app/reminders' && pendingRemindersCount > 0 && (
+                            <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
+                              {pendingRemindersCount > 9 ? '9+' : pendingRemindersCount}
+                            </span>
+                          )}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="my-2 border-t" />
+
+                {/* Secondary navigation section */}
+                <div className="px-2 py-2">
+                  <p className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    {t('nav.more')}
+                  </p>
+                  <div className="space-y-1">
+                    {translatedSecondaryNavItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive =
+                        pathname === item.href || pathname.startsWith(item.href + '/');
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          className={cn(
+                            'flex items-center gap-3 px-3 py-3 min-h-[48px] w-full cursor-pointer transition-all duration-200 rounded-lg relative',
+                            'hover:bg-accent hover:text-accent-foreground',
+                            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                            isActive
+                              ? 'bg-primary text-primary-foreground shadow-lg font-semibold border-l-4 border-l-primary-foreground/30'
+                              : 'hover:bg-muted/50'
+                          )}
+                          onClick={closeDrawer}
+                          aria-current={isActive ? 'page' : undefined}
+                        >
+                          <Icon className="h-5 w-5 flex-shrink-0" aria-hidden="true" />
+                          <span className="text-sm font-medium">{item.translatedLabel}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom section with language switcher, theme toggle and logout */}
+              <div className="flex-shrink-0 p-4 border-t bg-background space-y-3">
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-center justify-between px-2">
+                    <span className="text-sm font-medium">{t('nav.language')}</span>
+                    <LanguageToggle />
+                  </div>
+                  <div className="flex items-center justify-between px-2">
+                    <span className="text-sm font-medium">{t('nav.theme')}</span>
+                    <ThemeCycleToggle />
+                  </div>
+                </div>
+                {user && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      handleLogout();
+                      closeDrawer();
+                    }}
+                    className="w-full justify-start touch-target cursor-pointer"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" aria-hidden="true" />
+                    {t('nav.logout')}
+                  </Button>
+                )}
+              </div>
+            </nav>
+          </div>,
+          document.body
+        )}
     </header>
   );
 }
