@@ -42,10 +42,12 @@ const articleSourceArbitrary = fc
   .string({ minLength: 3, maxLength: 50 })
   .filter((s) => s.trim().length >= 3);
 
-const dateArbitrary = fc.date({
-  min: new Date('2020-01-01'),
-  max: new Date(),
-});
+const dateArbitrary = fc
+  .integer({
+    min: new Date('2020-01-01').getTime(),
+    max: Date.now(),
+  })
+  .map((timestamp) => new Date(timestamp));
 
 const analysisResultArbitrary: fc.Arbitrary<AnalysisResult> = fc.record({
   coreConcepts: fc.array(fc.string({ minLength: 5, maxLength: 100 }), {
@@ -509,13 +511,18 @@ describe('AnalysisModal Property Tests', () => {
    */
   describe('Property 13: Analysis Result Caching', () => {
     it('should return cached analysis for previously analyzed articles', async () => {
-      fc.assert(
+      const cacheMap = new Map<string, AnalysisResult>();
+
+      vi.mocked(services.getCachedAnalysis).mockImplementation(async (articleId) => {
+        return cacheMap.get(articleId) || null;
+      });
+
+      await fc.assert(
         fc.asyncProperty(
           articleIdArbitrary,
           analysisResultArbitrary,
           async (articleId, mockAnalysis) => {
-            vi.mocked(services.getCachedAnalysis).mockReset();
-            vi.mocked(services.getCachedAnalysis).mockResolvedValue(mockAnalysis);
+            cacheMap.set(articleId, mockAnalysis);
 
             // First call - should fetch from cache
             const result1 = await services.getCachedAnalysis(articleId);
@@ -533,10 +540,10 @@ describe('AnalysisModal Property Tests', () => {
     });
 
     it('should return null for articles without cached analysis', async () => {
-      fc.assert(
-        fc.asyncProperty(articleIdArbitrary, async (articleId) => {
-          vi.mocked(services.getCachedAnalysis).mockResolvedValue(null);
+      vi.mocked(services.getCachedAnalysis).mockImplementation(async () => null);
 
+      await fc.assert(
+        fc.asyncProperty(articleIdArbitrary, async (articleId) => {
           const result = await services.getCachedAnalysis(articleId);
 
           expect(result).toBeNull();

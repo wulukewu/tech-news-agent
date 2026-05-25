@@ -111,15 +111,17 @@ describe('Recommendation Algorithm Properties', () => {
         feedName: fc.string({ minLength: 5, maxLength: 50 }),
         category: fc.constantFrom('AI', 'Web', 'Mobile', 'DevOps', 'Security'),
         publishedAt: fc
-          .date({ min: new Date('2020-01-01'), max: new Date() })
-          .map((d) => d.toISOString()),
+          .integer({ min: new Date('2020-01-01').getTime(), max: Date.now() })
+          .map((t) => new Date(t).toISOString()),
         tinkeringIndex: fc.integer({ min: 1, max: 5 }),
         aiSummary: fc.string({ minLength: 50, maxLength: 200 }),
         isInReadingList: fc.boolean(),
       }),
       reason: fc.string({ minLength: 20, maxLength: 150 }),
-      confidence: fc.double({ min: 0, max: 1 }),
-      generatedAt: fc.date().map((d) => d.toISOString()),
+      confidence: fc.double({ min: 0, max: 1, noNaN: true }),
+      generatedAt: fc
+        .integer({ min: new Date('2020-01-01').getTime(), max: Date.now() })
+        .map((t) => new Date(t).toISOString()),
     });
 
     fc.assert(
