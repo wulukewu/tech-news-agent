@@ -569,7 +569,7 @@ export default function SubscriptionsPage() {
           const hasRecommended = categoryFeeds.some((f) => f.is_recommended);
 
           return (
-            <Card key={category} className="transition-all duration-300 hover:shadow-md">
+            <Card key={category} className="transition-spring hover-spring hover:shadow-md">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <button

@@ -46,11 +46,18 @@ function TrendIcon({ direction }: { direction: TrendItem['direction'] }) {
 // Simple inline bar chart using Tailwind
 function TrendBar({ value, max }: { value: number; max: number }) {
   const pct = max > 0 ? Math.round((value / max) * 100) : 0;
+  const [width, setWidth] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setWidth(pct), 50);
+    return () => clearTimeout(timer);
+  }, [pct]);
+
   return (
     <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
       <div
-        className="h-full rounded-full bg-primary transition-all duration-500"
-        style={{ width: `${pct}%` }}
+        className="h-full rounded-full bg-primary transition-all duration-1000 ease-out"
+        style={{ width: `${width}%` }}
         aria-valuenow={value}
         aria-valuemax={max}
         role="progressbar"
@@ -338,51 +345,80 @@ export default function InsightsPage() {
         </div>
       ) : report ? (
         <div className="space-y-6">
-          <ExecutiveSummaryCard report={report} />
+          <div
+            className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out fill-both"
+            style={{ animationDelay: '0ms', animationFillMode: 'both' }}
+          >
+            <ExecutiveSummaryCard report={report} />
+          </div>
 
-          {(report.trends ?? []).length > 0 && <TrendsSection trends={report.trends} />}
+          {(report.trends ?? []).length > 0 && (
+            <div
+              className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out fill-both"
+              style={{ animationDelay: '100ms', animationFillMode: 'both' }}
+            >
+              <TrendsSection trends={report.trends} />
+            </div>
+          )}
 
           {(report.clusters ?? []).length > 0 && (
-            <section aria-labelledby="clusters-heading">
-              <h2 id="clusters-heading" className="text-lg font-semibold mb-3">
-                {t('insights.clusters-title')}
-              </h2>
-              <ClusterBubbles clusters={report.clusters} />
-              <div className="space-y-2 mt-4">
-                {report.clusters.map((cluster) => (
-                  <ClusterCard key={cluster.name} cluster={cluster} />
-                ))}
-              </div>
-            </section>
+            <div
+              className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out fill-both"
+              style={{ animationDelay: '200ms', animationFillMode: 'both' }}
+            >
+              <section aria-labelledby="clusters-heading">
+                <h2 id="clusters-heading" className="text-lg font-semibold mb-3">
+                  {t('insights.clusters-title')}
+                </h2>
+                <ClusterBubbles clusters={report.clusters} />
+                <div className="space-y-2 mt-4">
+                  {report.clusters.map((cluster) => (
+                    <ClusterCard key={cluster.name} cluster={cluster} />
+                  ))}
+                </div>
+              </section>
+            </div>
           )}
 
           {(report.missed_articles ?? []).length > 0 && (
-            <section aria-labelledby="missed-heading">
-              <h2 id="missed-heading" className="text-lg font-semibold mb-3">
-                {t('insights.missed-title')}
-              </h2>
-              <ul className="space-y-2">
-                {report.missed_articles.map((a) => (
-                  <li key={a.id} className="rounded-lg border bg-card px-4 py-3">
-                    <a
-                      href={a.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 text-sm text-primary hover:underline cursor-pointer"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
-                      <span>{a.title}</span>
-                    </a>
-                    <span className="text-xs text-muted-foreground mt-1 block">
-                      {t('insights.tinkering-index', { value: a.tinkering_index })}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
+            <div
+              className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out fill-both"
+              style={{ animationDelay: '300ms', animationFillMode: 'both' }}
+            >
+              <section aria-labelledby="missed-heading">
+                <h2 id="missed-heading" className="text-lg font-semibold mb-3">
+                  {t('insights.missed-title')}
+                </h2>
+                <ul className="space-y-2">
+                  {report.missed_articles.map((a) => (
+                    <li key={a.id} className="rounded-lg border bg-card px-4 py-3">
+                      <a
+                        href={a.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 text-sm text-primary hover:underline cursor-pointer"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
+                        <span>{a.title}</span>
+                      </a>
+                      <span className="text-xs text-muted-foreground mt-1 block">
+                        {t('insights.tinkering-index', { value: a.tinkering_index })}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </div>
           )}
 
-          {history.length > 0 && <HistoryList items={history} onSelect={handleSelectHistory} />}
+          {history.length > 0 && (
+            <div
+              className="animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out fill-both"
+              style={{ animationDelay: '400ms', animationFillMode: 'both' }}
+            >
+              <HistoryList items={history} onSelect={handleSelectHistory} />
+            </div>
+          )}
         </div>
       ) : (
         <div className="text-center py-16 text-muted-foreground">

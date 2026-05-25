@@ -163,7 +163,7 @@ export default function ReadingListPage() {
 
         {/* Batch Actions Bar */}
         {isSelectionMode && articles && articles.length > 0 && (
-          <div className="mb-4 p-4 bg-muted rounded-lg flex items-center justify-between">
+          <div className="mb-4 p-4 bg-muted rounded-lg flex items-center justify-between animate-in slide-in-from-top-4 fade-in duration-300 ease-out">
             <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
@@ -215,11 +215,12 @@ export default function ReadingListPage() {
           {articles.map((item) => (
             <div key={item.articleId} className="flex items-start gap-3">
               {isSelectionMode && (
-                <Checkbox
-                  checked={selectedItems.has(item.articleId)}
-                  onCheckedChange={() => toggleItemSelection(item.articleId)}
-                  className="mt-6"
-                />
+                <div className="animate-in fade-in zoom-in-75 slide-in-from-left-4 duration-300 ease-out mt-6 shrink-0">
+                  <Checkbox
+                    checked={selectedItems.has(item.articleId)}
+                    onCheckedChange={() => toggleItemSelection(item.articleId)}
+                  />
+                </div>
               )}
               <div className="flex-1">
                 <ReadingListItem

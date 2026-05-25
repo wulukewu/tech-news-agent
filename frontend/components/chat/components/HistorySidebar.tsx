@@ -67,7 +67,7 @@ export function HistorySidebar({
         <Button
           onClick={onNewChat}
           size="sm"
-          className="w-full cursor-pointer justify-start gap-2"
+          className="w-full cursor-pointer justify-start gap-2 active-tap"
           aria-label={t('chat.new-conversation-aria')}
         >
           <Plus className="h-4 w-4" aria-hidden="true" />
@@ -123,14 +123,14 @@ export function HistorySidebar({
                   <button
                     onClick={() => onSelect(conv.id)}
                     className={cn(
-                      'w-full text-left px-3 py-2.5 transition-colors cursor-pointer',
+                      'w-full text-left px-3 py-2.5 transition-all cursor-pointer group active-tap',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
                       isActive ? 'bg-primary/10 text-primary' : 'hover:bg-muted/60 text-foreground'
                     )}
                     aria-current={isActive ? 'page' : undefined}
                     aria-label={t('chat.open-conversation-aria', { title: conv.title })}
                   >
-                    <div className="flex items-start gap-2">
+                    <div className="flex items-start gap-2 transition-transform duration-200 group-hover:translate-x-1">
                       <MessageSquare
                         className={cn(
                           'h-3.5 w-3.5 flex-shrink-0 mt-0.5',

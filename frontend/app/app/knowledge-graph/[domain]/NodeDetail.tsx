@@ -21,7 +21,7 @@ export function RelatedArticles({ nodeId }: { nodeId: string }) {
   if (isLoading) return <div className="h-4 w-24 bg-muted animate-pulse rounded" />;
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5 animate-in fade-in duration-300">
       <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
         {t('knowledge-graph.related-articles')} {articles.length > 0 ? `(${articles.length})` : ''}
       </p>
@@ -83,7 +83,7 @@ export function NodeDetail({
   }, [isPending]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 animate-in fade-in slide-in-from-right-5 duration-300 ease-out">
       <div className="flex items-start justify-between gap-2">
         <div>
           <h3 className="font-semibold text-base leading-tight">{node.display_name}</h3>
