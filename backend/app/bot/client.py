@@ -88,6 +88,31 @@ class TechNewsBot(commands.Bot):
                     await super().on_interaction(interaction)
                     return
 
+                # Route matching prefixes to persistent/stateless callbacks
+                if custom_id.startswith("news_prev:") or custom_id.startswith("news_next:"):
+                    try:
+                        from app.bot.cogs.news_commands import handle_stateless_news_pagination
+
+                        await handle_stateless_news_pagination(interaction, custom_id)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in stateless news pagination button callback: {e}",
+                            exc_info=True,
+                        )
+
+                elif custom_id == "news_filter":
+                    try:
+                        from app.bot.cogs.news_commands import handle_stateless_news_pagination
+
+                        await handle_stateless_news_pagination(interaction, custom_id)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in stateless news pagination select callback: {e}",
+                            exc_info=True,
+                        )
+
                 # Route matching prefixes to persistent callbacks
                 if custom_id.startswith("read_later_") and not custom_id.endswith("persistent"):
                     try:

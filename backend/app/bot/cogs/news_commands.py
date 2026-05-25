@@ -48,39 +48,57 @@ class NewsPaginationView(discord.ui.View):
     """Pagination view for /news_now with filter and deep-dive buttons."""
 
     def __init__(
-        self, articles, page: int, llm_service: LLMService, supabase_service: SupabaseService
+        self,
+        articles,
+        page: int,
+        llm_service: LLMService,
+        supabase_service: SupabaseService,
+        category: str = "__all__",
     ):
         super().__init__(timeout=None)
         self.articles = articles
         self.page = page
+        self.category = category
         self.llm_service = llm_service
         self.supabase_service = supabase_service
         self._build_components()
 
     def _build_components(self):
         self.clear_items()
-        total_pages = (len(self.articles) + _NEWS_PAGE_SIZE - 1) // _NEWS_PAGE_SIZE
+
+        # Filter articles by category
+        if self.category == "__all__":
+            filtered = self.articles
+        else:
+            filtered = [a for a in self.articles if a.category == self.category]
+
+        total_pages = (len(filtered) + _NEWS_PAGE_SIZE - 1) // _NEWS_PAGE_SIZE
         start = self.page * _NEWS_PAGE_SIZE
-        page_articles = self.articles[start : start + _NEWS_PAGE_SIZE]
+        page_articles = filtered[start : start + _NEWS_PAGE_SIZE]
 
         # Row 0: filter select
         from app.bot.cogs.interactions import FilterSelect
 
-        self.add_item(FilterSelect(self.articles, supabase_service=self.supabase_service))
+        filter_select = FilterSelect(self.articles, supabase_service=self.supabase_service)
+        filter_select.custom_id = "news_filter"
+        self.add_item(filter_select)
 
         # Row 1: prev/next buttons
+        prev_page = self.page - 1
+        next_page = self.page + 1
+
         prev_btn = discord.ui.Button(
             label="◀ 上一頁",
             style=discord.ButtonStyle.secondary,
             disabled=self.page == 0,
-            custom_id="news_prev",
+            custom_id=f"news_prev:{prev_page}:{self.category}",
             row=1,
         )
         next_btn = discord.ui.Button(
             label="下一頁 ▶",
             style=discord.ButtonStyle.secondary,
             disabled=self.page >= total_pages - 1,
-            custom_id="news_next",
+            custom_id=f"news_next:{next_page}:{self.category}",
             row=1,
         )
         prev_btn.callback = self._prev_callback
@@ -104,15 +122,21 @@ class NewsPaginationView(discord.ui.View):
     async def _prev_callback(self, interaction: discord.Interaction):
         self.page -= 1
         self._build_components()
+        filtered = [
+            a for a in self.articles if self.category == "__all__" or a.category == self.category
+        ]
         await interaction.response.edit_message(
-            content=_build_news_page(self.articles, self.page), view=self
+            content=_build_news_page(filtered, self.page), view=self
         )
 
     async def _next_callback(self, interaction: discord.Interaction):
         self.page += 1
         self._build_components()
+        filtered = [
+            a for a in self.articles if self.category == "__all__" or a.category == self.category
+        ]
         await interaction.response.edit_message(
-            content=_build_news_page(self.articles, self.page), view=self
+            content=_build_news_page(filtered, self.page), view=self
         )
 
 
@@ -491,6 +515,84 @@ class NewsCommands(commands.Cog):
             fp=io.BytesIO(buf.getvalue().encode("utf-8-sig")), filename="reading_list.csv"
         )
         await interaction.followup.send(f"📥 匯出完成，共 {len(items)} 篇文章。", file=file, ephemeral=True)
+
+
+async def handle_stateless_news_pagination(interaction: discord.Interaction, custom_id: str):
+    """
+    Stateless handler for news pagination and filter components.
+    Reconstructs the view state dynamically from the custom_id or selected option values,
+    and queries Supabase to rebuild the message and view without relying on in-memory state.
+    """
+    # Defer interaction to give us time to fetch from database
+    await interaction.response.defer()
+
+    # Initialize services
+    supabase_service = SupabaseService()
+    llm_service = LLMService()
+
+    # Parse target_page and category from custom_id
+    if custom_id.startswith("news_prev:"):
+        parts = custom_id.split(":")
+        target_page = int(parts[1])
+        category = parts[2]
+    elif custom_id.startswith("news_next:"):
+        parts = custom_id.split(":")
+        target_page = int(parts[1])
+        category = parts[2]
+    elif custom_id == "news_filter":
+        target_page = 0
+        values = interaction.data.get("values", [])
+        category = values[0] if values else "__all__"
+    else:
+        logger.error(f"Unknown stateless news interaction custom_id: {custom_id}")
+        return
+
+    # Fetch fresh articles and subscriptions for the user
+    discord_id = str(interaction.user.id)
+    try:
+        subscriptions = await supabase_service.get_user_subscriptions(discord_id)
+        articles = await supabase_service.get_user_articles(discord_id=discord_id, days=7, limit=50)
+    except Exception as e:
+        logger.error(f"Stateless news database query failed: {e}")
+        await interaction.followup.send("❌ 無法取得文章資料，請稍後再試。", ephemeral=True)
+        return
+
+    if not articles:
+        await interaction.followup.send("📭 最近已無可用文章。", ephemeral=True)
+        return
+
+    # Enrich feed names
+    for article in articles:
+        feed_name = next(
+            (sub.name for sub in subscriptions if str(sub.feed_id) == str(article.feed_id)),
+            "Unknown",
+        )
+        article.feed_name = feed_name
+
+    # Build new pagination view and content
+    view = NewsPaginationView(
+        articles=articles,
+        page=target_page,
+        llm_service=llm_service,
+        supabase_service=supabase_service,
+        category=category,
+    )
+
+    # Filter articles for build_page content rendering
+    if category == "__all__":
+        filtered = articles
+    else:
+        filtered = [a for a in articles if a.category == category]
+
+    content = _build_news_page(filtered, target_page)
+
+    try:
+        await interaction.message.edit(content=content, view=view)
+        logger.info(
+            f"Stateless news pagination handled: user={discord_id}, page={target_page}, category={category}"
+        )
+    except Exception as e:
+        logger.error(f"Failed to edit interaction message in stateless handler: {e}")
 
 
 async def setup(bot: commands.Bot):
