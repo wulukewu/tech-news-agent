@@ -9,31 +9,27 @@ export default function AccountPage() {
 
   return (
     <div className="space-y-6">
-      <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500 hover:shadow-md transition-all">
+      <Card className="animate-in fade-in slide-in-from-bottom-2 duration-300 hover-spring active-tap border-muted">
         <CardHeader>
-          <div className="flex items-center gap-3 animate-in slide-in-from-left-4 duration-500 delay-200">
-            <div className="p-2 rounded-lg bg-primary/10 text-primary animate-in zoom-in-50 duration-300 delay-300 hover:scale-[1.05] transition-transform">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-primary/10 text-primary transition-transform duration-200 group-hover:scale-[1.1]">
               <User className="h-5 w-5" />
             </div>
             <div>
-              <CardTitle className="animate-in fade-in duration-500 delay-400">
-                {t('settings.account.title')}
-              </CardTitle>
-              <CardDescription className="animate-in fade-in duration-500 delay-500">
-                {t('settings.account.description')}
-              </CardDescription>
+              <CardTitle>{t('settings.account.title')}</CardTitle>
+              <CardDescription>{t('settings.account.description')}</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="text-center py-12 animate-in fade-in slide-in-from-bottom-4 duration-500 delay-600">
-            <div className="relative inline-block animate-in zoom-in-50 duration-500 delay-700">
+          <div className="text-center py-12">
+            <div className="relative inline-block">
               <User className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-50 animate-pulse" />
               <div className="absolute inset-0 h-12 w-12 mx-auto text-muted-foreground/20 animate-ping">
                 <User className="h-12 w-12" />
               </div>
             </div>
-            <p className="text-lg font-medium text-muted-foreground animate-in slide-in-from-bottom-2 duration-500 delay-800">
+            <p className="text-lg font-medium text-muted-foreground">
               {t('settings.account.placeholder')}
             </p>
           </div>
