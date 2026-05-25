@@ -81,6 +81,7 @@ class NewsPaginationView(discord.ui.View):
 
         filter_select = FilterSelect(self.articles, supabase_service=self.supabase_service)
         filter_select.custom_id = "news_filter"
+        filter_select.row = 0
         self.add_item(filter_select)
 
         # Row 1: prev/next buttons
@@ -106,18 +107,26 @@ class NewsPaginationView(discord.ui.View):
         self.add_item(prev_btn)
         self.add_item(next_btn)
 
-        # Rows 2-3: deep dive + read later for current page articles
-        from app.bot.cogs.interactions import DeepDiveButton, ReadLaterButton
+        # Rows 2-4: Clean dropdown menus for page articles
+        if page_articles:
+            from app.bot.cogs.interactions import DeepDiveSelect, MarkReadSelect, ReadLaterSelect
 
-        for article in page_articles[:5]:
-            btn = DeepDiveButton(article, self.llm_service)
-            btn.row = 2
-            self.add_item(btn)
-        for article in page_articles[:5]:
-            if article.id:
-                btn = ReadLaterButton(article.id, article.title, self.supabase_service)
-                btn.row = 3
-                self.add_item(btn)
+            # Row 2: Read Later dropdown
+            read_later_select = ReadLaterSelect(page_articles, self.supabase_service)
+            read_later_select.row = 2
+            self.add_item(read_later_select)
+
+            # Row 3: Mark as Read dropdown
+            mark_read_select = MarkReadSelect(page_articles, self.supabase_service)
+            mark_read_select.row = 3
+            self.add_item(mark_read_select)
+
+            # Row 4: Deep Dive dropdown
+            deep_dive_select = DeepDiveSelect(
+                page_articles, self.llm_service, self.supabase_service
+            )
+            deep_dive_select.row = 4
+            self.add_item(deep_dive_select)
 
     async def _prev_callback(self, interaction: discord.Interaction):
         self.page -= 1

@@ -99,6 +99,48 @@ class TechNewsBot(commands.Bot):
                             exc_info=True,
                         )
 
+                elif custom_id == "news_read_later_select":
+                    try:
+                        from app.bot.cogs.interactions import ReadLaterSelect
+
+                        select = ReadLaterSelect([])
+                        select.values = interaction.data.get("values", [])
+                        await select.callback(interaction)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in stateless news_read_later_select callback: {e}",
+                            exc_info=True,
+                        )
+
+                elif custom_id == "news_mark_read_select":
+                    try:
+                        from app.bot.cogs.interactions import MarkReadSelect
+
+                        select = MarkReadSelect([])
+                        select.values = interaction.data.get("values", [])
+                        await select.callback(interaction)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in stateless news_mark_read_select callback: {e}",
+                            exc_info=True,
+                        )
+
+                elif custom_id == "news_deep_dive_select":
+                    try:
+                        from app.bot.cogs.interactions import DeepDiveSelect
+
+                        select = DeepDiveSelect([])
+                        select.values = interaction.data.get("values", [])
+                        await select.callback(interaction)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in stateless news_deep_dive_select callback: {e}",
+                            exc_info=True,
+                        )
+
                 # 2. In-memory views check (Only check active view in memory for other components)
                 view_store = self._connection._view_store
                 message_id = interaction.message.id if interaction.message else None

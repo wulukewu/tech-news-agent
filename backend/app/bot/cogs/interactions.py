@@ -188,6 +188,203 @@ class FilterView(discord.ui.View):
         self.add_item(FilterSelect(articles, supabase_service=supabase_service))
 
 
+class ReadLaterSelect(discord.ui.Select):
+    def __init__(self, articles: list[ArticleSchema], supabase_service: SupabaseService = None):
+        self.supabase_service = supabase_service or SupabaseService()
+        options = []
+        for i, article in enumerate(articles):
+            if article.id:
+                label = f"{i+1}. {article.title}"
+                if len(label) > 100:
+                    label = label[:97] + "..."
+
+                desc = f"分類: {article.category}"
+                if article.feed_name:
+                    desc += f" | 來源: {article.feed_name}"
+                if len(desc) > 100:
+                    desc = desc[:97] + "..."
+
+                options.append(
+                    discord.SelectOption(
+                        label=label,
+                        value=str(article.id),
+                        description=desc,
+                        emoji="⭐",
+                    )
+                )
+
+        super().__init__(
+            placeholder="⭐ 收藏文章至待讀清單…",
+            options=options,
+            custom_id="news_read_later_select",
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        try:
+            article_id = self.values[0]
+            discord_id = str(interaction.user.id)
+            await self.supabase_service.save_to_reading_list(
+                discord_id, article_id, source="discord"
+            )
+            await interaction.followup.send("✅ 已加入閱讀清單！", ephemeral=True)
+        except Exception as e:
+            logger.error(f"Error in ReadLaterSelect callback: {e}", exc_info=True)
+            await interaction.followup.send("❌ 收藏失敗，請稍後再試。", ephemeral=True)
+
+
+class MarkReadSelect(discord.ui.Select):
+    def __init__(self, articles: list[ArticleSchema], supabase_service: SupabaseService = None):
+        self.supabase_service = supabase_service or SupabaseService()
+        options = []
+        for i, article in enumerate(articles):
+            if article.id:
+                label = f"{i+1}. {article.title}"
+                if len(label) > 100:
+                    label = label[:97] + "..."
+
+                desc = f"分類: {article.category}"
+                if article.feed_name:
+                    desc += f" | 來源: {article.feed_name}"
+                if len(desc) > 100:
+                    desc = desc[:97] + "..."
+
+                options.append(
+                    discord.SelectOption(
+                        label=label,
+                        value=str(article.id),
+                        description=desc,
+                        emoji="✅",
+                    )
+                )
+
+        super().__init__(
+            placeholder="✅ 將文章標記為已讀…",
+            options=options,
+            custom_id="news_mark_read_select",
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        try:
+            article_id = self.values[0]
+            discord_id = str(interaction.user.id)
+            await self.supabase_service.update_article_status(discord_id, article_id, "Read")
+            await interaction.followup.send("✅ 已將文章標記為已讀！", ephemeral=True)
+        except Exception as e:
+            logger.error(f"Error in MarkReadSelect callback: {e}", exc_info=True)
+            await interaction.followup.send("❌ 標記失敗，請稍後再試。", ephemeral=True)
+
+
+class DeepDiveSelect(discord.ui.Select):
+    def __init__(
+        self,
+        articles: list[ArticleSchema],
+        llm_service: LLMService = None,
+        supabase_service: SupabaseService = None,
+    ):
+        self.llm_service = llm_service or LLMService()
+        self.supabase_service = supabase_service or SupabaseService()
+        options = []
+        for i, article in enumerate(articles):
+            if article.id:
+                label = f"{i+1}. {article.title}"
+                if len(label) > 100:
+                    label = label[:97] + "..."
+
+                desc = f"分類: {article.category}"
+                if article.feed_name:
+                    desc += f" | 來源: {article.feed_name}"
+                if len(desc) > 100:
+                    desc = desc[:97] + "..."
+
+                options.append(
+                    discord.SelectOption(
+                        label=label,
+                        value=str(article.id),
+                        description=desc,
+                        emoji="📖",
+                    )
+                )
+
+        super().__init__(
+            placeholder="📖 產生 AI 深度分析…",
+            options=options,
+            custom_id="news_deep_dive_select",
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        try:
+            article_id = self.values[0]
+            discord_id = str(interaction.user.id)
+
+            # Fetch article details
+            response = (
+                self.supabase_service.client.table("articles")
+                .select("*")
+                .eq("id", str(article_id))
+                .execute()
+            )
+
+            if not response.data:
+                await interaction.followup.send("❌ 找不到該文章", ephemeral=True)
+                return
+
+            article_data = response.data[0]
+
+            from datetime import datetime
+
+            from app.schemas.article import ArticleSchema
+
+            article = ArticleSchema(
+                id=UUID(article_data["id"]) if article_data.get("id") else None,
+                title=article_data["title"],
+                url=article_data["url"],
+                category=article_data.get("category") or "Unknown",
+                tinkering_index=article_data.get("tinkering_index"),
+                ai_summary=article_data.get("ai_summary"),
+                published_at=(
+                    datetime.fromisoformat(article_data["published_at"].replace("Z", "+00:00"))
+                    if article_data.get("published_at")
+                    else None
+                ),
+                feed_id=UUID(article_data["feed_id"]) if article_data.get("feed_id") else None,
+                feed_name=article_data.get("feed_name") or "",
+            )
+
+            thread, created = await ensure_discussion_thread(
+                interaction=interaction,
+                thread_name=f"deep-dive-{article.title[:40]}",
+            )
+            if created:
+                await interaction.followup.send(
+                    f"✅ 已建立深度分析討論串：{thread.mention}",
+                    ephemeral=True,
+                )
+            else:
+                await interaction.followup.send("✅ 已在此討論串提供深度分析。", ephemeral=True)
+
+            await thread.send(f"📖 **深度分析標的**：{article.title}")
+            result = await self.llm_service.generate_deep_dive(article)
+            await thread.send(result[:2000])
+
+            user = await self.supabase_service.get_user_by_discord_id(discord_id)
+            if user:
+                memory_service = ThreadMemoryService(supabase_service=self.supabase_service)
+                conversation = await memory_service.get_or_create_thread_conversation(
+                    user_id=str(user["id"]),
+                    thread_id=str(thread.id),
+                    title=f"Deep Dive: {article.title}",
+                    article_id=str(article.id) if article.id else None,
+                )
+                await memory_service.save_assistant_message(conversation.id, str(thread.id), result)
+
+        except Exception as e:
+            logger.error(f"Error in DeepDiveSelect callback: {e}", exc_info=True)
+            await interaction.followup.send("❌ 發生未預期的錯誤，請稍後再試。", ephemeral=True)
+
+
 class DeepDiveButton(discord.ui.Button):
     def __init__(
         self,
