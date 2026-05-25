@@ -153,8 +153,8 @@ def main():
         },
         # Engineering Blogs - Big Tech
         {
-            "name": "Uber Engineering",
-            "url": "https://www.uber.com/blog/engineering/rss/",
+            "name": "Airbnb Engineering",
+            "url": "https://medium.com/feed/airbnb-engineering",
             "category": "Engineering Blogs - Big Tech",
             "is_active": True,
         },

@@ -130,7 +130,7 @@ INSERT INTO feeds (name, url, category, is_active) VALUES
 
 -- Engineering Blogs - Big Tech
 INSERT INTO feeds (name, url, category, is_active) VALUES
-('Uber Engineering', 'https://www.uber.com/blog/engineering/rss/', 'Engineering Blogs - Big Tech', true),
+('Airbnb Engineering', 'https://medium.com/feed/airbnb-engineering', 'Engineering Blogs - Big Tech', true),
 ('Slack Engineering', 'https://slack.engineering/feed', 'Engineering Blogs - Big Tech', true),
 ('Spotify Engineering', 'https://engineering.atspotify.com/feed/', 'Engineering Blogs - Big Tech', true),
 ('Engineering at Meta', 'https://engineering.fb.com/feed/', 'Engineering Blogs - Big Tech', true);

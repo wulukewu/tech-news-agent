@@ -40,7 +40,7 @@ CURATED_FEED_URLS = {
     "https://sreweekly.com/feed",
     "https://www.hashicorp.com/blog/feed.xml",
     # Engineering Blogs - Big Tech
-    "https://www.uber.com/blog/engineering/rss/",
+    "https://medium.com/feed/airbnb-engineering",
     "https://slack.engineering/feed",
     "https://engineering.atspotify.com/feed/",
     "https://engineering.fb.com/feed/",
