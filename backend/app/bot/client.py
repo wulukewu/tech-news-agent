@@ -70,25 +70,11 @@ class TechNewsBot(commands.Bot):
             logger.error(f"Failed to register persistent views: {e}", exc_info=True)
 
     async def on_interaction(self, interaction: discord.Interaction):
-        """Intercept component interactions to route them to persistent handlers if the bot restarted."""
+        """Intercept component interactions to route them to persistent/stateless handlers."""
         if interaction.type == discord.InteractionType.component:
             custom_id = interaction.data.get("custom_id", "")
             if custom_id:
-                # Check if there is an active view handling this interaction
-                view_store = self._connection._view_store
-                message_id = interaction.message.id if interaction.message else None
-
-                # If the message has an active view in memory, let discord.py handle it
-                if message_id and message_id in view_store._views:
-                    await super().on_interaction(interaction)
-                    return
-
-                # If the exact custom_id is registered as a persistent view, let discord.py handle it
-                if custom_id in view_store._synced_views:
-                    await super().on_interaction(interaction)
-                    return
-
-                # Route matching prefixes to persistent/stateless callbacks
+                # 1. Stateless Pagination & Filter Route (ALWAYS handled statelessly to bypass in-memory dynamic bugs)
                 if custom_id.startswith("news_prev:") or custom_id.startswith("news_next:"):
                     try:
                         from app.bot.cogs.news_commands import handle_stateless_news_pagination
@@ -112,6 +98,20 @@ class TechNewsBot(commands.Bot):
                             f"Error in stateless news pagination select callback: {e}",
                             exc_info=True,
                         )
+
+                # 2. In-memory views check (Only check active view in memory for other components)
+                view_store = self._connection._view_store
+                message_id = interaction.message.id if interaction.message else None
+
+                # If the message has an active view in memory, let discord.py handle it
+                if message_id and message_id in view_store._views:
+                    await super().on_interaction(interaction)
+                    return
+
+                # If the exact custom_id is registered as a persistent view, let discord.py handle it
+                if custom_id in view_store._synced_views:
+                    await super().on_interaction(interaction)
+                    return
 
                 # Route matching prefixes to persistent callbacks
                 if custom_id.startswith("read_later_") and not custom_id.endswith("persistent"):
