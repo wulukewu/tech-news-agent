@@ -49,14 +49,37 @@ class DigestRatingSelect(discord.ui.Select):
             await interaction.followup.send("❌ 評分失敗，請稍後再試", ephemeral=True)
 
 
-class DigestRatingView(discord.ui.View):
-    """View with one rating select per article, attached to digest DMs."""
+class DigestActionsView(discord.ui.View):
+    """View with dropdown selects for daily/weekly technical article digests."""
 
-    def __init__(self, articles: list[ArticleSchema]):
+    def __init__(
+        self,
+        articles: list[ArticleSchema],
+        supabase_service: SupabaseService = None,
+        llm_service=None,
+    ):
         super().__init__(timeout=None)
-        for i, article in enumerate(articles):
-            if article.id:
-                self.add_item(DigestRatingSelect(article.id, article.title, i))
+
+        # Row 0: Read Later select
+        from app.bot.cogs.interactions import ReadLaterSelect
+
+        read_later_select = ReadLaterSelect(articles, supabase_service)
+        read_later_select.row = 0
+        self.add_item(read_later_select)
+
+        # Row 1: Mark Read select
+        from app.bot.cogs.interactions import MarkReadSelect
+
+        mark_read_select = MarkReadSelect(articles, supabase_service)
+        mark_read_select.row = 1
+        self.add_item(mark_read_select)
+
+        # Row 2: Deep Dive select
+        from app.bot.cogs.interactions import DeepDiveSelect
+
+        deep_dive_select = DeepDiveSelect(articles, llm_service, supabase_service)
+        deep_dive_select.row = 2
+        self.add_item(deep_dive_select)
 
 
 class DMNotificationService:
@@ -362,11 +385,11 @@ class DMNotificationService:
 
             # 建立 DM 訊息
             embed = self._create_digest_embed(ranked_articles_with_reasons, frequency)
-            rating_view = DigestRatingView(articles)
+            actions_view = DigestActionsView(articles, supabase_service=supabase)
 
             # 發送 DM
             try:
-                await user.send(embed=embed, view=rating_view)
+                await user.send(embed=embed, view=actions_view)
 
                 # Record notification history
                 try:
