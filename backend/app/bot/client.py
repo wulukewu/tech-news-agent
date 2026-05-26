@@ -71,16 +71,16 @@ class TechNewsBot(commands.Bot):
 
     async def on_interaction(self, interaction: discord.Interaction):
         """Intercept component interactions to route them to persistent/stateless handlers."""
-        # Dev guild isolation check: if dev_guild_id is configured and we are in a guild,
+        # Dev guild isolation check: if running locally in dev mode (enable_dm_listener is False),
         # ignore interactions from other servers to avoid competing with production bot.
         try:
             from app.core.config import get_settings
 
             settings = get_settings()
-            if settings.dev_guild_id and interaction.guild_id:
-                if interaction.guild_id != int(settings.dev_guild_id):
+            if not settings.enable_dm_listener and interaction.guild_id:
+                if not settings.dev_guild_id or interaction.guild_id != int(settings.dev_guild_id):
                     logger.debug(
-                        f"Ignoring interaction from guild {interaction.guild_id} due to dev_guild_id isolation."
+                        f"Ignoring guild interaction from {interaction.guild_id} in local dev mode due to dev_guild_id isolation."
                     )
                     return
         except Exception as e:
