@@ -2,7 +2,6 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from app.bot.utils.validators import validate_rating
 from app.core.exceptions import LLMServiceError, SupabaseServiceError
 from app.core.logger import get_logger
 from app.schemas.article import ReadingListItem
@@ -14,10 +13,9 @@ logger = get_logger(__name__)
 
 # Discord UI has a maximum of 5 rows (0-4)
 # Row 0: Pagination buttons
-# Row 1: MarkAsReadButtons (max 5)
-# Rows 2-4: RatingSelects (max 3, each takes full row)
-# Therefore, max items per page is 3
-PAGE_SIZE = 3
+# Row 1: ReadingListMarkReadSelect
+# Row 2: ReadingListRemoveSelect
+PAGE_SIZE = 5
 
 
 class MarkAsReadButton(discord.ui.Button):
@@ -34,70 +32,24 @@ class MarkAsReadButton(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-
+        discord_id = str(interaction.user.id)
         logger.info(
-            "MarkAsReadButton clicked",
-            user_id=str(interaction.user.id),
-            article_id=str(self.item.article_id),
-            button="MarkAsReadButton",
+            f"MarkAsReadButton clicked by user {discord_id} for article {self.item.article_id}"
         )
-
         try:
-            discord_id = str(interaction.user.id)
             await self.supabase_service.update_article_status(
                 discord_id, self.item.article_id, "Read"
             )
-
             self.disabled = True
             try:
                 await interaction.message.edit(view=self.view)
-            except discord.NotFound:
-                logger.warning(
-                    "Message not found when editing view", user_id=str(interaction.user.id)
-                )
-                pass  # message expired or was deleted, safe to ignore
-            except discord.HTTPException as e:
-                logger.warning(
-                    "HTTP error when editing message",
-                    user_id=str(interaction.user.id),
-                    error=str(e),
-                )
-                pass  # Handle Discord API errors gracefully
-
+            except Exception:
+                pass
             await interaction.followup.send(f"✅ 已將《{self.item.title}》標記為已讀！", ephemeral=True)
-            logger.info(
-                "Successfully marked article as read",
-                user_id=str(interaction.user.id),
-                article_id=str(self.item.article_id),
-            )
-
-        except SupabaseServiceError as e:
-            logger.error(
-                "Database error in MarkAsReadButton",
-                user_id=str(interaction.user.id),
-                article_id=str(self.item.article_id),
-                button="MarkAsReadButton",
-                error=str(e),
-                exc_info=True,
-            )
-            await interaction.followup.send(
-                "❌ 標記已讀時發生錯誤，請稍後再試。\n" "💡 建議：資料庫連線可能暫時中斷，請稍後再試。",
-                ephemeral=True,
-            )
+            logger.info(f"Successfully marked article as read via button for user {discord_id}")
         except Exception as e:
-            logger.critical(
-                "Unexpected error in MarkAsReadButton",
-                user_id=str(interaction.user.id),
-                article_id=str(self.item.article_id),
-                button="MarkAsReadButton",
-                error=str(e),
-                error_type=type(e).__name__,
-                exc_info=True,
-            )
-            await interaction.followup.send(
-                "❌ 發生未預期的錯誤，請稍後再試。\n💡 建議：如果問題持續發生，請聯繫管理員。",
-                ephemeral=True,
-            )
+            logger.error(f"Error in MarkAsReadButton callback: {e}", exc_info=True)
+            await interaction.followup.send("❌ 標記已讀時發生錯誤，請稍後再試。", ephemeral=True)
 
 
 class RatingSelect(discord.ui.Select):
@@ -121,74 +73,131 @@ class RatingSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True)
-        rating = int(self.values[0])
-
-        # Validate rating
-        is_valid, error_msg = validate_rating(rating)
-        if not is_valid:
-            logger.warning(
-                "Invalid rating provided",
-                user_id=str(interaction.user.id),
-                rating=rating,
-                error=error_msg,
-            )
-            await interaction.followup.send(f"❌ {error_msg}", ephemeral=True)
-            return
-
-        stars = "⭐" * rating
-
-        logger.info(
-            "User rating article",
-            user_id=str(interaction.user.id),
-            article_id=str(self.item.article_id),
-            rating=rating,
-        )
-
         try:
+            rating = int(self.values[0])
             discord_id = str(interaction.user.id)
             await self.supabase_service.update_article_rating(
                 discord_id, self.item.article_id, rating
             )
+            await interaction.followup.send(f"✅ 已評為 {rating} 星！{'⭐' * rating}", ephemeral=True)
+        except Exception:
+            await interaction.followup.send("❌ 評分時發生錯誤，請稍後再試。", ephemeral=True)
 
-            await interaction.followup.send(
-                f"✅ 已將《{self.item.title}》評為 {stars}（{rating} 星）！", ephemeral=True
-            )
-            logger.info(
-                "Successfully rated article",
-                user_id=str(interaction.user.id),
-                article_id=str(self.item.article_id),
-                rating=rating,
+
+class ReadingListMarkReadSelect(discord.ui.Select):
+    def __init__(self, items: list[ReadingListItem], supabase_service: SupabaseService = None):
+        self.supabase_service = supabase_service or SupabaseService()
+        options = []
+        for i, item in enumerate(items):
+            label = f"{i+1}. {item.title}"
+            if len(label) > 100:
+                label = label[:97] + "..."
+
+            desc = f"分類: {item.category}"
+            if item.rating:
+                desc += f" | 評分: {'⭐' * item.rating}"
+            if len(desc) > 100:
+                desc = desc[:97] + "..."
+
+            options.append(
+                discord.SelectOption(
+                    label=label,
+                    value=str(item.article_id),
+                    description=desc,
+                    emoji="✅",
+                )
             )
 
-        except SupabaseServiceError as e:
-            logger.error(
-                "Database error in RatingSelect",
-                user_id=str(interaction.user.id),
-                article_id=str(self.item.article_id),
-                rating=rating,
-                select="RatingSelect",
-                error=str(e),
-                exc_info=True,
-            )
-            await interaction.followup.send(
-                "❌ 評分時發生錯誤，請稍後再試。\n💡 建議：資料庫連線可能暫時中斷，請稍後再試。",
-                ephemeral=True,
-            )
+        super().__init__(
+            placeholder="✅ 將文章標記為已讀…",
+            options=options,
+            custom_id="reading_list_mark_read_select",
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        try:
+            from uuid import UUID
+
+            article_id = self.values[0]
+            discord_id = str(interaction.user.id)
+            await self.supabase_service.update_article_status(discord_id, UUID(article_id), "Read")
+            await interaction.followup.send("✅ 已標記為已讀！", ephemeral=True)
+
+            # Update the view dynamically to reflect the removed item
+            if self.view:
+                self.view.items = [x for x in self.view.items if str(x.article_id) != article_id]
+                await self.view.update_message(interaction)
+            else:
+                # Reconstruct statelessly
+                items = await self.supabase_service.get_reading_list(discord_id, status="Unread")
+                if not items:
+                    await interaction.message.edit(content="📭 目前待讀清單是空的！", view=None)
+                else:
+                    view = PaginationView(items, supabase_service=self.supabase_service)
+                    content = view.build_page_content()
+                    await interaction.message.edit(content=content, view=view)
         except Exception as e:
-            logger.critical(
-                "Unexpected error in RatingSelect",
-                user_id=str(interaction.user.id),
-                article_id=str(self.item.article_id),
-                rating=rating,
-                select="RatingSelect",
-                error=str(e),
-                error_type=type(e).__name__,
-                exc_info=True,
+            logger.error(f"Error in ReadingListMarkReadSelect callback: {e}", exc_info=True)
+            await interaction.followup.send("❌ 標記失敗，請稍後再試。", ephemeral=True)
+
+
+class ReadingListRemoveSelect(discord.ui.Select):
+    def __init__(self, items: list[ReadingListItem], supabase_service: SupabaseService = None):
+        self.supabase_service = supabase_service or SupabaseService()
+        options = []
+        for i, item in enumerate(items):
+            label = f"{i+1}. {item.title}"
+            if len(label) > 100:
+                label = label[:97] + "..."
+
+            desc = f"分類: {item.category}"
+            if item.rating:
+                desc += f" | 評分: {'⭐' * item.rating}"
+            if len(desc) > 100:
+                desc = desc[:97] + "..."
+
+            options.append(
+                discord.SelectOption(
+                    label=label,
+                    value=str(item.article_id),
+                    description=desc,
+                    emoji="❌",
+                )
             )
-            await interaction.followup.send(
-                "❌ 發生未預期的錯誤，請稍後再試。\n💡 建議：如果問題持續發生，請聯繫管理員。",
-                ephemeral=True,
-            )
+
+        super().__init__(
+            placeholder="❌ 從待讀清單中移除文章…",
+            options=options,
+            custom_id="reading_list_remove_select",
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        try:
+            from uuid import UUID
+
+            article_id = self.values[0]
+            discord_id = str(interaction.user.id)
+            await self.supabase_service.remove_from_reading_list(discord_id, UUID(article_id))
+            await interaction.followup.send("✅ 已從待讀清單移除該文章！", ephemeral=True)
+
+            # Update the view dynamically to reflect the removed item
+            if self.view:
+                self.view.items = [x for x in self.view.items if str(x.article_id) != article_id]
+                await self.view.update_message(interaction)
+            else:
+                # Reconstruct statelessly
+                items = await self.supabase_service.get_reading_list(discord_id, status="Unread")
+                if not items:
+                    await interaction.message.edit(content="📭 目前待讀清單是空的！", view=None)
+                else:
+                    view = PaginationView(items, supabase_service=self.supabase_service)
+                    content = view.build_page_content()
+                    await interaction.message.edit(content=content, view=view)
+        except Exception as e:
+            logger.error(f"Error in ReadingListRemoveSelect callback: {e}", exc_info=True)
+            await interaction.followup.send("❌ 移除失敗，請稍後再試。", ephemeral=True)
 
 
 class PrevPageButton(discord.ui.Button):
@@ -240,19 +249,18 @@ class PaginationView(discord.ui.View):
         self.add_item(PrevPageButton(self))
         self.add_item(NextPageButton(self))
 
-        # Discord has a maximum of 5 rows (0-4)
-        # Row 0: Pagination buttons
-        # Row 1: MarkAsReadButtons (up to 5 buttons, each width=1)
-        # Rows 2-4: RatingSelect (width=5, must be alone on its row, max 3 selects)
         page_items = self._current_page_items()
 
-        # Add MarkAsReadButtons to row 1 (max 5 buttons)
-        for item in page_items[:5]:
-            self.add_item(MarkAsReadButton(item, row=1, supabase_service=self.supabase_service))
+        if page_items:
+            # Row 1: MarkRead dropdown
+            mark_read_select = ReadingListMarkReadSelect(page_items, self.supabase_service)
+            mark_read_select.row = 1
+            self.add_item(mark_read_select)
 
-        # Add RatingSelects to rows 2-4 (max 3 selects due to 5-row limit)
-        for i, item in enumerate(page_items[:3]):
-            self.add_item(RatingSelect(item, row=i + 2, supabase_service=self.supabase_service))
+            # Row 2: Remove dropdown
+            remove_select = ReadingListRemoveSelect(page_items, self.supabase_service)
+            remove_select.row = 2
+            self.add_item(remove_select)
 
     def _current_page_items(self) -> list[ReadingListItem]:
         start = self.page * self.page_size
@@ -272,9 +280,23 @@ class PaginationView(discord.ui.View):
         return "\n".join(lines).strip()
 
     async def update_message(self, interaction: discord.Interaction):
+        if not self.items:
+            try:
+                await interaction.response.edit_message(content="📭 目前待讀清單是空的！", view=None)
+            except discord.InteractionResponded:
+                await interaction.message.edit(content="📭 目前待讀清單是空的！", view=None)
+            return
+
+        total_pages = (len(self.items) + self.page_size - 1) // self.page_size
+        if self.page >= total_pages:
+            self.page = max(0, total_pages - 1)
+
         self._build_components()
         content = self.build_page_content()
-        await interaction.response.edit_message(content=content, view=self)
+        try:
+            await interaction.response.edit_message(content=content, view=self)
+        except discord.InteractionResponded:
+            await interaction.message.edit(content=content, view=self)
 
 
 class ReadingListGroup(app_commands.Group):

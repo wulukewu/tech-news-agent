@@ -15,6 +15,96 @@ from app.services.supabase_service import SupabaseService
 logger = get_logger(__name__)
 
 
+class UnsubscribeFeedSelect(discord.ui.Select):
+    def __init__(self, subscriptions: list, supabase_service: SupabaseService = None):
+        self.supabase_service = supabase_service or SupabaseService()
+        options = []
+        # Max 25 options in Discord select
+        for sub in subscriptions[:25]:
+            label = f"{sub.name}"
+            if len(label) > 100:
+                label = label[:97] + "..."
+
+            desc = f"分類: {sub.category} | {sub.url}"
+            if len(desc) > 100:
+                desc = desc[:97] + "..."
+
+            options.append(
+                discord.SelectOption(
+                    label=label,
+                    value=str(sub.feed_id),
+                    description=desc,
+                    emoji="❌",
+                )
+            )
+
+        if not options:
+            options.append(discord.SelectOption(label="無訂閱來源", value="none", emoji="📭"))
+
+        super().__init__(
+            placeholder="❌ 取消訂閱 RSS 來源…",
+            options=options,
+            custom_id="subscription_unsubscribe_select",
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        try:
+            if self.values[0] == "none":
+                return
+
+            from uuid import UUID
+
+            feed_id = self.values[0]
+            discord_id = str(interaction.user.id)
+
+            await self.supabase_service.unsubscribe_from_feed(discord_id, UUID(feed_id))
+            await interaction.followup.send("✅ 已成功取消訂閱該來源！", ephemeral=True)
+
+            # Refresh list
+            subscriptions = await self.supabase_service.get_user_subscriptions(discord_id)
+            if not subscriptions:
+                await interaction.message.edit(content="📭 你還沒有訂閱任何 RSS 來源！", embed=None, view=None)
+            else:
+                view = SubscriptionListView(subscriptions, self.supabase_service)
+                embed = view.build_embed()
+                await interaction.message.edit(embed=embed, view=view)
+        except Exception as e:
+            logger.error(f"Error in UnsubscribeFeedSelect callback: {e}", exc_info=True)
+            await interaction.followup.send("❌ 取消訂閱失敗，請稍後再試。", ephemeral=True)
+
+
+class SubscriptionListView(discord.ui.View):
+    def __init__(self, subscriptions: list, supabase_service: SupabaseService = None):
+        super().__init__(timeout=None)
+        self.subscriptions = subscriptions
+        self.supabase_service = supabase_service or SupabaseService()
+        self.add_item(UnsubscribeFeedSelect(self.subscriptions, self.supabase_service))
+
+    def build_embed(self) -> discord.Embed:
+        embed = discord.Embed(
+            title="📚 你的 RSS 訂閱清單",
+            color=discord.Color.blue(),
+            description=f"目前共訂閱 {len(self.subscriptions)} 個技術來源",
+        )
+
+        from collections import defaultdict
+
+        by_category = defaultdict(list)
+        for sub in self.subscriptions:
+            by_category[sub.category].append(sub)
+
+        for category in sorted(by_category.keys()):
+            feed_lines = []
+            for sub in by_category[category]:
+                feed_lines.append(f"• **[{sub.name}]({sub.url})**")
+
+            embed.add_field(name=f"📁 {category}", value="\n".join(feed_lines), inline=False)
+
+        embed.set_footer(text="💡 提示：你可以直接從下方的下拉選單中取消訂閱任何來源。")
+        return embed
+
+
 class SubscriptionCommands(commands.Cog):
     """Cog for managing user feed subscriptions with service layer dependency injection."""
 
@@ -215,7 +305,7 @@ class SubscriptionCommands(commands.Cog):
                 )
                 return
 
-            # 4. Build subscription list message
+            # 4. Build subscription list message with premium interactive dashboard
             lines = ["📚 **你的訂閱清單**\n"]
 
             # Group by category for better organization
@@ -235,11 +325,13 @@ class SubscriptionCommands(commands.Cog):
 
             # Add footer with total count
             lines.append(f"_共 {len(subscriptions)} 個訂閱源_")
-
             content = "\n".join(lines)
 
+            view = SubscriptionListView(subscriptions, self.supabase_service)
+            embed = view.build_embed()
+
             # 5. Send ephemeral response
-            await interaction.followup.send(content, ephemeral=True)
+            await interaction.followup.send(content, embed=embed, view=view, ephemeral=True)
             logger.info(
                 "Sent subscription list to user",
                 user_id=str(interaction.user.id),

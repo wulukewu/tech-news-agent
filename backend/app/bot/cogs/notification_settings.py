@@ -21,6 +21,255 @@ from app.tasks.scheduler import get_dynamic_scheduler
 logger = get_logger(__name__)
 
 
+class NotificationFrequencySelect(discord.ui.Select):
+    def __init__(self, row: int):
+        options = [
+            discord.SelectOption(
+                label="📅 每日推送", value="daily", description="每天為你推薦最新技術文章", emoji="📆"
+            ),
+            discord.SelectOption(
+                label="📅 每週推送", value="weekly", description="每週一為你回顧技術精華", emoji="📅"
+            ),
+            discord.SelectOption(
+                label="📅 每月推送", value="monthly", description="每月為你整理趨勢分析", emoji="🗓️"
+            ),
+            discord.SelectOption(
+                label="❌ 停用推薦", value="disabled", description="不再主動發送精選推播", emoji="📭"
+            ),
+        ]
+        super().__init__(
+            placeholder="⏱️ 設定通知頻率…",
+            options=options,
+            custom_id="settings_frequency_select",
+            row=row,
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        try:
+            supabase_service = SupabaseService()
+            discord_id = str(interaction.user.id)
+            user_id = await supabase_service.get_or_create_user(discord_id)
+
+            prefs_repo = UserNotificationPreferencesRepository(supabase_service.client)
+            preference_service = PreferenceService(prefs_repo)
+
+            selected_frequency = self.values[0]
+            updates = UpdateUserNotificationPreferencesRequest(frequency=selected_frequency)
+            await preference_service.update_preferences(user_id, updates, source="discord")
+
+            frequency_labels = {
+                "daily": "每日推送",
+                "weekly": "每週推送",
+                "monthly": "每月推送",
+                "disabled": "已停用推薦",
+            }
+            await interaction.followup.send(
+                f"✅ 通知頻率已更新為：{frequency_labels.get(selected_frequency)}！", ephemeral=True
+            )
+
+            # Re-render dashboard
+            preferences = await preference_service.get_user_preferences(user_id)
+            view = NotificationSettingsControlView(preferences.dm_enabled, supabase_service)
+            await view._refresh_dashboard(interaction, user_id, preference_service)
+        except Exception as e:
+            logger.error(f"Error in NotificationFrequencySelect callback: {e}", exc_info=True)
+            await interaction.followup.send("❌ 設定頻率失敗，請稍後再試。", ephemeral=True)
+
+
+class NotificationTimezoneSelect(discord.ui.Select):
+    def __init__(self, row: int):
+        options = [
+            discord.SelectOption(
+                label="Asia/Taipei (台北時間 - UTC+8)", value="Asia/Taipei", emoji="🇹🇼"
+            ),
+            discord.SelectOption(label="Asia/Tokyo (東京時間 - UTC+9)", value="Asia/Tokyo", emoji="🇯🇵"),
+            discord.SelectOption(
+                label="Asia/Hong_Kong (香港時間 - UTC+8)", value="Asia/Hong_Kong", emoji="🇭🇰"
+            ),
+            discord.SelectOption(label="UTC (世界協調時間)", value="UTC", emoji="🌐"),
+            discord.SelectOption(
+                label="America/New_York (美東時間 - UTC-5)", value="America/New_York", emoji="🇺🇸"
+            ),
+            discord.SelectOption(
+                label="America/Los_Angeles (美西時間 - UTC-8)", value="America/Los_Angeles", emoji="🇺🇸"
+            ),
+            discord.SelectOption(
+                label="Europe/London (倫敦時間 - UTC+0)", value="Europe/London", emoji="🇬🇧"
+            ),
+        ]
+        super().__init__(
+            placeholder="🌍 變更你的時區…", options=options, custom_id="settings_timezone_select", row=row
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        try:
+            supabase_service = SupabaseService()
+            discord_id = str(interaction.user.id)
+            user_id = await supabase_service.get_or_create_user(discord_id)
+
+            prefs_repo = UserNotificationPreferencesRepository(supabase_service.client)
+            preference_service = PreferenceService(prefs_repo)
+
+            selected_timezone = self.values[0]
+            updates = UpdateUserNotificationPreferencesRequest(timezone=selected_timezone)
+            await preference_service.update_preferences(user_id, updates, source="discord")
+
+            await interaction.followup.send(f"✅ 時區已成功更新為：`{selected_timezone}`！", ephemeral=True)
+
+            # Re-render dashboard
+            preferences = await preference_service.get_user_preferences(user_id)
+            view = NotificationSettingsControlView(preferences.dm_enabled, supabase_service)
+            await view._refresh_dashboard(interaction, user_id, preference_service)
+        except Exception as e:
+            logger.error(f"Error in NotificationTimezoneSelect callback: {e}", exc_info=True)
+            await interaction.followup.send("❌ 設定時區失敗，請稍後再試。", ephemeral=True)
+
+
+class NotificationSettingsControlView(discord.ui.View):
+    def __init__(self, dm_enabled: bool, supabase_service: SupabaseService = None):
+        super().__init__(timeout=None)
+        self.supabase_service = supabase_service or SupabaseService()
+
+        # Toggle Button
+        toggle_label = "🔔 通知: 已開啟" if dm_enabled else "🔕 通知: 已關閉"
+        toggle_style = discord.ButtonStyle.success if dm_enabled else discord.ButtonStyle.secondary
+        self.toggle_btn = discord.ui.Button(
+            label=toggle_label, style=toggle_style, custom_id="settings_toggle_notifications", row=0
+        )
+        self.toggle_btn.callback = self._toggle_callback
+        self.add_item(self.toggle_btn)
+
+        # Quiet Hours Button
+        self.quiet_hours_btn = discord.ui.Button(
+            label="🔕 勿擾設定",
+            style=discord.ButtonStyle.primary,
+            custom_id="settings_configure_quiet_hours",
+            row=0,
+        )
+        self.quiet_hours_btn.callback = self._quiet_hours_callback
+        self.add_item(self.quiet_hours_btn)
+
+        # Frequency Select
+        self.add_item(NotificationFrequencySelect(row=1))
+
+        # Timezone Select
+        self.add_item(NotificationTimezoneSelect(row=2))
+
+    async def _toggle_callback(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        try:
+            discord_id = str(interaction.user.id)
+            user_id = await self.supabase_service.get_or_create_user(discord_id)
+
+            prefs_repo = UserNotificationPreferencesRepository(self.supabase_service.client)
+            preference_service = PreferenceService(prefs_repo)
+
+            current_preferences = await preference_service.get_user_preferences(user_id)
+            new_dm_enabled = not current_preferences.dm_enabled
+
+            updates = UpdateUserNotificationPreferencesRequest(dm_enabled=new_dm_enabled)
+            await preference_service.update_preferences(user_id, updates, source="discord")
+
+            await interaction.followup.send(
+                f"✅ 已成功{'開啟' if new_dm_enabled else '關閉'} DM 通知！", ephemeral=True
+            )
+            # Update the dashboard message
+            await self._refresh_dashboard(interaction, user_id, preference_service)
+        except Exception as e:
+            logger.error(f"Error in toggle notifications button: {e}", exc_info=True)
+            await interaction.followup.send("❌ 切換失敗，請稍後再試。", ephemeral=True)
+
+    async def _quiet_hours_callback(self, interaction: discord.Interaction):
+        # Trigger quiet hours config modal
+        from app.bot.ui.modals import SetQuietHoursModal
+
+        try:
+            await interaction.response.send_modal(SetQuietHoursModal(self.supabase_service))
+        except discord.InteractionResponded:
+            await interaction.followup.send(
+                "❌ 無法重新開啟勿擾表單，請使用 `/set-quiet-hours` 斜線指令。", ephemeral=True
+            )
+
+    async def _refresh_dashboard(
+        self, interaction: discord.Interaction, user_id, preference_service
+    ):
+        preferences = await preference_service.get_user_preferences(user_id)
+
+        # Re-create dashboard embed
+        embed = discord.Embed(
+            title="🔔 你的個人化通知設定",
+            color=discord.Color.blue(),
+        )
+
+        status_emoji = "✅" if preferences.dm_enabled else "❌"
+        embed.add_field(
+            name="📱 Discord DM",
+            value=f"{status_emoji} {'已開啟' if preferences.dm_enabled else '已關閉'}",
+            inline=True,
+        )
+
+        email_emoji = "✅" if preferences.email_enabled else "❌"
+        embed.add_field(
+            name="📧 電子郵件",
+            value=f"{email_emoji} {'已開啟' if preferences.email_enabled else '已關閉（即將推出）'}",
+            inline=True,
+        )
+
+        frequency_map = {
+            "daily": "每日",
+            "weekly": "每週",
+            "monthly": "每月",
+            "disabled": "停用",
+        }
+        embed.add_field(
+            name="⏰ 通知頻率",
+            value=frequency_map.get(preferences.frequency, preferences.frequency),
+            inline=True,
+        )
+
+        if preferences.frequency != "disabled":
+            embed.add_field(
+                name="🕐 通知時間",
+                value=f"{preferences.notification_time.strftime('%H:%M')}",
+                inline=True,
+            )
+
+            embed.add_field(
+                name="🌍 時區",
+                value=preferences.timezone,
+                inline=True,
+            )
+
+            try:
+                next_time = TimezoneConverter.get_next_notification_time(
+                    frequency=preferences.frequency,
+                    notification_time=preferences.notification_time.strftime("%H:%M"),
+                    timezone=preferences.timezone,
+                )
+                if next_time:
+                    local_time = TimezoneConverter.convert_to_user_time(
+                        next_time, preferences.timezone
+                    )
+                    embed.add_field(
+                        name="📅 下次通知",
+                        value=f"{local_time.strftime('%Y-%m-%d %H:%M')}",
+                        inline=True,
+                    )
+            except Exception:
+                pass
+
+        embed.set_footer(text="使用下方控制台按鈕來修改這些設定")
+
+        # Build new view
+        new_view = NotificationSettingsControlView(preferences.dm_enabled, self.supabase_service)
+        try:
+            await interaction.response.edit_message(embed=embed, view=new_view)
+        except discord.InteractionResponded:
+            await interaction.message.edit(embed=embed, view=new_view)
+
+
 class NotificationSettings(commands.Cog):
     """通知設定指令群組 with service layer dependency injection"""
 
@@ -286,9 +535,10 @@ class NotificationSettings(commands.Cog):
                 except Exception as e:
                     logger.warning(f"Failed to calculate next notification time: {e}")
 
-            embed.set_footer(text="使用其他指令來修改這些設定")
+            embed.set_footer(text="使用下方控制台按鈕來修改這些設定")
 
-            await interaction.followup.send(embed=embed, ephemeral=True)
+            view = NotificationSettingsControlView(preferences.dm_enabled, self.supabase_service)
+            await interaction.followup.send(embed=embed, view=view, ephemeral=True)
             logger.info("Notification settings displayed successfully", user_id=discord_id)
 
         except Exception as e:

@@ -141,6 +141,106 @@ class TechNewsBot(commands.Bot):
                             exc_info=True,
                         )
 
+                elif custom_id == "reading_list_mark_read_select":
+                    try:
+                        from app.bot.cogs.reading_list import ReadingListMarkReadSelect
+
+                        select = ReadingListMarkReadSelect([])
+                        select.values = interaction.data.get("values", [])
+                        await select.callback(interaction)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in stateless reading_list_mark_read_select callback: {e}",
+                            exc_info=True,
+                        )
+
+                elif custom_id == "reading_list_remove_select":
+                    try:
+                        from app.bot.cogs.reading_list import ReadingListRemoveSelect
+
+                        select = ReadingListRemoveSelect([])
+                        select.values = interaction.data.get("values", [])
+                        await select.callback(interaction)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in stateless reading_list_remove_select callback: {e}",
+                            exc_info=True,
+                        )
+
+                elif custom_id == "settings_toggle_notifications":
+                    try:
+                        from app.bot.cogs.notification_settings import (
+                            NotificationSettingsControlView,
+                        )
+
+                        view = NotificationSettingsControlView(True)
+                        await view._toggle_callback(interaction)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in stateless settings_toggle_notifications callback: {e}",
+                            exc_info=True,
+                        )
+
+                elif custom_id == "settings_configure_quiet_hours":
+                    try:
+                        from app.bot.cogs.notification_settings import (
+                            NotificationSettingsControlView,
+                        )
+
+                        view = NotificationSettingsControlView(True)
+                        await view._quiet_hours_callback(interaction)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in stateless settings_configure_quiet_hours callback: {e}",
+                            exc_info=True,
+                        )
+
+                elif custom_id == "settings_frequency_select":
+                    try:
+                        from app.bot.cogs.notification_settings import NotificationFrequencySelect
+
+                        select = NotificationFrequencySelect(1)
+                        select.values = interaction.data.get("values", [])
+                        await select.callback(interaction)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in stateless settings_frequency_select callback: {e}",
+                            exc_info=True,
+                        )
+
+                elif custom_id == "settings_timezone_select":
+                    try:
+                        from app.bot.cogs.notification_settings import NotificationTimezoneSelect
+
+                        select = NotificationTimezoneSelect(2)
+                        select.values = interaction.data.get("values", [])
+                        await select.callback(interaction)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in stateless settings_timezone_select callback: {e}",
+                            exc_info=True,
+                        )
+
+                elif custom_id == "subscription_unsubscribe_select":
+                    try:
+                        from app.bot.cogs.subscription_commands import UnsubscribeFeedSelect
+
+                        select = UnsubscribeFeedSelect([])
+                        select.values = interaction.data.get("values", [])
+                        await select.callback(interaction)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in stateless subscription_unsubscribe_select callback: {e}",
+                            exc_info=True,
+                        )
+
                 # 2. In-memory views check (Only check active view in memory for other components)
                 view_store = self._connection._view_store
                 message_id = interaction.message.id if interaction.message else None
