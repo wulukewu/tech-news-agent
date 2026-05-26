@@ -355,12 +355,12 @@ class DeepDiveSelect(discord.ui.Select):
                         label=label,
                         value=str(article.id),
                         description=desc,
-                        emoji="📖",
+                        emoji="💡",
                     )
                 )
 
         super().__init__(
-            placeholder="📖 產生 AI 深度分析…",
+            placeholder="💡 1秒核心技術精華…",
             options=options,
             custom_id="news_deep_dive_select",
         )
@@ -371,70 +371,32 @@ class DeepDiveSelect(discord.ui.Select):
             article_id = self.values[0]
             discord_id = str(interaction.user.id)
 
-            # Fetch article details
-            response = (
-                self.supabase_service.client.table("articles")
-                .select("*")
-                .eq("id", str(article_id))
-                .execute()
-            )
+            # Use generate_takeaway to load cached or LLM generate takeaway
+            takeaway = await self.llm_service.generate_takeaway(str(article_id))
 
-            if not response.data:
-                await interaction.followup.send("❌ 找不到該文章", ephemeral=True)
-                return
-
-            article_data = response.data[0]
-
-            from datetime import datetime
-
-            from app.schemas.article import ArticleSchema
-
-            article = ArticleSchema(
-                id=UUID(article_data["id"]) if article_data.get("id") else None,
-                title=article_data["title"],
-                url=article_data["url"],
-                category=article_data.get("category") or "Unknown",
-                tinkering_index=article_data.get("tinkering_index"),
-                ai_summary=article_data.get("ai_summary"),
-                published_at=(
-                    datetime.fromisoformat(article_data["published_at"].replace("Z", "+00:00"))
-                    if article_data.get("published_at")
-                    else None
-                ),
-                feed_id=UUID(article_data["feed_id"]) if article_data.get("feed_id") else None,
-                feed_name=article_data.get("feed_name") or "",
-            )
-
-            thread, created = await ensure_discussion_thread(
-                interaction=interaction,
-                thread_name=f"deep-dive-{article.title[:40]}",
-            )
-            if created:
-                await interaction.followup.send(
-                    f"✅ 已建立深度分析討論串：{thread.mention}",
-                    ephemeral=True,
+            # Fetch article title for beautiful response
+            try:
+                response = (
+                    self.supabase_service.client.table("articles")
+                    .select("title")
+                    .eq("id", str(article_id))
+                    .execute()
                 )
-            else:
-                await interaction.followup.send("✅ 已在此討論串提供深度分析。", ephemeral=True)
+                title = response.data[0]["title"] if (response and response.data) else "該文章"
+            except Exception:
+                title = "該文章"
 
-            await thread.send(f"📖 **深度分析標的**：{article.title}")
-            result = await self.llm_service.generate_deep_dive(article)
-            await thread.send(result[:2000])
+            display_title = title
+            if len(display_title) > 60:
+                display_title = display_title[:57] + "..."
 
-            user = await self.supabase_service.get_user_by_discord_id(discord_id)
-            if user:
-                memory_service = ThreadMemoryService(supabase_service=self.supabase_service)
-                conversation = await memory_service.get_or_create_thread_conversation(
-                    user_id=str(user["id"]),
-                    thread_id=str(thread.id),
-                    title=f"Deep Dive: {article.title}",
-                    article_id=str(article.id) if article.id else None,
-                )
-                await memory_service.save_assistant_message(conversation.id, str(thread.id), result)
-
+            await interaction.followup.send(
+                f"✅ **《{display_title}》1秒技術精華**：\n\n💡 *{takeaway}*",
+                ephemeral=True,
+            )
         except Exception as e:
             logger.error(f"Error in DeepDiveSelect callback: {e}", exc_info=True)
-            await interaction.followup.send("❌ 發生未預期的錯誤，請稍後再試。", ephemeral=True)
+            await interaction.followup.send("❌ 獲取精華失敗，請稍後再試。", ephemeral=True)
 
 
 class DeepDiveButton(discord.ui.Button):

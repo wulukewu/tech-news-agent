@@ -947,6 +947,7 @@
     "share-aria": "分享文章",
     "deep-dive-aria": "深度分析",
     "deep-dive-label": "深度分析",
+    "takeaway-prefix": "1秒核心技術精華",
     "tinkering-aria": "技術深度：{index} / 5 - {description}"
   },
   "articles-page": {

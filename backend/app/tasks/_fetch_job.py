@@ -200,6 +200,9 @@ async def background_fetch_job():
                         "feed_id": str(article.feed_id),
                         "tinkering_index": article.tinkering_index,
                         "ai_summary": article.ai_summary,
+                        "actionable_takeaway": article.ai_analysis.actionable_takeaway
+                        if article.ai_analysis
+                        else None,
                     }
                     articles_to_update.append(article_dict)
 
@@ -313,6 +316,9 @@ async def background_fetch_job():
                             ),
                             "tinkering_index": article.tinkering_index,
                             "ai_summary": article.ai_summary,
+                            "actionable_takeaway": article.ai_analysis.actionable_takeaway
+                            if article.ai_analysis
+                            else None,
                             "embedding": article.embedding,
                             "category": article.category,
                             "content_type": article.content_type,

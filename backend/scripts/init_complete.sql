@@ -106,6 +106,7 @@ CREATE TABLE IF NOT EXISTS articles (
     published_at TIMESTAMPTZ,
     tinkering_index INTEGER,
     ai_summary TEXT,
+    actionable_takeaway TEXT,
     embedding VECTOR(1024),
     fts_vector tsvector GENERATED ALWAYS AS (
         setweight(to_tsvector('english', coalesce(title, '')), 'A') ||
@@ -119,6 +120,7 @@ CREATE TABLE IF NOT EXISTS articles (
 -- Ensure columns added by migrations exist (safe for pre-existing tables)
 ALTER TABLE articles ADD COLUMN IF NOT EXISTS category TEXT;
 ALTER TABLE articles ADD COLUMN IF NOT EXISTS content_type VARCHAR(20) CHECK (content_type IN ('tutorial', 'guide', 'news', 'reference', 'project', 'opinion'));
+ALTER TABLE articles ADD COLUMN IF NOT EXISTS actionable_takeaway TEXT;
 -- fts_vector: add only if missing (generated columns require DO block)
 DO $$
 BEGIN

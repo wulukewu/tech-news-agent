@@ -403,6 +403,102 @@ class LLMService:
             logger.error(f"Failed to generate deep dive for '{article.title}': {e}")
             raise LLMServiceError(f"Deep dive generation error: {e}")
 
+    async def generate_takeaway(self, article_id: str) -> str:
+        """取得或生成文章的 1 句話技術核心精華（混合快取模式）
+
+        優先讀取資料庫已有的 actionable_takeaway；若無，則動態調用 LLM 生成，
+        將其寫回/快取至資料庫，並返回。
+        """
+        from app.services.supabase_service import SupabaseService
+
+        supabase = SupabaseService()
+
+        logger.info(f"Retrieving or generating takeaway for article {article_id}")
+
+        try:
+            # 1. 優先查詢資料庫是否已有快取
+            response = (
+                supabase.client.table("articles")
+                .select("title, category, actionable_takeaway, ai_summary")
+                .eq("id", str(article_id))
+                .execute()
+            )
+            if response and response.data:
+                row = response.data[0]
+                cached_takeaway = row.get("actionable_takeaway")
+                if cached_takeaway and cached_takeaway.strip():
+                    logger.info(f"Takeaway cache hit for article {article_id}")
+                    return cached_takeaway.strip()
+
+                title = row.get("title", "未知文章")
+                category = row.get("category", "技術")
+                ai_summary = row.get("ai_summary", "")
+            else:
+                title = "未知文章"
+                category = "技術"
+                ai_summary = ""
+        except Exception as e:
+            logger.warning(f"Failed to query database for article {article_id} takeaway: {e}")
+            title = "未知文章"
+            category = "技術"
+            ai_summary = ""
+
+        # 2. 快取未命中，實時調用 LLM 生成「極簡 1 句話核心精華」
+        logger.info(f"Takeaway cache miss for article {article_id}, generating via LLM...")
+
+        system_prompt = (
+            "你是一位資深技術分析師，請以繁體中文為以下技術文章寫一句最核心、最硬核的「1 句話技術核心精華」（不超過 50 字）。\n"
+            "風格要求：\n"
+            "- 用極度精鍊、一針見血的語言描述技術的核心本質與最具行動價值的要點。\n"
+            "- 絕不拖泥帶水，直接給出最關鍵的 Takeaway，不含任何前言或結語。\n"
+            "- 不要以『這篇文章...』或『作者指出...』開頭，直接說明技術本質。不超過 50 字。"
+        )
+
+        user_prompt = f"文章標題：{title}\n文章分類：{category}\nAI 摘要：{ai_summary}"
+
+        try:
+            # Use Groq client to generate
+            async def make_api_call():
+                return await self.client.chat.completions.create(
+                    model=SUMMARIZE_MODEL,
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    temperature=0.7,
+                    max_tokens=150,
+                )
+
+            response = await self._call_groq(make_api_call, context=f"generate_takeaway('{title}')")
+
+            takeaway = response.choices[0].message.content
+            if not takeaway or not takeaway.strip():
+                takeaway = "無法生成核心精華內容。"
+            else:
+                takeaway = takeaway.strip()
+
+                # 3. 快取寫回資料庫
+                try:
+                    (
+                        supabase.client.table("articles")
+                        .update({"actionable_takeaway": takeaway})
+                        .eq("id", str(article_id))
+                        .execute()
+                    )
+                    logger.info(
+                        f"Successfully cached generated takeaway to database for article {article_id}"
+                    )
+                except Exception as cache_exc:
+                    logger.warning(
+                        f"Failed to cache generated takeaway to database for article {article_id}: {cache_exc}"
+                    )
+
+            return takeaway
+
+        except Exception as e:
+            logger.error(f"Failed to generate takeaway for '{title}': {e}")
+            return "生成技術精華失敗，請稍後再試。"
+
     async def generate_weekly_newsletter(
         self, hardcore_articles: list[ArticleSchema]
     ) -> str | None:

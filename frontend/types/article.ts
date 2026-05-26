@@ -28,6 +28,8 @@ export interface Article {
   tinkeringIndex: number;
   /** AI-generated summary of the article content, or null if not available */
   aiSummary: string | null;
+  /** Actionable technical takeaway (1-second takeaway) */
+  actionableTakeaway?: string | null;
   /** Whether the article is already in the user's reading list */
   isInReadingList: boolean;
   /** Reading status from reading list: 'read' | 'unread' | null */

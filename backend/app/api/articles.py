@@ -100,7 +100,7 @@ async def get_my_articles(
         query = (
             supabase.client.table("articles")
             .select(
-                "id, title, url, published_at, tinkering_index, ai_summary, "
+                "id, title, url, published_at, tinkering_index, ai_summary, actionable_takeaway, "
                 "feeds!inner(name, category)"
             )
             .in_("feed_id", subscribed_feed_ids)
@@ -188,6 +188,7 @@ async def get_my_articles(
                     published_at=published_at,
                     tinkering_index=article["tinkering_index"],
                     ai_summary=article.get("ai_summary"),
+                    actionable_takeaway=article.get("actionable_takeaway"),
                     feed_name=feed_info.get("name", "Unknown"),
                     category=feed_info.get("category", "Unknown"),
                     is_in_reading_list=is_in_reading_list,

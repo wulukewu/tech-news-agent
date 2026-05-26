@@ -157,6 +157,16 @@ export function ArticleCard({
                   </h3>
                 </a>
 
+                {article.actionableTakeaway && (
+                  <div className="flex items-start gap-2 rounded-lg bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-xs text-emerald-800 dark:text-emerald-300 font-medium leading-relaxed transition-all duration-300 hover:bg-emerald-500/10 hover:border-emerald-500/30">
+                    <span className="flex-shrink-0 text-sm leading-none">💡</span>
+                    <div>
+                      <span className="font-bold mr-1">{t('article-card.takeaway-prefix')}：</span>
+                      <span className="font-normal italic">{article.actionableTakeaway}</span>
+                    </div>
+                  </div>
+                )}
+
                 {/* Metadata row: source, category badge, date */}
                 <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                   {article.feedName && <span className="truncate">{article.feedName}</span>}
@@ -342,6 +352,16 @@ export function ArticleCard({
                   </svg>
                 </Button>
               </div>
+
+              {article.actionableTakeaway && (
+                <div className="flex items-start gap-2 rounded-lg bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-xs text-emerald-800 dark:text-emerald-300 font-medium leading-relaxed transition-all duration-300 hover:bg-emerald-500/10 hover:border-emerald-500/30">
+                  <span className="flex-shrink-0 text-sm leading-none">💡</span>
+                  <div>
+                    <span className="font-bold mr-1">{t('article-card.takeaway-prefix')}：</span>
+                    <span className="font-normal italic">{article.actionableTakeaway}</span>
+                  </div>
+                </div>
+              )}
 
               {/* Metadata row: source, category badge, date */}
               <div className="flex items-center gap-3 text-sm text-muted-foreground">

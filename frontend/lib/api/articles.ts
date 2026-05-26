@@ -58,6 +58,7 @@ export async function fetchMyArticles(
       publishedAt: string | null;
       tinkeringIndex: number;
       aiSummary: string | null;
+      actionableTakeaway?: string | null;
       feedName: string;
       category: string;
       isInReadingList: boolean;
@@ -83,6 +84,7 @@ export async function fetchMyArticles(
       publishedAt: article.publishedAt,
       tinkeringIndex: article.tinkeringIndex,
       aiSummary: article.aiSummary,
+      actionableTakeaway: article.actionableTakeaway,
       isInReadingList: article.isInReadingList,
     })),
     page: response.data.pagination.page,

@@ -947,6 +947,7 @@
     "share-aria": "Share article",
     "deep-dive-aria": "Deep Dive Analysis",
     "deep-dive-label": "Deep Dive Analysis",
+    "takeaway-prefix": "1-second Takeaway",
     "tinkering-aria": "Tinkering index: {index} out of 5 - {description}"
   },
   "articles-page": {

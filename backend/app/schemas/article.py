@@ -132,6 +132,9 @@ class ArticleResponse(BaseModel):
         ..., ge=1, le=5, description="技術複雜度（1-5）", serialization_alias="tinkeringIndex"
     )
     ai_summary: str | None = Field(None, description="AI 摘要", serialization_alias="aiSummary")
+    actionable_takeaway: str | None = Field(
+        None, description="1秒核心技術精華", serialization_alias="actionableTakeaway"
+    )
     feed_name: str = Field(..., description="來源名稱", serialization_alias="feedName")
     category: str = Field(..., description="分類")
     is_in_reading_list: bool = Field(

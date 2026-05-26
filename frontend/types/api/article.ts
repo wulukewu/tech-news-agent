@@ -97,6 +97,8 @@ export interface ArticleResponse {
   tinkering_index: number;
   /** AI 摘要 */
   ai_summary?: string | null;
+  /** 1秒核心技術精華 */
+  actionable_takeaway?: string | null;
   /** 來源名稱 */
   feed_name: string;
   /** 分類 */

@@ -236,7 +236,7 @@ async def _search_articles_by_query(query: str) -> List[ArticleSummaryResponse]:
         resp = (
             supabase.client.table("articles")
             .select(
-                "id, title, url, ai_summary, tinkering_index, published_at, category, feeds(category)"
+                "id, title, url, ai_summary, actionable_takeaway, tinkering_index, published_at, category, feeds(category)"
             )
             .or_(filters)
             .order("published_at", desc=True)
