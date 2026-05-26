@@ -119,7 +119,7 @@ class TechNewsBot(commands.Bot):
                         from app.bot.cogs.interactions import ReadLaterSelect
 
                         select = ReadLaterSelect([])
-                        select.values = interaction.data.get("values", [])
+                        select._values = interaction.data.get("values", [])
                         await select.callback(interaction)
                         return
                     except Exception as e:
@@ -133,7 +133,7 @@ class TechNewsBot(commands.Bot):
                         from app.bot.cogs.interactions import MarkReadSelect
 
                         select = MarkReadSelect([])
-                        select.values = interaction.data.get("values", [])
+                        select._values = interaction.data.get("values", [])
                         await select.callback(interaction)
                         return
                     except Exception as e:
@@ -147,7 +147,7 @@ class TechNewsBot(commands.Bot):
                         from app.bot.cogs.interactions import DeepDiveSelect
 
                         select = DeepDiveSelect([])
-                        select.values = interaction.data.get("values", [])
+                        select._values = interaction.data.get("values", [])
                         await select.callback(interaction)
                         return
                     except Exception as e:
@@ -161,7 +161,7 @@ class TechNewsBot(commands.Bot):
                         from app.bot.cogs.reading_list import ReadingListMarkReadSelect
 
                         select = ReadingListMarkReadSelect([])
-                        select.values = interaction.data.get("values", [])
+                        select._values = interaction.data.get("values", [])
                         await select.callback(interaction)
                         return
                     except Exception as e:
@@ -175,7 +175,7 @@ class TechNewsBot(commands.Bot):
                         from app.bot.cogs.reading_list import ReadingListRemoveSelect
 
                         select = ReadingListRemoveSelect([])
-                        select.values = interaction.data.get("values", [])
+                        select._values = interaction.data.get("values", [])
                         await select.callback(interaction)
                         return
                     except Exception as e:
@@ -219,7 +219,7 @@ class TechNewsBot(commands.Bot):
                         from app.bot.cogs.notification_settings import NotificationFrequencySelect
 
                         select = NotificationFrequencySelect(1)
-                        select.values = interaction.data.get("values", [])
+                        select._values = interaction.data.get("values", [])
                         await select.callback(interaction)
                         return
                     except Exception as e:
@@ -233,7 +233,7 @@ class TechNewsBot(commands.Bot):
                         from app.bot.cogs.notification_settings import NotificationTimezoneSelect
 
                         select = NotificationTimezoneSelect(2)
-                        select.values = interaction.data.get("values", [])
+                        select._values = interaction.data.get("values", [])
                         await select.callback(interaction)
                         return
                     except Exception as e:
@@ -247,7 +247,7 @@ class TechNewsBot(commands.Bot):
                         from app.bot.cogs.subscription_commands import UnsubscribeFeedSelect
 
                         select = UnsubscribeFeedSelect([])
-                        select.values = interaction.data.get("values", [])
+                        select._values = interaction.data.get("values", [])
                         await select.callback(interaction)
                         return
                     except Exception as e:
@@ -364,7 +364,7 @@ class TechNewsBot(commands.Bot):
                         from app.bot.cogs.persistent_views import PersistentRatingSelect
 
                         select = PersistentRatingSelect()
-                        select.values = interaction.data.get("values", [])
+                        select._values = interaction.data.get("values", [])
                         await select.callback(interaction)
                         return
                     except Exception as e:
@@ -389,7 +389,7 @@ class TechNewsBot(commands.Bot):
                         from app.bot.cogs.persistent_views import PersistentDigestRatingSelect
 
                         select = PersistentDigestRatingSelect()
-                        select.values = interaction.data.get("values", [])
+                        select._values = interaction.data.get("values", [])
                         await select.callback(interaction)
                         return
                     except Exception as e:
