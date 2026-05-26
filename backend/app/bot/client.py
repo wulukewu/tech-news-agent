@@ -71,6 +71,21 @@ class TechNewsBot(commands.Bot):
 
     async def on_interaction(self, interaction: discord.Interaction):
         """Intercept component interactions to route them to persistent/stateless handlers."""
+        # Dev guild isolation check: if dev_guild_id is configured and we are in a guild,
+        # ignore interactions from other servers to avoid competing with production bot.
+        try:
+            from app.core.config import get_settings
+
+            settings = get_settings()
+            if settings.dev_guild_id and interaction.guild_id:
+                if interaction.guild_id != int(settings.dev_guild_id):
+                    logger.debug(
+                        f"Ignoring interaction from guild {interaction.guild_id} due to dev_guild_id isolation."
+                    )
+                    return
+        except Exception as e:
+            logger.warning(f"Error during dev guild isolation check: {e}")
+
         if interaction.type == discord.InteractionType.component:
             custom_id = interaction.data.get("custom_id", "")
             if custom_id:
@@ -240,6 +255,66 @@ class TechNewsBot(commands.Bot):
                             f"Error in stateless subscription_unsubscribe_select callback: {e}",
                             exc_info=True,
                         )
+
+                elif custom_id.startswith("rate_article:"):
+                    try:
+                        from app.services.supabase_service import SupabaseService
+
+                        supabase_service = SupabaseService()
+
+                        parts = custom_id.split(":")
+                        article_id = parts[1]
+                        rating = int(parts[2])
+                        discord_id = str(interaction.user.id)
+
+                        # Self-healing update
+                        try:
+                            await supabase_service.update_article_rating(
+                                discord_id, article_id, rating
+                            )
+                        except Exception:
+                            await supabase_service.save_to_reading_list(
+                                discord_id, article_id, "discord"
+                            )
+                            await supabase_service.update_article_status(
+                                discord_id, article_id, "Read"
+                            )
+                            await supabase_service.update_article_rating(
+                                discord_id, article_id, rating
+                            )
+
+                        # Respond immediately to edit the message and remove buttons
+                        await interaction.response.edit_message(
+                            content=f"✅ 已評為 {rating} 星！{'⭐' * rating} 該文章已成功存入您的永久優質收藏。", view=None
+                        )
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in stateless rate_article callback: {e}", exc_info=True
+                        )
+                        try:
+                            await interaction.response.send_message("❌ 評分失敗，請稍後再試。", ephemeral=True)
+                        except Exception:
+                            await interaction.followup.send("❌ 評分失敗，請稍後再試。", ephemeral=True)
+                        return
+
+                elif custom_id.startswith("rate_article_skip:"):
+                    try:
+                        parts = custom_id.split(":")
+                        article_id = parts[1]
+
+                        # Respond immediately to edit the message and remove buttons
+                        await interaction.response.edit_message(content="已標記為已讀（不評分）。", view=None)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in stateless rate_article_skip callback: {e}", exc_info=True
+                        )
+                        try:
+                            await interaction.response.send_message("❌ 操作失敗，請稍後再試。", ephemeral=True)
+                        except Exception:
+                            await interaction.followup.send("❌ 操作失敗，請稍後再試。", ephemeral=True)
+                        return
 
                 # 2. In-memory views check (Only check active view in memory for other components)
                 view_store = self._connection._view_store

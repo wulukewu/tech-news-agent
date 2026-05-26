@@ -109,7 +109,7 @@ class ReadingListMarkReadSelect(discord.ui.Select):
             )
 
         super().__init__(
-            placeholder="✅ 將文章標記為已讀…",
+            placeholder="✅ 標記已讀並評分收藏…",
             options=options,
             custom_id="reading_list_mark_read_select",
         )
@@ -121,8 +121,31 @@ class ReadingListMarkReadSelect(discord.ui.Select):
 
             article_id = self.values[0]
             discord_id = str(interaction.user.id)
-            await self.supabase_service.update_article_status(discord_id, UUID(article_id), "Read")
-            await interaction.followup.send("✅ 已標記為已讀！", ephemeral=True)
+
+            # Fetch the article title from DB to show a beautiful success message
+            try:
+                response = (
+                    self.supabase_service.client.table("articles")
+                    .select("title")
+                    .eq("id", str(article_id))
+                    .execute()
+                )
+                article_title = response.data[0]["title"] if (response and response.data) else "該文章"
+            except Exception:
+                article_title = "該文章"
+
+            # Self-healing mark read status update
+            try:
+                await self.supabase_service.update_article_status(
+                    discord_id, UUID(article_id), "Read"
+                )
+            except Exception:
+                await self.supabase_service.save_to_reading_list(
+                    discord_id, UUID(article_id), "discord"
+                )
+                await self.supabase_service.update_article_status(
+                    discord_id, UUID(article_id), "Read"
+                )
 
             # Update the view dynamically to reflect the removed item
             if self.view:
@@ -137,6 +160,19 @@ class ReadingListMarkReadSelect(discord.ui.Select):
                     view = PaginationView(items, supabase_service=self.supabase_service)
                     content = view.build_page_content()
                     await interaction.message.edit(content=content, view=view)
+
+            from app.bot.cogs.interactions import RateArticleView
+
+            view = RateArticleView(str(article_id))
+            display_title = article_title
+            if len(display_title) > 60:
+                display_title = display_title[:57] + "..."
+
+            await interaction.followup.send(
+                f"已將《{display_title}》標記為已讀！\n您想要為這篇文章評分並收藏嗎？",
+                view=view,
+                ephemeral=True,
+            )
         except Exception as e:
             logger.error(f"Error in ReadingListMarkReadSelect callback: {e}", exc_info=True)
             await interaction.followup.send("❌ 標記失敗，請稍後再試。", ephemeral=True)

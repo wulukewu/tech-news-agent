@@ -233,6 +233,30 @@ class ReadLaterSelect(discord.ui.Select):
             await interaction.followup.send("❌ 收藏失敗，請稍後再試。", ephemeral=True)
 
 
+class RateArticleView(discord.ui.View):
+    def __init__(self, article_id: str):
+        super().__init__(timeout=None)
+        # Add 5 rating buttons on Row 0
+        for i in range(1, 6):
+            self.add_item(
+                discord.ui.Button(
+                    label=f"⭐ {i}",
+                    custom_id=f"rate_article:{article_id}:{i}",
+                    style=discord.ButtonStyle.secondary,
+                    row=0,
+                )
+            )
+        # Add a Skip button on Row 1
+        self.add_item(
+            discord.ui.Button(
+                label="❌ 僅標記已讀",
+                custom_id=f"rate_article_skip:{article_id}",
+                style=discord.ButtonStyle.secondary,
+                row=1,
+            )
+        )
+
+
 class MarkReadSelect(discord.ui.Select):
     def __init__(self, articles: list[ArticleSchema], supabase_service: SupabaseService = None):
         self.supabase_service = supabase_service or SupabaseService()
@@ -259,7 +283,7 @@ class MarkReadSelect(discord.ui.Select):
                 )
 
         super().__init__(
-            placeholder="✅ 將文章標記為已讀…",
+            placeholder="✅ 標記已讀並評分收藏…",
             options=options,
             custom_id="news_mark_read_select",
         )
@@ -269,8 +293,36 @@ class MarkReadSelect(discord.ui.Select):
         try:
             article_id = self.values[0]
             discord_id = str(interaction.user.id)
-            await self.supabase_service.update_article_status(discord_id, article_id, "Read")
-            await interaction.followup.send("✅ 已將文章標記為已讀！", ephemeral=True)
+
+            # Fetch the article title from DB to show a beautiful success message
+            try:
+                response = (
+                    self.supabase_service.client.table("articles")
+                    .select("title")
+                    .eq("id", str(article_id))
+                    .execute()
+                )
+                article_title = response.data[0]["title"] if (response and response.data) else "該文章"
+            except Exception:
+                article_title = "該文章"
+
+            # Self-healing mark read status update
+            try:
+                await self.supabase_service.update_article_status(discord_id, article_id, "Read")
+            except Exception:
+                await self.supabase_service.save_to_reading_list(discord_id, article_id, "discord")
+                await self.supabase_service.update_article_status(discord_id, article_id, "Read")
+
+            view = RateArticleView(str(article_id))
+            display_title = article_title
+            if len(display_title) > 60:
+                display_title = display_title[:57] + "..."
+
+            await interaction.followup.send(
+                f"已將《{display_title}》標記為已讀！\n您想要為這篇文章評分並收藏嗎？",
+                view=view,
+                ephemeral=True,
+            )
         except Exception as e:
             logger.error(f"Error in MarkReadSelect callback: {e}", exc_info=True)
             await interaction.followup.send("❌ 標記失敗，請稍後再試。", ephemeral=True)
