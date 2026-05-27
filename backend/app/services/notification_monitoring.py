@@ -32,8 +32,8 @@ class NotificationMetrics:
         self.discord_dm_success_rate = 0.0
         self.email_success_rate = 0.0
         self.average_delivery_time = 0.0
-        self.lock_acquisition_success_rate = 0.0
-        self.scheduler_job_success_rate = 0.0
+        self.lock_acquisition_success_rate = 1.0
+        self.scheduler_job_success_rate = 1.0
         self.preference_update_frequency = 0
         self.validation_error_rate = 0.0
 
