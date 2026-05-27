@@ -163,7 +163,15 @@
     },
     "articles": {
       "title": "Articles",
-      "description": "Discover and read tech articles from your subscriptions"
+      "description": "Discover and read tech articles from your subscriptions",
+      "empty-no-subs-title": "No articles yet",
+      "empty-no-subs-desc": "Subscribe to some feeds to start seeing articles here.",
+      "empty-browse-feeds": "Browse feeds",
+      "empty-not-found-title": "No articles found",
+      "empty-no-match": "No articles match \"{query}\"",
+      "empty-select-category": "Select at least one category to view articles",
+      "empty-no-articles-category": "No articles available for the selected categories",
+      "empty-clear-search": "Clear search"
     },
     "login": {
       "title": "Login to Tech News Agent",

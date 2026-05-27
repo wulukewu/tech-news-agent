@@ -163,7 +163,15 @@
     },
     "articles": {
       "title": "文章",
-      "description": "探索並閱讀來自您訂閱的技術文章"
+      "description": "探索並閱讀來自您訂閱的技術文章",
+      "empty-no-subs-title": "尚無文章",
+      "empty-no-subs-desc": "訂閱一些 RSS 來源以開始在此處查看文章。",
+      "empty-browse-feeds": "瀏覽訂閱來源",
+      "empty-not-found-title": "找不到文章",
+      "empty-no-match": "沒有符合「{query}」的文章",
+      "empty-select-category": "選擇至少一個類別以查看文章",
+      "empty-no-articles-category": "所選類別目前沒有可用的文章",
+      "empty-clear-search": "清除搜尋"
     },
     "login": {
       "title": "登入 Tech News Agent",
