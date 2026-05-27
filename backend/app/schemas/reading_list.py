@@ -57,6 +57,8 @@ class ReadingListItemResponse(BaseModel):
     added_at: datetime = Field(..., description="加入時間", alias="addedAt")
     updated_at: datetime = Field(..., description="更新時間", alias="updatedAt")
     source: str = Field("web", description="來源平台（discord, web）")
+    tinkering_index: int | None = Field(None, description="折騰指數（1-5）", alias="tinkeringIndex")
+    ai_summary: str | None = Field(None, description="AI 摘要", alias="aiSummary")
 
     class Config:
         populate_by_name = True

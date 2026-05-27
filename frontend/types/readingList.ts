@@ -33,6 +33,10 @@ export interface ReadingListItem {
   updatedAt: string;
   /** Source platform (discord or web) */
   source?: string;
+  /** Technical depth rating (1-5 stars) */
+  tinkeringIndex?: number;
+  /** AI generated summary */
+  aiSummary?: string | null;
 }
 
 /**

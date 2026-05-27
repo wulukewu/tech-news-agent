@@ -217,7 +217,7 @@ async def get_reading_list(
             supabase.client.table("reading_list")
             .select(
                 "article_id, status, rating, added_at, updated_at, source, "
-                "articles!inner(id, title, url, feeds!inner(category))",
+                "articles!inner(id, title, url, tinkering_index, ai_summary, feeds!inner(category))",
                 count="exact",
             )
             .eq("user_id", str(user_uuid))
@@ -265,6 +265,8 @@ async def get_reading_list(
                         added_at=item_data["added_at"],
                         updated_at=item_data["updated_at"],
                         source=item_data.get("source", "web"),
+                        tinkering_index=article_data.get("tinkering_index"),
+                        ai_summary=article_data.get("ai_summary"),
                     )
                 )
             except Exception as e:

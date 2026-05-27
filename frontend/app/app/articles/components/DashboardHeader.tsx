@@ -56,7 +56,7 @@ export function DashboardHeader({
       {searchQuery && (
         <div className="mt-4 text-sm text-muted-foreground">
           {articlesCount > 0 ? (
-            <span>{t('forms.labels.search-results', { count: articlesCount })}</span>
+            <span>{t('forms.messages.search-results', { count: articlesCount })}</span>
           ) : (
             <span>{t('pages.articles.empty-no-match', { query: searchQuery })}</span>
           )}

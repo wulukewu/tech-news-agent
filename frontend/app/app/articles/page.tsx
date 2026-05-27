@@ -103,8 +103,8 @@ function DashboardContent() {
             feedName: '',
             category: item.category,
             publishedAt: item.addedAt,
-            tinkeringIndex: 0,
-            aiSummary: null,
+            tinkeringIndex: item.tinkeringIndex || 0,
+            aiSummary: item.aiSummary || null,
             isInReadingList: true,
           }));
           setSavedArticles(mapped);
@@ -133,8 +133,8 @@ function DashboardContent() {
       // Show saved articles from reading list
       result = savedArticles;
     } else if (currentTab === 'recommended') {
-      // Show articles with high tinkering index (>= 7)
-      result = result.filter((article) => (article.tinkeringIndex || 0) >= 7);
+      // Show articles with high tinkering index (>= 4)
+      result = result.filter((article) => (article.tinkeringIndex || 0) >= 4);
     }
     // 'all' and 'subscribed' tabs show everything (no additional filtering)
 

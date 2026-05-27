@@ -27,6 +27,8 @@ export async function fetchReadingList(
       rating: number | null;
       addedAt: string;
       updatedAt: string;
+      tinkeringIndex?: number;
+      aiSummary?: string | null;
     }>;
     pagination: {
       total_count: number;
@@ -56,6 +58,8 @@ export async function fetchReadingList(
       rating: item.rating,
       addedAt: item.addedAt,
       updatedAt: item.updatedAt,
+      tinkeringIndex: item.tinkeringIndex,
+      aiSummary: item.aiSummary,
     })),
     page: responseData.pagination.page,
     pageSize: responseData.pagination.page_size,

@@ -149,7 +149,7 @@ class PersonalizationEngine:
             a
             for a in articles
             if (not top_cats or a.get("category", "").lower() in top_cats)
-            and a.get("tinkering_index", 0) >= 6
+            and a.get("tinkering_index", 0) >= 4
         ]
 
         # Sort by tinkering_index descending
