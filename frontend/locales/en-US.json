@@ -932,7 +932,11 @@
     "batch-remove": "Remove",
     "loading-more-sr": "Loading more articles...",
     "no-more-articles": "No more articles",
-    "showing-count": "Showing {shown} of {total} articles"
+    "showing-count": "Showing {shown} of {total} articles",
+    "filter-all": "All",
+    "filter-unread": "Unread",
+    "filter-read": "Read",
+    "filter-archived": "Archived"
   },
   "reading-list-item": {
     "ai-insight-title": "Agent Insight",

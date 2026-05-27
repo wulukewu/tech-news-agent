@@ -3,6 +3,7 @@
 import * as Tabs from '@radix-ui/react-tabs';
 import { cn } from '@/lib/utils';
 import type { ReadingListStatus } from '@/types/readingList';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface StatusFilterTabsProps {
   selectedStatus: ReadingListStatus | null;
@@ -24,11 +25,12 @@ export function StatusFilterTabs({
   onStatusChange,
   counts,
 }: StatusFilterTabsProps) {
+  const { t } = useI18n();
   const tabs = [
-    { value: 'all', label: 'All', count: counts?.all },
-    { value: 'Unread', label: 'Unread', count: counts?.unread },
-    { value: 'Read', label: 'Read', count: counts?.read },
-    { value: 'Archived', label: 'Archived', count: counts?.archived },
+    { value: 'all', label: t('reading-list-page.filter-all'), count: counts?.all },
+    { value: 'Unread', label: t('reading-list-page.filter-unread'), count: counts?.unread },
+    { value: 'Read', label: t('reading-list-page.filter-read'), count: counts?.read },
+    { value: 'Archived', label: t('reading-list-page.filter-archived'), count: counts?.archived },
   ];
 
   const currentValue = selectedStatus || 'all';
