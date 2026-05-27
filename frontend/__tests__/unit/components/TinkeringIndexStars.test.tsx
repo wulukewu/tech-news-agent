@@ -79,8 +79,8 @@ describe('TinkeringIndexStars', () => {
 
       const tinkeringContainer = screen.getByLabelText(/tinkering index: 1 out of 5/i);
       const cpuBadge = tinkeringContainer.querySelector('span');
-      expect(cpuBadge).toHaveClass('bg-green-100');
-      expect(cpuBadge).toHaveClass('text-green-800');
+      expect(cpuBadge).toHaveClass('bg-green-50');
+      expect(cpuBadge).toHaveClass('text-green-700');
     });
 
     it('should use green color class for index 2', () => {
@@ -89,7 +89,7 @@ describe('TinkeringIndexStars', () => {
 
       const tinkeringContainer = screen.getByLabelText(/tinkering index: 2 out of 5/i);
       const cpuBadge = tinkeringContainer.querySelector('span');
-      expect(cpuBadge).toHaveClass('bg-green-100');
+      expect(cpuBadge).toHaveClass('bg-green-50');
     });
 
     it('should use blue color class for index 3', () => {
@@ -98,8 +98,8 @@ describe('TinkeringIndexStars', () => {
 
       const tinkeringContainer = screen.getByLabelText(/tinkering index: 3 out of 5/i);
       const cpuBadge = tinkeringContainer.querySelector('span');
-      expect(cpuBadge).toHaveClass('bg-blue-100');
-      expect(cpuBadge).toHaveClass('text-blue-800');
+      expect(cpuBadge).toHaveClass('bg-blue-50');
+      expect(cpuBadge).toHaveClass('text-blue-700');
     });
 
     it('should use purple color class for index 4', () => {
@@ -108,8 +108,8 @@ describe('TinkeringIndexStars', () => {
 
       const tinkeringContainer = screen.getByLabelText(/tinkering index: 4 out of 5/i);
       const cpuBadge = tinkeringContainer.querySelector('span');
-      expect(cpuBadge).toHaveClass('bg-purple-100');
-      expect(cpuBadge).toHaveClass('text-purple-800');
+      expect(cpuBadge).toHaveClass('bg-purple-50');
+      expect(cpuBadge).toHaveClass('text-purple-700');
     });
 
     it('should use purple color class for index 5', () => {
@@ -118,7 +118,7 @@ describe('TinkeringIndexStars', () => {
 
       const tinkeringContainer = screen.getByLabelText(/tinkering index: 5 out of 5/i);
       const cpuBadge = tinkeringContainer.querySelector('span');
-      expect(cpuBadge).toHaveClass('bg-purple-100');
+      expect(cpuBadge).toHaveClass('bg-fuchsia-50');
     });
   });
 
@@ -231,7 +231,7 @@ describe('TinkeringIndexStars', () => {
       await user.hover(tinkeringContainer);
 
       await waitFor(() => {
-        const tooltips = screen.getAllByText('5 - Advanced');
+        const tooltips = screen.getAllByText('5 - Expert');
         expect(tooltips.length).toBeGreaterThan(0);
       });
     });
@@ -265,8 +265,15 @@ describe('TinkeringIndexStars', () => {
       const article = createMockArticle(3);
       render(<ArticleCard article={article} />);
 
+      const getDescription = (idx: number): string => {
+        if (idx <= 2) return 'Beginner';
+        if (idx === 3) return 'Intermediate';
+        if (idx === 4) return 'Advanced';
+        return 'Expert';
+      };
+
       const tinkeringContainer = screen.getByLabelText(
-        'Tinkering index: 3 out of 5 - Intermediate'
+        `Tinkering index: 3 out of 5 - ${getDescription(3)}`
       );
       expect(tinkeringContainer).toBeInTheDocument();
     });
