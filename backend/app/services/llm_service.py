@@ -72,37 +72,52 @@ class LLMService:
             logger.error(f"Non-retryable Groq API error ({exc.status_code}) for {context}: {exc}")
             raise
 
-    async def evaluate_article(self, article: ArticleSchema) -> AIAnalysis:
+    async def evaluate_article(self, article: ArticleSchema) -> AIAnalysis | None:
         """Evaluate if an article is hardcore using a fast LLM."""
         logger.debug(f"Evaluating article: {article.title}")
 
         system_prompt = (
-            "你是一個熱愛動手實作的硬核全端開發者,負責審查技術文章。\n"
-            "你的任務是過濾掉無用的行銷廢話，只留下有價值的硬核技術資訊。\n"
-            "請根據以下標準評估文章：\n"
-            "1. 過濾行銷：是否包含具體程式碼、GitHub 連結或架構探討？純公告請淘汰。\n"
-            "2. 行動價值：這項技術可以怎麼用在現有專案上？\n"
-            "3. 折騰指數 (1-5分)：評估部署或上手的難易度\n"
-            "   - 1分：非常簡單，有完整文檔和一鍵部署\n"
-            "   - 2分：簡單，有 Docker Compose 或清晰指南\n"
-            "   - 3分：中等，需要一些配置和調試\n"
-            "   - 4分：困難，需要手動編譯或複雜配置\n"
-            "   - 5分：非常困難，需要深入理解和大量調試\n"
-            "4. 內容類型 (content_type)：\n"
-            "   - tutorial：有步驟的教學，帶著讀者完成某件事\n"
-            "   - guide：概念說明或最佳實踐指南\n"
-            "   - reference：API 文件、規格、速查表\n"
-            "   - project：開源專案介紹或 case study\n"
-            "   - news：產品發布、版本更新、業界新聞\n"
-            "   - opinion：觀點文章、評論、分析\n\n"
-            "⚠️ 重要：tinkering_index 必須是 1 到 5 之間的整數，不能是 0 或其他值。\n\n"
-            "⚠️ 絕對要求：你必須只回傳一個合法的 JSON，不要加上 Markdown 標記，例如 ```json。結構必須完全符合：\n"
+            "你是一個熱愛動手實作且極具理論深度的硬核全端開發者，負責審核與評估技術文章。\n"
+            "請對文章進行精準且客觀的三維度技術評估：\n\n"
+            "【維度 1：實作與折騰複雜度 (Practical Complexity - 1-5分)】\n"
+            "評估動手配置、寫代碼、編譯或部署的折騰難易度：\n"
+            "- 1分：純觀點散文/新聞、無任何代碼/命令或僅有極少代碼片段。\n"
+            "- 2分：簡單，有清晰指南、單個 CLI 命令或基礎 Docker Compose 執行。\n"
+            "- 3分：中等，有完整代碼/配置文件，上手需要進行部分配置與本地偵錯。\n"
+            "- 4分：困難，需要手動編譯、複雜的多模組配置、或深度環境偵錯。\n"
+            "- 5分：極端困難，需要深入理解底層、無文檔編譯核心或大量耗時偵錯。\n\n"
+            "【維度 2：理論與概念深度 (Theoretical Depth - 1-5分)】\n"
+            "評估電腦科學理論、演算法、分佈式原理或底層系統設計的深度：\n"
+            "- 1分：淺顯的新聞、基礎產品發布、無任何架構或理論探討。\n"
+            "- 2分：日常開發小技巧、單個 API 的使用方法。\n"
+            "- 3分：包含中階系統架構設計、性能分析、優化策略或設計模式探討。\n"
+            "- 4分：涉及分佈式一致性協定、底層操作系統原理、密碼學或極複雜的資安漏洞分析。\n"
+            "- 5分：前沿學術論文、全新底層理論架構、或極高深的計算理論剖析。\n\n"
+            "【維度 3：專案行動價值 (Actionability - 1-5分)】\n"
+            "評估此內容對現代全端/後端 web 開發者在專案落地上是否有直接的實用性或參考價值：\n"
+            "- 1分：與軟體開發無直接關聯（如科普趣聞、硬體發布）。\n"
+            "- 2分：一般性行業觀點、趨勢分析或無法落地的概念性產品。\n"
+            "- 3分：與現代開發主流技術相關的實用工具介紹或最佳實踐指南。\n"
+            "- 4分：能指導現有專案進行代碼重構、顯著提升效能、或解決常見的工程痛點。\n"
+            "- 5分：能直接解決重大安全隱患、顛覆性降低系統成本、或解決極關鍵工程阻礙的實戰指南。\n\n"
+            "【評分對齊錨點範例 (Few-Shot Anchors)】\n"
+            '- 範例 A (水文/新聞)："AI 晶片大廠發布全新效能卡，市場反應熱烈"\n'
+            "  * 評分分析：實作=1, 理論=1, 行動=1 (content_type=news)\n"
+            '- 範例 B (一般教學/工具介紹)："如何使用 Express.js 與 Docker 快速部署一個 Hello World App"\n'
+            "  * 評分分析：實作=2, 理論=2, 行動=3 (content_type=tutorial)\n"
+            '- 範例 C (中階實用指南)："使用 Redis 實作分散式限流器的最佳實踐與 Lua 腳本優化"\n'
+            "  * 評分分析：實作=3, 理論=3, 行動=4 (content_type=guide)\n"
+            '- 範例 D (硬核高難度文章)："手把手帶你用 Rust 從零寫一個相容 Redis 協議的異步併發 Key-Value 資料庫"\n'
+            "  * 評分分析：實作=5, 理論=4, 行動=4 (content_type=project)\n\n"
+            "⚠️ 絕對要求：你必須只回傳一個合法的 JSON，不要加上 Markdown 標記（如 ```json）。結構必須完全符合：\n"
             "{\n"
             '  "is_hardcore": boolean,\n'
-            '  "reason": "一句話說明為什麼推薦或淘汰",\n'
-            '  "actionable_takeaway": "提煉出的行動價值 (淘汰可留空)",\n'
-            '  "tinkering_index": number (必須是 1-5 之間的整數),\n'
-            '  "content_type": "tutorial|guide|reference|project|news|opinion"\n'
+            '  "reason": "請使用流暢的繁體中文撰寫，說明推薦或淘汰原因 (限制 50 字以內)",\n'
+            '  "actionable_takeaway": "請使用流暢的繁體中文撰寫，提煉出對開發者的行動價值 (淘汰可留空，限制 50 字以內)",\n'
+            '  "content_type": "tutorial|guide|reference|project|news|opinion",\n'
+            '  "practical_complexity": number (必須是 1 到 5 之間的整數),\n'
+            '  "theoretical_depth": number (必須是 1 到 5 之間的整數),\n'
+            '  "actionability": number (必須是 1 到 5 之間的整數)\n'
             "}"
         )
 
@@ -135,19 +150,47 @@ class LLMService:
             content = content.replace("```json", "").replace("```", "").strip()
             data = json.loads(content)
 
-            return AIAnalysis(**data)
+            # 提取 LLM 回傳的原始指標分數，在 Python 端進行權重公式計算
+            practical = int(data.get("practical_complexity", 1))
+            theoretical = int(data.get("theoretical_depth", 1))
+            actionability = int(data.get("actionability", 1))
+            content_type = data.get("content_type", "news")
+
+            # 邊界值防禦：限制在 1-5 範圍內
+            practical = max(1, min(5, practical))
+            theoretical = max(1, min(5, theoretical))
+            actionability = max(1, min(5, actionability))
+
+            # 針對 news 和 opinion 的實作複雜度強制設上限
+            if content_type in ("news", "opinion"):
+                practical = max(1, min(2, practical))
+
+            # 依據 content_type 進行加權公式計算
+            if content_type in ("tutorial", "project"):
+                raw_score = 0.5 * practical + 0.3 * theoretical + 0.2 * actionability
+            elif content_type in ("guide", "reference"):
+                raw_score = 0.3 * practical + 0.4 * theoretical + 0.3 * actionability
+            else:  # news / opinion / 預設
+                raw_score = 0.1 * practical + 0.6 * theoretical + 0.3 * actionability
+
+            # 嚴格的 Python 四捨五入
+            tinkering_index = int(raw_score + 0.5)
+            tinkering_index = max(1, min(5, tinkering_index))
+
+            # 寫入 AIAnalysis，保持與舊 Schema 欄位相容
+            return AIAnalysis(
+                is_hardcore=bool(data.get("is_hardcore", False)),
+                reason=str(data.get("reason", "")),
+                actionable_takeaway=str(data.get("actionable_takeaway", "")),
+                tinkering_index=tinkering_index,
+                content_type=content_type,
+            )
 
         except Exception as e:
             logger.warning(
-                f"Failed to evaluate article '{article.title}', defaulting to not hardcore. Error: {e}"
+                f"Failed to evaluate article '{article.title}', returning None. Error: {e}"
             )
-            # Return safe fallback AIAnalysis
-            return AIAnalysis(
-                is_hardcore=False,
-                reason="Evaluation failed",
-                actionable_takeaway="",
-                tinkering_index=1,
-            )
+            return None
 
     async def generate_summary(self, article: ArticleSchema) -> str | None:
         """

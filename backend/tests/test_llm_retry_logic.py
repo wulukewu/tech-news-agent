@@ -255,7 +255,7 @@ class TestEvaluateArticleWithRetry:
 
     @pytest.mark.asyncio
     async def test_evaluate_article_returns_fallback_after_all_retries_fail(self):
-        """evaluate_article returns fallback when all retries are exhausted."""
+        """evaluate_article returns None when all retries are exhausted."""
         service = LLMService.__new__(LLMService)
 
         call_count = 0
@@ -272,9 +272,8 @@ class TestEvaluateArticleWithRetry:
         with patch("asyncio.sleep", return_value=asyncio.sleep(0)):
             result = await service.evaluate_article(make_article())
 
-        # Should return fallback
-        assert result.is_hardcore is False
-        assert result.tinkering_index == 0
+        # Should return None
+        assert result is None
         assert call_count == MAX_RETRIES + 1  # All retries exhausted
 
 

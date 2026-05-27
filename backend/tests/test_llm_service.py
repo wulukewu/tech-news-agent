@@ -47,9 +47,11 @@ class TestEvaluateArticle:
         """evaluate_article returns a valid AIAnalysis when LLM responds correctly."""
         service = LLMService.__new__(LLMService)
         mock_response = MagicMock()
+        # Test Case: practical=4, theoretical=3, actionability=4, content_type=tutorial
+        # Python weight calc: 0.5*4 + 0.3*3 + 0.2*4 = 2.0 + 0.9 + 0.8 = 3.7 (rounded to 4)
         mock_response.choices[0].message.content = (
-            '{"is_hardcore": true, "reason": "Has code", '
-            '"actionable_takeaway": "Use it", "tinkering_index": 3}'
+            '{"is_hardcore": true, "reason": "Has code", "actionable_takeaway": "Use it", '
+            '"practical_complexity": 4, "theoretical_depth": 3, "actionability": 4, "content_type": "tutorial"}'
         )
         mock_client = MagicMock()
         mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
@@ -59,11 +61,32 @@ class TestEvaluateArticle:
 
         assert isinstance(result, AIAnalysis)
         assert result.is_hardcore is True
-        assert result.tinkering_index == 3
+        assert result.tinkering_index == 4
+        assert result.content_type == "tutorial"
+
+    @pytest.mark.asyncio
+    async def test_python_side_scoring_logic_and_limits(self):
+        """evaluate_article correctly implements weight formula and constraints in Python."""
+        service = LLMService.__new__(LLMService)
+
+        # News: practical complexity is capped at 2 (even if LLM returns 5)
+        # News Weight Calc: 0.1*2 (capped practical) + 0.6*4 (theoretical) + 0.3*3 (actionability) = 0.2 + 2.4 + 0.9 = 3.5 (rounded to 4)
+        mock_response = MagicMock()
+        mock_response.choices[0].message.content = (
+            '{"is_hardcore": true, "reason": "Theory paper", "actionable_takeaway": "None", '
+            '"practical_complexity": 5, "theoretical_depth": 4, "actionability": 3, "content_type": "news"}'
+        )
+        mock_client = MagicMock()
+        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
+        service.client = mock_client
+
+        result = await service.evaluate_article(make_article())
+        assert result.tinkering_index == 4
+        assert result.content_type == "news"
 
     @pytest.mark.asyncio
     async def test_returns_fallback_on_empty_response(self):
-        """evaluate_article returns a safe fallback when LLM returns empty content."""
+        """evaluate_article returns None when LLM returns empty content."""
         service = LLMService.__new__(LLMService)
         mock_response = MagicMock()
         mock_response.choices[0].message.content = None
@@ -73,12 +96,11 @@ class TestEvaluateArticle:
 
         result = await service.evaluate_article(make_article())
 
-        assert result.is_hardcore is False
-        assert result.tinkering_index == 1  # fallback value (0 is out of range 1-5)
+        assert result is None
 
     @pytest.mark.asyncio
     async def test_returns_fallback_on_exception(self):
-        """evaluate_article returns a safe fallback when LLM call raises."""
+        """evaluate_article returns None when LLM call raises."""
         service = LLMService.__new__(LLMService)
         mock_client = MagicMock()
         mock_client.chat.completions.create = AsyncMock(side_effect=Exception("timeout"))
@@ -86,7 +108,7 @@ class TestEvaluateArticle:
 
         result = await service.evaluate_article(make_article())
 
-        assert result.is_hardcore is False
+        assert result is None
 
     @pytest.mark.asyncio
     async def test_strips_markdown_code_block_from_response(self):
