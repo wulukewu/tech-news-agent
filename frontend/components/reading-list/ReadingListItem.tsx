@@ -133,7 +133,7 @@ export function ReadingListItem({
     <article
       className={cn(
         'bg-card border border-border rounded-lg p-4 md:p-6',
-        'transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:scale-[1.01]',
+        'transition-all duration-300 hover:shadow-md hover:border-muted-foreground/20 hover:bg-muted/5',
         'group cursor-pointer',
         'motion-reduce:transition-none'
       )}

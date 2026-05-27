@@ -27,7 +27,7 @@ import { useI18n } from '@/contexts/I18nContext';
  */
 export default function ReadingListPage() {
   const { t } = useI18n();
-  const [selectedStatus, setSelectedStatus] = useState<ReadingListStatus | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<ReadingListStatus | null>('Unread');
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 
