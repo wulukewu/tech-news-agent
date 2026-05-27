@@ -69,7 +69,7 @@ export function TinkeringIndexStars({ index }: { index: number }) {
                     'h-3.5 w-3.5 min-h-[14px] min-w-[14px]',
                     'transition-all duration-300 group-hover/stars:scale-[1.05]',
                     i < clampedIndex
-                      ? 'fill-foreground/45 text-foreground/45 dark:fill-foreground/35 dark:text-foreground/35'
+                      ? 'fill-yellow-400 text-yellow-400'
                       : 'text-muted-foreground/20 dark:text-muted-foreground/15'
                   )}
                   style={{ animationDelay: `${i * 50}ms` }}

@@ -185,9 +185,9 @@ describe('ArticleCard - Mobile Vertical Layout', () => {
       const stars = Array.from(tinkeringIndex.querySelectorAll('svg')).slice(1);
 
       // First 3 stars should be filled
-      expect(stars[0]).toHaveClass('fill-foreground/45');
-      expect(stars[1]).toHaveClass('fill-foreground/45');
-      expect(stars[2]).toHaveClass('fill-foreground/45');
+      expect(stars[0]).toHaveClass('fill-yellow-400');
+      expect(stars[1]).toHaveClass('fill-yellow-400');
+      expect(stars[2]).toHaveClass('fill-yellow-400');
 
       // Last 2 stars should be unfilled
       expect(stars[3]).toHaveClass('text-muted-foreground/20');
@@ -206,8 +206,8 @@ describe('ArticleCard - Mobile Vertical Layout', () => {
       const stars = Array.from(tinkeringIndex.querySelectorAll('svg')).slice(1);
 
       // First 2 stars should be filled
-      expect(stars[0]).toHaveClass('fill-foreground/45');
-      expect(stars[1]).toHaveClass('fill-foreground/45');
+      expect(stars[0]).toHaveClass('fill-yellow-400');
+      expect(stars[1]).toHaveClass('fill-yellow-400');
     });
 
     it('should use orange for advanced level (4-5 stars)', () => {
@@ -222,11 +222,11 @@ describe('ArticleCard - Mobile Vertical Layout', () => {
       const stars = Array.from(tinkeringIndex.querySelectorAll('svg')).slice(1);
 
       // All 5 stars should be filled
-      expect(stars[0]).toHaveClass('fill-foreground/45');
-      expect(stars[1]).toHaveClass('fill-foreground/45');
-      expect(stars[2]).toHaveClass('fill-foreground/45');
-      expect(stars[3]).toHaveClass('fill-foreground/45');
-      expect(stars[4]).toHaveClass('fill-foreground/45');
+      expect(stars[0]).toHaveClass('fill-yellow-400');
+      expect(stars[1]).toHaveClass('fill-yellow-400');
+      expect(stars[2]).toHaveClass('fill-yellow-400');
+      expect(stars[3]).toHaveClass('fill-yellow-400');
+      expect(stars[4]).toHaveClass('fill-yellow-400');
     });
   });
 

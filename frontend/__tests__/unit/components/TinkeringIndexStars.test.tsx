@@ -131,15 +131,15 @@ describe('TinkeringIndexStars', () => {
       const svgs = Array.from(tinkeringContainer.querySelectorAll('svg')).slice(1);
 
       // First 3 stars should be filled
-      expect(svgs[0]).toHaveClass('fill-foreground/45');
-      expect(svgs[1]).toHaveClass('fill-foreground/45');
-      expect(svgs[2]).toHaveClass('fill-foreground/45');
+      expect(svgs[0]).toHaveClass('fill-yellow-400');
+      expect(svgs[1]).toHaveClass('fill-yellow-400');
+      expect(svgs[2]).toHaveClass('fill-yellow-400');
 
       // Last 2 stars should be outlined
       expect(svgs[3]).toHaveClass('text-muted-foreground/20');
-      expect(svgs[3]).not.toHaveClass('fill-foreground/45');
+      expect(svgs[3]).not.toHaveClass('fill-yellow-400');
       expect(svgs[4]).toHaveClass('text-muted-foreground/20');
-      expect(svgs[4]).not.toHaveClass('fill-foreground/45');
+      expect(svgs[4]).not.toHaveClass('fill-yellow-400');
     });
 
     it('should show 1 filled star and 4 outlined stars for index 1', () => {
@@ -150,12 +150,12 @@ describe('TinkeringIndexStars', () => {
       const svgs = Array.from(tinkeringContainer.querySelectorAll('svg')).slice(1);
 
       // First star should be filled
-      expect(svgs[0]).toHaveClass('fill-foreground/45');
+      expect(svgs[0]).toHaveClass('fill-yellow-400');
 
       // Last 4 stars should be outlined
       for (let i = 1; i < 5; i++) {
         expect(svgs[i]).toHaveClass('text-muted-foreground/20');
-        expect(svgs[i]).not.toHaveClass('fill-foreground/45');
+        expect(svgs[i]).not.toHaveClass('fill-yellow-400');
       }
     });
 
@@ -168,7 +168,7 @@ describe('TinkeringIndexStars', () => {
 
       // All stars should be filled
       for (let i = 0; i < 5; i++) {
-        expect(svgs[i]).toHaveClass('fill-foreground/45');
+        expect(svgs[i]).toHaveClass('fill-yellow-400');
       }
     });
   });
