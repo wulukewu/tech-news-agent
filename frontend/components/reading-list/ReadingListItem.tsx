@@ -167,7 +167,7 @@ export function ReadingListItem({
             )}
           >
             <Cpu className="h-3 w-3 flex-shrink-0" />
-            <span>{t(`tinkering-index.level-${item.tinkeringIndex}`)}</span>
+            <span>{t(`tinkering-index.level-${item.tinkeringIndex}` as any)}</span>
           </span>
         )}
 

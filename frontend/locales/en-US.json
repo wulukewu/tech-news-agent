@@ -302,6 +302,8 @@
     "changed-to-english": "Language changed to English"
   },
   "buttons": {
+    "collapse": "Collapse",
+    "expand": "Expand",
     "save": "Save",
     "cancel": "Cancel",
     "delete": "Delete",
@@ -933,6 +935,7 @@
     "showing-count": "Showing {shown} of {total} articles"
   },
   "reading-list-item": {
+    "ai-insight-title": "Agent Insight",
     "status-label": "Status: {status}",
     "added-date": "Added {date}",
     "recently-added": "Recently added",

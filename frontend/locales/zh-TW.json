@@ -302,6 +302,8 @@
     "changed-to-english": "語言已切換為英文"
   },
   "buttons": {
+    "collapse": "收起",
+    "expand": "展開",
     "save": "儲存",
     "cancel": "取消",
     "delete": "刪除",
@@ -933,6 +935,7 @@
     "showing-count": "顯示 {shown} / {total} 篇文章"
   },
   "reading-list-item": {
+    "ai-insight-title": "Agent 智慧導讀",
     "status-label": "狀態：{status}",
     "added-date": "新增於 {date}",
     "recently-added": "最近新增",
