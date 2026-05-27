@@ -225,7 +225,11 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
       // Remove after 1 second
       setTimeout(() => {
-        if (document.body.contains(announcement)) {
+        if (
+          typeof document !== 'undefined' &&
+          document.body &&
+          document.body.contains(announcement)
+        ) {
           document.body.removeChild(announcement);
         }
       }, 1000);
