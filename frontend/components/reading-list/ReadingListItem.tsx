@@ -9,6 +9,8 @@ import {
   ExternalLink,
   RotateCcw,
   ArchiveRestore,
+  Cpu,
+  Sparkles,
 } from 'lucide-react';
 import { formatDistanceToNow, format, isAfter, subDays } from 'date-fns';
 import { zhTW, enUS } from 'date-fns/locale';
@@ -17,6 +19,7 @@ import type {
   ReadingListItem as ReadingListItemType,
   ReadingListStatus,
 } from '@/types/readingList';
+import { TINKERING_INDEX_LEVELS } from '@/lib/constants';
 import { RatingSelector } from './RatingSelector';
 import { useState } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
@@ -39,6 +42,7 @@ export function ReadingListItem({
   onRemove,
 }: ReadingListItemProps) {
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
+  const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const { t, locale } = useI18n();
   const dateFnsLocale = locale === 'zh-TW' ? zhTW : enUS;
 
@@ -150,7 +154,24 @@ export function ReadingListItem({
           {item.category}
         </span>
 
-        {/* Source badge */}
+        {/* Tinkering Index (Technical Depth) Badge - WITHOUT EMOJIS */}
+        {item.tinkeringIndex !== undefined && item.tinkeringIndex !== null && (
+          <span
+            className={cn(
+              'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider',
+              item.tinkeringIndex >= 4
+                ? 'bg-purple-100 text-purple-800 border border-purple-200 dark:bg-purple-950 dark:text-purple-200 dark:border-purple-900/50'
+                : item.tinkeringIndex === 3
+                  ? 'bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-950 dark:text-blue-200 dark:border-blue-900/50'
+                  : 'bg-green-100 text-green-800 border border-green-200 dark:bg-green-950 dark:text-green-200 dark:border-green-900/50'
+            )}
+          >
+            <Cpu className="h-3 w-3 flex-shrink-0" />
+            <span>{t(`tinkering-index.level-${item.tinkeringIndex}`)}</span>
+          </span>
+        )}
+
+        {/* Source badge - WITHOUT EMOJIS */}
         {item.source && (
           <span
             className={cn(
@@ -160,7 +181,7 @@ export function ReadingListItem({
                 : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200'
             )}
           >
-            {item.source === 'discord' ? '💬 Discord' : '🌐 Web'}
+            {item.source === 'discord' ? 'Discord' : 'Web'}
           </span>
         )}
 
@@ -179,6 +200,34 @@ export function ReadingListItem({
           {t('reading-list-item.added-date', { date: dateDisplay })}
         </span>
       </div>
+
+      {/* AI Summary Section - WITHOUT EMOJIS */}
+      {item.aiSummary && (
+        <div className="mt-4 mb-5 border border-border/60 rounded-lg bg-muted/30 dark:bg-muted/10 p-4 transition-all duration-300 hover:bg-muted/40 hover:border-border">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider inline-flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
+              {t('reading-list-item.ai-insight-title', { defaultValue: 'Agent 智慧導讀' })}
+            </span>
+            <button
+              onClick={() => setIsSummaryExpanded(!isSummaryExpanded)}
+              className="text-xs text-primary hover:text-primary/80 hover:underline focus:outline-none transition-colors"
+            >
+              {isSummaryExpanded
+                ? t('buttons.collapse', { defaultValue: '收起摘要' })
+                : t('buttons.expand', { defaultValue: '展開摘要' })}
+            </button>
+          </div>
+          <p
+            className={cn(
+              'text-sm text-foreground/85 leading-relaxed transition-all duration-300',
+              !isSummaryExpanded && 'line-clamp-2'
+            )}
+          >
+            {item.aiSummary}
+          </p>
+        </div>
+      )}
 
       {/* Rating and Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
