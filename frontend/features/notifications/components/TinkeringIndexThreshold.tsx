@@ -26,6 +26,7 @@ import {
   Target,
   Cpu,
   Terminal,
+  Layers,
 } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 import {
@@ -95,24 +96,24 @@ export function TinkeringIndexThreshold({
       case 'intermediate':
         return Terminal;
       case 'advanced':
-        return Cpu;
+        return Layers;
       case 'expert':
         return Zap;
       default:
-        return Cpu;
+        return BookOpen;
     }
   };
 
   const getLevelColor = (level: string) => {
     switch (level) {
       case 'basic':
-        return 'text-emerald-500 dark:text-emerald-400';
+        return 'text-green-500 dark:text-green-400';
       case 'intermediate':
         return 'text-blue-500 dark:text-blue-400';
       case 'advanced':
-        return 'text-indigo-500 dark:text-indigo-400';
+        return 'text-purple-500 dark:text-purple-400';
       case 'expert':
-        return 'text-rose-500 dark:text-rose-400';
+        return 'text-fuchsia-500 dark:text-fuchsia-400';
       default:
         return 'text-muted-foreground';
     }
@@ -121,15 +122,30 @@ export function TinkeringIndexThreshold({
   const getLevelBgClasses = (level: string) => {
     switch (level) {
       case 'basic':
-        return 'bg-emerald-50/40 border border-emerald-100/50 dark:bg-emerald-950/10 dark:border-emerald-900/20 text-emerald-900 dark:text-emerald-100';
+        return 'bg-green-50/40 border border-green-100/50 dark:bg-green-950/10 dark:border-green-900/20 text-green-900 dark:text-green-100';
       case 'intermediate':
         return 'bg-blue-50/40 border border-blue-100/50 dark:bg-blue-950/10 dark:border-blue-900/20 text-blue-900 dark:text-blue-100';
       case 'advanced':
-        return 'bg-indigo-50/40 border border-indigo-100/50 dark:bg-indigo-950/10 dark:border-indigo-900/20 text-indigo-900 dark:text-indigo-100';
+        return 'bg-purple-50/40 border border-purple-100/50 dark:bg-purple-950/10 dark:border-purple-900/20 text-purple-900 dark:text-purple-100';
       case 'expert':
-        return 'bg-rose-50/40 border border-rose-100/50 dark:bg-rose-950/10 dark:border-rose-900/20 text-rose-900 dark:text-rose-100';
+        return 'bg-fuchsia-50/40 border border-fuchsia-100/50 dark:bg-fuchsia-950/10 dark:border-fuchsia-900/20 text-fuchsia-900 dark:text-fuchsia-100';
       default:
         return 'bg-muted border border-border text-foreground';
+    }
+  };
+
+  const getLevelTranslationKeys = (levelValue: string) => {
+    switch (levelValue) {
+      case 'basic':
+        return { labelKey: 'tinkering-index.level-2', descKey: 'tinkering-index.level-2-desc' };
+      case 'intermediate':
+        return { labelKey: 'tinkering-index.level-3', descKey: 'tinkering-index.level-3-desc' };
+      case 'advanced':
+        return { labelKey: 'tinkering-index.level-4', descKey: 'tinkering-index.level-4-desc' };
+      case 'expert':
+        return { labelKey: 'tinkering-index.level-5', descKey: 'tinkering-index.level-5-desc' };
+      default:
+        return { labelKey: 'tinkering-index.level-2', descKey: 'tinkering-index.level-2-desc' };
     }
   };
 
@@ -237,12 +253,15 @@ export function TinkeringIndexThreshold({
                 <SelectContent>
                   {levels.map((level) => {
                     const Icon = getLevelIcon(level.value);
+                    const { labelKey, descKey } = getLevelTranslationKeys(level.value);
+                    const label = t(labelKey as any);
+                    const description = t(descKey as any);
                     return (
                       <SelectItem key={level.value} value={level.value}>
                         <div className="flex items-center gap-2">
                           <Icon className={`h-4 w-4 ${getLevelColor(level.value)}`} />
-                          <span className="font-medium">{level.label}</span>
-                          <span className="text-xs text-muted-foreground">{level.description}</span>
+                          <span className="font-medium">{label}</span>
+                          <span className="text-xs text-muted-foreground">{description}</span>
                         </div>
                       </SelectItem>
                     );
@@ -251,28 +270,34 @@ export function TinkeringIndexThreshold({
               </Select>
             </div>
 
-            {currentLevel && (
-              <div
-                className={`p-4 rounded-xl flex items-center gap-3 transition-all duration-300 animate-in fade-in-0 zoom-in-95 ${getLevelBgClasses(currentLevel.value)}`}
-              >
-                {(() => {
-                  const Icon = getLevelIcon(currentLevel.value);
-                  return (
-                    <div className="p-2 rounded-lg bg-background/50 shadow-sm border border-border/20 backdrop-blur-sm">
-                      <Icon
-                        className={`h-6 w-6 ${getLevelColor(currentLevel.value)} animate-pulse`}
-                      />
+            {currentLevel &&
+              (() => {
+                const { labelKey, descKey } = getLevelTranslationKeys(currentLevel.value);
+                const label = t(labelKey as any);
+                const description = t(descKey as any);
+                return (
+                  <div
+                    className={`p-4 rounded-xl flex items-center gap-3 transition-all duration-300 animate-in fade-in-0 zoom-in-95 ${getLevelBgClasses(currentLevel.value)}`}
+                  >
+                    {(() => {
+                      const Icon = getLevelIcon(currentLevel.value);
+                      return (
+                        <div className="p-2 rounded-lg bg-background/50 shadow-sm border border-border/20 backdrop-blur-sm">
+                          <Icon
+                            className={`h-6 w-6 ${getLevelColor(currentLevel.value)} animate-pulse`}
+                          />
+                        </div>
+                      );
+                    })()}
+                    <div>
+                      <p className="font-semibold text-sm leading-tight">{label}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                        {description}
+                      </p>
                     </div>
-                  );
-                })()}
-                <div>
-                  <p className="font-semibold text-sm leading-tight">{currentLevel.label}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
-                    {currentLevel.description}
-                  </p>
-                </div>
-              </div>
-            )}
+                  </div>
+                );
+              })()}
 
             {stats && (
               <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg flex items-center gap-2">
