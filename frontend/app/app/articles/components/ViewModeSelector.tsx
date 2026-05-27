@@ -14,8 +14,8 @@ interface ViewModeSelectorProps {
 export function ViewModeSelector({ value, onChange }: ViewModeSelectorProps) {
   const modes: { value: ViewMode; icon: React.ReactNode; label: string }[] = [
     { value: 'card', icon: <LayoutGrid className="h-4 w-4" />, label: 'Card' },
-    { value: 'list', icon: <List className="h-4 w-4" />, label: 'List' },
-    { value: 'compact', icon: <Rows className="h-4 w-4" />, label: 'Compact' },
+    { value: 'compact', icon: <List className="h-4 w-4" />, label: 'Compact' },
+    { value: 'list', icon: <Rows className="h-4 w-4" />, label: 'List' },
   ];
 
   return (
