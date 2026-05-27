@@ -12,7 +12,7 @@
  * - 25.8: Use consistent star icon sizing (20px standard view)
  */
 
-import { Star } from 'lucide-react';
+import { Star, Cpu } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/contexts/I18nContext';
@@ -27,38 +27,56 @@ export function TinkeringIndexStars({ index }: { index: number }) {
     return 'Advanced';
   };
 
-  const getStarColor = (starIndex: number) => {
-    if (starIndex >= clampedIndex) return 'text-gray-300 dark:text-gray-600';
-    if (clampedIndex <= 2) return 'fill-gray-400 text-gray-400';
-    if (clampedIndex === 3) return 'fill-yellow-400 text-yellow-400';
-    return 'fill-orange-400 text-orange-400';
-  };
-
   const description = getDescription(clampedIndex);
+
+  // Badge theme classes based on index (1-2 green, 3 blue, 4-5 purple)
+  const getBadgeClasses = (idx: number) => {
+    if (idx >= 4) {
+      return 'bg-purple-100 text-purple-800 border border-purple-200 dark:bg-purple-950 dark:text-purple-200 dark:border-purple-900/50';
+    }
+    if (idx === 3) {
+      return 'bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-950 dark:text-blue-200 dark:border-blue-900/50';
+    }
+    return 'bg-green-100 text-green-800 border border-green-200 dark:bg-green-950 dark:text-green-200 dark:border-green-900/50';
+  };
 
   return (
     <TooltipProvider delayDuration={300}>
       <Tooltip>
         <TooltipTrigger asChild>
           <div
-            className="flex items-center gap-1 cursor-help group/stars"
+            className="flex items-center gap-2 cursor-help group/stars"
             aria-label={t('article-card.tinkering-aria', { index: clampedIndex, description })}
             role="img"
           >
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Star
-                key={i}
-                className={cn(
-                  'h-5 w-5 min-h-[20px] min-w-[20px]',
-                  'md:h-5 md:w-5',
-                  'transition-all duration-300 hover:scale-[1.05]',
-                  'group-hover/stars:animate-pulse',
-                  getStarColor(i)
-                )}
-                style={{ animationDelay: `${i * 50}ms` }}
-                aria-hidden="true"
-              />
-            ))}
+            {/* CPU Badge */}
+            <span
+              className={cn(
+                'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all duration-300',
+                getBadgeClasses(clampedIndex)
+              )}
+            >
+              <Cpu className="h-3 w-3 flex-shrink-0 animate-pulse" />
+              <span>{t(`tinkering-index.level-${clampedIndex}` as any)}</span>
+            </span>
+
+            {/* Delicate monochrome star rail */}
+            <div className="flex items-center gap-0.5">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Star
+                  key={i}
+                  className={cn(
+                    'h-3.5 w-3.5 min-h-[14px] min-w-[14px]',
+                    'transition-all duration-300 group-hover/stars:scale-[1.05]',
+                    i < clampedIndex
+                      ? 'fill-foreground/45 text-foreground/45 dark:fill-foreground/35 dark:text-foreground/35'
+                      : 'text-muted-foreground/20 dark:text-muted-foreground/15'
+                  )}
+                  style={{ animationDelay: `${i * 50}ms` }}
+                  aria-hidden="true"
+                />
+              ))}
+            </div>
           </div>
         </TooltipTrigger>
         <TooltipContent side="top" align="center">

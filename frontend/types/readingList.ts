@@ -37,6 +37,8 @@ export interface ReadingListItem {
   tinkeringIndex?: number;
   /** AI generated summary */
   aiSummary?: string | null;
+  /** Actionable technical takeaway (1-second takeaway) */
+  actionableTakeaway?: string | null;
 }
 
 /**

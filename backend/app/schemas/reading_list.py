@@ -59,6 +59,7 @@ class ReadingListItemResponse(BaseModel):
     source: str = Field("web", description="來源平台（discord, web）")
     tinkering_index: int | None = Field(None, description="折騰指數（1-5）", alias="tinkeringIndex")
     ai_summary: str | None = Field(None, description="AI 摘要", alias="aiSummary")
+    actionable_takeaway: str | None = Field(None, description="行動價值", alias="actionableTakeaway")
 
     class Config:
         populate_by_name = True

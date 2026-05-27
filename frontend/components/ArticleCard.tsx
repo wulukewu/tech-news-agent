@@ -4,7 +4,16 @@ import { logger } from '@/lib/utils/logger';
 import { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { zhTW, enUS } from 'date-fns/locale';
-import { BookmarkPlus, BookmarkCheck, Star, Loader2, CheckCircle } from 'lucide-react';
+import {
+  BookmarkPlus,
+  BookmarkCheck,
+  Star,
+  Loader2,
+  CheckCircle,
+  Lightbulb,
+  Sparkles,
+  Cpu,
+} from 'lucide-react';
 import Image from 'next/image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -158,8 +167,8 @@ export function ArticleCard({
                 </a>
 
                 {article.actionableTakeaway && (
-                  <div className="flex items-start gap-2 rounded-lg bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-xs text-emerald-800 dark:text-emerald-300 font-medium leading-relaxed transition-all duration-300 hover:bg-emerald-500/10 hover:border-emerald-500/30">
-                    <span className="flex-shrink-0 text-sm leading-none">💡</span>
+                  <div className="flex items-start gap-2 rounded-lg bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 px-3 py-2 text-xs text-amber-800 dark:text-amber-300 font-medium leading-relaxed transition-all duration-300 hover:bg-amber-500/10 hover:border-amber-500/30">
+                    <Lightbulb className="h-4 w-4 flex-shrink-0 text-amber-500 animate-pulse" />
                     <div>
                       <span className="font-bold mr-1">{t('article-card.takeaway-prefix')}：</span>
                       <span className="font-normal italic">{article.actionableTakeaway}</span>
@@ -185,30 +194,32 @@ export function ArticleCard({
                 {/* Tinkering Index with star icons (1-5) */}
                 <TinkeringIndexStars index={article.tinkeringIndex} />
 
-                {/* Summary with line-clamp */}
+                {/* Agent Insight Panel (Task 10.3) */}
                 {article.aiSummary && (
-                  <div>
+                  <div className="border border-border/60 rounded-lg bg-muted/30 dark:bg-muted/10 p-3.5 transition-all duration-300 hover:bg-muted/40 hover:border-border">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider inline-flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
+                        {t('reading-list-item.ai-insight-title' as any)}
+                      </span>
+                      {shouldShowReadMore && (
+                        <button
+                          onClick={() => setIsExpanded(!isExpanded)}
+                          className="text-xs text-primary hover:text-primary/80 hover:underline focus:outline-none transition-colors cursor-pointer"
+                          aria-expanded={isExpanded}
+                        >
+                          {isExpanded ? t('buttons.collapse' as any) : t('buttons.expand' as any)}
+                        </button>
+                      )}
+                    </div>
                     <p
                       className={cn(
-                        'text-sm text-muted-foreground transition-all duration-300',
+                        'text-sm text-foreground/85 leading-relaxed transition-all duration-300',
                         !isExpanded && shouldShowReadMore && 'line-clamp-2'
                       )}
                     >
                       {article.aiSummary}
                     </p>
-                    {shouldShowReadMore && (
-                      <Button
-                        variant="link"
-                        size="sm"
-                        onClick={() => setIsExpanded(!isExpanded)}
-                        className="mt-1 p-0 h-auto text-xs transition-all duration-300 hover:scale-[1.02]"
-                        aria-expanded={isExpanded}
-                      >
-                        <span className="transition-transform duration-200">
-                          {isExpanded ? t('ui.show-less') : t('ui.read-more')}
-                        </span>
-                      </Button>
-                    )}
                   </div>
                 )}
 
@@ -354,8 +365,8 @@ export function ArticleCard({
               </div>
 
               {article.actionableTakeaway && (
-                <div className="flex items-start gap-2 rounded-lg bg-emerald-500/5 dark:bg-emerald-500/10 border border-emerald-500/20 px-3 py-2 text-xs text-emerald-800 dark:text-emerald-300 font-medium leading-relaxed transition-all duration-300 hover:bg-emerald-500/10 hover:border-emerald-500/30">
-                  <span className="flex-shrink-0 text-sm leading-none">💡</span>
+                <div className="flex items-start gap-2 rounded-lg bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 px-3 py-2 text-xs text-amber-800 dark:text-amber-300 font-medium leading-relaxed transition-all duration-300 hover:bg-amber-500/10 hover:border-amber-500/30">
+                  <Lightbulb className="h-4 w-4 flex-shrink-0 text-amber-500 animate-pulse" />
                   <div>
                     <span className="font-bold mr-1">{t('article-card.takeaway-prefix')}：</span>
                     <span className="font-normal italic">{article.actionableTakeaway}</span>
@@ -381,28 +392,32 @@ export function ArticleCard({
               {/* Tinkering Index with star icons */}
               <TinkeringIndexStars index={article.tinkeringIndex} />
 
-              {/* Summary with line-clamp-2 */}
+              {/* Agent Insight Panel (Task 10.3) */}
               {article.aiSummary && (
-                <div>
+                <div className="border border-border/60 rounded-lg bg-muted/30 dark:bg-muted/10 p-3.5 transition-all duration-300 hover:bg-muted/40 hover:border-border">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider inline-flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-primary animate-pulse" />
+                      {t('reading-list-item.ai-insight-title' as any)}
+                    </span>
+                    {shouldShowReadMore && (
+                      <button
+                        onClick={() => setIsExpanded(!isExpanded)}
+                        className="text-xs text-primary hover:text-primary/80 hover:underline focus:outline-none transition-colors cursor-pointer"
+                        aria-expanded={isExpanded}
+                      >
+                        {isExpanded ? t('buttons.collapse' as any) : t('buttons.expand' as any)}
+                      </button>
+                    )}
+                  </div>
                   <p
                     className={cn(
-                      'line-clamp-2 flex-1 text-sm text-muted-foreground',
-                      isExpanded && '!line-clamp-none'
+                      'text-sm text-foreground/85 leading-relaxed transition-all duration-300',
+                      !isExpanded && shouldShowReadMore && 'line-clamp-2'
                     )}
                   >
                     {article.aiSummary}
                   </p>
-                  {shouldShowReadMore && (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      onClick={() => setIsExpanded(!isExpanded)}
-                      className="mt-1 p-0 h-auto text-xs cursor-pointer"
-                      aria-expanded={isExpanded}
-                    >
-                      {isExpanded ? t('ui.show-less') : t('ui.read-more')}
-                    </Button>
-                  )}
                 </div>
               )}
 
