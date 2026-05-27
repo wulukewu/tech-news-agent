@@ -1055,6 +1055,8 @@ export type TranslationKey =
   | 'settings.notifications.time-hint'
   | 'settings.notifications.time-title'
   | 'settings.notifications.timezone'
+  | 'settings.notifications.timezone-cancel'
+  | 'settings.notifications.timezone-change'
   | 'settings.notifications.title'
   | 'settings.notifications.weekday-0'
   | 'settings.notifications.weekday-1'

@@ -871,6 +871,8 @@
       "time-hint": "輸入完成後點擊其他地方即可儲存",
       "notification-time": "通知時間",
       "timezone": "時區",
+      "timezone-change": "變更",
+      "timezone-cancel": "取消",
       "day-of-week": "通知星期",
       "day-of-month": "通知日期",
       "day-of-month-option": "{day} 號",

@@ -871,6 +871,8 @@
       "time-hint": "Click elsewhere after editing to save",
       "notification-time": "Notification Time",
       "timezone": "Timezone",
+      "timezone-change": "Change",
+      "timezone-cancel": "Cancel",
       "day-of-week": "Day of Week",
       "day-of-month": "Day of Month",
       "day-of-month-option": "Day {day}",
