@@ -160,14 +160,20 @@ describe('ArticleCard - Mobile Vertical Layout', () => {
       const tinkeringIndex = screen.getByLabelText(/tinkering index: 3 out of 5/i);
       expect(tinkeringIndex).toBeInTheDocument();
 
-      // Should have 1 Cpu icon + 5 stars = 6 SVGs
+      // Should have 1 badge icon + 5 stars = 6 SVGs
       const svgs = container.querySelectorAll('svg');
       const starIcons = Array.from(svgs).filter((svg) => {
         const roleImgContainer = svg.closest('[role="img"]');
         return (
           roleImgContainer &&
           roleImgContainer.getAttribute('aria-label')?.toLowerCase().includes('tinkering index') &&
-          !svg.classList.contains('lucide-cpu')
+          ![
+            'lucide-cpu',
+            'lucide-book-open',
+            'lucide-terminal',
+            'lucide-layers',
+            'lucide-zap',
+          ].some((cls) => svg.classList.contains(cls))
         );
       });
       expect(starIcons.length).toBe(5);
