@@ -126,7 +126,7 @@ export function ArticleCard({
       <article className="h-full">
         <Card
           className={cn(
-            'h-full flex flex-col group transition-all duration-300 cursor-pointer overflow-hidden active-tap hover-pointer-fine',
+            'h-full flex flex-col group transition-all duration-300 cursor-pointer overflow-hidden hover:shadow-md hover:border-muted-foreground/20 hover:bg-muted/5',
             isRead && 'opacity-60 border-l-4 border-l-green-500'
           )}
         >
@@ -329,13 +329,49 @@ export function ArticleCard({
                 <h4 className="text-sm font-semibold truncate leading-snug">{article.title}</h4>
               </a>
 
-              {/* Tiny single line of summary or takeaway context */}
+              {/* Tiny line of summary or takeaway context with expand/collapse */}
               {article.actionableTakeaway ? (
-                <p className="text-xs text-amber-600 dark:text-amber-400 font-medium italic truncate">
-                  {article.actionableTakeaway}
-                </p>
+                <div className="flex items-start gap-2 text-xs w-full">
+                  <p
+                    className={cn(
+                      'text-amber-600 dark:text-amber-400 font-medium italic transition-all duration-200',
+                      !isExpanded ? 'truncate flex-1' : 'whitespace-pre-wrap break-words flex-1'
+                    )}
+                  >
+                    {article.actionableTakeaway}
+                  </p>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsExpanded(!isExpanded);
+                    }}
+                    className="text-[10px] font-semibold text-amber-600/70 hover:text-amber-600 dark:text-amber-400/70 dark:hover:text-amber-400 hover:underline transition-colors flex-shrink-0"
+                  >
+                    {isExpanded ? t('buttons.collapse' as any) : t('buttons.expand' as any)}
+                  </button>
+                </div>
               ) : article.aiSummary ? (
-                <p className="text-xs text-muted-foreground truncate">{article.aiSummary}</p>
+                <div className="flex items-start gap-2 text-xs w-full">
+                  <p
+                    className={cn(
+                      'text-muted-foreground transition-all duration-200',
+                      !isExpanded ? 'truncate flex-1' : 'whitespace-pre-wrap break-words flex-1'
+                    )}
+                  >
+                    {article.aiSummary}
+                  </p>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setIsExpanded(!isExpanded);
+                    }}
+                    className="text-[10px] font-semibold text-muted-foreground/60 hover:text-primary hover:underline transition-colors flex-shrink-0"
+                  >
+                    {isExpanded ? t('buttons.collapse' as any) : t('buttons.expand' as any)}
+                  </button>
+                </div>
               ) : null}
             </div>
 
@@ -427,7 +463,7 @@ export function ArticleCard({
     <article>
       <Card
         className={cn(
-          'group transition-all duration-300 cursor-pointer overflow-hidden active-tap hover-pointer-fine',
+          'group transition-all duration-300 cursor-pointer overflow-hidden hover:shadow-md hover:border-muted-foreground/20 hover:bg-muted/5',
           isRead && 'opacity-60 border-l-4 border-l-green-500'
         )}
       >

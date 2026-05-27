@@ -133,13 +133,13 @@ describe('ArticleCard - Desktop Horizontal Layout', () => {
       expect(card).toBeInTheDocument();
     });
 
-    it('should have hover transform class for subtle elevation', () => {
+    it('should have hover shadow md class for subtle elevation', () => {
       render(<ArticleCard article={mockArticle} layout="desktop" />, {
         wrapper: createWrapper(),
       });
 
       const article = screen.getByRole('article');
-      const card = article.querySelector('.hover-pointer-fine');
+      const card = article.querySelector('.hover\\:shadow-md');
       expect(card).toBeInTheDocument();
     });
 
