@@ -69,7 +69,7 @@ export interface RecoveryOptions<T> {
  * Simple in-memory cache for API responses
  */
 class ResponseCache {
-  private cache: Map<string, { data: any; timestamp: number }> = new Map();
+  private cache: Map<string, { data: unknown; timestamp: number }> = new Map();
   private maxAge: number = 5 * 60 * 1000; // 5 minutes
 
   /**
@@ -290,15 +290,15 @@ export async function withTimeout<T>(
  * @param delayMs - Debounce delay in milliseconds
  * @returns Debounced API call function
  */
-export function debounceApiCall<T>(
-  apiCall: (...args: any[]) => Promise<T>,
+export function debounceApiCall<T, Args extends unknown[]>(
+  apiCall: (...args: Args) => Promise<T>,
   delayMs: number = 300
-): (...args: any[]) => Promise<T> {
+): (...args: Args) => Promise<T> {
   let timeoutId: NodeJS.Timeout | null = null;
   let latestResolve: ((value: T) => void) | null = null;
-  let latestReject: ((error: any) => void) | null = null;
+  let latestReject: ((error: unknown) => void) | null = null;
 
-  return (...args: any[]): Promise<T> => {
+  return (...args: Args): Promise<T> => {
     return new Promise<T>((resolve, reject) => {
       // Clear previous timeout
       if (timeoutId) {
@@ -333,14 +333,14 @@ export function debounceApiCall<T>(
  * @param limitMs - Minimum time between calls in milliseconds
  * @returns Throttled API call function
  */
-export function throttleApiCall<T>(
-  apiCall: (...args: any[]) => Promise<T>,
+export function throttleApiCall<T, Args extends unknown[]>(
+  apiCall: (...args: Args) => Promise<T>,
   limitMs: number = 1000
-): (...args: any[]) => Promise<T> {
+): (...args: Args) => Promise<T> {
   let lastCallTime = 0;
   let pendingCall: Promise<T> | null = null;
 
-  return async (...args: any[]): Promise<T> => {
+  return async (...args: Args): Promise<T> => {
     const now = Date.now();
     const timeSinceLastCall = now - lastCallTime;
 

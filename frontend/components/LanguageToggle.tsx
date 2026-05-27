@@ -9,7 +9,7 @@ interface LanguageToggleProps {
 }
 
 export function LanguageToggle({ className = '' }: LanguageToggleProps) {
-  const { locale, setLocale } = useI18n();
+  const { locale, setLocale, t } = useI18n();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -31,7 +31,7 @@ export function LanguageToggle({ className = '' }: LanguageToggleProps) {
       variant="ghost"
       size="icon"
       onClick={toggle}
-      aria-label={locale === 'zh-TW' ? 'Switch to English' : '切換為繁體中文'}
+      aria-label={t('language.toggle-language-aria')}
       className={`transition-all duration-300 hover:scale-[1.02] ${className}`}
     >
       <span

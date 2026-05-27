@@ -310,7 +310,11 @@ export default function LearningGoalDetailPage() {
                             })
                           }
                           disabled={completeArticleMutation.isPending}
-                          title={article.is_completed ? '點擊取消完成' : '標記為已完成'}
+                          title={
+                            article.is_completed
+                              ? t('learning.mark-incomplete-btn')
+                              : t('learning.mark-complete-btn')
+                          }
                         >
                           <CheckCircle className="h-4 w-4" />
                         </Button>

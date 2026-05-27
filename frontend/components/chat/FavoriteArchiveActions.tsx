@@ -1,10 +1,10 @@
 'use client';
-import { logger } from '@/lib/utils/logger';
 
 import { useState } from 'react';
 import { Star, Archive, ArchiveRestore, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/contexts/I18nContext';
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -41,6 +41,7 @@ export function FavoriteArchiveActions({
   iconOnly = false,
   disabled = false,
 }: FavoriteArchiveActionsProps) {
+  const { t } = useI18n();
   const [savingFavorite, setSavingFavorite] = useState(false);
   const [savingArchive, setSavingArchive] = useState(false);
 
@@ -78,7 +79,7 @@ export function FavoriteArchiveActions({
         size="sm"
         onClick={handleFavorite}
         disabled={savingFavorite || disabled}
-        aria-label={isFavorite ? '取消收藏' : '加入收藏'}
+        aria-label={isFavorite ? t('chat.unfavorite-aria') : t('chat.favorite-aria')}
         aria-pressed={isFavorite}
         className={cn(
           'cursor-pointer',
@@ -97,7 +98,11 @@ export function FavoriteArchiveActions({
             aria-hidden="true"
           />
         )}
-        {!iconOnly && <span className="text-xs">{isFavorite ? '已收藏' : '收藏'}</span>}
+        {!iconOnly && (
+          <span className="text-xs">
+            {isFavorite ? t('chat.favorited') : t('chat.add-to-favorites')}
+          </span>
+        )}
       </Button>
 
       {/* Archive */}
@@ -106,7 +111,7 @@ export function FavoriteArchiveActions({
         size="sm"
         onClick={handleArchive}
         disabled={savingArchive || disabled}
-        aria-label={isArchived ? '取消歸檔' : '歸檔對話'}
+        aria-label={isArchived ? t('chat.unarchive-aria') : t('chat.archive-aria')}
         aria-pressed={isArchived}
         className={cn(
           'cursor-pointer text-muted-foreground hover:text-foreground',
@@ -120,7 +125,9 @@ export function FavoriteArchiveActions({
         ) : (
           <Archive className="h-3.5 w-3.5" aria-hidden="true" />
         )}
-        {!iconOnly && <span className="text-xs">{isArchived ? '取消歸檔' : '歸檔'}</span>}
+        {!iconOnly && (
+          <span className="text-xs">{isArchived ? t('chat.unarchive') : t('chat.archive')}</span>
+        )}
       </Button>
     </div>
   );

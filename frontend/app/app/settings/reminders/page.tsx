@@ -20,7 +20,7 @@ import {
 } from '@/lib/api/reminders';
 
 export default function RemindersSettingsPage() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const queryClient = useQueryClient();
 
   // Local state for sliders to provide smooth UX
@@ -93,23 +93,31 @@ export default function RemindersSettingsPage() {
       {settings?.reminder_enabled && stats && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">本週統計</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              {t('reminders.stats-extra.weekly-stats')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-muted-foreground">發送次數</p>
+                <p className="text-muted-foreground">{t('reminders.stats-extra.sent-count')}</p>
                 <p className="text-lg font-semibold">{stats.week_sent_count}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">點擊率</p>
+                <p className="text-muted-foreground">{t('reminders.stats-extra.click-rate')}</p>
                 <p className="text-lg font-semibold">{stats.click_rate}%</p>
               </div>
             </div>
             {stats.last_reminder_at && (
               <p className="text-xs text-muted-foreground mt-3">
-                最近提醒：{new Date(stats.last_reminder_at).toLocaleString('zh-TW')}
-                {stats.last_reminder_type === 'add' ? '（加入文章）' : '（評分觸發）'}
+                {t('reminders.stats-extra.last-reminder', {
+                  time: new Date(stats.last_reminder_at).toLocaleString(
+                    locale === 'zh-TW' ? 'zh-TW' : 'en-US'
+                  ),
+                })}
+                {stats.last_reminder_type === 'add'
+                  ? t('reminders.stats-extra.trigger-add-inline')
+                  : t('reminders.stats-extra.trigger-rate-inline')}
               </p>
             )}
             <div className="mt-4 flex gap-2">
@@ -121,7 +129,9 @@ export default function RemindersSettingsPage() {
                 className="flex-1"
               >
                 <Send className="w-4 h-4 mr-2" />
-                {isTestingReminder ? '發送中...' : '測試提醒'}
+                {isTestingReminder
+                  ? t('reminders.stats-extra.testing')
+                  : t('reminders.stats-extra.test-reminder')}
               </Button>
               <Button
                 variant="outline"
@@ -130,7 +140,7 @@ export default function RemindersSettingsPage() {
                 className="flex-1"
               >
                 <History className="w-4 h-4 mr-2" />
-                查看歷史
+                {t('reminders.stats-extra.view-history')}
               </Button>
             </div>
           </CardContent>

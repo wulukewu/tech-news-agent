@@ -297,18 +297,18 @@ export default function PreferencesPage() {
             className="animate-in fade-in slide-in-from-right-4 duration-500 delay-500"
           >
             <h2 id="summary-heading" className="text-base font-semibold mb-3">
-              偏好摘要
+              {t('preferences.preference-summary-title')}
             </h2>
             <div className="rounded-xl border bg-card p-5 shadow-sm space-y-3 hover:shadow-md transition-all">
               <p className="text-xs text-muted-foreground animate-in slide-in-from-top-2 duration-500 delay-600">
-                直接在 Discord DM 裡告訴 bot
-                你的偏好，每天會自動更新這份摘要。你也可以直接在這裡編輯。
-                {summaryUpdatedAt && ` 上次更新：${summaryUpdatedAt.slice(0, 10)}`}
+                {t('preferences.preference-summary-desc')}
+                {summaryUpdatedAt &&
+                  ` ${t('preferences.last-updated', { date: summaryUpdatedAt.slice(0, 10) })}`}
               </p>
               <textarea
                 value={summary}
                 onChange={(e) => setSummary(e.target.value)}
-                placeholder="例如：我喜歡 Rust 和系統設計，偏好進階內容，不喜歡入門教學和 LLM wrapper 文章。"
+                placeholder={t('preferences.preference-summary-placeholder')}
                 rows={4}
                 className="w-full rounded-lg border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ring transition-all duration-300 hover:shadow-sm focus:shadow-md animate-in slide-in-from-bottom-2 duration-500 delay-700"
               />
@@ -318,9 +318,9 @@ export default function PreferencesPage() {
                   setSavingSummary(true);
                   try {
                     await updatePreferenceSummary(summary);
-                    toast.success('偏好摘要已儲存');
+                    toast.success(t('preferences.preference-summary-saved'));
                   } catch {
-                    toast.error('儲存失敗，請稍後再試');
+                    toast.error(t('preferences.preference-summary-save-failed'));
                   } finally {
                     setSavingSummary(false);
                   }

@@ -159,7 +159,33 @@
       "similarity": "相似度閾值",
       "similarity-desc": "只推薦相似度高於此閾值的文章",
       "dm-note": "提醒將通過 Discord 私訊發送。您可以在{link}中管理通知設定。",
-      "dm-note-link": "通知設定"
+      "dm-note-link": "通知設定",
+      "history": {
+        "title": "提醒歷史記錄",
+        "description": "查看所有智能提醒記錄和反饋",
+        "empty": "還沒有提醒記錄。當你加入文章到閱讀清單或評高分時，系統會發送智能提醒。",
+        "trigger-add": "加入文章",
+        "trigger-rate": "評分觸發",
+        "trigger-article": "觸發文章：",
+        "recommended-article": "推薦文章：",
+        "clicked": "已點擊",
+        "feedback-accurate": "準確",
+        "feedback-inaccurate": "不準確",
+        "feedback-uninterested": "不感興趣",
+        "feedback-saved": "反饋已記錄",
+        "feedback-failed": "提交反饋失敗"
+      },
+      "stats-extra": {
+        "weekly-stats": "本週統計",
+        "sent-count": "發送次數",
+        "click-rate": "點擊率",
+        "last-reminder": "最近提醒：{time}",
+        "trigger-add-inline": "（加入文章）",
+        "trigger-rate-inline": "（評分觸發）",
+        "testing": "發送中...",
+        "test-reminder": "測試提醒",
+        "view-history": "查看歷史"
+      }
     },
     "articles": {
       "title": "文章",
@@ -299,7 +325,8 @@
   },
   "language": {
     "changed-to-chinese": "語言已切換為繁體中文",
-    "changed-to-english": "語言已切換為英文"
+    "changed-to-english": "語言已切換為英文",
+    "toggle-language-aria": "Switch to English"
   },
   "buttons": {
     "collapse": "收起",
@@ -1066,7 +1093,13 @@
     "trigger-failed": "觸發分析失敗。",
     "new-question": "已生成新學習問題！",
     "settings-updated": "設定已更新。",
-    "settings-failed": "更新設定失敗。"
+    "settings-failed": "更新設定失敗。",
+    "preference-summary-title": "偏好摘要",
+    "preference-summary-desc": "直接在 Discord DM 裡告訴 bot 你的偏好，每天會自動更新這份摘要。你也可以直接在這裡編輯。",
+    "preference-summary-placeholder": "例如：我喜歡 Rust 和系統設計，偏好進階內容，不喜歡入門教學和 LLM wrapper 文章。",
+    "preference-summary-saved": "偏好摘要已儲存",
+    "preference-summary-save-failed": "儲存失敗，請稍後再試",
+    "last-updated": "上次更新：{date}"
   },
   "insights": {
     "title": "每週洞察",
@@ -1330,6 +1363,8 @@
     "no-recommendations": "目前沒有符合此階段的推薦文章，等待更多文章被抓取後會自動出現",
     "mark-complete": "已標記為完成",
     "mark-complete-failed": "標記失敗",
+    "mark-complete-btn": "標記為已完成",
+    "mark-incomplete-btn": "點擊取消完成",
     "stage-foundation": "基礎",
     "stage-intermediate": "中級",
     "stage-advanced": "進階",

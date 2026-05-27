@@ -1,14 +1,17 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink, ThumbsUp, ThumbsDown, Meh } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { getReminderHistory, submitFeedback, type ReminderHistoryItem } from '@/lib/api/reminders';
+import { useI18n } from '@/contexts/I18nContext';
 
 export default function ReminderHistoryPage() {
+  const { t, locale } = useI18n();
+
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['reminder-history'],
     queryFn: () => getReminderHistory(50),
@@ -20,16 +23,22 @@ export default function ReminderHistoryPage() {
   ) => {
     try {
       await submitFeedback(articleId, feedback);
-      toast.success('反饋已記錄');
+      toast.success(t('reminders.history.feedback-saved'));
       refetch();
-    } catch (error: any) {
-      toast.error(error?.response?.data?.detail || '提交反饋失敗');
+    } catch (error: unknown) {
+      const apiErrorMsg =
+        error && typeof error === 'object' && 'response' in error
+          ? (error as { response?: { data?: { detail?: string } } }).response?.data?.detail
+          : null;
+      toast.error(apiErrorMsg || t('reminders.history.feedback-failed'));
     }
   };
 
   if (isLoading) {
     return (
-      <div className="h-40 flex items-center justify-center text-muted-foreground">Loading...</div>
+      <div className="h-40 flex items-center justify-center text-muted-foreground">
+        {t('chat.loading')}
+      </div>
     );
   }
 
@@ -38,14 +47,14 @@ export default function ReminderHistoryPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h2 className="text-lg font-semibold">提醒歷史記錄</h2>
-        <p className="text-sm text-muted-foreground mt-1">查看所有智能提醒記錄和反饋</p>
+        <h2 className="text-lg font-semibold">{t('reminders.history.title')}</h2>
+        <p className="text-sm text-muted-foreground mt-1">{t('reminders.history.description')}</p>
       </div>
 
       {history.length === 0 ? (
         <Card>
           <CardContent className="pt-6 text-center text-muted-foreground">
-            還沒有提醒記錄。當你加入文章到閱讀清單或評高分時，系統會發送智能提醒。
+            {t('reminders.history.empty')}
           </CardContent>
         </Card>
       ) : (
@@ -56,25 +65,33 @@ export default function ReminderHistoryPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Badge variant={item.trigger_type === 'add' ? 'default' : 'secondary'}>
-                      {item.trigger_type === 'add' ? '加入文章' : '評分觸發'}
+                      {item.trigger_type === 'add'
+                        ? t('reminders.history.trigger-add')
+                        : t('reminders.history.trigger-rate')}
                     </Badge>
                     <span className="text-sm text-muted-foreground">
-                      相似度 {Math.round(item.similarity_score * 100)}%
+                      {t('reminders.match-percentage', {
+                        percentage: Math.round(item.similarity_score * 100),
+                      })}
                     </span>
                   </div>
                   <span className="text-xs text-muted-foreground">
-                    {new Date(item.sent_at).toLocaleString('zh-TW')}
+                    {new Date(item.sent_at).toLocaleString(locale === 'zh-TW' ? 'zh-TW' : 'en-US')}
                   </span>
                 </div>
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <p className="text-sm text-muted-foreground">觸發文章：</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t('reminders.history.trigger-article')}
+                  </p>
                   <p className="font-medium">{item.trigger_article.title}</p>
                 </div>
 
                 <div>
-                  <p className="text-sm text-muted-foreground">推薦文章：</p>
+                  <p className="text-sm text-muted-foreground">
+                    {t('reminders.history.recommended-article')}
+                  </p>
                   <div className="flex items-center gap-2">
                     <p className="font-medium flex-1">{item.recommended_article.title}</p>
                     <Button
@@ -91,16 +108,16 @@ export default function ReminderHistoryPage() {
                   <div className="flex items-center gap-2">
                     {item.clicked_at && (
                       <Badge variant="outline" className="text-green-600">
-                        已點擊
+                        {t('reminders.history.clicked')}
                       </Badge>
                     )}
                     {item.user_feedback && (
                       <Badge variant="outline">
                         {item.user_feedback === 'accurate'
-                          ? '準確'
+                          ? t('reminders.history.feedback-accurate')
                           : item.user_feedback === 'inaccurate'
-                            ? '不準確'
-                            : '不感興趣'}
+                            ? t('reminders.history.feedback-inaccurate')
+                            : t('reminders.history.feedback-uninterested')}
                       </Badge>
                     )}
                   </div>

@@ -159,7 +159,33 @@
       "similarity": "Similarity Threshold",
       "similarity-desc": "Only recommend articles with similarity above this threshold",
       "dm-note": "Reminders will be sent via Discord DM. You can manage notification settings in {link}.",
-      "dm-note-link": "notification settings"
+      "dm-note-link": "notification settings",
+      "history": {
+        "title": "Reminder History",
+        "description": "View all smart reminder history and feedback",
+        "empty": "No reminder history yet. When you add articles to your reading list or rate them highly, the system will send smart reminders.",
+        "trigger-add": "Added Article",
+        "trigger-rate": "Rating Triggered",
+        "trigger-article": "Trigger Article:",
+        "recommended-article": "Recommended Article:",
+        "clicked": "Clicked",
+        "feedback-accurate": "Accurate",
+        "feedback-inaccurate": "Inaccurate",
+        "feedback-uninterested": "Not Interested",
+        "feedback-saved": "Feedback recorded",
+        "feedback-failed": "Failed to submit feedback"
+      },
+      "stats-extra": {
+        "weekly-stats": "Weekly Stats",
+        "sent-count": "Sent Count",
+        "click-rate": "Click Rate",
+        "last-reminder": "Recent Reminder: {time}",
+        "trigger-add-inline": " (Added Article)",
+        "trigger-rate-inline": " (Rating Triggered)",
+        "testing": "Sending...",
+        "test-reminder": "Test Reminder",
+        "view-history": "View History"
+      }
     },
     "articles": {
       "title": "Articles",
@@ -299,7 +325,8 @@
   },
   "language": {
     "changed-to-chinese": "Language changed to Traditional Chinese",
-    "changed-to-english": "Language changed to English"
+    "changed-to-english": "Language changed to English",
+    "toggle-language-aria": "切換為繁體中文"
   },
   "buttons": {
     "collapse": "Collapse",
@@ -1282,7 +1309,13 @@
     "trigger-failed": "Failed to trigger analysis.",
     "new-question": "New learning question generated!",
     "settings-updated": "Settings updated.",
-    "settings-failed": "Failed to update settings."
+    "settings-failed": "Failed to update settings.",
+    "preference-summary-title": "Preference Summary",
+    "preference-summary-desc": "Tell the bot your preferences directly in Discord DM, and this summary will update automatically every day. You can also edit it directly here.",
+    "preference-summary-placeholder": "e.g., I like Rust and system design, prefer advanced content, and dislike beginner tutorials or LLM wrappers.",
+    "preference-summary-saved": "Preference summary saved",
+    "preference-summary-save-failed": "Failed to save, please try again later",
+    "last-updated": "Last updated: {date}"
   },
   "insights": {
     "title": "Weekly Insights",
@@ -1330,6 +1363,8 @@
     "no-recommendations": "No articles match this stage yet. More will appear after the next fetch.",
     "mark-complete": "Marked as complete",
     "mark-complete-failed": "Failed to mark",
+    "mark-complete-btn": "Mark as completed",
+    "mark-incomplete-btn": "Click to cancel completion",
     "stage-foundation": "Foundation",
     "stage-intermediate": "Intermediate",
     "stage-advanced": "Advanced",
