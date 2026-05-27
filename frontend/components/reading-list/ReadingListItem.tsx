@@ -16,7 +16,8 @@ import {
 import { TinkeringIndexStars } from '@/components/TinkeringIndexStars';
 import { formatDistanceToNow, format, isAfter, subDays } from 'date-fns';
 import { zhTW, enUS } from 'date-fns/locale';
-import { cn } from '@/lib/utils';
+import { cn, getCategoryBadgeStyles } from '@/lib/utils';
+import { useTheme } from 'next-themes';
 import type {
   ReadingListItem as ReadingListItemType,
   ReadingListStatus,
@@ -46,7 +47,13 @@ export function ReadingListItem({
   const [loadingAction, setLoadingAction] = useState<string | null>(null);
   const [isSummaryExpanded, setIsSummaryExpanded] = useState(false);
   const { t, locale } = useI18n();
+  const { theme } = useTheme();
   const dateFnsLocale = locale === 'zh-TW' ? zhTW : enUS;
+
+  const categoryStyles = getCategoryBadgeStyles(
+    item.category,
+    (theme as 'light' | 'dark') || 'light'
+  );
 
   const handleStatusChange = async (status: ReadingListStatus) => {
     if (!item.articleId) {
@@ -162,7 +169,10 @@ export function ReadingListItem({
       {/* Metadata row */}
       <div className="flex flex-wrap items-center gap-2 mb-4 text-sm">
         {/* Category badge */}
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-secondary text-secondary-foreground font-medium transition-all duration-300 hover:scale-[1.02] cursor-default">
+        <span
+          style={categoryStyles}
+          className="inline-flex items-center px-2.5 py-0.5 rounded-full font-medium transition-all duration-300 hover:scale-[1.02] cursor-default"
+        >
           {item.category}
         </span>
 

@@ -50,14 +50,14 @@ describe('ArticleCard', () => {
     expect(summary).toHaveClass('line-clamp-2');
 
     // Click "Read more"
-    const readMoreButton = screen.getByRole('button', { name: /read more/i });
+    const readMoreButton = screen.getByRole('button', { name: /expand/i });
     fireEvent.click(readMoreButton);
 
     // Summary should no longer be clamped
     expect(summary).not.toHaveClass('line-clamp-2');
 
     // Button text should change to "Show less"
-    expect(screen.getByRole('button', { name: /show less/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /collapse/i })).toBeInTheDocument();
   });
 
   it('should not show "Read more" for short summaries', () => {
@@ -67,7 +67,7 @@ describe('ArticleCard', () => {
     };
     render(<ArticleCard article={shortArticle} />);
 
-    expect(screen.queryByRole('button', { name: /read more/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /expand/i })).not.toBeInTheDocument();
   });
 
   it('should display "Add to Reading List" button', () => {

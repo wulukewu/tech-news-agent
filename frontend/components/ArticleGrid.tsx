@@ -47,7 +47,7 @@ export function ArticleGrid({
       case 'list':
         return 'flex flex-col gap-4';
       case 'compact':
-        return 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3';
+        return 'flex flex-col gap-2';
       case 'card':
       default:
         return 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4';
@@ -59,6 +59,7 @@ export function ArticleGrid({
       case 'list':
         return 'desktop';
       case 'compact':
+        return 'compact';
       case 'card':
       default:
         return 'mobile';
@@ -68,7 +69,7 @@ export function ArticleGrid({
   return (
     <div className={getGridClasses()} role="list" aria-label="Articles grid">
       {articles.map((article) => (
-        <div key={article.id} role="listitem">
+        <div key={article.id} role="listitem" className="h-full">
           <ArticleCard
             article={article}
             showAnalysisButton={showAnalysisButton}

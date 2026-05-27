@@ -153,14 +153,16 @@ describe('Category Color Utilities', () => {
   describe('getCategoryBadgeStyles', () => {
     it('should return correct styles for light mode', () => {
       const styles = getCategoryBadgeStyles('tech-news', 'light');
-      expect(styles.backgroundColor).toBe('#3B82F6');
-      expect(styles.color).toBe('#FFFFFF');
+      expect(styles.backgroundColor).toBe('#3B82F618');
+      expect(styles.color).toBe('#3B82F6');
+      expect(styles.border).toBe('1.5px solid #3B82F633');
     });
 
     it('should return correct styles for dark mode', () => {
       const styles = getCategoryBadgeStyles('tech-news', 'dark');
-      expect(styles.backgroundColor).toBe('#60A5FA');
-      expect(styles.color).toBe('#000000');
+      expect(styles.backgroundColor).toBe('#60A5FA18');
+      expect(styles.color).toBe('#60A5FA');
+      expect(styles.border).toBe('1.5px solid #60A5FA33');
     });
 
     it('should support custom colors', () => {
@@ -172,7 +174,8 @@ describe('Category Color Utilities', () => {
       };
 
       const styles = getCategoryBadgeStyles('custom-category', 'light', customColors);
-      expect(styles.backgroundColor).toBe('#FF0000');
+      expect(styles.backgroundColor).toBe('#FF000018');
+      expect(styles.color).toBe('#FF0000');
     });
   });
 

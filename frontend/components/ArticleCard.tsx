@@ -37,8 +37,8 @@ interface ArticleCardProps {
   onAnalyze?: (articleId: string) => void;
   /** Callback when article is added to reading list */
   onAddToReadingList?: (articleId: string) => void;
-  /** Layout variant - mobile (vertical) or desktop (horizontal) */
-  layout?: 'mobile' | 'desktop';
+  /** Layout variant - mobile (vertical), desktop (horizontal), or compact (dense) */
+  layout?: 'mobile' | 'desktop' | 'compact';
 }
 
 export function ArticleCard({
@@ -123,15 +123,15 @@ export function ArticleCard({
   // Mobile vertical layout (Task 6.1)
   if (layout === 'mobile') {
     return (
-      <article>
+      <article className="h-full">
         <Card
           className={cn(
-            'group transition-all duration-300 cursor-pointer overflow-hidden active-tap hover-pointer-fine',
+            'h-full flex flex-col group transition-all duration-300 cursor-pointer overflow-hidden active-tap hover-pointer-fine',
             isRead && 'opacity-60 border-l-4 border-l-green-500'
           )}
         >
-          <CardContent className="p-0">
-            {/* Vertical stack layout */}
+          <CardContent className="p-0 h-full flex flex-col justify-between">
+            {/* Top part: Image + Content */}
             <div className="flex flex-col">
               {/* Image - Only show if imageUrl exists */}
               {article.imageUrl && (
@@ -215,64 +215,206 @@ export function ArticleCard({
                     <p
                       className={cn(
                         'text-sm text-foreground/85 leading-relaxed transition-all duration-300',
-                        !isExpanded && shouldShowReadMore && 'line-clamp-2'
+                        !isExpanded && shouldShowReadMore && 'line-clamp-2',
+                        isExpanded && '!line-clamp-none'
                       )}
                     >
                       {article.aiSummary}
                     </p>
                   </div>
                 )}
+              </div>
+            </div>
 
-                {/* Action buttons with 44px touch targets */}
-                <div className="flex gap-2">
-                  {showReadingListButton && (
-                    <Button
-                      variant="outline"
-                      onClick={handleAddToReadingList}
-                      disabled={addToReadingList.isPending || isAdded}
-                      aria-label={
-                        isAdded
-                          ? t('article-card.added-to-reading-list-aria')
-                          : t('article-card.add-to-reading-list-aria')
-                      }
-                      className="flex-1 min-h-[44px] min-w-[44px] transition-all duration-300 hover:scale-[1.02] active:scale-95"
-                    >
-                      {addToReadingList.isPending ? (
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                      ) : isAdded ? (
-                        <BookmarkCheck className="h-4 w-4 mr-2 text-green-600 animate-in zoom-in-50 duration-300" />
-                      ) : (
-                        <BookmarkPlus className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:scale-[1.05]" />
-                      )}
-                      <span className="text-sm">
-                        {isAdded ? t('buttons.saved') : t('buttons.read-later')}
-                      </span>
-                    </Button>
-                  )}
+            {/* Bottom part: Action buttons pushed to bottom using mt-auto */}
+            <div className="p-4 pt-0 mt-auto flex flex-col gap-2">
+              <div className="flex gap-2">
+                {showReadingListButton && (
                   <Button
                     variant="outline"
                     onClick={handleAddToReadingList}
-                    disabled={isAdded}
-                    aria-label={t('article-card.mark-as-read-aria')}
+                    disabled={addToReadingList.isPending || isAdded}
+                    aria-label={
+                      isAdded
+                        ? t('article-card.added-to-reading-list-aria')
+                        : t('article-card.add-to-reading-list-aria')
+                    }
                     className="flex-1 min-h-[44px] min-w-[44px] transition-all duration-300 hover:scale-[1.02] active:scale-95"
                   >
-                    <CheckCircle className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:scale-[1.05]" />
-                    <span className="text-sm">{t('buttons.mark-as-read')}</span>
-                  </Button>
-                </div>
-
-                {/* Optional analysis button */}
-                {showAnalysisButton && (
-                  <Button
-                    variant="default"
-                    onClick={handleAnalyze}
-                    aria-label={t('article-card.deep-dive-aria')}
-                    className="w-full min-h-[44px] transition-all duration-300 hover:scale-[1.02] active:scale-95 hover:shadow-md"
-                  >
-                    {t('article-card.deep-dive-label')}
+                    {addToReadingList.isPending ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : isAdded ? (
+                      <BookmarkCheck className="h-4 w-4 mr-2 text-green-600 animate-in zoom-in-50 duration-300" />
+                    ) : (
+                      <BookmarkPlus className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:scale-[1.05]" />
+                    )}
+                    <span className="text-sm">
+                      {isAdded ? t('buttons.saved') : t('buttons.read-later')}
+                    </span>
                   </Button>
                 )}
+                <Button
+                  variant="outline"
+                  onClick={handleAddToReadingList}
+                  disabled={isAdded}
+                  aria-label={t('article-card.mark-as-read-aria')}
+                  className="flex-1 min-h-[44px] min-w-[44px] transition-all duration-300 hover:scale-[1.02] active:scale-95"
+                >
+                  <CheckCircle className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:scale-[1.05]" />
+                  <span className="text-sm">{t('buttons.mark-as-read')}</span>
+                </Button>
               </div>
+
+              {/* Optional analysis button */}
+              {showAnalysisButton && (
+                <Button
+                  variant="default"
+                  onClick={handleAnalyze}
+                  aria-label={t('article-card.deep-dive-aria')}
+                  className="w-full min-h-[44px] transition-all duration-300 hover:scale-[1.02] active:scale-95 hover:shadow-md"
+                >
+                  {t('article-card.deep-dive-label')}
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </article>
+    );
+  }
+
+  // Compact layout (for fast scanning)
+  if (layout === 'compact') {
+    return (
+      <article>
+        <Card
+          className={cn(
+            'group transition-all duration-300 cursor-pointer overflow-hidden bg-card border border-border/60 p-3 hover:shadow-sm hover:border-border hover:bg-muted/10',
+            isRead && 'opacity-60 border-l-4 border-l-green-500'
+          )}
+        >
+          <CardContent className="p-0 flex items-center justify-between gap-4">
+            {/* Left part: Title, Category badge, published date */}
+            <div className="flex flex-col gap-1.5 min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge
+                  variant="secondary"
+                  style={categoryStyles}
+                  className="px-1.5 py-0 rounded text-[10px] font-semibold tracking-wider transition-all duration-300 hover:scale-[1.02] cursor-default"
+                >
+                  {article.category}
+                </Badge>
+                {article.feedName && (
+                  <span className="text-xs text-muted-foreground truncate max-w-[120px]">
+                    {article.feedName}
+                  </span>
+                )}
+                <span aria-hidden="true" className="text-xs text-muted-foreground/40">
+                  •
+                </span>
+                <time
+                  dateTime={article.publishedAt || undefined}
+                  className="text-xs text-muted-foreground"
+                >
+                  {formattedDate}
+                </time>
+              </div>
+
+              <a
+                href={article.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:underline group-hover:text-primary transition-colors duration-200 truncate block"
+              >
+                <h4 className="text-sm font-semibold truncate leading-snug">{article.title}</h4>
+              </a>
+
+              {/* Tiny single line of summary or takeaway context */}
+              {article.actionableTakeaway ? (
+                <p className="text-xs text-amber-600 dark:text-amber-400 font-medium italic truncate">
+                  {article.actionableTakeaway}
+                </p>
+              ) : article.aiSummary ? (
+                <p className="text-xs text-muted-foreground truncate">{article.aiSummary}</p>
+              ) : null}
+            </div>
+
+            {/* Right part: Minimal icon action buttons */}
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {showReadingListButton && (
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={handleAddToReadingList}
+                        disabled={addToReadingList.isPending || isAdded}
+                        aria-label={
+                          isAdded
+                            ? t('article-card.added-to-reading-list-aria')
+                            : t('article-card.add-to-reading-list-aria')
+                        }
+                        className="h-8 w-8 min-h-[32px] min-w-[32px] transition-all duration-200 hover:scale-[1.05]"
+                      >
+                        {addToReadingList.isPending ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : isAdded ? (
+                          <BookmarkCheck className="h-3.5 w-3.5 text-green-600 animate-in zoom-in-50 duration-300" />
+                        ) : (
+                          <BookmarkPlus className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p className="text-xs">
+                        {isAdded ? t('buttons.saved') : t('buttons.read-later')}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+
+              <TooltipProvider delayDuration={300}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={handleAddToReadingList}
+                      disabled={isAdded}
+                      aria-label={t('article-card.mark-as-read-aria')}
+                      className="h-8 w-8 min-h-[32px] min-w-[32px] transition-all duration-200 hover:scale-[1.05]"
+                    >
+                      <CheckCircle className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="text-xs">{t('buttons.mark-as-read')}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              {showAnalysisButton && (
+                <TooltipProvider delayDuration={300}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={handleAnalyze}
+                        aria-label={t('article-card.deep-dive-aria')}
+                        className="h-8 w-8 min-h-[32px] min-w-[32px] transition-all duration-200 hover:scale-[1.05]"
+                      >
+                        <Sparkles className="h-3.5 w-3.5 text-primary" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      <p className="text-xs">{t('article-card.deep-dive-label')}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -413,7 +555,8 @@ export function ArticleCard({
                   <p
                     className={cn(
                       'text-sm text-foreground/85 leading-relaxed transition-all duration-300',
-                      !isExpanded && shouldShowReadMore && 'line-clamp-2'
+                      !isExpanded && shouldShowReadMore && 'line-clamp-2',
+                      isExpanded && '!line-clamp-none'
                     )}
                   >
                     {article.aiSummary}

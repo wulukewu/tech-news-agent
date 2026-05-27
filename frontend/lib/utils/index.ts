@@ -266,12 +266,16 @@ export function getCategoryBadgeStyles(
 ): React.CSSProperties {
   const color = getCategoryColor(category, theme, customColors);
 
-  // Calculate appropriate text color based on background
-  // For colored backgrounds, use white text for better contrast
-  const textColor = theme === 'light' ? '#FFFFFF' : '#000000';
+  // Calculate appropriate background and text colors for premium translucent style
+  // Background: soft 9% opacity tint of the category color
+  // Text: the vibrant 100% solid category color itself
+  // Border: 1.5px solid with 20% opacity border of the category color
+  const bgColor = color + '18';
+  const borderColor = color + '33';
 
   return {
-    backgroundColor: color,
-    color: textColor,
+    backgroundColor: bgColor,
+    color: color,
+    border: `1.5px solid ${borderColor}`,
   };
 }

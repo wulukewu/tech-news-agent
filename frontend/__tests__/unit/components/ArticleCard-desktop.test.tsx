@@ -267,7 +267,7 @@ describe('ArticleCard - Desktop Horizontal Layout', () => {
         wrapper: createWrapper(),
       });
 
-      const readMoreButton = screen.getByRole('button', { name: /read more/i });
+      const readMoreButton = screen.getByRole('button', { name: /expand/i });
       expect(readMoreButton).toBeInTheDocument();
     });
 
@@ -279,12 +279,12 @@ describe('ArticleCard - Desktop Horizontal Layout', () => {
       const summary = screen.getByText(/this is a test article summary/i);
       expect(summary).toHaveClass('line-clamp-2');
 
-      const readMoreButton = screen.getByRole('button', { name: /read more/i });
+      const readMoreButton = screen.getByRole('button', { name: /expand/i });
       fireEvent.click(readMoreButton);
 
       // Summary should expand - check for !line-clamp-none class
       expect(summary).toHaveClass('!line-clamp-none');
-      expect(screen.getByRole('button', { name: /show less/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /collapse/i })).toBeInTheDocument();
     });
   });
 

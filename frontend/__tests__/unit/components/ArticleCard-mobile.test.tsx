@@ -160,13 +160,17 @@ describe('ArticleCard - Mobile Vertical Layout', () => {
       const tinkeringIndex = screen.getByLabelText(/tinkering index: 3 out of 5/i);
       expect(tinkeringIndex).toBeInTheDocument();
 
-      // Should have 5 star icons
-      const stars = container.querySelectorAll('svg');
-      // Filter for star icons (they should be in the tinkering index section)
-      const starIcons = Array.from(stars).filter((svg) =>
-        svg.parentElement?.getAttribute('aria-label')?.includes('Tinkering index')
-      );
-      expect(starIcons.length).toBeGreaterThanOrEqual(5);
+      // Should have 1 Cpu icon + 5 stars = 6 SVGs
+      const svgs = container.querySelectorAll('svg');
+      const starIcons = Array.from(svgs).filter((svg) => {
+        const roleImgContainer = svg.closest('[role="img"]');
+        return (
+          roleImgContainer &&
+          roleImgContainer.getAttribute('aria-label')?.toLowerCase().includes('tinkering index') &&
+          !svg.classList.contains('lucide-cpu')
+        );
+      });
+      expect(starIcons.length).toBe(5);
     });
 
     it('should color stars based on index value (3 = yellow)', () => {
@@ -178,16 +182,16 @@ describe('ArticleCard - Mobile Vertical Layout', () => {
       );
 
       const tinkeringIndex = screen.getByLabelText(/tinkering index: 3 out of 5/i);
-      const stars = tinkeringIndex.querySelectorAll('svg');
+      const stars = Array.from(tinkeringIndex.querySelectorAll('svg')).slice(1);
 
-      // First 3 stars should be filled yellow (intermediate)
-      expect(stars[0]).toHaveClass('fill-yellow-400');
-      expect(stars[1]).toHaveClass('fill-yellow-400');
-      expect(stars[2]).toHaveClass('fill-yellow-400');
+      // First 3 stars should be filled
+      expect(stars[0]).toHaveClass('fill-foreground/45');
+      expect(stars[1]).toHaveClass('fill-foreground/45');
+      expect(stars[2]).toHaveClass('fill-foreground/45');
 
-      // Last 2 stars should be gray (unfilled)
-      expect(stars[3]).toHaveClass('text-gray-300');
-      expect(stars[4]).toHaveClass('text-gray-300');
+      // Last 2 stars should be unfilled
+      expect(stars[3]).toHaveClass('text-muted-foreground/20');
+      expect(stars[4]).toHaveClass('text-muted-foreground/20');
     });
 
     it('should use gray for beginner level (1-2 stars)', () => {
@@ -199,11 +203,11 @@ describe('ArticleCard - Mobile Vertical Layout', () => {
       );
 
       const tinkeringIndex = screen.getByLabelText(/tinkering index: 2 out of 5/i);
-      const stars = tinkeringIndex.querySelectorAll('svg');
+      const stars = Array.from(tinkeringIndex.querySelectorAll('svg')).slice(1);
 
-      // First 2 stars should be filled gray (beginner)
-      expect(stars[0]).toHaveClass('fill-gray-400');
-      expect(stars[1]).toHaveClass('fill-gray-400');
+      // First 2 stars should be filled
+      expect(stars[0]).toHaveClass('fill-foreground/45');
+      expect(stars[1]).toHaveClass('fill-foreground/45');
     });
 
     it('should use orange for advanced level (4-5 stars)', () => {
@@ -215,14 +219,14 @@ describe('ArticleCard - Mobile Vertical Layout', () => {
       );
 
       const tinkeringIndex = screen.getByLabelText(/tinkering index: 5 out of 5/i);
-      const stars = tinkeringIndex.querySelectorAll('svg');
+      const stars = Array.from(tinkeringIndex.querySelectorAll('svg')).slice(1);
 
-      // All 5 stars should be filled orange (advanced)
-      expect(stars[0]).toHaveClass('fill-orange-400');
-      expect(stars[1]).toHaveClass('fill-orange-400');
-      expect(stars[2]).toHaveClass('fill-orange-400');
-      expect(stars[3]).toHaveClass('fill-orange-400');
-      expect(stars[4]).toHaveClass('fill-orange-400');
+      // All 5 stars should be filled
+      expect(stars[0]).toHaveClass('fill-foreground/45');
+      expect(stars[1]).toHaveClass('fill-foreground/45');
+      expect(stars[2]).toHaveClass('fill-foreground/45');
+      expect(stars[3]).toHaveClass('fill-foreground/45');
+      expect(stars[4]).toHaveClass('fill-foreground/45');
     });
   });
 
@@ -256,7 +260,7 @@ describe('ArticleCard - Mobile Vertical Layout', () => {
         wrapper: createWrapper(),
       });
 
-      const readMoreButton = screen.getByRole('button', { name: /read more/i });
+      const readMoreButton = screen.getByRole('button', { name: /expand/i });
       expect(readMoreButton).toBeInTheDocument();
     });
 
@@ -266,11 +270,11 @@ describe('ArticleCard - Mobile Vertical Layout', () => {
         wrapper: createWrapper(),
       });
 
-      const readMoreButton = screen.getByRole('button', { name: /read more/i });
+      const readMoreButton = screen.getByRole('button', { name: /expand/i });
       fireEvent.click(readMoreButton);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /show less/i })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: /collapse/i })).toBeInTheDocument();
       });
     });
   });
