@@ -39,6 +39,7 @@ import {
   Mail,
   CheckCircle,
   AlertCircle,
+  Search,
 } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 
@@ -55,6 +56,7 @@ export function PersonalizedNotificationSettings({
   const [previewData, setPreviewData] = useState<NotificationPreviewResponse | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [localTime, setLocalTime] = useState<string>(''); // Local state for time input
+  const [tzSearchQuery, setTzSearchQuery] = useState<string>('');
 
   // Fetch notification preferences
   const {
@@ -460,50 +462,166 @@ export function PersonalizedNotificationSettings({
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="notification-time">
-                  {t('settings.notifications.notification-time')}
-                </Label>
-                <Input
-                  id="notification-time"
-                  type="time"
-                  value={localTime}
-                  onChange={(e) => setLocalTime(e.target.value)}
-                  onBlur={(e) => {
-                    if (e.target.value && e.target.value !== preferences.notificationTime) {
-                      handleUpdate({ notificationTime: e.target.value });
-                    }
-                  }}
-                  disabled={isSaving || !preferences.dmEnabled}
-                />
+            {/* Upgraded visual layout for Time and Timezone Configuration */}
+            <div className="grid grid-cols-1 gap-6 pt-4 border-t border-border mt-4">
+              {/* Notification Time Configuration Section */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label
+                    htmlFor="notification-time"
+                    className="text-sm font-semibold flex items-center gap-2"
+                  >
+                    <Clock className="h-4 w-4 text-emerald-500" />
+                    {t('settings.notifications.notification-time')}
+                  </Label>
+                  <span className="text-[10px] text-muted-foreground bg-secondary px-2 py-0.5 rounded font-mono">
+                    24H format
+                  </span>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+                  <div className="relative flex-1">
+                    <Input
+                      id="notification-time"
+                      type="time"
+                      value={localTime}
+                      onChange={(e) => setLocalTime(e.target.value)}
+                      onBlur={(e) => {
+                        if (e.target.value && e.target.value !== preferences.notificationTime) {
+                          handleUpdate({ notificationTime: e.target.value });
+                        }
+                      }}
+                      disabled={isSaving || !preferences.dmEnabled}
+                      className="pl-3 h-10 w-full bg-background border-input ring-offset-background focus-visible:ring-emerald-500 font-medium text-base rounded-md focus:shadow-emerald-500/10 focus:shadow-md transition-all duration-300"
+                    />
+                  </div>
+
+                  {/* Preset Quick Select Time Pills */}
+                  <div className="flex flex-wrap gap-2 items-center">
+                    {[
+                      { label: '🌅 08:00', time: '08:00' },
+                      { label: '🕛 12:00', time: '12:00' },
+                      { label: '🌃 20:00', time: '20:00' },
+                      { label: '🌙 22:00', time: '22:00' },
+                    ].map((preset) => {
+                      const isSelected = localTime === preset.time;
+                      return (
+                        <Button
+                          key={preset.time}
+                          type="button"
+                          variant={isSelected ? 'default' : 'outline'}
+                          size="sm"
+                          disabled={isSaving || !preferences.dmEnabled}
+                          onClick={() => {
+                            setLocalTime(preset.time);
+                            handleUpdate({ notificationTime: preset.time });
+                          }}
+                          className={`h-9 px-3 text-xs rounded-full font-medium transition-all duration-300 hover:scale-[1.03] active:scale-95 ${
+                            isSelected
+                              ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-600/20'
+                              : 'hover:bg-secondary hover:border-emerald-500/30'
+                          }`}
+                        >
+                          {preset.label}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </div>
                 <p className="text-xs text-muted-foreground">
                   {t('settings.notifications.time-hint')}
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="timezone">{t('settings.notifications.timezone')}</Label>
-                <Select
-                  value={preferences.timezone}
-                  onValueChange={(value) => handleUpdate({ timezone: value })}
-                  disabled={isSaving || !preferences.dmEnabled}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {timezones.map((tz) => (
-                      <SelectItem key={tz.value} value={tz.value}>
-                        <div className="flex items-center gap-2">
-                          <Globe className="h-4 w-4" />
-                          <span>{tz.label}</span>
-                          <span className="text-xs text-muted-foreground">{tz.offset}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              {/* Timezone Configuration Section */}
+              <div className="space-y-3 pt-2">
+                <Label htmlFor="timezone" className="text-sm font-semibold flex items-center gap-2">
+                  <Globe className="h-4 w-4 text-emerald-500" />
+                  {t('settings.notifications.timezone')}
+                </Label>
+
+                {/* Popular Region Quick-Select Cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                  {[
+                    { flag: '🇹🇼', label: 'Taipei', timezone: 'Asia/Taipei', gmt: 'UTC+8' },
+                    { flag: '🇯🇵', label: 'Tokyo', timezone: 'Asia/Tokyo', gmt: 'UTC+9' },
+                    { flag: '🇺🇸', label: 'New York', timezone: 'America/New_York', gmt: 'UTC-5' },
+                    { flag: '🇬🇧', label: 'London', timezone: 'Europe/London', gmt: 'UTC+0' },
+                    { flag: '🌐', label: 'UTC', timezone: 'UTC', gmt: 'UTC+0' },
+                  ].map((pop) => {
+                    const isSelected = preferences.timezone === pop.timezone;
+                    return (
+                      <button
+                        key={pop.timezone}
+                        type="button"
+                        disabled={isSaving || !preferences.dmEnabled}
+                        onClick={() => handleUpdate({ timezone: pop.timezone })}
+                        className={`flex flex-col items-center justify-center p-2.5 rounded-lg border text-center transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] ${
+                          isSelected
+                            ? 'bg-emerald-500/5 dark:bg-emerald-500/10 border-emerald-500 text-emerald-800 dark:text-emerald-300 font-semibold shadow-sm shadow-emerald-500/10'
+                            : 'border-border bg-background hover:bg-secondary hover:border-muted-foreground/20'
+                        }`}
+                      >
+                        <span className="text-lg mb-1 leading-none">{pop.flag}</span>
+                        <span className="text-xs truncate max-w-full font-medium">{pop.label}</span>
+                        <span className="text-[10px] text-muted-foreground mt-0.5">{pop.gmt}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Real-time Searchable Timezone Dropdown Select */}
+                <div className="relative">
+                  <Select
+                    value={preferences.timezone}
+                    onValueChange={(value) => handleUpdate({ timezone: value })}
+                    disabled={isSaving || !preferences.dmEnabled}
+                  >
+                    <SelectTrigger className="w-full h-10 font-medium hover:border-emerald-500/30 transition-all duration-300">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-80 overflow-y-auto">
+                      {/* Search Bar inside Select Dropdown */}
+                      <div className="flex items-center gap-2 px-3 py-2 border-b sticky top-0 bg-popover z-10">
+                        <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                        <input
+                          placeholder="搜尋時區 (e.g. Taipei, UTC)..."
+                          value={tzSearchQuery}
+                          onChange={(e) => setTzSearchQuery(e.target.value)}
+                          onClick={(e) => e.stopPropagation()} // Prevent closing select on click
+                          onKeyDown={(e) => e.stopPropagation()} // Prevent selecting item on keys
+                          className="bg-transparent border-none outline-none w-full text-sm placeholder:text-muted-foreground"
+                        />
+                      </div>
+
+                      {(() => {
+                        const filtered = timezones.filter(
+                          (tz) =>
+                            tz.label.toLowerCase().includes(tzSearchQuery.toLowerCase()) ||
+                            tz.value.toLowerCase().includes(tzSearchQuery.toLowerCase()) ||
+                            tz.offset.toLowerCase().includes(tzSearchQuery.toLowerCase())
+                        );
+                        return filtered.length > 0 ? (
+                          filtered.map((tz) => (
+                            <SelectItem key={tz.value} value={tz.value}>
+                              <div className="flex items-center gap-2">
+                                <Globe className="h-4 w-4 text-muted-foreground" />
+                                <span>{tz.label}</span>
+                                <span className="text-xs text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
+                                  {tz.offset}
+                                </span>
+                              </div>
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <div className="text-xs text-muted-foreground p-3 text-center">
+                            查無匹配時區
+                          </div>
+                        );
+                      })()}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           </CardContent>

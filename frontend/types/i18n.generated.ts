@@ -34,6 +34,7 @@ export type TranslationKey =
   | 'article-card.minutes-ago'
   | 'article-card.recently-added'
   | 'article-card.share-aria'
+  | 'article-card.takeaway-prefix'
   | 'article-card.tinkering-aria'
   | 'articles-page.article-list-aria'
   | 'articles-page.loading-more-sr'
