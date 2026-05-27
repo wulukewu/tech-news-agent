@@ -39,6 +39,8 @@ def _build_news_page(articles, page: int) -> str:
             tinkering = "🔥" * article.tinkering_index
             lines.append(f"  {tinkering} {article.title}")
             lines.append(f"    🔗 {article.url}")
+            if getattr(article, "actionable_takeaway", None):
+                lines.append(f"    💡 *{article.actionable_takeaway}*")
         lines.append("")
 
     return "\n".join(lines)

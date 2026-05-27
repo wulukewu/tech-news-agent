@@ -51,6 +51,7 @@ class ArticleSchema(BaseModel):
     # AI 分析結果
     tinkering_index: int | None = Field(None, ge=1, le=5)  # 移至頂層
     ai_summary: str | None = Field(None, max_length=5000)  # 新增：AI 摘要
+    actionable_takeaway: str | None = None  # 1秒技術精華
     ai_analysis: AIAnalysis | None = None  # 保留：完整 AI 分析
     content_type: str | None = None  # 內容類型：tutorial/guide/news/reference/project/opinion
 

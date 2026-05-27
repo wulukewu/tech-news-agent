@@ -522,6 +522,9 @@ class DMNotificationService:
             lines = [f"{tinkering} **{title}**"]
             lines.append(f"🔗 {article.url}")
 
+            if getattr(article, "actionable_takeaway", None):
+                lines.append(f"💡 *{article.actionable_takeaway}*")
+
             if article.ai_summary:
                 summary = (
                     article.ai_summary[:80] + "..."

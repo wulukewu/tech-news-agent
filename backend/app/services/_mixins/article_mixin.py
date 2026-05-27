@@ -342,7 +342,7 @@ class ArticleMixin:
             query = (
                 self.client.table("articles")
                 .select(
-                    "id, title, url, published_at, tinkering_index, ai_summary, feed_id, feeds(category)"
+                    "id, title, url, published_at, tinkering_index, ai_summary, actionable_takeaway, feed_id, feeds(category)"
                 )
                 .in_("feed_id", feed_ids)
                 .gte("published_at", cutoff_date.isoformat())
@@ -386,6 +386,7 @@ class ArticleMixin:
                         ),
                         tinkering_index=article_data.get("tinkering_index"),
                         ai_summary=article_data.get("ai_summary"),
+                        actionable_takeaway=article_data.get("actionable_takeaway"),
                     )
                     articles.append(article)
                 except Exception as e:
