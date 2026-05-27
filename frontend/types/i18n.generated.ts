@@ -982,6 +982,7 @@ export type TranslationKey =
   | 'settings.notifications.depth-enable-desc'
   | 'settings.notifications.depth-load-error'
   | 'settings.notifications.depth-min-label'
+  | 'settings.notifications.depth-stats-active'
   | 'settings.notifications.depth-title'
   | 'settings.notifications.depth-updated'
   | 'settings.notifications.description'

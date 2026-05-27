@@ -12,7 +12,7 @@
  * - 25.8: Use consistent star icon sizing (20px standard view)
  */
 
-import { Star, Cpu } from 'lucide-react';
+import { Star, BookOpen, Terminal, Layers, Zap } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/contexts/I18nContext';
@@ -24,21 +24,39 @@ export function TinkeringIndexStars({ index }: { index: number }) {
   const getDescription = (idx: number): string => {
     if (idx <= 2) return 'Beginner';
     if (idx === 3) return 'Intermediate';
-    return 'Advanced';
+    if (idx === 4) return 'Advanced';
+    return 'Expert';
   };
 
   const description = getDescription(clampedIndex);
 
-  // Badge theme classes based on index (1-2 green, 3 blue, 4-5 purple)
+  // Difficulty-progressive icons to unify with Settings page
+  const getStarsIcon = (idx: number) => {
+    if (idx <= 2) return BookOpen;
+    if (idx === 3) return Terminal;
+    if (idx === 4) return Layers;
+    return Zap;
+  };
+
+  // Badge theme classes matching the Settings page HSL colors
   const getBadgeClasses = (idx: number) => {
-    if (idx >= 4) {
-      return 'bg-purple-100 text-purple-800 border border-purple-200 dark:bg-purple-950 dark:text-purple-200 dark:border-purple-900/50';
+    if (idx === 5) {
+      // Expert -> Fuchsia
+      return 'bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-200/60 dark:bg-fuchsia-950/20 dark:text-fuchsia-300 dark:border-fuchsia-900/40';
+    }
+    if (idx === 4) {
+      // Advanced -> Purple
+      return 'bg-purple-50 text-purple-700 border border-purple-200/60 dark:bg-purple-950/20 dark:text-purple-300 dark:border-purple-900/40';
     }
     if (idx === 3) {
-      return 'bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-950 dark:text-blue-200 dark:border-blue-900/50';
+      // Intermediate -> Blue
+      return 'bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-blue-950/20 dark:text-blue-300 dark:border-blue-900/40';
     }
-    return 'bg-green-100 text-green-800 border border-green-200 dark:bg-green-950 dark:text-green-200 dark:border-green-900/50';
+    // Basic -> Green
+    return 'bg-green-50 text-green-700 border border-green-200/60 dark:bg-green-950/20 dark:text-green-300 dark:border-green-900/40';
   };
+
+  const Icon = getStarsIcon(clampedIndex);
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -49,14 +67,14 @@ export function TinkeringIndexStars({ index }: { index: number }) {
             aria-label={t('article-card.tinkering-aria', { index: clampedIndex, description })}
             role="img"
           >
-            {/* CPU Badge */}
+            {/* Unified Level Badge */}
             <span
               className={cn(
                 'inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all duration-300',
                 getBadgeClasses(clampedIndex)
               )}
             >
-              <Cpu className="h-3 w-3 flex-shrink-0 animate-pulse" />
+              <Icon className="h-3 w-3 flex-shrink-0 animate-pulse" />
               <span>{t(`tinkering-index.level-${clampedIndex}` as any)}</span>
             </span>
 

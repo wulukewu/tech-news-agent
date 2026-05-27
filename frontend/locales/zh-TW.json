@@ -914,7 +914,8 @@
       "depth-min-label": "最低技術深度",
       "depth-updated": "技術深度設定已更新",
       "depth-load-error": "無法載入技術深度設定",
-      "depth-disabled-hint": "技術深度篩選已停用，您將接收所有文章的通知，不論其技術深度等級。"
+      "depth-disabled-hint": "技術深度篩選已停用，您將接收所有文章的通知，不論其技術深度等級。",
+      "depth-stats-active": "只會接收 {level} 等級以上的文章通知"
     }
   },
   "reading-list-page": {

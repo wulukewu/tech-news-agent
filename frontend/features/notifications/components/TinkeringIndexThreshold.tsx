@@ -154,7 +154,7 @@ export function TinkeringIndexThreshold({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Cpu className="h-5 w-5 text-purple-600 dark:text-purple-400 animate-pulse" />
+            <Cpu className="h-5 w-5 text-muted-foreground animate-pulse" />
             {t('settings.notifications.depth-title')}
           </CardTitle>
           <CardDescription>{t('settings.notifications.depth-desc')}</CardDescription>
@@ -173,7 +173,7 @@ export function TinkeringIndexThreshold({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Cpu className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <Cpu className="h-5 w-5 text-muted-foreground" />
             {t('settings.notifications.depth-title')}
           </CardTitle>
           <CardDescription>{t('settings.notifications.depth-desc')}</CardDescription>
@@ -197,7 +197,7 @@ export function TinkeringIndexThreshold({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Cpu className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            <Cpu className="h-5 w-5 text-muted-foreground" />
             <div>
               <CardTitle>{t('settings.notifications.depth-title')}</CardTitle>
               <CardDescription>{t('settings.notifications.depth-desc')}</CardDescription>
@@ -302,7 +302,13 @@ export function TinkeringIndexThreshold({
             {stats && (
               <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg flex items-center gap-2">
                 <BarChart3 className="h-4 w-4 text-blue-600 flex-shrink-0" />
-                <p className="text-sm text-blue-700 dark:text-blue-300">{stats.message}</p>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  {stats.enabled && stats.threshold
+                    ? t('settings.notifications.depth-stats-active', {
+                        level: t(getLevelTranslationKeys(stats.threshold).labelKey as any),
+                      })
+                    : t('settings.notifications.depth-disabled-hint')}
+                </p>
               </div>
             )}
           </>

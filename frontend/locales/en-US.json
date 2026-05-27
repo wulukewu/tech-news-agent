@@ -914,7 +914,8 @@
       "depth-min-label": "Minimum Technical Depth",
       "depth-updated": "Technical depth settings updated",
       "depth-load-error": "Unable to load technical depth settings",
-      "depth-disabled-hint": "Technical depth filter is disabled. You will receive notifications for all articles regardless of technical depth."
+      "depth-disabled-hint": "Technical depth filter is disabled. You will receive notifications for all articles regardless of technical depth.",
+      "depth-stats-active": "Only receive notifications for articles of {level} level and above."
     }
   },
   "reading-list-page": {
