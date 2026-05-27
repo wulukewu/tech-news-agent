@@ -94,30 +94,34 @@ export default function RemindersSettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              {t('reminders.stats-extra.weekly-stats')}
+              {t('pages.reminders.stats-extra.weekly-stats')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-muted-foreground">{t('reminders.stats-extra.sent-count')}</p>
+                <p className="text-muted-foreground">
+                  {t('pages.reminders.stats-extra.sent-count')}
+                </p>
                 <p className="text-lg font-semibold">{stats.week_sent_count}</p>
               </div>
               <div>
-                <p className="text-muted-foreground">{t('reminders.stats-extra.click-rate')}</p>
+                <p className="text-muted-foreground">
+                  {t('pages.reminders.stats-extra.click-rate')}
+                </p>
                 <p className="text-lg font-semibold">{stats.click_rate}%</p>
               </div>
             </div>
             {stats.last_reminder_at && (
               <p className="text-xs text-muted-foreground mt-3">
-                {t('reminders.stats-extra.last-reminder', {
+                {t('pages.reminders.stats-extra.last-reminder', {
                   time: new Date(stats.last_reminder_at).toLocaleString(
                     locale === 'zh-TW' ? 'zh-TW' : 'en-US'
                   ),
                 })}
                 {stats.last_reminder_type === 'add'
-                  ? t('reminders.stats-extra.trigger-add-inline')
-                  : t('reminders.stats-extra.trigger-rate-inline')}
+                  ? t('pages.reminders.stats-extra.trigger-add-inline')
+                  : t('pages.reminders.stats-extra.trigger-rate-inline')}
               </p>
             )}
             <div className="mt-4 flex gap-2">
@@ -130,8 +134,8 @@ export default function RemindersSettingsPage() {
               >
                 <Send className="w-4 h-4 mr-2" />
                 {isTestingReminder
-                  ? t('reminders.stats-extra.testing')
-                  : t('reminders.stats-extra.test-reminder')}
+                  ? t('pages.reminders.stats-extra.testing')
+                  : t('pages.reminders.stats-extra.test-reminder')}
               </Button>
               <Button
                 variant="outline"
@@ -140,7 +144,7 @@ export default function RemindersSettingsPage() {
                 className="flex-1"
               >
                 <History className="w-4 h-4 mr-2" />
-                {t('reminders.stats-extra.view-history')}
+                {t('pages.reminders.stats-extra.view-history')}
               </Button>
             </div>
           </CardContent>

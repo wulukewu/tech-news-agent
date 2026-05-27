@@ -23,14 +23,14 @@ export default function ReminderHistoryPage() {
   ) => {
     try {
       await submitFeedback(articleId, feedback);
-      toast.success(t('reminders.history.feedback-saved'));
+      toast.success(t('pages.reminders.history.feedback-saved'));
       refetch();
     } catch (error: unknown) {
       const apiErrorMsg =
         error && typeof error === 'object' && 'response' in error
           ? (error as { response?: { data?: { detail?: string } } }).response?.data?.detail
           : null;
-      toast.error(apiErrorMsg || t('reminders.history.feedback-failed'));
+      toast.error(apiErrorMsg || t('pages.reminders.history.feedback-failed'));
     }
   };
 
@@ -47,14 +47,16 @@ export default function ReminderHistoryPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
-        <h2 className="text-lg font-semibold">{t('reminders.history.title')}</h2>
-        <p className="text-sm text-muted-foreground mt-1">{t('reminders.history.description')}</p>
+        <h2 className="text-lg font-semibold">{t('pages.reminders.history.title')}</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          {t('pages.reminders.history.description')}
+        </p>
       </div>
 
       {history.length === 0 ? (
         <Card>
           <CardContent className="pt-6 text-center text-muted-foreground">
-            {t('reminders.history.empty')}
+            {t('pages.reminders.history.empty')}
           </CardContent>
         </Card>
       ) : (
@@ -66,11 +68,11 @@ export default function ReminderHistoryPage() {
                   <div className="flex items-center gap-2">
                     <Badge variant={item.trigger_type === 'add' ? 'default' : 'secondary'}>
                       {item.trigger_type === 'add'
-                        ? t('reminders.history.trigger-add')
-                        : t('reminders.history.trigger-rate')}
+                        ? t('pages.reminders.history.trigger-add')
+                        : t('pages.reminders.history.trigger-rate')}
                     </Badge>
                     <span className="text-sm text-muted-foreground">
-                      {t('reminders.match-percentage', {
+                      {t('pages.reminders.match-percentage', {
                         percentage: Math.round(item.similarity_score * 100),
                       })}
                     </span>
@@ -83,14 +85,14 @@ export default function ReminderHistoryPage() {
               <CardContent className="space-y-3">
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {t('reminders.history.trigger-article')}
+                    {t('pages.reminders.history.trigger-article')}
                   </p>
                   <p className="font-medium">{item.trigger_article.title}</p>
                 </div>
 
                 <div>
                   <p className="text-sm text-muted-foreground">
-                    {t('reminders.history.recommended-article')}
+                    {t('pages.reminders.history.recommended-article')}
                   </p>
                   <div className="flex items-center gap-2">
                     <p className="font-medium flex-1">{item.recommended_article.title}</p>
@@ -108,16 +110,16 @@ export default function ReminderHistoryPage() {
                   <div className="flex items-center gap-2">
                     {item.clicked_at && (
                       <Badge variant="outline" className="text-green-600">
-                        {t('reminders.history.clicked')}
+                        {t('pages.reminders.history.clicked')}
                       </Badge>
                     )}
                     {item.user_feedback && (
                       <Badge variant="outline">
                         {item.user_feedback === 'accurate'
-                          ? t('reminders.history.feedback-accurate')
+                          ? t('pages.reminders.history.feedback-accurate')
                           : item.user_feedback === 'inaccurate'
-                            ? t('reminders.history.feedback-inaccurate')
-                            : t('reminders.history.feedback-uninterested')}
+                            ? t('pages.reminders.history.feedback-inaccurate')
+                            : t('pages.reminders.history.feedback-uninterested')}
                       </Badge>
                     )}
                   </div>
