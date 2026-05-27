@@ -19,7 +19,7 @@ import { FeedNotificationSettings } from '@/features/notifications/components/Fe
 import { PersonalizedNotificationSettings } from '@/features/notifications/components/PersonalizedNotificationSettings';
 import { ProactiveFrequencySettings } from '@/features/notifications/components/ProactiveFrequencySettings';
 import { PersonalizedNotificationPreview } from '@/features/notifications/components/PersonalizedNotificationPreview';
-import { Bell, Moon, Brain, Rss, CheckCircle, AlertCircle } from 'lucide-react';
+import { Bell, Moon, Cpu, Rss, CheckCircle, AlertCircle } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 
 export default function NotificationSettingsPage() {
@@ -84,7 +84,7 @@ export default function NotificationSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between gap-4 animate-in fade-in-50 slide-in-from-top-2 duration-500">
+      <div className="flex items-start justify-between gap-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-400 ease-out">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{t('settings.notifications.title')}</h1>
           <p className="text-muted-foreground mt-1">{t('settings.notifications.description')}</p>
@@ -114,7 +114,7 @@ export default function NotificationSettingsPage() {
 
       <Tabs
         defaultValue="schedule"
-        className="space-y-4 animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-300"
+        className="space-y-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-400 ease-out"
       >
         <TabsList className="grid w-full grid-cols-4 h-auto">
           {[
@@ -124,14 +124,14 @@ export default function NotificationSettingsPage() {
               icon: Moon,
               label: t('settings.notifications.tab-quiet-hours'),
             },
-            { value: 'filters', icon: Brain, label: t('settings.notifications.tab-filters') },
+            { value: 'filters', icon: Cpu, label: t('settings.notifications.tab-filters') },
             { value: 'feeds', icon: Rss, label: t('settings.notifications.tab-feeds') },
           ].map((tab, index) => (
             <TabsTrigger
               key={tab.value}
               value={tab.value}
-              className="flex items-center gap-1.5 py-2 text-xs sm:text-sm transition-all duration-300 hover:scale-[1.02] animate-in slide-in-from-top-2"
-              style={{ animationDelay: `${400 + index * 100}ms` }}
+              className="flex items-center gap-1.5 py-2 text-xs sm:text-sm transition-all duration-300 hover:scale-[1.02] animate-in slide-in-from-left-2 fade-in-0 duration-300 ease-out"
+              style={{ animationDelay: `${100 + index * 50}ms`, animationFillMode: 'both' }}
             >
               <tab.icon className="h-3.5 w-3.5 flex-shrink-0 transition-transform duration-300 hover:scale-[1.05]" />
               <span className="hidden sm:inline">{tab.label}</span>
@@ -142,7 +142,7 @@ export default function NotificationSettingsPage() {
 
         <TabsContent
           value="schedule"
-          className="space-y-4 animate-in fade-in-50 slide-in-from-right-4 duration-500"
+          className="space-y-4 animate-in fade-in-0 slide-in-from-right-2 duration-300 ease-out"
         >
           <PersonalizedNotificationSettings />
           <ProactiveFrequencySettings />
@@ -151,7 +151,7 @@ export default function NotificationSettingsPage() {
 
         <TabsContent
           value="quiet-hours"
-          className="animate-in fade-in-50 slide-in-from-right-4 duration-500"
+          className="animate-in fade-in-0 slide-in-from-right-2 duration-300 ease-out"
         >
           <QuietHoursSettings
             quietHours={
@@ -166,7 +166,7 @@ export default function NotificationSettingsPage() {
 
         <TabsContent
           value="filters"
-          className="animate-in fade-in-50 slide-in-from-right-4 duration-500"
+          className="animate-in fade-in-0 slide-in-from-right-2 duration-300 ease-out"
         >
           <TinkeringIndexThreshold
             threshold={
@@ -181,7 +181,7 @@ export default function NotificationSettingsPage() {
 
         <TabsContent
           value="feeds"
-          className="animate-in fade-in-50 slide-in-from-right-4 duration-500"
+          className="animate-in fade-in-0 slide-in-from-right-2 duration-300 ease-out"
         >
           <FeedNotificationSettings
             feedSettings={

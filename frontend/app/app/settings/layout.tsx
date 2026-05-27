@@ -26,7 +26,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
 
   return (
     <div className="space-y-6">
-      <div className="border-b relative animate-in fade-in-50 slide-in-from-top-2 duration-500">
+      <div className="border-b relative">
         {/* Right fade-out indicator for horizontal scroll on mobile */}
         <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-background to-transparent pointer-events-none z-10 md:hidden" />
 
@@ -47,12 +47,12 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
                   'flex items-center gap-2 px-1 py-3 border-b-2 text-sm whitespace-nowrap',
                   'transition-all duration-300 hover:scale-[1.02]',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                  'animate-in slide-in-from-top-2 fade-in-50',
+                  'animate-in slide-in-from-left-2 fade-in-0 duration-300 ease-out',
                   isActive
                     ? 'border-primary text-foreground font-medium'
                     : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
                 )}
-                style={{ animationDelay: `${index * 100}ms` }}
+                style={{ animationDelay: `${index * 50}ms`, animationFillMode: 'both' }}
               >
                 <Icon
                   className={cn(
@@ -66,7 +66,10 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
           })}
         </nav>
       </div>
-      <main className="animate-in fade-in-50 slide-in-from-bottom-4 duration-500 delay-300">
+      <main
+        key={pathname}
+        className="animate-in fade-in-0 slide-in-from-bottom-2 duration-400 ease-out"
+      >
         {children}
       </main>
     </div>

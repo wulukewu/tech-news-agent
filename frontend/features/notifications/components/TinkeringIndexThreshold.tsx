@@ -24,6 +24,8 @@ import {
   BookOpen,
   Zap,
   Target,
+  Cpu,
+  Terminal,
 } from 'lucide-react';
 import { useI18n } from '@/contexts/I18nContext';
 import {
@@ -91,28 +93,43 @@ export function TinkeringIndexThreshold({
       case 'basic':
         return BookOpen;
       case 'intermediate':
-        return Target;
+        return Terminal;
       case 'advanced':
-        return TrendingUp;
+        return Cpu;
       case 'expert':
         return Zap;
       default:
-        return Brain;
+        return Cpu;
     }
   };
 
   const getLevelColor = (level: string) => {
     switch (level) {
       case 'basic':
-        return 'text-green-600';
+        return 'text-emerald-500 dark:text-emerald-400';
       case 'intermediate':
-        return 'text-blue-600';
+        return 'text-blue-500 dark:text-blue-400';
       case 'advanced':
-        return 'text-orange-600';
+        return 'text-indigo-500 dark:text-indigo-400';
       case 'expert':
-        return 'text-red-600';
+        return 'text-rose-500 dark:text-rose-400';
       default:
-        return 'text-gray-600';
+        return 'text-muted-foreground';
+    }
+  };
+
+  const getLevelBgClasses = (level: string) => {
+    switch (level) {
+      case 'basic':
+        return 'bg-emerald-50/40 border border-emerald-100/50 dark:bg-emerald-950/10 dark:border-emerald-900/20 text-emerald-900 dark:text-emerald-100';
+      case 'intermediate':
+        return 'bg-blue-50/40 border border-blue-100/50 dark:bg-blue-950/10 dark:border-blue-900/20 text-blue-900 dark:text-blue-100';
+      case 'advanced':
+        return 'bg-indigo-50/40 border border-indigo-100/50 dark:bg-indigo-950/10 dark:border-indigo-900/20 text-indigo-900 dark:text-indigo-100';
+      case 'expert':
+        return 'bg-rose-50/40 border border-rose-100/50 dark:bg-rose-950/10 dark:border-rose-900/20 text-rose-900 dark:text-rose-100';
+      default:
+        return 'bg-muted border border-border text-foreground';
     }
   };
 
@@ -121,7 +138,7 @@ export function TinkeringIndexThreshold({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Brain className="h-5 w-5" />
+            <Cpu className="h-5 w-5 text-purple-600 dark:text-purple-400 animate-pulse" />
             {t('settings.notifications.depth-title')}
           </CardTitle>
           <CardDescription>{t('settings.notifications.depth-desc')}</CardDescription>
@@ -140,7 +157,7 @@ export function TinkeringIndexThreshold({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Brain className="h-5 w-5" />
+            <Cpu className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             {t('settings.notifications.depth-title')}
           </CardTitle>
           <CardDescription>{t('settings.notifications.depth-desc')}</CardDescription>
@@ -164,7 +181,7 @@ export function TinkeringIndexThreshold({
       <CardHeader>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Brain className="h-5 w-5 text-purple-600" />
+            <Cpu className="h-5 w-5 text-purple-600 dark:text-purple-400" />
             <div>
               <CardTitle>{t('settings.notifications.depth-title')}</CardTitle>
               <CardDescription>{t('settings.notifications.depth-desc')}</CardDescription>
@@ -235,14 +252,24 @@ export function TinkeringIndexThreshold({
             </div>
 
             {currentLevel && (
-              <div className="p-4 bg-muted rounded-lg flex items-center gap-3">
+              <div
+                className={`p-4 rounded-xl flex items-center gap-3 transition-all duration-300 animate-in fade-in-0 zoom-in-95 ${getLevelBgClasses(currentLevel.value)}`}
+              >
                 {(() => {
                   const Icon = getLevelIcon(currentLevel.value);
-                  return <Icon className={`h-6 w-6 ${getLevelColor(currentLevel.value)}`} />;
+                  return (
+                    <div className="p-2 rounded-lg bg-background/50 shadow-sm border border-border/20 backdrop-blur-sm">
+                      <Icon
+                        className={`h-6 w-6 ${getLevelColor(currentLevel.value)} animate-pulse`}
+                      />
+                    </div>
+                  );
                 })()}
                 <div>
-                  <p className="font-medium">{currentLevel.label}</p>
-                  <p className="text-sm text-muted-foreground">{currentLevel.description}</p>
+                  <p className="font-semibold text-sm leading-tight">{currentLevel.label}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                    {currentLevel.description}
+                  </p>
                 </div>
               </div>
             )}
