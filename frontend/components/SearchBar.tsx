@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { debounce } from '@/lib/utils';
+import { useI18n } from '@/contexts/I18nContext';
 
 interface SearchBarProps {
   /** Callback when search query changes (debounced) */
@@ -51,12 +52,17 @@ interface SearchBarProps {
  */
 export function SearchBar({
   onSearch,
-  placeholder = 'Search articles...',
+  placeholder,
   debounceMs = 300,
   className,
   isLoading = false,
 }: SearchBarProps) {
+  const { t } = useI18n();
   const [query, setQuery] = useState('');
+
+  const displayPlaceholder = placeholder || t('forms.placeholders.search-articles');
+  const ariaLabel = t('forms.placeholders.search-articles').replace('...', '');
+  const clearAriaLabel = t('pages.articles.empty-clear-search');
 
   // Create debounced search function
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -107,12 +113,12 @@ export function SearchBar({
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={placeholder}
+        placeholder={displayPlaceholder}
         className={cn(
           'pl-9 pr-9 transition-all duration-300 hover:shadow-md focus:shadow-lg',
           query && 'pr-16' // Extra padding when clear button is visible
         )}
-        aria-label="Search articles"
+        aria-label={ariaLabel}
         aria-describedby={isLoading ? 'search-loading' : undefined}
       />
 
@@ -124,7 +130,7 @@ export function SearchBar({
           size="icon"
           onClick={handleClear}
           className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-transparent transition-all duration-300 hover:scale-[1.05] animate-in zoom-in-50 duration-300"
-          aria-label="Clear search"
+          aria-label={clearAriaLabel}
         >
           <X className="h-4 w-4 transition-transform duration-300 hover:rotate-90" />
         </Button>

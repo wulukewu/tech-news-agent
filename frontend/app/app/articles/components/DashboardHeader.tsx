@@ -32,7 +32,7 @@ export function DashboardHeader({
   return (
     <header className="mb-6">
       <div className="flex items-center justify-between mb-4">
-        <h1 className="text-3xl font-bold">Your Articles</h1>
+        <h1 className="text-3xl font-bold">{t('pages.articles.title')}</h1>
         <div className="flex gap-2">
           <TriggerSchedulerButton />
           <Button variant="outline" onClick={() => router.push('/dashboard/subscriptions')}>
@@ -42,7 +42,7 @@ export function DashboardHeader({
       </div>
 
       <div className="mb-4">
-        <SearchBar onSearch={onSearch} placeholder="Search articles..." />
+        <SearchBar onSearch={onSearch} placeholder={t('forms.placeholders.search-articles')} />
       </div>
 
       <CategoryFilter
@@ -56,16 +56,14 @@ export function DashboardHeader({
       {searchQuery && (
         <div className="mt-4 text-sm text-muted-foreground">
           {articlesCount > 0 ? (
-            <span>
-              {articlesCount} result{articlesCount !== 1 ? 's' : ''} found
-            </span>
+            <span>{t('forms.labels.search-results', { count: articlesCount })}</span>
           ) : (
-            <span>No results found for &quot;{searchQuery}&quot;</span>
+            <span>{t('pages.articles.empty-no-match', { query: searchQuery })}</span>
           )}
         </div>
       )}
       {!searchQuery && articlesCount > 0 && (
-        <div className="mt-4 text-sm text-muted-foreground">Showing all articles</div>
+        <div className="mt-4 text-sm text-muted-foreground">{t('pages.articles.showing-all')}</div>
       )}
     </header>
   );

@@ -715,6 +715,7 @@ export type TranslationKey =
   | 'pages.articles.empty-no-subs-title'
   | 'pages.articles.empty-not-found-title'
   | 'pages.articles.empty-select-category'
+  | 'pages.articles.showing-all'
   | 'pages.articles.title'
   | 'pages.landing.cta.button'
   | 'pages.landing.cta.description'

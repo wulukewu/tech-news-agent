@@ -171,7 +171,8 @@
       "empty-no-match": "沒有符合「{query}」的文章",
       "empty-select-category": "選擇至少一個類別以查看文章",
       "empty-no-articles-category": "所選類別目前沒有可用的文章",
-      "empty-clear-search": "清除搜尋"
+      "empty-clear-search": "清除搜尋",
+      "showing-all": "顯示所有文章"
     },
     "login": {
       "title": "登入 Tech News Agent",

@@ -171,7 +171,8 @@
       "empty-no-match": "No articles match \"{query}\"",
       "empty-select-category": "Select at least one category to view articles",
       "empty-no-articles-category": "No articles available for the selected categories",
-      "empty-clear-search": "Clear search"
+      "empty-clear-search": "Clear search",
+      "showing-all": "Showing all articles"
     },
     "login": {
       "title": "Login to Tech News Agent",

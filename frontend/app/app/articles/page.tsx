@@ -174,7 +174,10 @@ function DashboardContent() {
       <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
         {/* Filters and Controls */}
         <div className="space-y-2">
-          <SearchBar onSearch={handleSearch} placeholder="Search articles..." />
+          <SearchBar
+            onSearch={handleSearch}
+            placeholder={t('forms.placeholders.search-articles')}
+          />
           <div className="flex items-center gap-2">
             <TabsList>
               <TabsTrigger value="all">{t('ui.all')}</TabsTrigger>
