@@ -82,9 +82,11 @@ export function ArticleCard({ article }: { article: ArticleSummary }) {
 export function PreferenceAckCard({
   insights,
   recommendations,
+  platform = 'web',
 }: {
   insights: string[];
   recommendations: string[];
+  platform?: string;
 }) {
   return (
     <div className="flex items-start gap-3">
@@ -109,6 +111,9 @@ export function PreferenceAckCard({
             ))}
           </div>
         )}
+        <div className="flex items-center pt-1">
+          <PlatformBadge platform={platform} />
+        </div>
       </div>
     </div>
   );
@@ -120,10 +125,12 @@ export function OtherAckCard({
   insights,
   recommendations,
   onFollowUp,
+  platform = 'web',
 }: {
   insights: string[];
   recommendations: string[];
   onFollowUp: (q: string) => void;
+  platform?: string;
 }) {
   return (
     <div className="flex items-start gap-3">
@@ -149,6 +156,9 @@ export function OtherAckCard({
             ))}
           </div>
         )}
+        <div className="flex items-center pt-1">
+          <PlatformBadge platform={platform} />
+        </div>
       </div>
     </div>
   );
@@ -182,7 +192,11 @@ export function QAAssistantMessage({
   // Intent-aware rendering
   if (response.intent === 'preference') {
     return (
-      <PreferenceAckCard insights={response.insights} recommendations={response.recommendations} />
+      <PreferenceAckCard
+        insights={response.insights}
+        recommendations={response.recommendations}
+        platform="web"
+      />
     );
   }
   if (response.intent === 'other') {
@@ -191,6 +205,7 @@ export function QAAssistantMessage({
         insights={response.insights}
         recommendations={response.recommendations}
         onFollowUp={onFollowUp}
+        platform="web"
       />
     );
   }
@@ -257,21 +272,37 @@ export function QAAssistantMessage({
             </div>
           </section>
         )}
-        {response.response_time > 0 && (
-          <p className="text-xs text-muted-foreground/60">
-            {t('chat.response-time', { seconds: response.response_time.toFixed(2) })}
-          </p>
-        )}
+
+        {/* Unified footer area with platform tag */}
+        <div className="flex items-center gap-1.5 pt-1">
+          {response.response_time > 0 && (
+            <span className="text-xs text-muted-foreground/60">
+              {t('chat.response-time', { seconds: response.response_time.toFixed(2) })}
+            </span>
+          )}
+          <PlatformBadge platform="web" />
+        </div>
       </div>
     </div>
   );
 }
 
-export function QAUserMessage({ content }: { content: string }) {
+export function QAUserMessage({
+  content,
+  platform = 'web',
+}: {
+  content: string;
+  platform?: string;
+}) {
   return (
     <div className="flex items-start justify-end gap-3">
-      <div className="max-w-[75%] rounded-2xl rounded-tr-sm bg-primary text-primary-foreground px-4 py-2.5">
-        <p className="text-sm leading-relaxed">{content}</p>
+      <div className="flex flex-col gap-1 items-end max-w-[75%]">
+        <div className="rounded-2xl rounded-tr-sm bg-primary text-primary-foreground px-4 py-2.5">
+          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{content}</p>
+        </div>
+        <div className="flex items-center">
+          <PlatformBadge platform={platform} />
+        </div>
       </div>
       <div
         className="flex-shrink-0 h-8 w-8 rounded-full bg-muted flex items-center justify-center"
