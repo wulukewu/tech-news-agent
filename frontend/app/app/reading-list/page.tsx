@@ -32,7 +32,7 @@ export default function ReadingListPage() {
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 
   // Use infinite scroll hook for articles
-  const { articles, loading, loadingMore, hasNextPage, totalCount, handleLoadMore } =
+  const { articles, loading, loadingMore, hasNextPage, totalCount, handleLoadMore, refetch } =
     useReadingListArticles({ selectedStatus });
 
   // Mutations
@@ -72,6 +72,7 @@ export default function ReadingListPage() {
     for (const articleId of selectedItems) {
       await updateStatus.mutateAsync({ articleId, status: 'Read' });
     }
+    refetch();
     setSelectedItems(new Set());
     setIsSelectionMode(false);
   };
@@ -80,6 +81,7 @@ export default function ReadingListPage() {
     for (const articleId of selectedItems) {
       await removeItem.mutateAsync(articleId);
     }
+    refetch();
     setSelectedItems(new Set());
     setIsSelectionMode(false);
   };
@@ -225,14 +227,17 @@ export default function ReadingListPage() {
               <div className="flex-1">
                 <ReadingListItem
                   item={item}
-                  onStatusChange={(articleId, status) => {
-                    updateStatus.mutate({ articleId, status });
+                  onStatusChange={async (articleId, status) => {
+                    await updateStatus.mutateAsync({ articleId, status });
+                    refetch();
                   }}
-                  onRatingChange={(articleId, rating) => {
-                    updateRating.mutate({ articleId, rating });
+                  onRatingChange={async (articleId, rating) => {
+                    await updateRating.mutateAsync({ articleId, rating });
+                    refetch();
                   }}
-                  onRemove={(articleId) => {
-                    removeItem.mutate(articleId);
+                  onRemove={async (articleId) => {
+                    await removeItem.mutateAsync(articleId);
+                    refetch();
                   }}
                 />
               </div>
