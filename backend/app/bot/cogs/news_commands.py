@@ -15,7 +15,7 @@ from app.services.supabase_service import SupabaseService
 
 logger = get_logger(__name__)
 
-_NEWS_PAGE_SIZE = 10  # articles per page in /news_now
+_NEWS_PAGE_SIZE = 5  # articles per page in /news_now
 
 
 def _build_news_page(articles, page: int) -> str:
@@ -39,8 +39,10 @@ def _build_news_page(articles, page: int) -> str:
             tinkering = "🔥" * article.tinkering_index
             lines.append(f"  {tinkering} {article.title}")
             lines.append(f"    🔗 {article.url}")
+            if getattr(article, "ai_summary", None):
+                lines.append(f"    📝 *{article.ai_summary.strip()}*")
             if getattr(article, "actionable_takeaway", None):
-                lines.append(f"    💡 *{article.actionable_takeaway}*")
+                lines.append(f"    💡 *核心精華：{article.actionable_takeaway.strip()}*")
         lines.append("")
 
     return "\n".join(lines)

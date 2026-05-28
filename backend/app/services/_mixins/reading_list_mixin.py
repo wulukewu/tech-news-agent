@@ -433,7 +433,7 @@ class ReadingListMixin:
             query = (
                 self.client.table("reading_list")
                 .select(
-                    "article_id, status, rating, added_at, updated_at, source, articles(id, title, url, feeds(category))"
+                    "article_id, status, rating, added_at, updated_at, source, articles(id, title, url, ai_summary, actionable_takeaway, feeds(category))"
                 )
                 .eq("user_id", str(user_uuid))
             )
@@ -486,6 +486,8 @@ class ReadingListMixin:
                             item_data["updated_at"].replace("Z", "+00:00")
                         ),
                         source=item_data.get("source", "web"),
+                        ai_summary=article_data.get("ai_summary"),
+                        actionable_takeaway=article_data.get("actionable_takeaway"),
                     )
                     items.append(reading_list_item)
                 except Exception as e:

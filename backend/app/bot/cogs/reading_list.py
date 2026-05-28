@@ -311,6 +311,10 @@ class PaginationView(discord.ui.View):
             lines.append(f"**{i}. {item.title}**")
             lines.append(f"🔗 {item.url}")
             lines.append(f"📂 {item.category}　⭐ {rating_str}")
+            if getattr(item, "ai_summary", None):
+                lines.append(f"    📝 *{item.ai_summary.strip()}*")
+            if getattr(item, "actionable_takeaway", None):
+                lines.append(f"    💡 *核心精華：{item.actionable_takeaway.strip()}*")
             lines.append(f"🆔 `{item.article_id}`")
             lines.append("")
         return "\n".join(lines).strip()

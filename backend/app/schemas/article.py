@@ -85,6 +85,8 @@ class ReadingListItem(BaseModel):
     added_at: datetime | None = None  # 新增時間
     updated_at: datetime | None = None  # 更新時間
     source: str = "web"  # 來源平台（discord, web）
+    ai_summary: str | None = None  # AI 摘要
+    actionable_takeaway: str | None = None  # 1秒核心技術精華
 
 
 class BatchResult(BaseModel):
