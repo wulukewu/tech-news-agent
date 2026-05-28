@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { Fragment } from 'react';
 import { useI18n } from '@/contexts/I18nContext';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,183 @@ import {
 } from 'lucide-react';
 import { type ArticleSummary, type QAMessage, EXAMPLE_QUERIES } from '../types';
 import { PlatformBadge } from './PlatformBadge';
+
+// ─── Minimal Safe Markdown Parser ──────────────────────────────────────────
+
+function renderInlineMarkdown(text: string): React.ReactNode[] {
+  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\))/g;
+  const parts = text.split(regex);
+
+  return parts.map((part, index) => {
+    if (part.startsWith('`') && part.endsWith('`')) {
+      return (
+        <code
+          key={index}
+          className="px-1.5 py-0.5 rounded bg-muted-foreground/10 text-muted-foreground font-mono text-xs border"
+        >
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <strong key={index} className="font-semibold text-foreground">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    const linkMatch = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (linkMatch) {
+      return (
+        <a
+          key={index}
+          href={linkMatch[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary underline hover:text-primary/80 transition-colors"
+        >
+          {linkMatch[1]}
+        </a>
+      );
+    }
+    return <Fragment key={index}>{part}</Fragment>;
+  });
+}
+
+export function Markdown({ content, className }: { content: string; className?: string }) {
+  const normalized = content.replace(/\r\n/g, '\n');
+  const lines = normalized.split('\n');
+  const elements: React.ReactNode[] = [];
+
+  let inCodeBlock = false;
+  let codeBlockLines: string[] = [];
+  let codeBlockLang = '';
+
+  let inList = false;
+  let listItems: string[] = [];
+  let listType: 'ul' | 'ol' = 'ul';
+
+  const flushList = (key: number) => {
+    if (listItems.length === 0) return;
+    const ListTag = listType;
+    elements.push(
+      <ListTag
+        key={`list-${key}`}
+        className={
+          listType === 'ul'
+            ? 'list-disc pl-5 my-2 space-y-1 text-sm'
+            : 'list-decimal pl-5 my-2 space-y-1 text-sm'
+        }
+      >
+        {listItems.map((item, idx) => (
+          <li key={idx} className="leading-relaxed">
+            {renderInlineMarkdown(item)}
+          </li>
+        ))}
+      </ListTag>
+    );
+    listItems = [];
+    inList = false;
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (line.startsWith('```')) {
+      if (inCodeBlock) {
+        elements.push(
+          <pre
+            key={`code-${i}`}
+            className="p-3 my-2 rounded-lg bg-zinc-950 text-zinc-100 font-mono text-xs overflow-x-auto border border-zinc-800"
+          >
+            {codeBlockLang && (
+              <div className="text-[10px] text-zinc-500 uppercase font-semibold mb-1 border-b border-zinc-800/50 pb-1">
+                {codeBlockLang}
+              </div>
+            )}
+            <code>{codeBlockLines.join('\n')}</code>
+          </pre>
+        );
+        codeBlockLines = [];
+        inCodeBlock = false;
+      } else {
+        flushList(i);
+        inCodeBlock = true;
+        codeBlockLang = line.slice(3).trim();
+      }
+      continue;
+    }
+
+    if (inCodeBlock) {
+      codeBlockLines.push(line);
+      continue;
+    }
+
+    const ulMatch = line.match(/^[-*]\s+(.*)$/);
+    const olMatch = line.match(/^(\d+)\.\s+(.*)$/);
+
+    if (ulMatch) {
+      if (inList && listType !== 'ul') {
+        flushList(i);
+      }
+      inList = true;
+      listType = 'ul';
+      listItems.push(ulMatch[1]);
+      continue;
+    }
+
+    if (olMatch) {
+      if (inList && listType !== 'ol') {
+        flushList(i);
+      }
+      inList = true;
+      listType = 'ol';
+      listItems.push(olMatch[2]);
+      continue;
+    }
+
+    if (line.trim() === '') {
+      flushList(i);
+      continue;
+    }
+
+    flushList(i);
+
+    const headerMatch = line.match(/^(#{1,6})\s+(.*)$/);
+    if (headerMatch) {
+      const level = headerMatch[1].length;
+      const text = headerMatch[2];
+      const HeadingTag = `h${level}` as keyof JSX.IntrinsicElements;
+
+      const sizeClasses =
+        {
+          h1: 'text-xl font-bold mt-4 mb-2 border-b pb-1',
+          h2: 'text-lg font-bold mt-3 mb-2',
+          h3: 'text-base font-semibold mt-2 mb-1',
+          h4: 'text-sm font-semibold mt-2 mb-1',
+          h5: 'text-xs font-semibold mt-1 mb-1',
+          h6: 'text-xs font-semibold mt-1 mb-1',
+        }[`h${level}`] || 'text-sm font-bold';
+
+      elements.push(
+        <HeadingTag key={`h-${i}`} className={cn(sizeClasses, 'text-foreground')}>
+          {renderInlineMarkdown(text)}
+        </HeadingTag>
+      );
+      continue;
+    }
+
+    elements.push(
+      <p key={`p-${i}`} className="my-1.5 leading-relaxed text-sm">
+        {renderInlineMarkdown(line)}
+      </p>
+    );
+  }
+
+  flushList(lines.length);
+
+  return <div className={cn('space-y-1', className)}>{elements}</div>;
+}
 
 export function ArticleCard({ article }: { article: ArticleSummary }) {
   const { t } = useI18n();
@@ -94,7 +271,7 @@ export function PreferenceAckCard({
       <div className="flex-1 rounded-2xl rounded-tl-sm border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 px-4 py-3 space-y-2">
         {insights.map((line, i) => (
           <p key={i} className="text-sm text-green-800 dark:text-green-200">
-            {line}
+            {renderInlineMarkdown(line)}
           </p>
         ))}
         {recommendations.length > 0 && (
@@ -133,7 +310,7 @@ export function OtherAckCard({
       <div className="flex-1 rounded-2xl rounded-tl-sm bg-muted px-4 py-3 space-y-2">
         {insights.map((line, i) => (
           <p key={i} className="text-sm">
-            {line}
+            {renderInlineMarkdown(line)}
           </p>
         ))}
         {recommendations.length > 0 && (
@@ -213,7 +390,7 @@ export function QAAssistantMessage({
               {response.insights.map((insight, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm">
                   <span className="text-primary font-bold flex-shrink-0 mt-0.5">•</span>
-                  <span>{insight}</span>
+                  <span>{renderInlineMarkdown(insight)}</span>
                 </li>
               ))}
             </ul>
@@ -282,7 +459,7 @@ export function QAUserMessage({
     <div className="flex items-start justify-end gap-3">
       <div className="flex flex-col gap-1 items-end max-w-[75%]">
         <div className="rounded-2xl rounded-tr-sm bg-primary text-primary-foreground px-4 py-2.5">
-          <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">{content}</p>
+          <Markdown content={content} />
         </div>
         <div className="flex items-center">
           <PlatformBadge platform={platform} />
@@ -334,7 +511,7 @@ export function HistoryMessageBubble({ message }: { message: ConversationMessage
               : 'rounded-tl-sm bg-muted text-foreground'
           )}
         >
-          <p className="whitespace-pre-wrap break-words">{message.content}</p>
+          <Markdown content={message.content} />
         </div>
         <div className="flex items-center gap-1.5">
           {timeDisplay && <span className="text-xs text-muted-foreground">{timeDisplay}</span>}
