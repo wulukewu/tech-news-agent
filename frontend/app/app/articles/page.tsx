@@ -91,7 +91,7 @@ function DashboardContent() {
     router.push(`/app/articles?${params.toString()}`, { scroll: false });
 
     // Load saved articles when switching to saved tab
-    if (value === 'saved' && savedArticles.length === 0) {
+    if (value === 'saved') {
       setLoadingSaved(true);
       fetchReadingList(1, 50)
         .then((data) => {
