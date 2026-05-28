@@ -39,13 +39,29 @@ def _build_news_page(articles, page: int) -> str:
             tinkering = "🔥" * article.tinkering_index
             lines.append(f"  {tinkering} {article.title}")
             lines.append(f"    🔗 {article.url}")
-            if getattr(article, "ai_summary", None):
-                lines.append(f"    📝 *{article.ai_summary.strip()}*")
-            if getattr(article, "actionable_takeaway", None):
-                lines.append(f"    💡 *核心精華：{article.actionable_takeaway.strip()}*")
+
+            ai_sum = getattr(article, "ai_summary", None)
+            if ai_sum:
+                ai_sum = ai_sum.strip()
+                # Defensive length check per summary to avoid exceeding 2000 discord limit
+                if len(ai_sum) > 160:
+                    ai_sum = ai_sum[:157] + "..."
+                lines.append(f"    📝 *{ai_sum}*")
+
+            takeaway = getattr(article, "actionable_takeaway", None)
+            if takeaway:
+                takeaway = takeaway.strip()
+                # Defensive length check per takeaway
+                if len(takeaway) > 80:
+                    takeaway = takeaway[:77] + "..."
+                lines.append(f"    💡 *核心精華：{takeaway}*")
         lines.append("")
 
-    return "\n".join(lines)
+    content = "\n".join(lines)
+    # Absolute safety threshold block to ensure discord API acceptance (max 2000 chars)
+    if len(content) > 1990:
+        content = content[:1950] + "\n... *(由於 Discord 訊息長度限制，其餘內容已省略)*"
+    return content
 
 
 class NewsPaginationView(discord.ui.View):

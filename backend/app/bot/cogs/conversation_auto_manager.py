@@ -159,9 +159,9 @@ class ConversationAutoManager(commands.Cog):
                 # DMConversationListener handles the actual reply to the user.
                 # Only log here to avoid duplicate messages.
                 logger.info(
-                    "New conversation created for user %s: %s",
-                    discord_user_id,
-                    conv_id,
+                    "New conversation created for user",
+                    discord_user_id=discord_user_id,
+                    conversation_id=conv_id,
                 )
 
         except SupabaseServiceError as exc:
