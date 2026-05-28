@@ -38,7 +38,8 @@ async def test_generate_takeaway_cache_hit():
         mock_supabase_instance.client = mock_supabase_client
         mock_supabase_class.return_value = mock_supabase_instance
 
-        llm_service = LLMService()
+        llm_service = LLMService.__new__(LLMService)
+        llm_service.client = MagicMock()
         takeaway = await llm_service.generate_takeaway(article_id)
 
         assert takeaway == cached_takeaway
@@ -103,7 +104,8 @@ async def test_generate_takeaway_cache_miss():
 
         mock_call_groq.return_value = mock_groq_response
 
-        llm_service = LLMService()
+        llm_service = LLMService.__new__(LLMService)
+        llm_service.client = MagicMock()
         takeaway = await llm_service.generate_takeaway(article_id)
 
         assert takeaway == generated_takeaway
