@@ -86,7 +86,7 @@ export function PreferenceAckCard({
 }: {
   insights: string[];
   recommendations: string[];
-  platform?: string;
+  platform?: 'web' | 'discord';
 }) {
   return (
     <div className="flex items-start gap-3">
@@ -130,7 +130,7 @@ export function OtherAckCard({
   insights: string[];
   recommendations: string[];
   onFollowUp: (q: string) => void;
-  platform?: string;
+  platform?: 'web' | 'discord';
 }) {
   return (
     <div className="flex items-start gap-3">
@@ -292,7 +292,7 @@ export function QAUserMessage({
   platform = 'web',
 }: {
   content: string;
-  platform?: string;
+  platform?: 'web' | 'discord';
 }) {
   return (
     <div className="flex items-start justify-end gap-3">
