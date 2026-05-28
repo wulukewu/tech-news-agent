@@ -88,52 +88,46 @@ class DMConversationListener(commands.Cog):
 
         show_hint = _should_show_hint(discord_id)
 
-        # --- Intent detection ---
-        if _QUESTION_PATTERNS.search(content):
-            await self._handle_question(message, user_id, discord_id, content, supabase, show_hint)
-        elif _PREFERENCE_PATTERNS.search(content):
-            await self._handle_preference(
-                message, user_id, discord_id, content, supabase, show_hint
-            )
-        else:
-            # Ambiguous — store as preference signal and give a light reply
-            await self._store_dm(supabase, user_id, content)
-            reply = "已記錄 👍"
-            if show_hint:
-                reply += _USAGE_HINT
-            await message.reply(reply, mention_author=False)
-            await self._save_assistant_message(user_id, reply)
+        # Get active conversation ID or create a new one
+        from uuid import uuid4
 
-    async def _handle_question(
-        self,
-        message: discord.Message,
-        user_id: str,
-        discord_id: str,
-        content: str,
-        supabase: SupabaseService,
-        show_hint: bool,
-    ) -> None:
-        """Search articles directly and reply with results."""
+        conv_id = await self._get_active_conversation_id(user_id)
+        if not conv_id:
+            from app.api._qa_helpers import _create_conversation_in_db
+
+            try:
+                conv_id = await _create_conversation_in_db(user_id, title="Discord DM 對話")
+            except Exception as e:
+                logger.warning(f"Failed to create new conversation for Discord DM: {e}")
+                conv_id = str(uuid4())
+
+        from app.api._qa_helpers import _process_query_with_intent, _save_messages_to_db
+
         reply = ""
         async with message.channel.typing():
             try:
-                articles = await self._search_articles(supabase, content)
+                # Store raw user message in dm_conversations table
+                await self._store_dm(supabase, user_id, content)
 
-                if articles:
-                    lines = ["📚 **相關文章**"]
-                    for i, a in enumerate(articles, 1):
-                        title = (a.get("title") or "")[:60]
-                        url = a.get("url", "")
-                        summary = (a.get("ai_summary") or "")[:120]
+                # Process query using context-aware agent dispatcher
+                qa_response = await _process_query_with_intent(user_id, content, conv_id)
+
+                # Formulate reply format
+                if qa_response.articles:
+                    lines = [f"📚 **{qa_response.insights[0] if qa_response.insights else '相關文章'}**"]
+                    for i, a in enumerate(qa_response.articles, 1):
+                        title = (a.title or "")[:60]
+                        url = str(a.url) if a.url else ""
+                        summary = (a.ai_summary or "")[:120]
                         lines.append(f"\n**{i}. {title}**")
                         if url:
                             lines.append(f"🔗 {url}")
                         if summary:
-                            lines.append(f"_{summary}..._")
+                            lines.append(f"_{summary.strip()}..._")
+                    reply = "\n".join(lines)
                 else:
-                    lines = ["找不到相關文章。試試換個關鍵字，或先用 `/add_feed` 訂閱更多 RSS 來源。"]
+                    reply = qa_response.insights[0] if qa_response.insights else "已處理您的查詢。"
 
-                reply = "\n".join(lines)
                 if len(reply) > 1900:
                     reply = reply[:1900] + "..."
                 if show_hint:
@@ -141,49 +135,16 @@ class DMConversationListener(commands.Cog):
 
                 await message.reply(reply, mention_author=False)
 
+                # Save history turns
+                try:
+                    await _save_messages_to_db(conv_id, content, qa_response)
+                except Exception as e:
+                    logger.warning(f"Failed to save DM messages to DB: {e}")
+
             except Exception as exc:
-                logger.error("Article search failed for %s: %s", discord_id, exc)
+                logger.error("Failed to process DM conversation: %s", exc)
                 reply = "抱歉，查詢時發生錯誤，請稍後再試。"
                 await message.reply(reply, mention_author=False)
-
-        await self._store_dm(supabase, user_id, content)
-        if reply:
-            await self._save_assistant_message(user_id, reply)
-
-    async def _search_articles(self, supabase: SupabaseService, query: str) -> list[dict]:
-        """Delegate to shared search helper in qa.py."""
-        from app.api.qa import _search_articles_by_query
-
-        results = await _search_articles_by_query(query)
-        return [
-            {
-                "title": a.title,
-                "url": a.url,
-                "ai_summary": a.summary,
-            }
-            for a in results
-        ]
-
-    async def _handle_preference(
-        self,
-        message: discord.Message,
-        user_id: str,
-        discord_id: str,
-        content: str,
-        supabase: SupabaseService,
-        show_hint: bool,
-    ) -> None:
-        """Store preference and prompt user to update profile."""
-        await self._store_dm(supabase, user_id, content)
-        # Auto-update summary in background if condition met
-        from app.services.auto_preference_summary import schedule_preference_summary_update
-
-        schedule_preference_summary_update(user_id)
-        reply = "✅ 已記錄你的偏好！偏好摘要將自動更新 🎯"
-        if show_hint:
-            reply += _USAGE_HINT
-        await message.reply(reply, mention_author=False)
-        await self._save_assistant_message(user_id, reply)
 
     async def _store_dm(self, supabase: SupabaseService, user_id: str, content: str) -> None:
         try:

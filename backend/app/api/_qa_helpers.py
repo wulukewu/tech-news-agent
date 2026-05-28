@@ -408,69 +408,116 @@ async def _process_query_with_intent(
     user_id: str, query: str, conversation_id: str
 ) -> "QAQueryResponse":
     """
-    Detect intent, store preferences, and run article search if needed.
-    Returns a QAQueryResponse with the intent field set.
+    Intelligently dispatch and process user query using QAAgentDispatcher.
     """
-    intent = _detect_intent(query)
+    import time
 
-    if intent == "preference":
-        await _store_preference(user_id, query)
-        from app.services.auto_preference_summary import maybe_update_preference_summary
+    from app.qa_agent.agent_dispatcher import QAAgentDispatcher
 
-        await maybe_update_preference_summary(user_id)
+    start_time = time.time()
+    supabase = _get_supabase()
+
+    # 1. Fetch user's discord_id to fetch active subscriptions
+    discord_id = ""
+    try:
+        user_row = await supabase.get_user_by_id(user_id)
+        if user_row:
+            discord_id = user_row.get("discord_id") or ""
+    except Exception as e:
+        logger.warning(f"Failed to fetch discord_id for user {user_id}: {e}")
+
+    # 2. Fetch conversation history turns
+    history_turns = []
+    try:
+        msg_resp = (
+            supabase.client.table("conversation_messages")
+            .select("role, content")
+            .eq("conversation_id", conversation_id)
+            .order("created_at", desc=False)
+            .limit(10)
+            .execute()
+        )
+        if msg_resp.data:
+            for msg in msg_resp.data:
+                history_turns.append(
+                    {"is_user": msg.get("role") == "user", "content": msg.get("content") or ""}
+                )
+    except Exception as e:
+        logger.warning(f"Failed to fetch conversation history for {conversation_id}: {e}")
+
+    # 3. Call the dispatcher
+    dispatcher = QAAgentDispatcher(supabase_service=supabase)
+    dispatch_result = await dispatcher.dispatch(
+        user_id=user_id, discord_id=discord_id, query=query, history_turns=history_turns
+    )
+
+    action = dispatch_result.get("action", "chat")
+    reply_content = dispatch_result.get("reply_content")
+
+    # 4. Route dispatcher action
+    if action == "record_preference":
+        # Extract and store preference
+        memory = dispatch_result.get("memory_to_record") or query
+        await _store_preference(user_id, memory)
+
+        # Trigger background summary update
+        from app.services.auto_preference_summary import schedule_preference_summary_update
+
+        try:
+            schedule_preference_summary_update(user_id)
+        except Exception:
+            pass
+
         return QAQueryResponse(
             query=query,
             articles=[],
-            insights=[
-                "✅ 已記錄你的偏好！偏好摘要將自動更新。",
-                "累積更多偏好後推薦會越來越精準。",
-            ],
+            insights=[reply_content or "✅ 已為您記錄偏好！"],
             recommendations=[],
             conversation_id=conversation_id,
-            response_time=0.0,
+            response_time=round(time.time() - start_time, 2),
             intent="preference",
         )
 
-    if intent == "other":
-        await _store_preference(user_id, query)
+    elif action == "search":
+        search_query = dispatch_result.get("search_query") or query
+        articles = await _search_articles_by_query(search_query)
+
+        insights = []
+        recommendations = []
+        if not articles:
+            insights = ["找不到相關文章。試試換個關鍵字，或先訂閱更多 RSS 來源。"]
+            recommendations = ["使用 /add_feed 訂閱更多 RSS 來源", "試試不同的關鍵字"]
+        else:
+            insights = [f"已為您搜尋關於「{search_query}」的相關文章："]
+
+        return QAQueryResponse(
+            query=query,
+            articles=articles,
+            insights=insights,
+            recommendations=recommendations,
+            conversation_id=conversation_id,
+            response_time=round(time.time() - start_time, 2),
+            intent="question",
+        )
+
+    else:  # action == "chat"
+        # Just standard conversational chat
         return QAQueryResponse(
             query=query,
             articles=[],
-            insights=["已記錄 👍"],
-            recommendations=[
-                "試試問我問題，例如「最近有什麼 AI 文章？」",
-                "或告訴我你的偏好，例如「我喜歡系統設計」",
-            ],
+            insights=[reply_content or "你好！有什麼想聊的技術話題嗎？"],
+            recommendations=[],
             conversation_id=conversation_id,
-            response_time=0.0,
+            response_time=round(time.time() - start_time, 2),
             intent="other",
         )
-
-    # intent == "question" — search articles directly (same as DM)
-    import time
-
-    start = time.time()
-    articles = await _search_articles_by_query(query)
-
-    insights: List[str] = []
-    recommendations: List[str] = []
-    if not articles:
-        insights = ["找不到相關文章。試試換個關鍵字，或先訂閱更多 RSS 來源。"]
-        recommendations = ["使用 /add_feed 訂閱更多 RSS 來源", "試試不同的關鍵字"]
-
-    return QAQueryResponse(
-        query=query,
-        articles=articles,
-        insights=insights,
-        recommendations=recommendations,
-        conversation_id=conversation_id,
-        response_time=round(time.time() - start, 2),
-        intent="question",
-    )
 
 
 def _qa_response_to_text(qa_response: "QAQueryResponse") -> str:
     """Convert a QAQueryResponse to a plain-text assistant message for storage."""
+    if not qa_response.articles and qa_response.insights:
+        return " ".join(qa_response.insights)
+
     parts = []
     if qa_response.articles:
         titles = [a.title for a in qa_response.articles[:3]]
