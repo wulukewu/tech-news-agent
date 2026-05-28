@@ -118,7 +118,7 @@ class DMConversationListener(commands.Cog):
                     for i, a in enumerate(qa_response.articles, 1):
                         title = (a.title or "")[:60]
                         url = str(a.url) if a.url else ""
-                        summary = (a.ai_summary or "")[:120]
+                        summary = (getattr(a, "summary", getattr(a, "ai_summary", "")) or "")[:120]
                         lines.append(f"\n**{i}. {title}**")
                         if url:
                             lines.append(f"🔗 {url}")
