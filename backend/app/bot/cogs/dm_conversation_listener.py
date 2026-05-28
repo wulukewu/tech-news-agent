@@ -171,7 +171,9 @@ class DMConversationListener(commands.Cog):
 
                 # Save history turns
                 try:
-                    await _save_messages_to_db(conv_id, content, qa_response, platform="discord")
+                    await _save_messages_to_db(
+                        conv_id, content, qa_response, platform="discord", skip_user_message=True
+                    )
                 except Exception as e:
                     logger.warning(f"Failed to save DM messages to DB: {e}")
 

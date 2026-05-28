@@ -324,11 +324,40 @@ async def _create_conversation_in_db(
         return conversation_id
 
 
+def _make_json_safe(obj: Any) -> Any:
+    """Recursively convert UUID, datetime, HttpUrl etc to JSON serializable formats."""
+    import uuid
+    from datetime import datetime
+
+    from pydantic import BaseModel
+
+    if isinstance(obj, BaseModel):
+        return obj.model_dump(mode="json")
+    if isinstance(obj, dict):
+        return {k: _make_json_safe(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_make_json_safe(x) for x in obj]
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    if isinstance(obj, uuid.UUID):
+        return str(obj)
+    if hasattr(obj, "dict") and callable(getattr(obj, "dict")):
+        try:
+            return _make_json_safe(obj.dict())
+        except Exception:
+            pass
+    # Check for Pydantic HttpUrl / Url types
+    if hasattr(obj, "host") or type(obj).__name__ in ("HttpUrl", "Url", "UrlConstraints"):
+        return str(obj)
+    return obj
+
+
 async def _save_messages_to_db(
     conversation_id: str,
     user_query: str,
     qa_response: Optional["QAQueryResponse"],
     platform: str = "web",
+    skip_user_message: bool = False,
 ) -> None:
     """
     Save the user query and assistant response as rows in conversation_messages.
@@ -342,45 +371,51 @@ async def _save_messages_to_db(
         user_ts = now.isoformat()
         assistant_ts = (now + timedelta(milliseconds=1)).isoformat()
 
-        messages_to_insert = [
-            {
-                "conversation_id": conversation_id,
-                "role": "user",
-                "content": user_query,
-                "platform": platform,
-                "metadata": {},
-                "created_at": user_ts,
-            }
-        ]
+        messages_to_insert = []
+        if not skip_user_message:
+            messages_to_insert.append(
+                {
+                    "conversation_id": conversation_id,
+                    "role": "user",
+                    "content": user_query,
+                    "platform": platform,
+                    "metadata": {},
+                    "created_at": user_ts,
+                }
+            )
 
         if qa_response is not None:
             assistant_content = _qa_response_to_text(qa_response)
+
+            # Construct raw metadata dict safely
+            raw_metadata = {
+                "articles": [
+                    a.model_dump()
+                    if hasattr(a, "model_dump")
+                    else a.dict()
+                    if hasattr(a, "dict")
+                    else a
+                    for a in qa_response.articles
+                ],
+                "insights": qa_response.insights,
+                "recommendations": qa_response.recommendations,
+                "response_time": qa_response.response_time,
+                "intent": qa_response.intent,
+            }
+
             messages_to_insert.append(
                 {
                     "conversation_id": conversation_id,
                     "role": "assistant",
                     "content": assistant_content,
                     "platform": platform,
-                    "metadata": {
-                        "articles": [
-                            {
-                                **a.dict(),
-                                "published_at": (
-                                    a.published_at.isoformat() if a.published_at else None
-                                ),
-                            }
-                            for a in qa_response.articles
-                        ],
-                        "insights": qa_response.insights,
-                        "recommendations": qa_response.recommendations,
-                        "response_time": qa_response.response_time,
-                        "intent": qa_response.intent,
-                    },
+                    "metadata": _make_json_safe(raw_metadata),
                     "created_at": assistant_ts,
                 }
             )
 
-        supabase.client.table("conversation_messages").insert(messages_to_insert).execute()
+        if messages_to_insert:
+            supabase.client.table("conversation_messages").insert(messages_to_insert).execute()
 
         # Update conversation title and message_count
         existing = (
