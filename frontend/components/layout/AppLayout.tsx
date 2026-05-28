@@ -78,13 +78,13 @@ export function AppLayout({
           className={cn(
             'flex-1 flex flex-col min-w-0 transition-all duration-300 ease-in-out',
             'pt-4 md:pt-0',
-            'pb-16 lg:pb-0',
+            sidebar ? 'pb-16 lg:pb-0' : 'pb-0',
             sidebar && (collapsed ? 'lg:ml-16' : 'lg:ml-64')
           )}
           id="main-content"
           tabIndex={-1}
         >
-          <div className="flex-1 p-4 lg:p-6">{children}</div>
+          <div className="flex-1 flex flex-col p-4 lg:p-6">{children}</div>
         </main>
       </div>
 

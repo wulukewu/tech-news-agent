@@ -320,7 +320,7 @@ export function ChatShell({
   // ── Centre panel content ──────────────────────────────────────────────────
 
   return (
-    <div className="-m-4 lg:-m-6 flex overflow-hidden h-[calc(100vh-9rem)] md:h-[calc(100vh-8rem)] lg:h-[calc(100vh-4rem)]">
+    <div className="-m-4 lg:-m-6 flex overflow-hidden h-full flex-1 min-h-0">
       {/* Left: history sidebar */}
       {sidebarOpen && (
         <HistorySidebar
