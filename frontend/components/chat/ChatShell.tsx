@@ -93,6 +93,14 @@ export function ChatShell({
     setTimeout(() => inputRef.current?.focus(), 100);
   }, [mode, activeId]);
 
+  // Lock body/main layout scrolling on mount and clean up on unmount
+  useEffect(() => {
+    document.documentElement.classList.add('chat-page-active');
+    return () => {
+      document.documentElement.classList.remove('chat-page-active');
+    };
+  }, []);
+
   // Load a conversation from history (called by sidebar click or on mount when initialId is set)
   const loadConversation = useCallback(
     async (id: string, updateUrl = true) => {
@@ -320,7 +328,7 @@ export function ChatShell({
   // ── Centre panel content ──────────────────────────────────────────────────
 
   return (
-    <div className="-m-4 lg:-m-6 flex overflow-hidden h-full flex-1 min-h-0">
+    <div className="-m-4 lg:-m-6 flex overflow-hidden h-[calc(100vh-64px)] flex-1 min-h-0">
       {/* Left: history sidebar */}
       {sidebarOpen && (
         <HistorySidebar

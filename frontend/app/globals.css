@@ -495,3 +495,30 @@
     box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.15) !important;
   }
 }
+
+/* Chat View layout overrides to lock viewport scrolling */
+html.chat-page-active,
+html.chat-page-active body {
+  overflow: hidden !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+}
+
+html.chat-page-active #main-content {
+  height: calc(100vh - 64px) !important;
+  max-height: calc(100vh - 64px) !important;
+  overflow: hidden !important;
+}
+
+html.chat-page-active #main-content > div {
+  height: 100% !important;
+  max-height: 100% !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+}
+
+html.chat-page-active #main-content > div > div {
+  margin: 0 !important;
+  height: 100% !important;
+}
