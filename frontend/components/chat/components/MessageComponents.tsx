@@ -82,11 +82,9 @@ export function ArticleCard({ article }: { article: ArticleSummary }) {
 export function PreferenceAckCard({
   insights,
   recommendations,
-  platform = 'web',
 }: {
   insights: string[];
   recommendations: string[];
-  platform?: 'web' | 'discord';
 }) {
   return (
     <div className="flex items-start gap-3">
@@ -111,9 +109,6 @@ export function PreferenceAckCard({
             ))}
           </div>
         )}
-        <div className="flex items-center pt-1">
-          <PlatformBadge platform={platform} />
-        </div>
       </div>
     </div>
   );
@@ -125,12 +120,10 @@ export function OtherAckCard({
   insights,
   recommendations,
   onFollowUp,
-  platform = 'web',
 }: {
   insights: string[];
   recommendations: string[];
   onFollowUp: (q: string) => void;
-  platform?: 'web' | 'discord';
 }) {
   return (
     <div className="flex items-start gap-3">
@@ -156,9 +149,6 @@ export function OtherAckCard({
             ))}
           </div>
         )}
-        <div className="flex items-center pt-1">
-          <PlatformBadge platform={platform} />
-        </div>
       </div>
     </div>
   );
@@ -192,11 +182,7 @@ export function QAAssistantMessage({
   // Intent-aware rendering
   if (response.intent === 'preference') {
     return (
-      <PreferenceAckCard
-        insights={response.insights}
-        recommendations={response.recommendations}
-        platform="web"
-      />
+      <PreferenceAckCard insights={response.insights} recommendations={response.recommendations} />
     );
   }
   if (response.intent === 'other') {
@@ -205,7 +191,6 @@ export function QAAssistantMessage({
         insights={response.insights}
         recommendations={response.recommendations}
         onFollowUp={onFollowUp}
-        platform="web"
       />
     );
   }
@@ -273,14 +258,13 @@ export function QAAssistantMessage({
           </section>
         )}
 
-        {/* Unified footer area with platform tag */}
+        {/* Unified footer area */}
         <div className="flex items-center gap-1.5 pt-1">
           {response.response_time > 0 && (
             <span className="text-xs text-muted-foreground/60">
               {t('chat.response-time', { seconds: response.response_time.toFixed(2) })}
             </span>
           )}
-          <PlatformBadge platform="web" />
         </div>
       </div>
     </div>
@@ -354,7 +338,7 @@ export function HistoryMessageBubble({ message }: { message: ConversationMessage
         </div>
         <div className="flex items-center gap-1.5">
           {timeDisplay && <span className="text-xs text-muted-foreground">{timeDisplay}</span>}
-          <PlatformBadge platform={message.platform} />
+          {isUser && <PlatformBadge platform={message.platform} />}
         </div>
       </div>
     </div>
