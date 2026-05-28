@@ -116,19 +116,35 @@ class QAAgentDispatcher:
             f"【多輪對話歷史】\n{history_text}\n\n"
             "【你必須採取的行動（Action）類型】\n"
             "分析使用者目前的輸入，並從中選擇一個行動（Action）：\n"
-            "1. `chat`：使用者在進行閒聊、打招呼（如「你好」）、詢問一般技術概念（如「解釋一下什麼是 HMR？」）、**詢問系統功能/詢問你能做什麼（例如「你能找文章給我嗎？」、「你能幫我推薦文章嗎？」、「你擁有什麼功能？」）**。\n"
-            "   - **重要限制**：如果使用者詢問系統功能或進行閒聊，你應該選擇 `chat`。你需要在 `reply_content` 中用繁體中文熱情、專業且貼心地回答。介紹功能時，請採用極具排版美感、條理清晰的 Markdown 格式（分段條列上述三大模塊），並適時指引他們可以使用對應的 Discord 斜線指令。千萬不要選擇 `search`。\n"
-            '2. `record_preference`：使用者明確表達了他喜歡/不喜歡的主題（例如「我想多看一些系統設計的文章」）。你需要在 `reply_content` 回覆已幫他記錄，並將提取出的具體偏好簡短寫在 `memory_to_record` 中（例如："喜歡系統設計"）。\n'
-            "3. `search`：使用者**明確指定**想要尋找「特定技術主題的文章」或尋找「最近有哪些文章」（例如「幫我找找關於 AI 的新技術文章」、「最近有什麼 Rust 的文章嗎？」）。\n"
-            '   - **重要限制**：只有當使用者明確提到某個具體技術名詞（如 AI, Rust, React, 系統設計 等）或明確要求搜尋特定領域時，才選擇 `search`。你需要提供對應的搜尋關鍵字並寫在 `search_query` 中（注意：**搜尋關鍵字必須是具體的技術名詞或主題**，如 "AI"、"Rust"，不能是用戶的整句閒聊或「找文章給我」這類無意義的詞）。此時 `reply_content` 應設為 null。\n\n'
+            "1. `chat`：使用者在進行閒聊、打招呼、詢問一般技術概念或詢問系統功能/詢問你能做什麼（如「你擁有什麼功能？」、「你能做什麼？」）。\n"
+            "   - 你需要在 `reply_content` 中以極具排版美感、條理清晰的繁體中文 Markdown 格式詳細向使用者介紹你的強大功能（分段條列上述「個人化新聞與推薦」、「訂閱與待讀清單管理」、「個人化推送與勿擾設定」三大模塊），並鼓勵他直接與你對話調整設定或使用斜線指令。\n"
+            "2. `record_preference`：使用者表達了他喜歡/不喜歡的主題（例如「我想多看一些系統設計的文章」）。你需要回覆已記錄，並將提取出的具體偏好寫在 `memory_to_record` 中。\n"
+            "3. `search`：使用者**明確要求搜尋特定主題的文章**（例如「幫我找找關於 AI 的新技術文章」）。你需要提供對應的搜尋技術關鍵字寫在 `search_query` 中，此時 `reply_content` 應設為 null。\n"
+            "4. `update_notification_frequency`：使用者明確希望修改他的通知推播頻率（例如「我想每天收到通知」、「改為每週推送」、「關閉推播推薦」）。\n"
+            "   - 你需要在 `action_args` 的 `frequency` 中填入對應的值：'daily' | 'weekly' | 'monthly' | 'disabled'。同時在 `reply_content` 中給予溫暖的回覆，確認你已幫他完成修改。\n"
+            "5. `update_timezone`：使用者明確希望修改他的時區設定（例如「幫我把時區改成台北」）。\n"
+            "   - 你需要在 `action_args` 的 `timezone` 中填入對應的值（例如 'Asia/Taipei'）。同時在 `reply_content` 中確認已幫他完成修改。\n"
+            "6. `toggle_notifications`：使用者希望開啟或關閉他的推送通知功能（例如「關閉通知」、「開啟通知」、「不要再發推送給我了」）。\n"
+            "   - 你需要在 `action_args` 的 `enabled` 中填入 true 或 false。同時在 `reply_content` 中確認已幫他完成修改。\n"
+            "7. `subscribe_rss`：使用者明確要求訂閱某個特定的 RSS 網址（例如「幫我訂閱這個來源：https://example.com/rss」）。\n"
+            "   - 你需要在 `action_args` 的 `feed_url` 中填入該網址，並在 `feed_name` 中填入該來源的名稱（若沒提供，可以從網域推測出一個合適的名稱）。同時在 `reply_content` 中確認已幫他完成訂閱。\n"
+            "8. `unsubscribe_rss`：使用者要求取消訂閱某個 RSS 來源（例如「幫我取消訂閱：Simon Willison」）。\n"
+            "   - 你需要在 `action_args` 的 `feed_name` 中填入要取消的訂閱名稱。同時在 `reply_content` 中確認已幫他完成取消訂閱。\n\n"
             "【輸出規範】\n"
-            "你必須且只能輸出一個合法的 JSON 字串，不得包含任何 Markdown 標籤（如 ```json）或多餘字元。JSON 格式必須如下：\n"
+            "你必須且只能輸出一個合法的 JSON 字串，不得包含 any Markdown 標籤（如 ```json）或多餘字元。JSON 格式必須如下：\n"
             "{\n"
             '  "thought": "你的思考鏈（中文），分析使用者的意圖與背景知識",\n'
-            '  "action": "chat" | "record_preference" | "search",\n'
+            '  "action": "chat" | "record_preference" | "search" | "update_notification_frequency" | "update_timezone" | "toggle_notifications" | "subscribe_rss" | "unsubscribe_rss",\n'
             '  "search_query": "如果 action 是 search，此處填入搜尋關鍵字，否則為 null",\n'
             '  "memory_to_record": "如果 action 是 record_preference，此處填入提取的偏好設定，否則為 null",\n'
-            '  "reply_content": "如果 action 是 chat 或 record_preference，此處填入你的對話回覆，否則為 null"\n'
+            '  "action_args": {\n'
+            '    "frequency": "daily" | "weekly" | "monthly" | "disabled" 或 null,\n'
+            '    "timezone": "例如 Asia/Taipei" 或 null,\n'
+            '    "enabled": true | false 或 null,\n'
+            '    "feed_url": "RSS URL" 或 null,\n'
+            '    "feed_name": "訂閱來源名稱" 或 null\n'
+            "  },\n"
+            '  "reply_content": "對話回覆，確認執行的設定，或回答技術話題，不可為 null（search 除外）"\n'
             "}"
         )
 

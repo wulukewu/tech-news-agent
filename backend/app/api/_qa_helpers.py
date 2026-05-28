@@ -464,6 +464,7 @@ async def _process_query_with_intent(
 
     action = dispatch_result.get("action", "chat")
     reply_content = dispatch_result.get("reply_content")
+    action_args = dispatch_result.get("action_args") or {}
 
     # 4. Route dispatcher action
     if action == "record_preference":
@@ -487,6 +488,172 @@ async def _process_query_with_intent(
             conversation_id=conversation_id,
             response_time=round(time.time() - start_time, 2),
             intent="preference",
+        )
+
+    elif action == "update_notification_frequency":
+        frequency = action_args.get("frequency")
+        if frequency in ["daily", "weekly", "monthly", "disabled"]:
+            try:
+                from app.repositories.user_notification_preferences import (
+                    UserNotificationPreferencesRepository,
+                )
+                from app.schemas.user_notification_preferences import (
+                    UpdateUserNotificationPreferencesRequest,
+                )
+                from app.services.preference_service import PreferenceService
+
+                prefs_repo = UserNotificationPreferencesRepository(supabase.client)
+                pref_service = PreferenceService(prefs_repo)
+                updates = UpdateUserNotificationPreferencesRequest(frequency=frequency)
+                await pref_service.update_preferences(user_id, updates, source="agent")
+                logger.info(f"Successfully updated frequency to {frequency} for user {user_id}")
+            except Exception as e:
+                logger.error(f"Failed to update frequency in agent dispatcher: {e}")
+                reply_content = "抱歉，設定推送頻率時發生錯誤，請稍後再試。"
+
+        return QAQueryResponse(
+            query=query,
+            articles=[],
+            insights=[reply_content or f"✅ 已為您將通知頻率更新為：{frequency}！"],
+            recommendations=[],
+            conversation_id=conversation_id,
+            response_time=round(time.time() - start_time, 2),
+            intent="preference",
+        )
+
+    elif action == "update_timezone":
+        timezone = action_args.get("timezone") or "Asia/Taipei"
+        try:
+            from app.repositories.user_notification_preferences import (
+                UserNotificationPreferencesRepository,
+            )
+            from app.schemas.user_notification_preferences import (
+                UpdateUserNotificationPreferencesRequest,
+            )
+            from app.services.preference_service import PreferenceService
+
+            prefs_repo = UserNotificationPreferencesRepository(supabase.client)
+            pref_service = PreferenceService(prefs_repo)
+            updates = UpdateUserNotificationPreferencesRequest(timezone=timezone)
+            await pref_service.update_preferences(user_id, updates, source="agent")
+            logger.info(f"Successfully updated timezone to {timezone} for user {user_id}")
+        except Exception as e:
+            logger.error(f"Failed to update timezone in agent dispatcher: {e}")
+            reply_content = "抱歉，設定時區時發生錯誤，請稍後再試。"
+
+        return QAQueryResponse(
+            query=query,
+            articles=[],
+            insights=[reply_content or f"✅ 已為您將時區更新為：{timezone}！"],
+            recommendations=[],
+            conversation_id=conversation_id,
+            response_time=round(time.time() - start_time, 2),
+            intent="preference",
+        )
+
+    elif action == "toggle_notifications":
+        enabled = action_args.get("enabled")
+        if enabled is not None:
+            try:
+                from app.repositories.user_notification_preferences import (
+                    UserNotificationPreferencesRepository,
+                )
+                from app.schemas.user_notification_preferences import (
+                    UpdateUserNotificationPreferencesRequest,
+                )
+                from app.services.preference_service import PreferenceService
+
+                prefs_repo = UserNotificationPreferencesRepository(supabase.client)
+                pref_service = PreferenceService(prefs_repo)
+                updates = UpdateUserNotificationPreferencesRequest(dm_enabled=bool(enabled))
+                await pref_service.update_preferences(user_id, updates, source="agent")
+                logger.info(f"Successfully toggled notifications to {enabled} for user {user_id}")
+            except Exception as e:
+                logger.error(f"Failed to toggle notifications in agent dispatcher: {e}")
+                reply_content = "抱歉，切換通知設定時發生錯誤，請稍後再試。"
+
+        status_str = "開啟" if enabled else "關閉"
+        return QAQueryResponse(
+            query=query,
+            articles=[],
+            insights=[reply_content or f"✅ 已為您{status_str}推送通知！"],
+            recommendations=[],
+            conversation_id=conversation_id,
+            response_time=round(time.time() - start_time, 2),
+            intent="preference",
+        )
+
+    elif action == "subscribe_rss":
+        feed_url = action_args.get("feed_url")
+        feed_name = action_args.get("feed_name") or "技術來源"
+        if feed_url and discord_id:
+            try:
+                # 1. Look up if feed already exists
+                feed_id = await supabase.find_feed_by_url(feed_url)
+                if not feed_id:
+                    # 2. Create feed first
+                    feed_id = await supabase.create_feed(
+                        url=feed_url,
+                        name=feed_name,
+                        category="Technology",
+                        created_by=user_id,
+                    )
+                # 3. Subscribe user to feed
+                await supabase.subscribe_to_feed(discord_id, feed_id)
+                logger.info(f"Successfully subscribed user {discord_id} to feed {feed_id}")
+            except Exception as e:
+                logger.error(f"Failed to subscribe user to feed in agent dispatcher: {e}")
+                reply_content = f"抱歉，訂閱 RSS 來源時發生錯誤：{e}"
+        elif not discord_id:
+            reply_content = "請先在 Discord 中註冊以訂閱 RSS 來源！"
+
+        return QAQueryResponse(
+            query=query,
+            articles=[],
+            insights=[reply_content or f"✅ 已為您成功訂閱 RSS 來源：{feed_name}！"],
+            recommendations=[],
+            conversation_id=conversation_id,
+            response_time=round(time.time() - start_time, 2),
+            intent="other",
+        )
+
+    elif action == "unsubscribe_rss":
+        feed_name = action_args.get("feed_name")
+        if feed_name and discord_id:
+            try:
+                # 1. Fetch user subscriptions
+                subs = await supabase.get_user_subscriptions(discord_id)
+                matched_sub = None
+                for sub in subs:
+                    # Case insensitive name search or partial match
+                    if (
+                        feed_name.lower() in sub.name.lower()
+                        or sub.name.lower() in feed_name.lower()
+                    ):
+                        matched_sub = sub
+                        break
+                if matched_sub:
+                    # 2. Unsubscribe
+                    await supabase.unsubscribe_from_feed(discord_id, matched_sub.feed_id)
+                    logger.info(
+                        f"Successfully unsubscribed user {discord_id} from feed {matched_sub.feed_id}"
+                    )
+                else:
+                    reply_content = f"抱歉，在您的訂閱清單中找不到名為「{feed_name}」的來源。"
+            except Exception as e:
+                logger.error(f"Failed to unsubscribe user from feed in agent dispatcher: {e}")
+                reply_content = "抱歉，取消訂閱時發生錯誤，請稍後再試。"
+        elif not discord_id:
+            reply_content = "請先在 Discord 中註冊以管理訂閱！"
+
+        return QAQueryResponse(
+            query=query,
+            articles=[],
+            insights=[reply_content or f"✅ 已為您成功取消訂閱 RSS 來源：{feed_name}！"],
+            recommendations=[],
+            conversation_id=conversation_id,
+            response_time=round(time.time() - start_time, 2),
+            intent="other",
         )
 
     elif action == "search":
