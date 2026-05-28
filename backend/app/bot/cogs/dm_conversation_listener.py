@@ -36,23 +36,51 @@ _PREFERENCE_PATTERNS = re.compile(
     re.IGNORECASE,
 )
 
-_HINT_INTERVAL = 5  # Show usage hint every N messages
-_user_message_counts: dict[str, int] = {}
-
-_USAGE_HINT = (
-    "\n\n💡 **你可以：**\n"
-    "• 直接問我問題，例如「最近有什麼 Rust 文章？」\n"
-    "• 告訴我偏好，例如「我喜歡系統設計，不喜歡入門教學」\n"
-    "• `/update_profile` 更新偏好摘要\n"
-    "• `/recommend_now` 立即獲取個人化推薦\n"
-    "• `/my_profile` 查看你的偏好檔案"
-)
+_last_hint_type: dict[str, str] = {}
 
 
-def _should_show_hint(discord_id: str) -> bool:
-    count = _user_message_counts.get(discord_id, 0) + 1
-    _user_message_counts[discord_id] = count
-    return count % _HINT_INTERVAL == 1  # Show on 1st, 6th, 11th... message
+def _get_smart_hint(discord_id: str, intent: str, content: str) -> str | None:
+    """
+    Generate a context-aware single-line hint based on user intent and content.
+    Guards against repetition by storing the last shown category.
+    """
+    cleaned_content = content.lower().strip()
+
+    # Determine hint category
+    is_greeting = (
+        cleaned_content
+        in {
+            "hi",
+            "hello",
+            "你好",
+            "哈囉",
+            "hey",
+            "嗨",
+            "你好啊",
+            "您好",
+        }
+        or len(cleaned_content) <= 3
+    )
+
+    if is_greeting:
+        category = "greeting"
+        hint = "💡 提示：您可以試著對我說「我對 Rust 和系統設計感興趣」，我會幫您建立專屬的閱讀偏好！"
+    elif intent == "preference":
+        category = "preference"
+        hint = "💡 提示：我已為您更新偏好！您可以試著輸入「最近有哪些關於 AI 的文章？」來搜尋，或使用 `/my_profile` 查看偏好檔案！"
+    elif intent == "question":  # Search intent
+        category = "search"
+        hint = "💡 提示：您可以輸入 `/recommend_now` 獲取當前個人化推薦，或使用 `/reading_list` 來管理您的待讀清單！"
+    else:  # General chat
+        category = "chat"
+        hint = "💡 提示：您可以輸入 `/news_now` 隨時瀏覽最新推薦的技術新聞喔！"
+
+    # Avoid repetition: do not show same category hint consecutively
+    if _last_hint_type.get(discord_id) == category:
+        return None
+
+    _last_hint_type[discord_id] = category
+    return f"\n\n{hint}"
 
 
 class DMConversationListener(commands.Cog):
@@ -86,8 +114,6 @@ class DMConversationListener(commands.Cog):
             logger.error("Failed to resolve user %s: %s", discord_id, exc)
             return
 
-        show_hint = _should_show_hint(discord_id)
-
         # Get active conversation ID or create a new one
         from uuid import uuid4
 
@@ -96,7 +122,9 @@ class DMConversationListener(commands.Cog):
             from app.api._qa_helpers import _create_conversation_in_db
 
             try:
-                conv_id = await _create_conversation_in_db(user_id, title="Discord DM 對話")
+                conv_id = await _create_conversation_in_db(
+                    user_id, title="Discord DM 對話", platform="discord"
+                )
             except Exception as e:
                 logger.warning(f"Failed to create new conversation for Discord DM: {e}")
                 conv_id = str(uuid4())
@@ -110,7 +138,10 @@ class DMConversationListener(commands.Cog):
                 await self._store_dm(supabase, user_id, content)
 
                 # Process query using context-aware agent dispatcher
-                qa_response = await _process_query_with_intent(user_id, content, conv_id)
+                qa_response = await _process_query_with_intent(
+                    user_id, content, conv_id, platform="discord"
+                )
+                intent = getattr(qa_response, "intent", "other")
 
                 # Formulate reply format
                 if qa_response.articles:
@@ -130,14 +161,17 @@ class DMConversationListener(commands.Cog):
 
                 if len(reply) > 1900:
                     reply = reply[:1900] + "..."
-                if show_hint:
-                    reply += _USAGE_HINT
+
+                # Attach context-aware smart micro-hint
+                smart_hint = _get_smart_hint(discord_id, intent, content)
+                if smart_hint:
+                    reply += smart_hint
 
                 await message.reply(reply, mention_author=False)
 
                 # Save history turns
                 try:
-                    await _save_messages_to_db(conv_id, content, qa_response)
+                    await _save_messages_to_db(conv_id, content, qa_response, platform="discord")
                 except Exception as e:
                     logger.warning(f"Failed to save DM messages to DB: {e}")
 

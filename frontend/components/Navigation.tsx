@@ -132,8 +132,8 @@ export function Navigation() {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <nav className="container mx-auto px-4" aria-label="Main navigation">
+    <>
+      <nav className="w-full px-4" aria-label="Main navigation">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-4 lg:gap-6 min-w-0 flex-1">
             <Link
@@ -372,6 +372,6 @@ export function Navigation() {
           </div>,
           document.body
         )}
-    </header>
+    </>
   );
 }

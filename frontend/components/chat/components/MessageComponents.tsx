@@ -203,19 +203,6 @@ export function QAAssistantMessage({
         <Bot className="h-4 w-4 text-primary" />
       </div>
       <div className="flex-1 space-y-4 min-w-0">
-        {response.articles && response.articles.length > 0 && (
-          <section aria-label={t('chat.related-articles', { count: response.articles.length })}>
-            <h3 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
-              <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
-              {t('chat.related-articles', { count: response.articles.length })}
-            </h3>
-            <div className="space-y-2">
-              {response.articles.map((a) => (
-                <ArticleCard key={a.article_id} article={a} />
-              ))}
-            </div>
-          </section>
-        )}
         {response.insights && response.insights.length > 0 && (
           <section aria-label={t('chat.insights')}>
             <h3 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
@@ -230,6 +217,19 @@ export function QAAssistantMessage({
                 </li>
               ))}
             </ul>
+          </section>
+        )}
+        {response.articles && response.articles.length > 0 && (
+          <section aria-label={t('chat.related-articles', { count: response.articles.length })}>
+            <h3 className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+              <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
+              {t('chat.related-articles', { count: response.articles.length })}
+            </h3>
+            <div className="space-y-2">
+              {response.articles.map((a) => (
+                <ArticleCard key={a.article_id} article={a} />
+              ))}
+            </div>
           </section>
         )}
         {response.recommendations && response.recommendations.length > 0 && (

@@ -24,6 +24,7 @@ class QAAgentDispatcher:
         discord_id: str,
         query: str,
         history_turns: Optional[List[Dict[str, Any]]] = None,
+        platform: str = "web",
     ) -> Dict[str, Any]:
         """
         Dispatch user query based on intent, system state, subscriptions, and preferences.
@@ -68,14 +69,25 @@ class QAAgentDispatcher:
             hist_lines = []
             for turn in history_turns[-5:]:  # limit to last 5 turns for efficiency
                 role = "User" if turn.get("is_user") else "Assistant"
+                plat = turn.get("platform", "web")
                 text = turn.get("content", "")
-                hist_lines.append(f"{role}: {text}")
+                hist_lines.append(f"{role} ({plat}): {text}")
             history_text = "\n".join(hist_lines)
 
         # 4. Construct System Prompt
         system_prompt = (
             "你是一個高智能、貼心的個人技術新聞 AI 助理（Agent Dispatcher）。\n"
             "你的工作是分析使用者的輸入，並決定最合適的行為（Action）。你對系統的功能瞭若指掌，且說話專業、溫暖、精簡，使用繁體中文（Taiwan）。\n\n"
+            "【重要：多渠道交流模式】\n"
+            "你同時可以透過兩個不同的管道（平台）與使用者進行交流，兩邊各有不同的操作與呈現方式：\n"
+            "1. 💻 Web 網頁介面 (web)：\n"
+            "   - 使用者在網頁上直接與你打字對話。\n"
+            "   - 網頁介面不支援 Discord 的斜線指令，如果使用者在此平台，你可以引導他使用網頁上的對應按鈕或進行一般問答，但仍可提及 Discord 的斜線指令（讓他們知道有這個選項）。\n"
+            "2. 💬 Discord 聊天機器人 (discord)：\n"
+            "   - 使用者在 Discord 的私訊（DM）中與你對話。\n"
+            "   - Discord 是功能的核心載體，強烈推薦引導使用者在 Discord 中使用斜線指令（如 /news_now、/recommend_now 等）。\n\n"
+            f"【當前交流管道】\n"
+            f"- 使用者目前正在透過 **{platform}** 平台與你溝通！請根據此平台特性給予最貼切、智慧的引導與回覆。\n\n"
             "【系統能力與斜線指令介紹】\n"
             "你擁有極其強大的功能模組，使用者可以使用以下 Discord 斜線指令進行操作。當用戶詢問功能、想做某些事情或不知如何操作時，你應該口頭親切地指引他們使用對應的指令：\n\n"
             "1. 📰 個人化新聞與推薦：\n"

@@ -270,7 +270,9 @@ def _get_supabase() -> SupabaseService:
     return SupabaseService(validate_connection=False)
 
 
-async def _create_conversation_in_db(user_id: str, title: Optional[str] = None) -> str:
+async def _create_conversation_in_db(
+    user_id: str, title: Optional[str] = None, platform: str = "web"
+) -> str:
     """
     Create a new conversation row in Supabase and return its ID.
     Uses fallback approach if conversations table doesn't exist.
@@ -299,7 +301,7 @@ async def _create_conversation_in_db(user_id: str, title: Optional[str] = None) 
             "created_at": now,
             "last_updated": now,
             "expires_at": expires_at,
-            "platform": "web",
+            "platform": platform,
             "tags": [],
             "is_archived": False,
             "is_favorite": False,
@@ -326,6 +328,7 @@ async def _save_messages_to_db(
     conversation_id: str,
     user_query: str,
     qa_response: Optional["QAQueryResponse"],
+    platform: str = "web",
 ) -> None:
     """
     Save the user query and assistant response as rows in conversation_messages.
@@ -344,7 +347,7 @@ async def _save_messages_to_db(
                 "conversation_id": conversation_id,
                 "role": "user",
                 "content": user_query,
-                "platform": "web",
+                "platform": platform,
                 "metadata": {},
                 "created_at": user_ts,
             }
@@ -357,7 +360,7 @@ async def _save_messages_to_db(
                     "conversation_id": conversation_id,
                     "role": "assistant",
                     "content": assistant_content,
-                    "platform": "web",
+                    "platform": platform,
                     "metadata": {
                         "articles": [
                             {
@@ -405,7 +408,7 @@ async def _save_messages_to_db(
 
 
 async def _process_query_with_intent(
-    user_id: str, query: str, conversation_id: str
+    user_id: str, query: str, conversation_id: str, platform: str = "web"
 ) -> "QAQueryResponse":
     """
     Intelligently dispatch and process user query using QAAgentDispatcher.
@@ -431,7 +434,7 @@ async def _process_query_with_intent(
     try:
         msg_resp = (
             supabase.client.table("conversation_messages")
-            .select("role, content")
+            .select("role, content, platform")
             .eq("conversation_id", conversation_id)
             .order("created_at", desc=False)
             .limit(10)
@@ -440,7 +443,11 @@ async def _process_query_with_intent(
         if msg_resp.data:
             for msg in msg_resp.data:
                 history_turns.append(
-                    {"is_user": msg.get("role") == "user", "content": msg.get("content") or ""}
+                    {
+                        "is_user": msg.get("role") == "user",
+                        "content": msg.get("content") or "",
+                        "platform": msg.get("platform") or "web",
+                    }
                 )
     except Exception as e:
         logger.warning(f"Failed to fetch conversation history for {conversation_id}: {e}")
@@ -448,7 +455,11 @@ async def _process_query_with_intent(
     # 3. Call the dispatcher
     dispatcher = QAAgentDispatcher(supabase_service=supabase)
     dispatch_result = await dispatcher.dispatch(
-        user_id=user_id, discord_id=discord_id, query=query, history_turns=history_turns
+        user_id=user_id,
+        discord_id=discord_id,
+        query=query,
+        history_turns=history_turns,
+        platform=platform,
     )
 
     action = dispatch_result.get("action", "chat")
