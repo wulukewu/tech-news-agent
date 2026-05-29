@@ -171,15 +171,16 @@ export function Markdown({ content, className }: { content: string; className?: 
       const text = headerMatch[2];
       const HeadingTag = `h${level}` as keyof JSX.IntrinsicElements;
 
-      const sizeClasses =
-        {
-          h1: 'text-xl font-bold mt-4 mb-2 border-b pb-1',
-          h2: 'text-lg font-bold mt-3 mb-2',
-          h3: 'text-base font-semibold mt-2 mb-1',
-          h4: 'text-sm font-semibold mt-2 mb-1',
-          h5: 'text-xs font-semibold mt-1 mb-1',
-          h6: 'text-xs font-semibold mt-1 mb-1',
-        }[`h${level}`] || 'text-sm font-bold';
+      const levelKey = `h${level}` as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+      const sizeMap = {
+        h1: 'text-xl font-bold mt-4 mb-2 border-b pb-1',
+        h2: 'text-lg font-bold mt-3 mb-2',
+        h3: 'text-base font-semibold mt-2 mb-1',
+        h4: 'text-sm font-semibold mt-2 mb-1',
+        h5: 'text-xs font-semibold mt-1 mb-1',
+        h6: 'text-xs font-semibold mt-1 mb-1',
+      };
+      const sizeClasses = sizeMap[levelKey] || 'text-sm font-bold';
 
       elements.push(
         <HeadingTag key={`h-${i}`} className={cn(sizeClasses, 'text-foreground')}>
