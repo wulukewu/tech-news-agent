@@ -48,7 +48,12 @@
         "ai-powered": "AI-Powered Analysis",
         "discord": "Discord Integration",
         "smart-reminders": "Smart Reminders",
-        "demo-title": "Live Article Feed"
+        "demo-title": "Live Article Feed",
+        "live-badge": "LIVE",
+        "login-to-unlock": "Want personalized recommendations? Login to unlock →",
+        "login-toast-save": "Please login to save articles to your reading list!",
+        "login-toast-analyze": "Please login to start deep dive analysis!",
+        "no-articles": "No articles available right now."
       },
       "section": {
         "title": "Intelligent News Curation",

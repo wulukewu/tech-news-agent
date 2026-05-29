@@ -1,37 +1,64 @@
 'use client';
 
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Zap, Brain, MessageSquare, Star, FileText } from 'lucide-react';
+import { ArrowRight, Zap, Brain, MessageSquare, FileText, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { Logo } from '@/components/Logo';
 import { PublicNavbar } from '@/components/PublicNavbar';
 import { Footer } from '@/components/landing/Footer';
 import { useI18n } from '@/contexts/I18nContext';
-
-// Mock data for demo
-const mockArticles = [
-  {
-    id: '1',
-    title: 'Next.js 15 Released with Revolutionary App Router Improvements',
-    category: 'Frontend',
-    tinkering_index: 4.2,
-    displayDate: '2024/4/29',
-    ai_summary: 'Major performance improvements and new caching strategies...',
-  },
-  {
-    id: '2',
-    title: 'OpenAI Announces GPT-5 with Multimodal Capabilities',
-    category: 'AI/ML',
-    tinkering_index: 4.8,
-    displayDate: '2024/4/29',
-    ai_summary: 'Breakthrough in reasoning and code generation...',
-  },
-];
+import { fetchPublicRecommendedArticles } from '@/lib/api/articles';
+import { ArticleCard } from '@/components/ArticleCard';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from '@/lib/toast';
+import type { Article } from '@/types/article';
 
 export default function ModernLandingPage() {
   const { t } = useI18n();
+  const router = useRouter();
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const loadArticles = useCallback(async (isSilent = false) => {
+    if (!isSilent) setIsLoading(true);
+    else setIsRefreshing(true);
+
+    try {
+      // Fetch 3 recommended articles
+      const data = await fetchPublicRecommendedArticles(3);
+      if (data && data.length > 0) {
+        setArticles(data);
+      }
+    } catch (err) {
+      console.error('Error fetching landing articles:', err);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadArticles();
+
+    // 30 seconds auto-refresh interval
+    const interval = setInterval(() => {
+      loadArticles(true);
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [loadArticles]);
+
+  const handleActionRedirect = useCallback(
+    (toastMessageKey: string) => {
+      toast.info(t(toastMessageKey as any));
+      router.push('/login');
+    },
+    [router, t]
+  );
 
   const scrollToDemo = () => {
     const demoSection = document.getElementById('demo-section');
@@ -100,40 +127,69 @@ export default function ModernLandingPage() {
 
           {/* Right: Live Demo */}
           <div className="space-y-6" id="demo-section">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold mb-4">
+            <div className="flex items-center justify-between mb-4 border-b pb-2">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
                 {t('pages.landing.features.demo-title')}
+                <Badge
+                  variant="outline"
+                  className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 border-emerald-500/20 bg-emerald-500/5 px-1.5 py-0"
+                >
+                  {t('pages.landing.features.live-badge')}
+                </Badge>
               </h3>
+              {isRefreshing && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
             </div>
-            <div className="space-y-4">
-              {mockArticles.map((article) => (
-                <Card key={article.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="space-y-3">
+
+            {isLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <Card key={i} className="overflow-hidden border border-border/60">
+                    <CardContent className="p-4 space-y-3">
                       <div className="flex items-center justify-between">
-                        <Badge variant="outline">{article.category}</Badge>
-                        <div className="flex items-center gap-1">
-                          {Array.from({ length: Math.floor(article.tinkering_index) }).map(
-                            (_, i) => (
-                              <Star key={i} className="w-3 h-3 fill-yellow-400 text-yellow-400" />
-                            )
-                          )}
-                          <span className="text-sm text-muted-foreground ml-1">
-                            {article.tinkering_index}
-                          </span>
-                        </div>
+                        <Skeleton className="h-4 w-16" />
+                        <Skeleton className="h-4 w-24" />
                       </div>
-                      <h4 className="font-semibold leading-tight">{article.title}</h4>
-                      <p className="text-sm text-muted-foreground">{article.ai_summary}</p>
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{article.displayDate}</span>
-                        <span>AI Generated Summary</span>
+                      <Skeleton className="h-6 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                      <div className="space-y-2 pt-2">
+                        <Skeleton className="h-12 w-full" />
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : articles.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground border border-dashed rounded-lg">
+                <p>{t('pages.landing.features.no-articles')}</p>
+              </div>
+            ) : (
+              <div className="space-y-4 animate-in fade-in duration-500">
+                {articles.map((article) => (
+                  <div
+                    key={article.id}
+                    className="transition-all duration-300 transform hover:-translate-y-0.5"
+                  >
+                    <ArticleCard article={article} hideActions={true} />
+                  </div>
+                ))}
+
+                {/* Registration CTA button at the bottom of the feed */}
+                <div className="pt-2 text-center">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    asChild
+                    className="text-xs text-muted-foreground hover:text-primary transition-colors duration-200"
+                  >
+                    <Link href="/login">{t('pages.landing.features.login-to-unlock')}</Link>
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>

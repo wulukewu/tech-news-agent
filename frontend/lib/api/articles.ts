@@ -93,3 +93,45 @@ export async function fetchMyArticles(
     hasNextPage: response.data.pagination.has_next,
   };
 }
+
+/**
+ * Fetch public recommended articles (for homepage live feed)
+ *
+ * @param limit - Number of articles to fetch (defaults to 3)
+ * @returns Promise resolving to an array of Article items
+ */
+export async function fetchPublicRecommendedArticles(limit: number = 3): Promise<Article[]> {
+  try {
+    const response = await apiClient.get<{
+      success: boolean;
+      data: Array<{
+        id: string;
+        title: string;
+        url: string;
+        published_at: string | null;
+        tinkering_index: number;
+        ai_summary: string | null;
+        actionable_takeaway?: string | null;
+        feed_name: string;
+        category: string;
+        is_in_reading_list: boolean;
+      }>;
+    }>(`/api/articles/public/recommended?limit=${limit}`);
+
+    return response.data.data.map((article) => ({
+      id: article.id,
+      title: article.title,
+      url: article.url,
+      feedName: article.feed_name,
+      category: article.category,
+      publishedAt: article.published_at,
+      tinkeringIndex: article.tinkering_index,
+      aiSummary: article.ai_summary,
+      actionableTakeaway: article.actionable_takeaway,
+      isInReadingList: article.is_in_reading_list,
+    }));
+  } catch (error) {
+    console.error('Failed to fetch public recommended articles:', error);
+    return [];
+  }
+}

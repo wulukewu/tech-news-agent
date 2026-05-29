@@ -48,7 +48,12 @@
         "ai-powered": "AI 驅動分析",
         "discord": "Discord 整合",
         "smart-reminders": "智能提醒",
-        "demo-title": "即時文章動態"
+        "demo-title": "即時文章動態",
+        "live-badge": "即時",
+        "login-to-unlock": "想要個人化推薦？立即登入解鎖 →",
+        "login-toast-save": "請先登入以將文章儲存至待讀清單！",
+        "login-toast-analyze": "請先登入以進行 AI 深入分析！",
+        "no-articles": "目前暫無文章動態。"
       },
       "section": {
         "title": "智能新聞策展",
