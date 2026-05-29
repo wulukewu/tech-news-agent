@@ -390,7 +390,9 @@ export function QAAssistantMessage({
               {response.insights.map((insight, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm">
                   <span className="text-primary font-bold flex-shrink-0 mt-0.5">•</span>
-                  <span>{renderInlineMarkdown(insight)}</span>
+                  <div className="flex-1 min-w-0">
+                    <Markdown content={insight} />
+                  </div>
                 </li>
               ))}
             </ul>
