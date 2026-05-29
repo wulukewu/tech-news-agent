@@ -171,7 +171,7 @@ class QAAgentDispatcher:
                 cleaned_content = re.sub(r"\s*```$", "", cleaned_content)
             cleaned_content = cleaned_content.strip()
 
-            parsed = json.loads(cleaned_content)
+            parsed = json.loads(cleaned_content, strict=False)
             logger.info(f"Dispatcher successfully routed query with action={parsed.get('action')}")
             return parsed
 
