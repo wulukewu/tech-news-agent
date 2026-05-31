@@ -41,6 +41,10 @@ vi.mock('@/lib/hooks/useReadingList', () => ({
     mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,
   }),
+  useUpdateReadingListStatus: () => ({
+    mutateAsync: vi.fn().mockResolvedValue({}),
+    isPending: false,
+  }),
 }));
 
 const mockArticle: Article = {

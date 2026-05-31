@@ -422,6 +422,7 @@
   },
   "success": {
     "article-saved": "Article added to reading list",
+    "article-marked-read": "Article marked as read",
     "article-removed": "Article removed from reading list",
     "settings-saved": "Settings saved",
     "analysis-copied": "Analysis content copied to clipboard",

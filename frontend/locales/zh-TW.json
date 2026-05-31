@@ -422,6 +422,7 @@
   },
   "success": {
     "article-saved": "文章已加入閱讀清單",
+    "article-marked-read": "文章已標記為已讀",
     "article-removed": "文章已從閱讀清單移除",
     "settings-saved": "設定已儲存",
     "analysis-copied": "分析內容已複製到剪貼簿",
