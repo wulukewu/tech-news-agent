@@ -221,8 +221,9 @@ describe('Property: Code Splitting Implementation', () => {
 
           const report = BundleAnalyzer.getPerformanceReport();
 
-          // totalComponents should match what we tracked
-          expect(report.totalComponents).toBe(components.length);
+          // totalComponents should match the number of unique tracked components (duplicates overwrite in Map)
+          const uniqueCount = new Set(components.map((c) => c.name)).size;
+          expect(report.totalComponents).toBe(uniqueCount);
           expect(report.averageLoadTime).toBeGreaterThanOrEqual(0);
         }
       ),

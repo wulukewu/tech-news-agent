@@ -109,7 +109,7 @@ export function ArticleCard({
     try {
       if (isReadState || isRead) return;
 
-      await updateStatus.mutateAsync({ articleId: article.id, status: 'read' });
+      await updateStatus.mutateAsync({ articleId: article.id, status: 'Read' });
       setIsReadState(true);
       toast.success(t('success.article-marked-read'));
     } catch (error) {
@@ -117,7 +117,7 @@ export function ArticleCard({
       try {
         await addToReadingList.mutateAsync(article.id);
         setIsAdded(true);
-        await updateStatus.mutateAsync({ articleId: article.id, status: 'read' });
+        await updateStatus.mutateAsync({ articleId: article.id, status: 'Read' });
         setIsReadState(true);
         toast.success(t('success.article-marked-read'));
       } catch (err) {

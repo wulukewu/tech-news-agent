@@ -1174,6 +1174,7 @@ export type TranslationKey =
   | 'subscriptions.unsubscribe-all'
   | 'subscriptions.unsubscribed'
   | 'success.analysis-copied'
+  | 'success.article-marked-read'
   | 'success.article-removed'
   | 'success.article-saved'
   | 'success.link-copied'

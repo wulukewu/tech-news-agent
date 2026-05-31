@@ -354,22 +354,30 @@ class TestPerformanceMonitorUnit:
 
     def test_percentile_calculation(self):
         """With 100 operations of known durations, p50/p95/p99 should be approximately correct."""
+        from unittest.mock import patch
+
         monitor = PerformanceMonitor()
 
-        # Create operations with predictable durations (1ms to 100ms)
+        # Create operations with predictable durations (1ms to 100ms) without sleeping
         async def timed_operation(duration_ms: float):
-            await asyncio.sleep(duration_ms / 1000.0)
             return "ok"
 
-        # Run 100 operations with durations 1ms, 2ms, ..., 100ms
+        # Construct deterministic time.time() mock return values
+        mock_times = []
         for i in range(1, 101):
-            asyncio.run(monitor.track_operation("percentile_test", timed_operation, i))
+            mock_times.append(float(i))  # start_time
+            mock_times.append(float(i) + i / 1000.0)  # end_time (duration is exactly i ms)
+
+        # Run 100 operations with deterministic time tracking
+        with patch("time.time", side_effect=mock_times):
+            for i in range(1, 101):
+                asyncio.run(monitor.track_operation("percentile_test", timed_operation, i))
 
         # Get summary
         summary = monitor.get_performance_summary()
         duration_stats = summary["duration_stats"]
 
-        # Check percentiles (with tolerance for timing variance)
+        # Check percentiles (exactly correct because of deterministic mock times)
         assert 45 <= duration_stats["p50_ms"] <= 55  # Should be around 50ms
         assert 90 <= duration_stats["p95_ms"] <= 100  # Should be around 95ms
         assert 95 <= duration_stats["p99_ms"] <= 105  # Should be around 99ms
