@@ -72,10 +72,10 @@ export default function ModernLandingPage() {
       <PublicNavbar />
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+      <section className="container mx-auto px-4 py-20 lg:py-24">
+        <div className="grid lg:grid-cols-2 gap-12 items-start">
           {/* Left: Content */}
-          <div className="space-y-8">
+          <div className="space-y-6 lg:pt-6">
             <div className="space-y-4">
               <Badge variant="secondary" className="w-fit">
                 <Zap className="w-3 h-3 mr-1" />
