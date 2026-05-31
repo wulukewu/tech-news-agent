@@ -60,10 +60,10 @@ export default function ModernLandingPage() {
     [router, t]
   );
 
-  const scrollToDemo = () => {
-    const demoSection = document.getElementById('demo-section');
-    if (demoSection) {
-      demoSection.scrollIntoView({ behavior: 'smooth' });
+  const scrollToFeatures = () => {
+    const featuresSection = document.getElementById('features-section');
+    if (featuresSection) {
+      featuresSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
 
@@ -119,7 +119,7 @@ export default function ModernLandingPage() {
                   {t('pages.landing.hero.cta-primary')} <ArrowRight className="w-4 h-4 ml-2" />
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" onClick={scrollToDemo}>
+              <Button variant="outline" size="lg" onClick={scrollToFeatures}>
                 {t('pages.landing.hero.cta-secondary')}
               </Button>
             </div>
@@ -195,7 +195,7 @@ export default function ModernLandingPage() {
       </section>
 
       {/* Features Section */}
-      <section className="bg-muted/30 py-20">
+      <section id="features-section" className="bg-muted/30 py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold mb-4">
