@@ -241,9 +241,7 @@ export function ArticleCard({
                 <div className="flex flex-col items-end gap-1">
                   <CheckCircle className="h-5 w-5 animate-pulse" />
                   <span className="text-[10px] uppercase font-bold tracking-wider">
-                    {isReadState || isRead
-                      ? t('article-read-badge' as any)
-                      : t('buttons.mark-as-read')}
+                    {isReadState || isRead ? t('buttons.read') : t('buttons.mark-as-read')}
                   </span>
                 </div>
               </div>
@@ -408,9 +406,7 @@ export function ArticleCard({
                         <CheckCircle className="h-4 w-4 mr-2 transition-transform duration-200 group-hover:scale-[1.05]" />
                       )}
                       <span className="text-sm">
-                        {isReadState || isRead
-                          ? t('article-read-badge' as any)
-                          : t('buttons.mark-as-read')}
+                        {isReadState || isRead ? t('buttons.read') : t('buttons.mark-as-read')}
                       </span>
                     </Button>
                   </div>
@@ -463,9 +459,7 @@ export function ArticleCard({
                 <div className="flex flex-col items-end gap-1">
                   <CheckCircle className="h-5 w-5 animate-pulse" />
                   <span className="text-[10px] uppercase font-bold tracking-wider">
-                    {isReadState || isRead
-                      ? t('article-read-badge' as any)
-                      : t('buttons.mark-as-read')}
+                    {isReadState || isRead ? t('buttons.read') : t('buttons.mark-as-read')}
                   </span>
                 </div>
               </div>
@@ -630,9 +624,7 @@ export function ArticleCard({
                       </TooltipTrigger>
                       <TooltipContent side="top">
                         <p className="text-xs">
-                          {isReadState || isRead
-                            ? t('article-read-badge' as any)
-                            : t('buttons.mark-as-read')}
+                          {isReadState || isRead ? t('buttons.read') : t('buttons.mark-as-read')}
                         </p>
                       </TooltipContent>
                     </Tooltip>
@@ -694,9 +686,7 @@ export function ArticleCard({
               <div className="flex flex-col items-end gap-1">
                 <CheckCircle className="h-5 w-5 animate-pulse" />
                 <span className="text-[10px] uppercase font-bold tracking-wider">
-                  {isReadState || isRead
-                    ? t('article-read-badge' as any)
-                    : t('buttons.mark-as-read')}
+                  {isReadState || isRead ? t('buttons.read') : t('buttons.mark-as-read')}
                 </span>
               </div>
             </div>
@@ -898,9 +888,7 @@ export function ArticleCard({
                           <CheckCircle className="h-4 w-4 mr-2" />
                         )}
                         <span className="text-sm">
-                          {isReadState || isRead
-                            ? t('article-read-badge' as any)
-                            : t('buttons.mark-as-read')}
+                          {isReadState || isRead ? t('buttons.read') : t('buttons.mark-as-read')}
                         </span>
                       </Button>
                     </div>

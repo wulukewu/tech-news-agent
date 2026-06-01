@@ -88,6 +88,7 @@ export type TranslationKey =
   | 'buttons.next'
   | 'buttons.preview'
   | 'buttons.previewing'
+  | 'buttons.read'
   | 'buttons.read-later'
   | 'buttons.refresh'
   | 'buttons.reload-page'
