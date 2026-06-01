@@ -445,7 +445,7 @@ export default function SubscriptionsPage() {
         value={currentTab}
         onValueChange={(value) => setCurrentTab(value as 'subscriptions' | 'explore')}
       >
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-2 sm:inline-flex sm:w-auto">
           <TabsTrigger value="subscriptions">{t('subscriptions.my-subscriptions')}</TabsTrigger>
           <TabsTrigger value="explore">{t('subscriptions.explore')}</TabsTrigger>
         </TabsList>

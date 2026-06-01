@@ -178,13 +178,13 @@ function DashboardContent() {
             onSearch={handleSearch}
             placeholder={t('forms.placeholders.search-articles')}
           />
-          <div className="flex items-center gap-2">
-            <TabsList>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+            <TabsList className="grid w-full grid-cols-3 sm:inline-flex sm:w-auto">
               <TabsTrigger value="all">{t('ui.all')}</TabsTrigger>
               <TabsTrigger value="saved">{t('ui.saved')}</TabsTrigger>
               <TabsTrigger value="recommended">{t('ui.recommended')}</TabsTrigger>
             </TabsList>
-            <div className="flex items-center gap-2 ml-auto">
+            <div className="flex items-center gap-2 justify-end sm:ml-auto">
               <SortSelector value={sortOption} onChange={setSortOption} />
               <ViewModeSelector value={viewMode} onChange={setViewMode} />
             </div>
