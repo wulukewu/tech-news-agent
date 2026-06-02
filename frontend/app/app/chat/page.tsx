@@ -16,7 +16,9 @@ function ChatPageContent() {
     initialMessage = `Tell me more about article ${articleId}`;
   }
 
-  return <ChatShell initialId={null} initialMessage={initialMessage} />;
+  return (
+    <ChatShell initialId={null} initialMessage={initialMessage} initialArticleId={articleId} />
+  );
 }
 
 export default function ChatNewPage() {

@@ -1344,7 +1344,22 @@
     "search-status-label": "狀態",
     "search-status-favorite": "收藏",
     "search-status-archived": "已歸檔",
-    "search-open-aria": "開啟對話：{title}"
+    "search-open-aria": "開啟對話：{title}",
+    "contextual-drawer-label": "參考文章詳情",
+    "contextual-drawer-title": "參考文章",
+    "drawer-toggle-aria": "切換參考文章面板",
+    "no-reference-article": "此對話內容中尚無參考文章。",
+    "article-summary": "AI 摘要",
+    "article-key-insights": "核心要點",
+    "article-takeaway": "核心技術精華",
+    "quick-ask": "快速提問",
+    "copied": "已複製！",
+    "copy-to-clipboard": "複製到剪貼簿",
+    "quick-prompts": "推薦快速提問",
+    "quick-prompt-conclusion": "摘要文章三個核心結論",
+    "quick-prompt-practice": "詢問具體實作範例",
+    "quick-prompt-background": "適合哪種技術背景？",
+    "quick-prompt-roadmap": "生成相關學習路徑"
   },
   "learning": {
     "title": "學習路徑",

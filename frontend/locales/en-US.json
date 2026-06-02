@@ -1289,7 +1289,22 @@
     "search-status-label": "Status",
     "search-status-favorite": "Favorites",
     "search-status-archived": "Archived",
-    "search-open-aria": "Open conversation: {title}"
+    "search-open-aria": "Open conversation: {title}",
+    "contextual-drawer-label": "Reference Article Details",
+    "contextual-drawer-title": "Reference Article",
+    "drawer-toggle-aria": "Toggle reference article drawer",
+    "no-reference-article": "No article referenced in this conversation context yet.",
+    "article-summary": "AI Summary",
+    "article-key-insights": "Key Insights",
+    "article-takeaway": "Actionable Takeaway",
+    "quick-ask": "Quick Ask",
+    "copied": "Copied!",
+    "copy-to-clipboard": "Copy to clipboard",
+    "quick-prompts": "Recommended Prompts",
+    "quick-prompt-conclusion": "Summarize 3 core conclusions",
+    "quick-prompt-practice": "Ask for practical examples",
+    "quick-prompt-background": "What technical background is suitable?",
+    "quick-prompt-roadmap": "Generate learning roadmap"
   },
   "preferences": {
     "title": "Learning Preferences",

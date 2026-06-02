@@ -17,6 +17,7 @@ from app.api.auth import get_current_user
 from app.schemas.article import ArticleResponse
 from app.schemas.responses import (
     PaginatedResponse,
+    SuccessResponse,
     paginated_response,
     success_response,
 )
@@ -50,6 +51,83 @@ async def get_categories(current_user: dict = Depends(get_current_user)):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to retrieve categories: {e!s}")
+
+
+@router.get("/{article_id}", response_model=SuccessResponse[ArticleResponse])
+async def get_article(
+    article_id: UUID,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    查詢單一文章詳細資訊
+    """
+    try:
+        supabase = SupabaseService()
+
+        # 1. 查詢文章與 feed 資訊
+        response = (
+            supabase.client.table("articles")
+            .select(
+                "id, title, url, published_at, tinkering_index, ai_summary, actionable_takeaway, "
+                "feeds!inner(name, category)"
+            )
+            .eq("id", str(article_id))
+            .execute()
+        )
+
+        if not response.data:
+            raise HTTPException(status_code=404, detail="Article not found")
+
+        article = response.data[0]
+        feed_info = article.get("feeds", {})
+
+        # 2. 檢查是否在 reading list 中
+        reading_list_response = (
+            supabase.client.table("reading_list")
+            .select("status")
+            .eq("user_id", str(current_user["user_id"]))
+            .eq("article_id", str(article_id))
+            .execute()
+        )
+
+        is_in_reading_list = len(reading_list_response.data) > 0
+        read_status = reading_list_response.data[0]["status"] if is_in_reading_list else None
+
+        # 處理 published_at
+        published_at = None
+        if article.get("published_at"):
+            try:
+                raw = article["published_at"]
+                if isinstance(raw, datetime):
+                    published_at = raw if raw.tzinfo else raw.replace(tzinfo=UTC)
+                else:
+                    pub_at_str = str(raw)
+                    if pub_at_str.endswith("Z"):
+                        pub_at_str = pub_at_str[:-1] + "+00:00"
+                    published_at = datetime.fromisoformat(pub_at_str)
+            except (ValueError, TypeError):
+                published_at = None
+
+        result = ArticleResponse(
+            id=UUID(str(article["id"])),
+            title=article["title"],
+            url=article["url"],
+            published_at=published_at,
+            tinkering_index=article.get("tinkering_index") or 1,
+            ai_summary=article.get("ai_summary"),
+            actionable_takeaway=article.get("actionable_takeaway"),
+            feed_name=feed_info.get("name", "Unknown"),
+            category=feed_info.get("category", "Unknown"),
+            is_in_reading_list=is_in_reading_list,
+            read_status=read_status,
+        )
+
+        return success_response(result)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to retrieve article: {e!s}")
 
 
 @router.get("/me", response_model=PaginatedResponse[ArticleResponse])

@@ -135,3 +135,45 @@ export async function fetchPublicRecommendedArticles(limit: number = 3): Promise
     return [];
   }
 }
+
+/**
+ * Fetch a single article by its ID
+ *
+ * @param id - Article ID (UUID)
+ * @returns Promise resolving to the Article
+ */
+export async function fetchArticle(id: string): Promise<Article> {
+  const response = await apiClient.get<{
+    success: boolean;
+    data: {
+      id: string;
+      title: string;
+      url: string;
+      imageUrl?: string | null;
+      publishedAt: string | null;
+      tinkeringIndex: number;
+      aiSummary: string | null;
+      actionableTakeaway?: string | null;
+      feedName: string;
+      category: string;
+      isInReadingList: boolean;
+      readStatus?: string | null;
+    };
+  }>(`/api/articles/${id}`);
+
+  const article = response.data.data;
+  return {
+    id: article.id,
+    title: article.title,
+    url: article.url,
+    imageUrl: article.imageUrl,
+    feedName: article.feedName,
+    category: article.category,
+    publishedAt: article.publishedAt,
+    tinkeringIndex: article.tinkeringIndex,
+    aiSummary: article.aiSummary,
+    actionableTakeaway: article.actionableTakeaway,
+    isInReadingList: article.isInReadingList,
+    readStatus: article.readStatus,
+  };
+}

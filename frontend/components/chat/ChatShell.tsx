@@ -34,10 +34,13 @@ import {
   Settings,
   Globe,
   Hash,
+  BookOpen,
 } from 'lucide-react';
 import { type ArticleSummary, type QAResponse, type QAMessage, EXAMPLE_QUERIES } from './types';
 import { SettingsSidebar } from './components/SettingsSidebar';
 import { HistorySidebar } from './components/HistorySidebar';
+import { ReferenceDrawer, type DrawerArticle } from './components/ReferenceDrawer';
+import { fetchArticle } from '@/lib/api/articles';
 import {
   ArticleCard,
   QAAssistantMessage,
@@ -54,9 +57,11 @@ import { PlatformBadge } from './components/PlatformBadge';
 export function ChatShell({
   initialId,
   initialMessage,
+  initialArticleId,
 }: {
   initialId: string | null;
   initialMessage?: string;
+  initialArticleId?: string | null;
 }) {
   const { t } = useI18n();
 
@@ -66,6 +71,11 @@ export function ChatShell({
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [showSettings, setShowSettings] = useState(true);
   const [sidebarRefreshKey, setSidebarRefreshKey] = useState(0);
+
+  // Reference Drawer states
+  const [showReferenceDrawer, setShowReferenceDrawer] = useState(true);
+  const [selectedReferenceId, setSelectedReferenceId] = useState<string | null>(null);
+  const [loadedInitialArticle, setLoadedInitialArticle] = useState<DrawerArticle | null>(null);
 
   // New-conversation QA state
   const [qaMessages, setQaMessages] = useState<QAMessage[]>([]);
@@ -84,6 +94,114 @@ export function ChatShell({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch initial article if requested from search params
+  useEffect(() => {
+    if (initialArticleId) {
+      let active = true;
+      fetchArticle(initialArticleId)
+        .then((art) => {
+          if (active) {
+            const normalized: DrawerArticle = {
+              id: art.id,
+              title: art.title,
+              url: art.url,
+              summary: art.aiSummary,
+              category: art.category,
+              tinkeringIndex: art.tinkeringIndex,
+              actionableTakeaway: art.actionableTakeaway,
+              feedName: art.feedName,
+              publishedAt: art.publishedAt,
+            };
+            setLoadedInitialArticle(normalized);
+            setSelectedReferenceId(art.id);
+            setShowReferenceDrawer(true);
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to load initial article detail:', err);
+        });
+      return () => {
+        active = false;
+      };
+    }
+  }, [initialArticleId]);
+
+  // Extract all articles referenced in messages
+  const extractedArticles = React.useMemo(() => {
+    const list: DrawerArticle[] = [];
+
+    // 1. New chat messages
+    qaMessages.forEach((msg) => {
+      if (msg.type === 'assistant' && msg.response?.articles) {
+        msg.response.articles.forEach((art) => {
+          if (!list.some((a) => a.id === art.article_id)) {
+            list.push({
+              id: art.article_id,
+              title: art.title,
+              url: art.url,
+              summary: art.summary,
+              category: art.category,
+              tinkeringIndex: 3, // fallback
+              readingTime: art.reading_time,
+              keyInsights: art.key_insights,
+            });
+          }
+        });
+      }
+    });
+
+    // 2. History chat messages
+    histMessages.forEach((msg) => {
+      if (msg.role === 'assistant' && msg.metadata?.articles) {
+        (msg.metadata.articles as any[]).forEach((art) => {
+          const id = art.article_id || art.id;
+          if (id && !list.some((a) => a.id === id)) {
+            list.push({
+              id: id,
+              title: art.title,
+              url: art.url,
+              summary: art.summary || art.ai_summary || art.aiSummary || '',
+              category: art.category || 'Unknown',
+              tinkeringIndex: art.tinkeringIndex || art.tinkering_index || 3,
+              readingTime: art.reading_time || art.readingTime,
+              keyInsights:
+                art.key_insights ||
+                art.keyInsights ||
+                (art.actionable_takeaway ? [art.actionable_takeaway] : []),
+              actionableTakeaway: art.actionable_takeaway || art.actionableTakeaway,
+              feedName: art.feedName || art.feed_name,
+              publishedAt: art.published_at || art.publishedAt,
+            });
+          }
+        });
+      }
+    });
+
+    return list;
+  }, [qaMessages, histMessages]);
+
+  // Combine initial loaded article & extracted ones
+  const allReferenceArticles = React.useMemo(() => {
+    const combined = [...extractedArticles];
+    if (loadedInitialArticle && !combined.some((a) => a.id === loadedInitialArticle.id)) {
+      combined.unshift(loadedInitialArticle);
+    }
+    return combined;
+  }, [extractedArticles, loadedInitialArticle]);
+
+  // Quick Ask handler
+  const handleQuickAsk = useCallback(
+    (prompt: string) => {
+      if (mode === 'new') {
+        setQaInput(prompt);
+      } else {
+        setHistInput(prompt);
+      }
+      setTimeout(() => inputRef.current?.focus(), 100);
+    },
+    [mode]
+  );
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -110,6 +228,8 @@ export function ChatShell({
       setHistError(null);
       setHistMessages([]);
       setHistConversation(null);
+      setLoadedInitialArticle(null);
+      setSelectedReferenceId(null);
       if (updateUrl) {
         // Use pushState directly to avoid triggering a Next.js navigation/re-render
         window.history.pushState(null, '', `/app/chat/${id}`);
@@ -121,6 +241,18 @@ export function ChatShell({
         ]);
         setHistConversation(conv);
         setHistMessages(msgs);
+
+        // Select first referenced article if available
+        const referenced = msgs
+          .filter((m) => m.role === 'assistant' && m.metadata?.articles)
+          .flatMap((m) => m.metadata!.articles as any[]);
+        if (referenced.length > 0) {
+          const firstId = referenced[0].article_id || referenced[0].id;
+          if (firstId) {
+            setSelectedReferenceId(firstId);
+            setShowReferenceDrawer(true);
+          }
+        }
       } catch {
         setHistError(t('chat.load-failed'));
       } finally {
@@ -145,6 +277,8 @@ export function ChatShell({
     setQaError(null);
     setHistConversation(null);
     setHistMessages([]);
+    setLoadedInitialArticle(null);
+    setSelectedReferenceId(null);
     window.history.pushState(null, '', '/app/chat');
     setTimeout(() => inputRef.current?.focus(), 100);
   }, []);
@@ -206,6 +340,11 @@ export function ChatShell({
             timestamp: new Date(),
           },
         ]);
+
+        if (data.articles && data.articles.length > 0) {
+          setSelectedReferenceId(data.articles[0].article_id);
+          setShowReferenceDrawer(true);
+        }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : t('errors.server-error');
         setQaMessages((prev) => [
@@ -285,6 +424,11 @@ export function ChatShell({
         setHistConversation((prev) =>
           prev ? { ...prev, message_count: prev.message_count + 2 } : prev
         );
+
+        if (qaData.articles && qaData.articles.length > 0) {
+          setSelectedReferenceId(qaData.articles[0].article_id);
+          setShowReferenceDrawer(true);
+        }
       } catch {
         // QA failed — fall back to just saving the user message
         try {
@@ -396,6 +540,24 @@ export function ChatShell({
                 </>
               )}
             </div>
+            {allReferenceArticles.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowReferenceDrawer((v) => !v)}
+                className={cn(
+                  'cursor-pointer flex-shrink-0 h-8 w-8 p-0 relative mr-1 hover:bg-muted transition-colors rounded-lg',
+                  showReferenceDrawer && 'bg-primary/10 text-primary hover:bg-primary/20'
+                )}
+                aria-label={t('chat.drawer-toggle-aria', { defaultValue: '切換參考文章面板' })}
+                aria-expanded={showReferenceDrawer}
+              >
+                <BookOpen className="h-4 w-4" aria-hidden="true" />
+                {!showReferenceDrawer && (
+                  <span className="absolute top-1 right-1 h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-background animate-pulse" />
+                )}
+              </Button>
+            )}
             {mode === 'history' && histConversation && (
               <Button
                 variant="ghost"
@@ -445,6 +607,15 @@ export function ChatShell({
               />
             )}
           </div>
+          {showReferenceDrawer && allReferenceArticles.length > 0 && (
+            <ReferenceDrawer
+              articles={allReferenceArticles}
+              selectedArticleId={selectedReferenceId}
+              onSelectArticle={setSelectedReferenceId}
+              onQuickAsk={handleQuickAsk}
+              onClose={() => setShowReferenceDrawer(false)}
+            />
+          )}
           {mode === 'history' && histConversation && showSettings && (
             <SettingsSidebar
               conversation={histConversation}
