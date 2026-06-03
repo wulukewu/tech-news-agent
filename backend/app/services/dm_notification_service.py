@@ -309,7 +309,7 @@ class DMNotificationService:
                             article_depth = getattr(article, "technical_depth", None)
                             if not article_depth:
                                 article_depth = tech_depth_service.estimate_article_depth(
-                                    content=getattr(article, "content", "") or "",
+                                    content=getattr(article, "ai_summary", "") or "",
                                     title=article.title or "",
                                 )
 

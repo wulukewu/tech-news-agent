@@ -16,7 +16,14 @@ export const url = fc.webUrl();
 export const webPath = fc.webPath();
 export const safeIsoDate = fc
   .date({ min: new Date('1970-01-01T00:00:00Z'), max: new Date('3000-01-01T00:00:00Z') })
-  .map((d) => d.toISOString());
+  .filter((d) => !isNaN(d.getTime()))
+  .map((d) => {
+    try {
+      return d.toISOString();
+    } catch {
+      return new Date().toISOString();
+    }
+  });
 
 // UI-specific arbitraries
 export const badgeArbitrary = fc.oneof(
