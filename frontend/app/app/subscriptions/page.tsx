@@ -343,7 +343,7 @@ export default function SubscriptionsPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="max-w-6xl mx-auto py-6 space-y-6 px-4">
+      <div className="container mx-auto max-w-7xl py-6 space-y-6 px-4 md:px-6 lg:px-8">
         {/* Header skeleton */}
         <div className="space-y-2">
           <Skeleton className="h-8 w-48" />
@@ -356,9 +356,9 @@ export default function SubscriptionsPage() {
           ))}
         </div>
         {/* Feed list skeleton */}
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 rounded-lg" />
+            <Skeleton key={i} className="h-24 rounded-lg" />
           ))}
         </div>
       </div>
@@ -430,7 +430,7 @@ export default function SubscriptionsPage() {
     feeds.reduce((sum, feed) => sum + (feed.average_tinkering_index || 0), 0) / feeds.length || 0;
 
   return (
-    <div className="max-w-6xl mx-auto py-6 space-y-6">
+    <div className="container mx-auto max-w-7xl py-6 space-y-6 px-4 md:px-6 lg:px-8">
       <div className="flex flex-col gap-1">
         <h1 className="text-3xl font-bold">{t('subscriptions.title')}</h1>
         <p className="text-muted-foreground">
@@ -631,7 +631,7 @@ export default function SubscriptionsPage() {
               </CardHeader>
               {!isCollapsed && (
                 <CardContent className="animate-in slide-in-from-top-2 duration-300">
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {categoryFeeds.map((feed) => (
                       <div
                         key={feed.id}
