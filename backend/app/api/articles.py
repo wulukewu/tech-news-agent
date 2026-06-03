@@ -5,12 +5,15 @@
 """
 
 import asyncio
+import logging
 import time
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, cast
 
 UTC = timezone.utc
 from uuid import UUID
+
+logger = logging.getLogger(__name__)
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -101,29 +104,59 @@ async def get_my_articles(
             return paginated_response(items=[], total_count=0, page=page, page_size=page_size)
 
         # 2. 建立基礎查詢 - 只查詢用戶訂閱的 feeds 的文章
-        query = (
-            supabase.client.table("articles")
-            .select(
-                "id, title, url, published_at, tinkering_index, ai_summary, actionable_takeaway, image_url, "
-                "feeds!inner(name, category)"
+        try:
+            query = (
+                supabase.client.table("articles")
+                .select(
+                    "id, title, url, published_at, tinkering_index, ai_summary, actionable_takeaway, image_url, "
+                    "feeds!inner(name, category)"
+                )
+                .in_("feed_id", subscribed_feed_ids)
+                .gte("published_at", seven_days_ago.isoformat())
+                .not_.is_("tinkering_index", "null")
             )
-            .in_("feed_id", subscribed_feed_ids)
-            .gte("published_at", seven_days_ago.isoformat())
-            .not_.is_("tinkering_index", "null")
-        )
 
-        # 如果有指定類別篩選
-        if categories:
-            category_list = [cat.strip() for cat in categories.split(",")]
-            query = query.in_("feeds.category", category_list)
+            # 如果有指定類別篩選
+            if categories:
+                category_list = [cat.strip() for cat in categories.split(",")]
+                query = query.in_("feeds.category", category_list)
 
-        # 執行查詢
-        response = (
-            query.order("tinkering_index", desc=True)
-            .order("published_at", desc=True)
-            .range(offset, offset + page_size - 1)
-            .execute()
-        )
+            # 執行查詢
+            response = (
+                query.order("tinkering_index", desc=True)
+                .order("published_at", desc=True)
+                .range(offset, offset + page_size - 1)
+                .execute()
+            )
+        except Exception as e:
+            # Fallback if image_url column does not exist in the database schema
+            if "image_url" in str(e):
+                logger.warning(
+                    "articles.image_url column not found in database. Retrying query without it."
+                )
+                query = (
+                    supabase.client.table("articles")
+                    .select(
+                        "id, title, url, published_at, tinkering_index, ai_summary, actionable_takeaway, "
+                        "feeds!inner(name, category)"
+                    )
+                    .in_("feed_id", subscribed_feed_ids)
+                    .gte("published_at", seven_days_ago.isoformat())
+                    .not_.is_("tinkering_index", "null")
+                )
+
+                if categories:
+                    category_list = [cat.strip() for cat in categories.split(",")]
+                    query = query.in_("feeds.category", category_list)
+
+                response = (
+                    query.order("tinkering_index", desc=True)
+                    .order("published_at", desc=True)
+                    .range(offset, offset + page_size - 1)
+                    .execute()
+                )
+            else:
+                raise
 
         # 計算總數
         # 如果有類別篩選，需要 join feeds 表
@@ -224,15 +257,32 @@ async def get_article(
         supabase = SupabaseService()
 
         # 1. 查詢文章與 feed 資訊
-        response = (
-            supabase.client.table("articles")
-            .select(
-                "id, title, url, published_at, tinkering_index, ai_summary, actionable_takeaway, image_url, "
-                "feeds!inner(name, category)"
+        try:
+            response = (
+                supabase.client.table("articles")
+                .select(
+                    "id, title, url, published_at, tinkering_index, ai_summary, actionable_takeaway, image_url, "
+                    "feeds!inner(name, category)"
+                )
+                .eq("id", str(article_id))
+                .execute()
             )
-            .eq("id", str(article_id))
-            .execute()
-        )
+        except Exception as e:
+            if "image_url" in str(e):
+                logger.warning(
+                    "articles.image_url column not found in database. Retrying query without it."
+                )
+                response = (
+                    supabase.client.table("articles")
+                    .select(
+                        "id, title, url, published_at, tinkering_index, ai_summary, actionable_takeaway, "
+                        "feeds!inner(name, category)"
+                    )
+                    .eq("id", str(article_id))
+                    .execute()
+                )
+            else:
+                raise
 
         if not response.data:
             raise HTTPException(status_code=404, detail="Article not found")
