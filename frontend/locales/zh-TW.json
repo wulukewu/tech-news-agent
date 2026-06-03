@@ -1359,7 +1359,8 @@
     "quick-prompt-conclusion": "摘要文章三個核心結論",
     "quick-prompt-practice": "詢問具體實作範例",
     "quick-prompt-background": "適合哪種技術背景？",
-    "quick-prompt-roadmap": "生成相關學習路徑"
+    "quick-prompt-roadmap": "生成相關學習路徑",
+    "tinkering-index": "技術深度：{value}"
   },
   "learning": {
     "title": "學習路徑",

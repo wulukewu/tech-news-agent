@@ -1304,7 +1304,8 @@
     "quick-prompt-conclusion": "Summarize 3 core conclusions",
     "quick-prompt-practice": "Ask for practical examples",
     "quick-prompt-background": "What technical background is suitable?",
-    "quick-prompt-roadmap": "Generate learning roadmap"
+    "quick-prompt-roadmap": "Generate learning roadmap",
+    "tinkering-index": "Tinkering index: {value}"
   },
   "preferences": {
     "title": "Learning Preferences",

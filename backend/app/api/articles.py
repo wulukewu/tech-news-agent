@@ -7,6 +7,7 @@
 import asyncio
 import time
 from datetime import datetime, timedelta, timezone
+from typing import Any, Dict, cast
 
 UTC = timezone.utc
 from uuid import UUID
@@ -68,7 +69,7 @@ async def get_article(
         response = (
             supabase.client.table("articles")
             .select(
-                "id, title, url, published_at, tinkering_index, ai_summary, actionable_takeaway, "
+                "id, title, url, published_at, tinkering_index, ai_summary, actionable_takeaway, image_url, "
                 "feeds!inner(name, category)"
             )
             .eq("id", str(article_id))
@@ -78,8 +79,8 @@ async def get_article(
         if not response.data:
             raise HTTPException(status_code=404, detail="Article not found")
 
-        article = response.data[0]
-        feed_info = article.get("feeds", {})
+        article = cast(Dict[str, Any], response.data[0])
+        feed_info = cast(Dict[str, Any], article.get("feeds") or {})
 
         # 2. 檢查是否在 reading list 中
         reading_list_response = (
@@ -110,7 +111,7 @@ async def get_article(
 
         result = ArticleResponse(
             id=UUID(str(article["id"])),
-            title=article["title"],
+            title=str(article["title"]),
             url=article["url"],
             published_at=published_at,
             tinkering_index=article.get("tinkering_index") or 1,
@@ -120,6 +121,7 @@ async def get_article(
             category=feed_info.get("category", "Unknown"),
             is_in_reading_list=is_in_reading_list,
             read_status=read_status,
+            image_url=article.get("image_url"),
         )
 
         return success_response(result)
@@ -180,7 +182,7 @@ async def get_my_articles(
         query = (
             supabase.client.table("articles")
             .select(
-                "id, title, url, published_at, tinkering_index, ai_summary, actionable_takeaway, "
+                "id, title, url, published_at, tinkering_index, ai_summary, actionable_takeaway, image_url, "
                 "feeds!inner(name, category)"
             )
             .in_("feed_id", subscribed_feed_ids)
@@ -273,6 +275,7 @@ async def get_my_articles(
                     category=feed_info.get("category", "Unknown"),
                     is_in_reading_list=is_in_reading_list,
                     read_status=read_status,
+                    image_url=article.get("image_url"),
                 )
             )
 

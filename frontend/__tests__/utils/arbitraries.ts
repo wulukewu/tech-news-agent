@@ -14,6 +14,9 @@ export const longString = fc.string({ minLength: 1, maxLength: 500 });
 export const className = fc.string({ maxLength: 100 });
 export const url = fc.webUrl();
 export const webPath = fc.webPath();
+export const safeIsoDate = fc
+  .date({ min: new Date('1970-01-01T00:00:00Z'), max: new Date('3000-01-01T00:00:00Z') })
+  .map((d) => d.toISOString());
 
 // UI-specific arbitraries
 export const badgeArbitrary = fc.oneof(
@@ -165,7 +168,7 @@ export const systemStatusArbitrary = fc.record({
 export const apiErrorArbitrary = fc.record({
   code: fc.constantFrom('NETWORK_ERROR', 'VALIDATION_ERROR', 'SERVER_ERROR', 'NOT_FOUND'),
   message: nonEmptyString,
-  timestamp: fc.date().map((d) => d.toISOString()),
+  timestamp: safeIsoDate,
   requestId: fc.option(fc.uuid()),
 });
 
@@ -184,14 +187,14 @@ export const analysisModalPropsArbitrary = fc.record({
   articleId: fc.uuid(),
   articleTitle: nonEmptyString,
   articleSource: shortString,
-  articlePublishedAt: fc.option(fc.date().map((d) => d.toISOString())),
+  articlePublishedAt: fc.option(safeIsoDate),
 });
 
 export const articleMetadataArbitrary = fc.record({
   id: fc.uuid(),
   title: nonEmptyString,
   source: shortString,
-  publishedAt: fc.option(fc.date().map((d) => d.toISOString())),
+  publishedAt: fc.option(safeIsoDate),
 });
 
 export const analysisApiResponseArbitrary = fc.record({
@@ -201,7 +204,7 @@ export const analysisApiResponseArbitrary = fc.record({
     application_scenarios: fc.array(nonEmptyString, { minLength: 1, maxLength: 5 }),
     potential_risks: fc.array(nonEmptyString, { minLength: 1, maxLength: 5 }),
     recommended_steps: fc.array(nonEmptyString, { minLength: 1, maxLength: 5 }),
-    generated_at: fc.date().map((d) => d.toISOString()),
+    generated_at: safeIsoDate,
     model: fc.constant('llama-3.3-70b'),
     raw_text: longString,
   }),
