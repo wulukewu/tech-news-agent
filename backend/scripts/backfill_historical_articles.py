@@ -109,10 +109,25 @@ async def main():
                         logger.info(f"Takeaway: {analysis.actionable_takeaway}")
                         success = True
                     else:
-                        logger.error(
-                            f"Failed to generate evaluation for: {title} (returned None). Skipping to next article."
+                        logger.info(
+                            "Evaluation returned None. Verifying if it is a rate limit or a structural issue..."
                         )
-                        success = True  # Move on if LLM returns None on structural error
+                        # Run a tiny dummy request to see if Groq is alive or rate-limiting us
+                        try:
+                            await llm.client.chat.completions.create(
+                                model="llama-3.1-8b-instant",
+                                messages=[{"role": "user", "content": "ping"}],
+                                max_tokens=1,
+                            )
+                            # If this succeeds, the API is healthy, so the None was a structural error.
+                            logger.error(
+                                f"Failed to generate evaluation for: {title} (returned None). Skipping to next article."
+                            )
+                            success = True  # Move on
+                        except Exception as dummy_e:
+                            # If the dummy call fails, raise it to be handled by the rate limit handler
+                            logger.warning(f"Dummy validation request failed: {dummy_e}")
+                            raise dummy_e
                 except Exception as e:
                     err_msg = str(e).lower()
                     if "429" in err_msg or "rate limit" in err_msg:
