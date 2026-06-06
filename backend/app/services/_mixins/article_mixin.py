@@ -65,6 +65,8 @@ class ArticleMixin:
                             else None
                         ),
                         "embedding": article.get("embedding"),
+                        "actionable_takeaway": article.get("actionable_takeaway"),
+                        "content_type": article.get("content_type"),
                     }
 
                     # 移除 None 值以避免覆蓋預設值
