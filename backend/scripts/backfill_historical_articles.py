@@ -115,11 +115,16 @@ async def main():
                         success = True  # Move on if LLM returns None on structural error
                 except Exception as e:
                     err_msg = str(e).lower()
-                    if "429" in err_msg or "rate limit" in err_msg:
+                    # Include the message of any underlying cause (e.g. rate limit error wrapped in APIConnectionError)
+                    cause_msg = str(e.__cause__).lower() if getattr(e, "__cause__", None) else ""
+                    combined_msg = f"{err_msg} | {cause_msg}"
+                    if "429" in combined_msg or "rate limit" in combined_msg:
                         # Extract sleep time or use default (5 minutes)
                         sleep_time = 300
                         # Try to match e.g. "try again in 5m28.4928s" or "4m53.0688s"
-                        match = re.search(r"try again in (?:([0-9]+)m)?(?:([0-9\.]+)s)?", err_msg)
+                        match = re.search(
+                            r"try again in (?:([0-9]+)m)?(?:([0-9\.]+)s)?", combined_msg
+                        )
                         if match:
                             m_group = match.group(1)
                             s_group = match.group(2)

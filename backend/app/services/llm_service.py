@@ -68,7 +68,9 @@ class LLMService:
         except APIStatusError as exc:
             if _is_retryable_status(exc):
                 logger.warning(f"Retryable HTTP {exc.status_code} from Groq for {context}: {exc}")
-                raise APIConnectionError(request=exc.request) from exc  # re-raise as retryable
+                raise APIConnectionError(
+                    message=str(exc), request=exc.request
+                ) from exc  # re-raise as retryable
             logger.error(f"Non-retryable Groq API error ({exc.status_code}) for {context}: {exc}")
             raise
 
