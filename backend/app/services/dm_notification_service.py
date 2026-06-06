@@ -311,6 +311,7 @@ class DMNotificationService:
                                 article_depth = tech_depth_service.estimate_article_depth(
                                     content=getattr(article, "ai_summary", "") or "",
                                     title=article.title or "",
+                                    tinkering_index=article.tinkering_index,
                                 )
 
                             # Check if article meets user's threshold

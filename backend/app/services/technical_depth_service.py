@@ -331,7 +331,9 @@ class TechnicalDepthService:
         return TechnicalDepthLevel.get_all_levels()
 
     @staticmethod
-    def estimate_article_depth(content: str, title: str = "") -> str:
+    def estimate_article_depth(
+        content: str, title: str = "", tinkering_index: Optional[int] = None
+    ) -> str:
         """
         Estimate the technical depth of an article based on its content.
         This is a simple heuristic-based approach.
@@ -339,10 +341,22 @@ class TechnicalDepthService:
         Args:
             content: Article content
             title: Article title
+            tinkering_index: Optional tinkering index (1-5) of the article. If provided,
+                             maps directly to technical depth level.
 
         Returns:
             Estimated technical depth level
         """
+        if tinkering_index is not None:
+            if tinkering_index <= 2:
+                return TechnicalDepthLevel.BASIC.value
+            elif tinkering_index == 3:
+                return TechnicalDepthLevel.INTERMEDIATE.value
+            elif tinkering_index == 4:
+                return TechnicalDepthLevel.ADVANCED.value
+            elif tinkering_index == 5:
+                return TechnicalDepthLevel.EXPERT.value
+
         # Simple keyword-based heuristic
         text = (title + " " + content).lower()
 

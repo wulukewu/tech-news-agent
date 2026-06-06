@@ -476,6 +476,53 @@ async def background_fetch_job():
             except Exception as exc:
                 logger.error("Proactive recommendation job failed: %s", exc, exc_info=True)
 
+        # Stage 5.5: Self-healing background backfill for historical articles
+        try:
+            logger.info("Starting automated background backfill for historical articles...")
+            backfill_resp = (
+                supabase.client.table("articles")
+                .select("id, title, url, published_at, tinkering_index, ai_summary, feed_id")
+                .is_("actionable_takeaway", "null")
+                .order("published_at", desc=True)
+                .limit(5)
+                .execute()
+            )
+            articles_to_backfill = backfill_resp.data or []
+            if articles_to_backfill:
+                logger.info(
+                    f"Found {len(articles_to_backfill)} articles needing backfill. Processing..."
+                )
+                for idx, a in enumerate(articles_to_backfill):
+                    if idx > 0:
+                        await asyncio.sleep(2)
+
+                    from app.schemas.article import ArticleSchema
+
+                    article_obj = ArticleSchema(
+                        id=a["id"],
+                        title=a["title"],
+                        url=a["url"],
+                        feed_id=a["feed_id"],
+                        feed_name="",
+                        category="",
+                        content_preview=a.get("ai_summary") or "",
+                    )
+                    analysis = await llm.evaluate_article(article_obj)
+                    if analysis:
+                        supabase.client.table("articles").update(
+                            {
+                                "actionable_takeaway": analysis.actionable_takeaway,
+                                "content_type": analysis.content_type,
+                            }
+                        ).eq("id", a["id"]).execute()
+                logger.info(
+                    f"Automated backfill successfully completed for {len(articles_to_backfill)} articles."
+                )
+        except Exception as bf_err:
+            logger.warning(
+                f"Automated background backfill failed (will retry in next run): {bf_err}"
+            )
+
         # Stage 6: Log final statistics (Requirement 12.7)
         job_end_time = datetime.now(UTC)
         job_duration = (job_end_time - job_start_time).total_seconds()
