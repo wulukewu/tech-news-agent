@@ -186,6 +186,11 @@ class LLMService:
                 content_type=content_type,
             )
 
+        except (RateLimitError, APIConnectionError, APITimeoutError) as e:
+            logger.error(
+                f"Rate limit or connection error during evaluation of '{article.title}': {e}"
+            )
+            raise
         except Exception as e:
             logger.warning(
                 f"Failed to evaluate article '{article.title}', returning None. Error: {e}"
