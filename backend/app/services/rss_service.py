@@ -315,7 +315,7 @@ class RSSService:
 
         # Step 4: Enrich articles with short/missing content by scraping the full page
         articles_to_scrape = [
-            a for a in new_articles if not a.content_preview or len(a.content_preview) < 200
+            a for a in new_articles if not a.content_preview or len(a.content_preview) < 1500
         ]
         if articles_to_scrape:
             logger.info(
@@ -334,7 +334,9 @@ class RSSService:
             await asyncio.gather(*[_enrich(a) for a in articles_to_scrape], return_exceptions=True)
 
             enriched = sum(
-                1 for a in articles_to_scrape if a.content_preview and len(a.content_preview) >= 200
+                1
+                for a in articles_to_scrape
+                if a.content_preview and len(a.content_preview) >= 1500
             )
             logger.info(f"Web scraping enriched {enriched}/{len(articles_to_scrape)} articles")
 
