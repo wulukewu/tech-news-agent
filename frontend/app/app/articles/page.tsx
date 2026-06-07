@@ -17,6 +17,7 @@ import { SortSelector, type SortOption } from './components/SortSelector';
 import { CategoryFilter } from '@/components/CategoryFilter';
 import { SearchBar } from '@/components/SearchBar';
 import { useI18n } from '@/contexts/I18nContext';
+import { cn } from '@/lib/utils';
 import type { Article } from '@/types/article';
 
 function DashboardContent() {
@@ -34,6 +35,17 @@ function DashboardContent() {
   // View mode and sort state
   const [viewMode, setViewMode] = useState<ViewMode>('card');
   const [sortOption, setSortOption] = useState<SortOption>('latest');
+
+  // Sticky header scroll detection
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 80);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleAnalyze = (articleId: string) => {
     const article = filteredArticles.find((a) => a.id === articleId);
@@ -171,12 +183,29 @@ function DashboardContent() {
 
       <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-6">
         {/* Filters and Controls */}
-        <div className="space-y-2">
-          <SearchBar
-            onSearch={handleSearch}
-            placeholder={t('forms.placeholders.search-articles')}
-          />
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+        <div
+          className={cn(
+            'sticky top-16 z-30 transition-all duration-300 ease-in-out -mx-4 px-4 md:-mx-6 md:px-6 lg:-mx-8 lg:px-8 border-b',
+            isScrolled
+              ? 'bg-background/95 backdrop-blur-md py-2 shadow-sm border-border/80'
+              : 'border-transparent py-0 bg-transparent'
+          )}
+        >
+          {/* Top row: Search Bar (Collapsed when scrolled) */}
+          <div
+            className={cn(
+              'transition-all duration-300 ease-in-out overflow-hidden',
+              isScrolled ? 'max-h-0 opacity-0 mb-0' : 'max-h-12 opacity-100 mb-2'
+            )}
+          >
+            <SearchBar
+              onSearch={handleSearch}
+              placeholder={t('forms.placeholders.search-articles')}
+            />
+          </div>
+
+          {/* Middle row: Tabs + Sort/View (Always visible, sticky) */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 justify-between">
             <TabsList className="grid w-full grid-cols-3 sm:inline-flex sm:w-auto">
               <TabsTrigger value="all">{t('ui.all')}</TabsTrigger>
               <TabsTrigger value="saved">{t('ui.saved')}</TabsTrigger>
@@ -187,13 +216,22 @@ function DashboardContent() {
               <ViewModeSelector value={viewMode} onChange={setViewMode} />
             </div>
           </div>
-          <CategoryFilter
-            categories={categories}
-            selectedCategories={selectedCategories}
-            onToggleCategory={toggleCategory}
-            onClearAll={deselectAllCategories}
-            loading={loadingCategories}
-          />
+
+          {/* Bottom row: Category Filter (Collapsed when scrolled) */}
+          <div
+            className={cn(
+              'transition-all duration-300 ease-in-out overflow-hidden',
+              isScrolled ? 'max-h-0 opacity-0 mt-0' : 'max-h-[300px] opacity-100 mt-2'
+            )}
+          >
+            <CategoryFilter
+              categories={categories}
+              selectedCategories={selectedCategories}
+              onToggleCategory={toggleCategory}
+              onClearAll={deselectAllCategories}
+              loading={loadingCategories}
+            />
+          </div>
         </div>
 
         <TabsContent value="all" className="mt-6">
