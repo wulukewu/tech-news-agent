@@ -66,7 +66,7 @@ cp .env.example .env
 # Edit .env with your credentials
 
 # 3. Initialize database
-# Run backend/scripts/init_supabase.sql in Supabase SQL Editor
+# Run backend/scripts/init_complete.sql in Supabase SQL Editor
 
 # 4. Start services
 docker compose up -d
@@ -141,18 +141,18 @@ SUPABASE_KEY=your-service-role-key
 # Groq AI
 GROQ_API_KEY=your-groq-api-key
 
-# JWT Authentication
-JWT_SECRET_KEY=your-secret-key-here   # openssl rand -hex 32
+# JWT Configuration
+JWT_SECRET=your-secret-key-here   # openssl rand -hex 32
 JWT_ALGORITHM=HS256
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+JWT_EXPIRATION_DAYS=7
 
 # Discord OAuth (for web login)
 DISCORD_CLIENT_ID=your-client-id
 DISCORD_CLIENT_SECRET=your-client-secret
-DISCORD_REDIRECT_URI=http://localhost:3000/auth/callback
+DISCORD_REDIRECT_URI=http://localhost:8000/api/auth/discord/callback
 
-# Frontend
-NEXT_PUBLIC_API_URL=http://localhost:8000
+# Frontend (Next.js server-side)
+API_BASE_URL=http://localhost:8000
 ```
 
 ### Optional

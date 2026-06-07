@@ -66,7 +66,7 @@ cp .env.example .env
 # 編輯 .env 填入你的憑證
 
 # 3. 初始化資料庫
-# 在 Supabase SQL 編輯器中執行 backend/scripts/init_supabase.sql
+# 在 Supabase SQL 編輯器中執行 backend/scripts/init_complete.sql
 
 # 4. 啟動服務
 docker compose up -d
@@ -141,18 +141,18 @@ SUPABASE_KEY=your-service-role-key
 # Groq AI
 GROQ_API_KEY=your-groq-api-key
 
-# JWT 認證
-JWT_SECRET_KEY=your-secret-key-here   # openssl rand -hex 32
+# JWT 認證配置
+JWT_SECRET=your-secret-key-here   # openssl rand -hex 32
 JWT_ALGORITHM=HS256
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+JWT_EXPIRATION_DAYS=7
 
 # Discord OAuth（網頁登入用）
 DISCORD_CLIENT_ID=your-client-id
 DISCORD_CLIENT_SECRET=your-client-secret
-DISCORD_REDIRECT_URI=http://localhost:3000/auth/callback
+DISCORD_REDIRECT_URI=http://localhost:8000/api/auth/discord/callback
 
-# 前端
-NEXT_PUBLIC_API_URL=http://localhost:8000
+# 前端（Next.js 伺服器端環境變數）
+API_BASE_URL=http://localhost:8000
 ```
 
 ### 可選
