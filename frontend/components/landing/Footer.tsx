@@ -2,6 +2,7 @@
 
 import { Logo } from '@/components/Logo';
 import { LanguageToggle } from '@/components/LanguageToggle';
+import { Github } from 'lucide-react';
 
 const legalLinks = [
   { label: 'Privacy Policy', href: '/privacy' },
@@ -23,6 +24,16 @@ export function Footer() {
         </div>
 
         <div className="flex items-center gap-6 text-sm text-muted-foreground">
+          <a
+            href="https://github.com/wulukewu/tech-news-agent"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-foreground transition-colors flex items-center gap-1.5"
+            aria-label="GitHub Repository"
+          >
+            <Github className="h-4 w-4" />
+            <span>GitHub</span>
+          </a>
           {legalLinks.map((link) => (
             <a
               key={link.label}
