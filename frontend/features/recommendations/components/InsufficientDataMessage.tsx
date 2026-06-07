@@ -60,7 +60,7 @@ export function InsufficientDataMessage({
 
         <div className="flex flex-col sm:flex-row gap-3">
           <Button asChild size="lg" className="gap-2">
-            <Link href="/articles">
+            <Link href="/app/articles">
               <Star className="h-4 w-4" />
               開始評分文章
             </Link>

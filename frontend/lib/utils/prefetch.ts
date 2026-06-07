@@ -185,12 +185,12 @@ export class IntelligentPrefetcher {
 
     // Analyze common navigation patterns
     const patterns: Record<string, string[]> = {
-      '/articles': ['/recommendations', '/reading-list', '/subscriptions'],
-      '/recommendations': ['/articles', '/reading-list'],
-      '/reading-list': ['/articles', '/recommendations'],
-      '/subscriptions': ['/articles', '/system-status'],
-      '/analytics': ['/articles', '/subscriptions'],
-      '/settings': ['/articles', '/subscriptions'],
+      '/app/articles': ['/app/recommendations', '/app/reading-list', '/app/subscriptions'],
+      '/app/recommendations': ['/app/articles', '/app/reading-list'],
+      '/app/reading-list': ['/app/articles', '/app/recommendations'],
+      '/app/subscriptions': ['/app/articles', '/app/system-status'],
+      '/app/analytics': ['/app/articles', '/app/subscriptions'],
+      '/app/settings': ['/app/articles', '/app/subscriptions'],
     };
 
     // Get base predictions
@@ -250,7 +250,7 @@ export class IntelligentPrefetcher {
       {
         key: 'reading-list',
         priority: PrefetchPriority.HIGH,
-        condition: () => ['/articles', '/'].includes(window.location.pathname),
+        condition: () => ['/app/articles', '/'].includes(window.location.pathname),
         action: async () => {
           await this.queryClient.prefetchQuery({
             queryKey: ['reading-list'],
@@ -265,7 +265,7 @@ export class IntelligentPrefetcher {
       {
         key: 'recommendations',
         priority: PrefetchPriority.MEDIUM,
-        condition: () => ['/articles', '/reading-list'].includes(window.location.pathname),
+        condition: () => ['/app/articles', '/app/reading-list'].includes(window.location.pathname),
         action: async () => {
           await this.queryClient.prefetchQuery({
             queryKey: ['recommendations'],
@@ -281,7 +281,8 @@ export class IntelligentPrefetcher {
       {
         key: 'subscriptions',
         priority: PrefetchPriority.MEDIUM,
-        condition: () => ['/articles', '/recommendations'].includes(window.location.pathname),
+        condition: () =>
+          ['/app/articles', '/app/recommendations'].includes(window.location.pathname),
         action: async () => {
           await this.queryClient.prefetchQuery({
             queryKey: ['subscriptions'],
@@ -296,7 +297,7 @@ export class IntelligentPrefetcher {
       {
         key: 'system-status',
         priority: PrefetchPriority.LOW,
-        condition: () => this.userBehavior.pageViews.includes('/system-status'),
+        condition: () => this.userBehavior.pageViews.includes('/app/system-status'),
         action: async () => {
           await this.queryClient.prefetchQuery({
             queryKey: ['system', 'status'],

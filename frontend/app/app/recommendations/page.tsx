@@ -199,7 +199,7 @@ export default function RecommendationsPage() {
           <h3 className="text-lg font-semibold mb-2">{t('recommendations.no-recommendations')}</h3>
           <p className="text-muted-foreground mb-4">{t('recommendations.rate-more-articles')}</p>
           <Button asChild className="transition-all duration-200 hover:scale-[1.02]">
-            <a href="/articles">{t('recommendations.go-to-articles')}</a>
+            <a href="/app/articles">{t('recommendations.go-to-articles')}</a>
           </Button>
         </div>
       </div>

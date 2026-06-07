@@ -255,7 +255,7 @@ function ComprehensiveTestApp() {
 
       {/* Navigation */}
       <nav data-testid="navigation">
-        <a href="/articles" data-testid="nav-articles">
+        <a href="/app/articles" data-testid="nav-articles">
           {t('nav.articles')}
         </a>
         <a href="/reading-list" data-testid="nav-reading-list">
