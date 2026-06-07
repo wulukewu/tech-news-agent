@@ -28,8 +28,8 @@ function DashboardContent() {
   const [savedArticles, setSavedArticles] = useState<Article[]>([]);
   const [loadingSaved, setLoadingSaved] = useState(false);
 
-  // Get tab from URL, default to 'all'
-  const currentTab = searchParams.get('tab') || 'all';
+  // Local tab state
+  const [currentTab, setCurrentTab] = useState('all');
 
   // View mode and sort state
   const [viewMode, setViewMode] = useState<ViewMode>('card');
@@ -86,9 +86,7 @@ function DashboardContent() {
 
   // Handle tab change
   const handleTabChange = (value: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('tab', value);
-    router.push(`/app/articles?${params.toString()}`, { scroll: false });
+    setCurrentTab(value);
 
     // Load saved articles when switching to saved tab
     if (value === 'saved') {

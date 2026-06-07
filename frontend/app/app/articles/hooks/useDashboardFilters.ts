@@ -32,12 +32,6 @@ export function useDashboardFilters({ categories }: UseDashboardFiltersProps) {
   const updateURL = (newCategories: string[], newSearch: string) => {
     const params = new URLSearchParams();
 
-    // Preserve the current tab parameter if present
-    const currentTab = searchParams.get('tab');
-    if (currentTab) {
-      params.set('tab', currentTab);
-    }
-
     if (newCategories.length > 0 && newCategories.length < categories.length) {
       params.set('categories', newCategories.join(','));
     }
