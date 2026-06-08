@@ -77,8 +77,15 @@ class TechNewsBot(commands.Bot):
             from app.core.config import get_settings
 
             settings = get_settings()
-            if not settings.enable_dm_listener and interaction.guild_id:
-                if not settings.dev_guild_id or interaction.guild_id != int(settings.dev_guild_id):
+            if not settings.enable_dm_listener:
+                if not interaction.guild_id:
+                    logger.debug(
+                        "Ignoring DM interaction in local dev mode due to enable_dm_listener isolation."
+                    )
+                    return
+                elif not settings.dev_guild_id or interaction.guild_id != int(
+                    settings.dev_guild_id
+                ):
                     logger.debug(
                         f"Ignoring guild interaction from {interaction.guild_id} in local dev mode due to dev_guild_id isolation."
                     )
