@@ -17,15 +17,13 @@ async def test_set_notification_time_modal_validation():
 
     mock_interaction = AsyncMock(spec=discord.Interaction)
     mock_interaction.user.id = 123456789
-    mock_interaction.response.defer = AsyncMock()
-    mock_interaction.followup.send = AsyncMock()
+    mock_interaction.response.send_message = AsyncMock()
 
     # Test invalid time format
     modal.notification_time = MagicMock(value="99:99")
     await modal.on_submit(mock_interaction)
 
-    mock_interaction.response.defer.assert_called_once()
-    mock_interaction.followup.send.assert_called_once_with(
+    mock_interaction.response.send_message.assert_called_once_with(
         "❌ 通知時間格式錯誤，請使用 HH:MM（例如 09:30）", ephemeral=True
     )
 
@@ -41,7 +39,7 @@ async def test_set_notification_time_modal_submit():
 
     mock_interaction = AsyncMock(spec=discord.Interaction)
     mock_interaction.user.id = 123456789
-    mock_interaction.response.defer = AsyncMock()
+    mock_interaction.response.send_message = AsyncMock()
     mock_interaction.followup.send = AsyncMock()
 
     with (

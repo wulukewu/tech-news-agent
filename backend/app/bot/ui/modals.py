@@ -186,15 +186,15 @@ class SetNotificationTimeModal(discord.ui.Modal, title="設定通知時間"):
         self.supabase_service = supabase_service
 
     async def on_submit(self, interaction: discord.Interaction) -> None:
-        await interaction.response.defer(ephemeral=True)
-
         import re
 
         _time_re = re.compile(r"^([01]?\d|2[0-3]):([0-5]\d)$")
         time_val = self.notification_time.value.strip()
 
         if not _time_re.match(time_val):
-            await interaction.followup.send("❌ 通知時間格式錯誤，請使用 HH:MM（例如 09:30）", ephemeral=True)
+            await interaction.response.send_message(
+                "❌ 通知時間格式錯誤，請使用 HH:MM（例如 09:30）", ephemeral=True
+            )
             return
 
         h, m = map(int, time_val.split(":"))
@@ -218,17 +218,20 @@ class SetNotificationTimeModal(discord.ui.Modal, title="設定通知時間"):
             updates = UpdateUserNotificationPreferencesRequest(notification_time=formatted_time)
             await preference_service.update_preferences(user_uuid, updates, source="discord")
 
-            embed = discord.Embed(title="⏰ 通知時間已更新", color=discord.Color.green())
-            embed.add_field(name="通知時間", value=formatted_time, inline=True)
-            await interaction.followup.send(embed=embed, ephemeral=True)
-
-            # Re-render dashboard
+            # Re-render dashboard first
             preferences = await preference_service.get_user_preferences(user_uuid)
             from app.bot.cogs.notification_settings import NotificationSettingsControlView
 
             view = NotificationSettingsControlView(preferences.dm_enabled, self.supabase_service)
             await view._refresh_dashboard(interaction, user_uuid, preference_service)
 
+            embed = discord.Embed(title="⏰ 通知時間已更新", color=discord.Color.green())
+            embed.add_field(name="通知時間", value=formatted_time, inline=True)
+            await interaction.followup.send(embed=embed, ephemeral=True)
+
         except Exception as e:
             logger.error(f"SetNotificationTimeModal error: {e}", exc_info=True)
-            await interaction.followup.send("❌ 設定失敗，請稍後再試。", ephemeral=True)
+            try:
+                await interaction.response.send_message("❌ 設定失敗，請稍後再試。", ephemeral=True)
+            except discord.InteractionResponded:
+                await interaction.followup.send("❌ 設定失敗，請稍後再試。", ephemeral=True)

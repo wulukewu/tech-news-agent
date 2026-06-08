@@ -45,7 +45,6 @@ class NotificationFrequencySelect(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer(ephemeral=True)
         try:
             supabase_service = SupabaseService()
             discord_id = str(interaction.user.id)
@@ -58,6 +57,11 @@ class NotificationFrequencySelect(discord.ui.Select):
             updates = UpdateUserNotificationPreferencesRequest(frequency=selected_frequency)
             await preference_service.update_preferences(user_id, updates, source="discord")
 
+            # Re-render dashboard first
+            preferences = await preference_service.get_user_preferences(user_id)
+            view = NotificationSettingsControlView(preferences.dm_enabled, supabase_service)
+            await view._refresh_dashboard(interaction, user_id, preference_service)
+
             frequency_labels = {
                 "daily": "每日推送",
                 "weekly": "每週推送",
@@ -67,14 +71,12 @@ class NotificationFrequencySelect(discord.ui.Select):
             await interaction.followup.send(
                 f"✅ 通知頻率已更新為：{frequency_labels.get(selected_frequency)}！", ephemeral=True
             )
-
-            # Re-render dashboard
-            preferences = await preference_service.get_user_preferences(user_id)
-            view = NotificationSettingsControlView(preferences.dm_enabled, supabase_service)
-            await view._refresh_dashboard(interaction, user_id, preference_service)
         except Exception as e:
             logger.error(f"Error in NotificationFrequencySelect callback: {e}", exc_info=True)
-            await interaction.followup.send("❌ 設定頻率失敗，請稍後再試。", ephemeral=True)
+            try:
+                await interaction.response.send_message("❌ 設定頻率失敗，請稍後再試。", ephemeral=True)
+            except discord.InteractionResponded:
+                await interaction.followup.send("❌ 設定頻率失敗，請稍後再試。", ephemeral=True)
 
 
 class NotificationTimezoneSelect(discord.ui.Select):
@@ -103,7 +105,6 @@ class NotificationTimezoneSelect(discord.ui.Select):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        await interaction.response.defer(ephemeral=True)
         try:
             supabase_service = SupabaseService()
             discord_id = str(interaction.user.id)
@@ -116,14 +117,18 @@ class NotificationTimezoneSelect(discord.ui.Select):
             updates = UpdateUserNotificationPreferencesRequest(timezone=selected_timezone)
             await preference_service.update_preferences(user_id, updates, source="discord")
 
-            await interaction.followup.send(f"✅ 時區已成功更新為：`{selected_timezone}`！", ephemeral=True)
-
+            # Re-render dashboard first
             preferences = await preference_service.get_user_preferences(user_id)
             view = NotificationSettingsControlView(preferences.dm_enabled, supabase_service)
             await view._refresh_dashboard(interaction, user_id, preference_service)
+
+            await interaction.followup.send(f"✅ 時區已成功更新為：`{selected_timezone}`！", ephemeral=True)
         except Exception as e:
             logger.error(f"Error in NotificationTimezoneSelect callback: {e}", exc_info=True)
-            await interaction.followup.send("❌ 設定時區失敗，請稍後再試。", ephemeral=True)
+            try:
+                await interaction.response.send_message("❌ 設定時區失敗，請稍後再試。", ephemeral=True)
+            except discord.InteractionResponded:
+                await interaction.followup.send("❌ 設定時區失敗，請稍後再試。", ephemeral=True)
 
 
 class NotificationSettingsControlView(discord.ui.View):
@@ -167,7 +172,6 @@ class NotificationSettingsControlView(discord.ui.View):
         self.add_item(NotificationTimezoneSelect(row=2))
 
     async def _toggle_callback(self, interaction: discord.Interaction):
-        await interaction.response.defer(ephemeral=True)
         try:
             discord_id = str(interaction.user.id)
             user_id = await self.supabase_service.get_or_create_user(discord_id)
@@ -181,14 +185,18 @@ class NotificationSettingsControlView(discord.ui.View):
             updates = UpdateUserNotificationPreferencesRequest(dm_enabled=new_dm_enabled)
             await preference_service.update_preferences(user_id, updates, source="discord")
 
+            # Update the dashboard message first
+            await self._refresh_dashboard(interaction, user_id, preference_service)
+
             await interaction.followup.send(
                 f"✅ 已成功{'開啟' if new_dm_enabled else '關閉'} DM 通知！", ephemeral=True
             )
-            # Update the dashboard message
-            await self._refresh_dashboard(interaction, user_id, preference_service)
         except Exception as e:
             logger.error(f"Error in toggle notifications button: {e}", exc_info=True)
-            await interaction.followup.send("❌ 處理失敗，請稍後再試。", ephemeral=True)
+            try:
+                await interaction.response.send_message("❌ 處理失敗，請稍後再試。", ephemeral=True)
+            except discord.InteractionResponded:
+                await interaction.followup.send("❌ 處理失敗，請稍後再試。", ephemeral=True)
 
     async def _time_callback(self, interaction: discord.Interaction):
         # Trigger notification time config modal
@@ -287,7 +295,7 @@ class NotificationSettingsControlView(discord.ui.View):
         try:
             await interaction.response.edit_message(embed=embed, view=new_view)
         except discord.InteractionResponded:
-            await interaction.message.edit(embed=embed, view=new_view)
+            await interaction.edit_original_response(embed=embed, view=new_view)
 
 
 class NotificationSettings(commands.Cog):
