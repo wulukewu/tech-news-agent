@@ -72,7 +72,7 @@ class QACommands(commands.Cog):
                 user_id=str(user_uuid),
                 thread_id=str(thread.id),
                 query=question,
-                title=thread.name or f"Ask {question[:30]}",
+                title=getattr(thread, "name", None) or f"Ask {question[:30]}",
             )
 
             for chunk in _chunk_content(result["answer"]):

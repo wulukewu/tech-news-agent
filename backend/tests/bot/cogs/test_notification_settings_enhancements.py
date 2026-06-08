@@ -140,3 +140,67 @@ async def test_thread_qa_listener_isolation():
         ) as mock_get_user:
             await listener.on_message(mock_message)
             mock_get_user.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_qa_commands_ask_in_dm_channel():
+    """Test /ask command when executed in a DM channel (no name attribute)."""
+    from app.bot.cogs.qa_commands import QACommands
+
+    bot = MagicMock()
+    cog = QACommands(bot)
+
+    mock_interaction = AsyncMock(spec=discord.Interaction)
+    mock_interaction.user.id = 123456789
+    mock_interaction.response.defer = AsyncMock()
+    mock_interaction.followup.send = AsyncMock()
+
+    # Mock DM Channel
+    mock_dm_channel = AsyncMock(spec=discord.DMChannel)
+    mock_dm_channel.id = 987654321
+    mock_dm_channel.send = AsyncMock()
+    # Ensure DMChannel does NOT have a 'name' attribute
+    if hasattr(mock_dm_channel, "name"):
+        delattr(mock_dm_channel, "name")
+
+    user_uuid = uuid4()
+
+    with (
+        patch(
+            "app.bot.cogs.qa_commands.ensure_user_registered", return_value=user_uuid
+        ) as mock_register,
+        patch(
+            "app.bot.cogs.qa_commands.ensure_discussion_thread",
+            return_value=(mock_dm_channel, False),
+        ) as mock_ensure_thread,
+        patch("app.bot.cogs.qa_commands.ThreadMemoryService") as mock_memory_service_class,
+    ):
+        mock_memory_service = AsyncMock()
+        mock_memory_service.process_thread_query.return_value = {
+            "answer": "This is a test answer from AI assistant."
+        }
+        mock_memory_service_class.return_value = mock_memory_service
+
+        await cog.ask.callback(cog, mock_interaction, "hello")
+
+        # Verify registration and thread utilities were called
+        mock_register.assert_called_once_with(mock_interaction)
+        mock_ensure_thread.assert_called_once_with(
+            interaction=mock_interaction,
+            thread_name="ask-hello",
+        )
+
+        # Verify thread.send was called
+        mock_dm_channel.send.assert_any_call("❓ **問題**：hello")
+        mock_dm_channel.send.assert_any_call("This is a test answer from AI assistant.")
+
+        # Verify followup.send was called
+        mock_interaction.followup.send.assert_called_once_with("✅ 已在此討論串處理你的問題。", ephemeral=True)
+
+        # Verify process_thread_query was called with correct title fallback (Ask hello)
+        mock_memory_service.process_thread_query.assert_called_once_with(
+            user_id=str(user_uuid),
+            thread_id=str(mock_dm_channel.id),
+            query="hello",
+            title="Ask hello",
+        )
