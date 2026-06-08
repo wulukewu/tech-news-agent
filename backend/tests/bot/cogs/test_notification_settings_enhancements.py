@@ -195,7 +195,7 @@ async def test_qa_commands_ask_in_dm_channel():
         mock_dm_channel.send.assert_any_call("This is a test answer from AI assistant.")
 
         # Verify followup.send was called
-        mock_interaction.followup.send.assert_called_once_with("✅ 已在此討論串處理你的問題。", ephemeral=True)
+        mock_interaction.followup.send.assert_called_once_with("✅ 已在此對話中處理你的問題。", ephemeral=True)
 
         # Verify process_thread_query was called with correct title fallback (Ask hello)
         mock_memory_service.process_thread_query.assert_called_once_with(

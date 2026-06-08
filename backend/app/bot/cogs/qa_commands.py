@@ -64,7 +64,9 @@ class QACommands(commands.Cog):
                     ephemeral=True,
                 )
             else:
-                await interaction.followup.send("✅ 已在此討論串處理你的問題。", ephemeral=True)
+                is_dm = isinstance(thread, discord.DMChannel)
+                msg = "✅ 已在此對話中處理你的問題。" if is_dm else "✅ 已在此討論串處理你的問題。"
+                await interaction.followup.send(msg, ephemeral=True)
 
             await thread.send(f"❓ **問題**：{question}")
             memory_service = ThreadMemoryService()
