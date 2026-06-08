@@ -397,6 +397,51 @@ class TechNewsBot(commands.Bot):
                             f"Error in intercepted PersistentDigestRatingSelect: {e}", exc_info=True
                         )
 
+                elif custom_id.startswith("proactive_fb_"):
+                    try:
+                        parts = custom_id.split("_")
+                        if len(parts) >= 5:
+                            direction = parts[2]
+                            user_id = parts[3]
+                            category = "_".join(parts[4:])
+
+                            await interaction.response.defer(ephemeral=True)
+
+                            from app.bot.cogs.proactive_dm import FEEDBACK_DELTA
+                            from app.qa_agent.proactive_learning.preference_model import (
+                                PreferenceModel,
+                            )
+
+                            positive = direction == "up"
+                            delta = FEEDBACK_DELTA if positive else -FEEDBACK_DELTA
+
+                            pref = PreferenceModel()
+                            await pref.apply_adjustments(user_id, {category: delta})
+
+                            # Remove buttons after successful feedback
+                            try:
+                                await interaction.message.edit(view=None)
+                            except Exception:
+                                pass
+
+                            dir_text = "增加" if positive else "減少"
+                            await interaction.followup.send(
+                                f"✅ 已記錄，會{dir_text} **{category}** 的推薦頻率。",
+                                ephemeral=True,
+                            )
+                            return
+                        else:
+                            logger.error(f"Invalid proactive_fb_ custom_id format: {custom_id}")
+                    except Exception as e:
+                        logger.error(
+                            f"Error in stateless proactive_fb_ callback: {e}", exc_info=True
+                        )
+                        try:
+                            await interaction.followup.send("❌ 處理偏好時發生錯誤，請稍後再試。", ephemeral=True)
+                        except Exception:
+                            pass
+                        return
+
         await super().on_interaction(interaction)
 
     async def on_ready(self):
