@@ -78,3 +78,11 @@ Or run these validation scripts directly:
 The application supports bilingual access (EN/ZH).
 - Translations are managed in `frontend/locales/` via `en-US.json` and `zh-TW.json`.
 - **Strict Sync Rule:** Any modification, addition, or deletion of UI/system texts MUST be synchronized in **both** translation files to ensure all keys remain identical and prevent translation omissions in production.
+
+---
+
+## Discord Bot Local Development Isolation
+
+To prevent local development bots and the production bot on Render (which use the same Discord Token) from competing for events and causing duplicate replies or `Interaction failed` errors, we use strict environment variables to isolate local instances:
+- **`ENABLE_DM_LISTENER=false`**: Local development environments MUST set this to `false` in `.env`. This ensures that local bots ignore all Discord DMs, DM commands, DM message listeners, thread QA follow-ups, and DM button interactions.
+- **`DEV_GUILD_ID`**: Set this to your test server ID. Local bots will only listen to commands and interactions originating from this specific guild/server, ignoring events from all production guilds.

@@ -72,4 +72,10 @@ class ThreadQAListener(commands.Cog):
 
 
 async def setup(bot: commands.Bot) -> None:
+    from app.core.config import settings
+
+    if not getattr(settings, "enable_dm_listener", True):
+        logger.info("ThreadQAListener disabled via ENABLE_DM_LISTENER=false")
+        return
+
     await bot.add_cog(ThreadQAListener(bot))
