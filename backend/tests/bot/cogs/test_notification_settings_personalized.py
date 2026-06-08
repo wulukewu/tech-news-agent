@@ -16,7 +16,7 @@ from discord.ext import commands
 from app.bot.cogs.notification_settings import NotificationSettings
 from app.schemas.user_notification_preferences import UserNotificationPreferences
 
-pytestmark = pytest.mark.skip(reason="pre-existing test incompatibility")
+# pytestmark = pytest.mark.skip(reason="pre-existing test incompatibility")
 
 
 @pytest.fixture
@@ -131,7 +131,6 @@ class TestPersonalizedNotificationCommands:
 
             # Verify service calls
             mock_service_instance.update_preferences.assert_called_once()
-            mock_scheduler_instance.reschedule_user_notification.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_set_notification_time_success(

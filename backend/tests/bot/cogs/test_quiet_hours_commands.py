@@ -5,18 +5,18 @@ Tests the Discord slash commands for managing quiet hours settings.
 """
 
 from datetime import time
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from uuid import uuid4
 
 import discord
 import pytest
 
-from app.bot.cogs.notification_settings import NotificationSettings
+from app.bot.cogs.quiet_hours_settings import QuietHoursSettings as QuietHoursSettingsCog
 from app.services.quiet_hours_service import QuietHoursSettings
 
-pytestmark = pytest.mark.skip(
-    reason="NotificationSettings does not have set_quiet_hours (moved to QuietHoursSettings)"
-)
+# pytestmark = pytest.mark.skip(
+#     reason="NotificationSettings does not have set_quiet_hours (moved to QuietHoursSettings)"
+# )
 
 
 class TestQuietHoursCommands:
@@ -36,8 +36,8 @@ class TestQuietHoursCommands:
 
     @pytest.fixture
     def cog(self, mock_bot, mock_supabase_service):
-        """Create NotificationSettings cog with mocked dependencies."""
-        return NotificationSettings(mock_bot, mock_supabase_service)
+        """Create QuietHoursSettings cog with mocked dependencies."""
+        return QuietHoursSettingsCog(mock_bot, mock_supabase_service)
 
     @pytest.fixture
     def mock_interaction(self):
@@ -69,7 +69,7 @@ class TestQuietHoursCommands:
         self, cog, mock_interaction, sample_quiet_hours
     ):
         """Test /quiet-hours command with existing settings."""
-        with patch("app.bot.cogs.notification_settings.QuietHoursService") as mock_service_class:
+        with patch("app.services.quiet_hours_service.QuietHoursService") as mock_service_class:
             # Setup mock service
             mock_service = AsyncMock()
             mock_service.get_quiet_hours = AsyncMock(return_value=sample_quiet_hours)
@@ -77,7 +77,7 @@ class TestQuietHoursCommands:
             mock_service_class.return_value = mock_service
 
             # Execute command
-            await cog.quiet_hours(mock_interaction)
+            await cog.quiet_hours.callback(cog, mock_interaction)
 
             # Verify interaction
             mock_interaction.response.defer.assert_called_once_with(ephemeral=True)
@@ -106,7 +106,7 @@ class TestQuietHoursCommands:
             enabled=False,
         )
 
-        with patch("app.bot.cogs.notification_settings.QuietHoursService") as mock_service_class:
+        with patch("app.services.quiet_hours_service.QuietHoursService") as mock_service_class:
             # Setup mock service
             mock_service = AsyncMock()
             mock_service.get_quiet_hours = AsyncMock(return_value=None)
@@ -115,7 +115,7 @@ class TestQuietHoursCommands:
             mock_service_class.return_value = mock_service
 
             # Execute command
-            await cog.quiet_hours(mock_interaction)
+            await cog.quiet_hours.callback(cog, mock_interaction)
 
             # Verify service calls
             mock_service.get_quiet_hours.assert_called_once()
@@ -126,110 +126,114 @@ class TestQuietHoursCommands:
             mock_interaction.followup.send.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_set_quiet_hours_command_valid_input(self, cog, mock_interaction):
-        """Test /set-quiet-hours command with valid input."""
-        updated_quiet_hours = QuietHoursSettings(
-            id=uuid4(),
-            user_id=uuid4(),
-            start_time=time(22, 0),
-            end_time=time(8, 0),
-            timezone="UTC",
-            weekdays=[1, 2, 3, 4, 5, 6, 7],
-            enabled=True,
+    async def test_set_quiet_hours_command_modal(self, cog, mock_interaction):
+        """Test /set-quiet-hours command sends the modal."""
+        mock_interaction.response.send_modal = AsyncMock()
+        await cog.set_quiet_hours.callback(cog, mock_interaction)
+        mock_interaction.response.send_modal.assert_called_once()
+        modal = mock_interaction.response.send_modal.call_args[0][0]
+        from app.bot.ui.modals import SetQuietHoursModal
+
+        assert isinstance(modal, SetQuietHoursModal)
+
+    @pytest.mark.asyncio
+    async def test_set_quiet_hours_modal_validation_errors(self, mock_supabase_service):
+        """Test modal validation for invalid inputs."""
+        from app.bot.ui.modals import SetQuietHoursModal
+
+        modal = SetQuietHoursModal(mock_supabase_service)
+
+        mock_interaction = AsyncMock(spec=discord.Interaction)
+        mock_interaction.user.id = 123456789
+        mock_interaction.response.defer = AsyncMock()
+        mock_interaction.followup.send = AsyncMock()
+
+        # Test invalid start time format
+        modal.start_time = MagicMock(value="25:00")
+        modal.end_time = MagicMock(value="08:00")
+        modal.enabled = MagicMock(value="yes")
+        await modal.on_submit(mock_interaction)
+        mock_interaction.followup.send.assert_called_once_with(
+            "❌ 開始時間格式錯誤，請使用 HH:MM（例如 22:00）", ephemeral=True
         )
 
-        with patch("app.bot.cogs.notification_settings.QuietHoursService") as mock_service_class:
-            # Setup mock service
+        # Test invalid end time format
+        mock_interaction.followup.send.reset_mock()
+        modal.start_time = MagicMock(value="22:00")
+        modal.end_time = MagicMock(value="invalid")
+        modal.enabled = MagicMock(value="yes")
+        await modal.on_submit(mock_interaction)
+        mock_interaction.followup.send.assert_called_once_with(
+            "❌ 結束時間格式錯誤，請使用 HH:MM（例如 08:00）", ephemeral=True
+        )
+
+        # Test invalid enabled format
+        mock_interaction.followup.send.reset_mock()
+        modal.start_time = MagicMock(value="22:00")
+        modal.end_time = MagicMock(value="08:00")
+        modal.enabled = MagicMock(value="invalid")
+        await modal.on_submit(mock_interaction)
+        mock_interaction.followup.send.assert_called_once_with("❌ 啟用欄位請填 yes 或 no", ephemeral=True)
+
+    @pytest.mark.asyncio
+    async def test_set_quiet_hours_modal_submit_success(
+        self, mock_supabase_service, sample_quiet_hours
+    ):
+        """Test modal submit success with valid inputs."""
+        from app.bot.ui.modals import SetQuietHoursModal
+
+        modal = SetQuietHoursModal(mock_supabase_service)
+
+        mock_interaction = AsyncMock(spec=discord.Interaction)
+        mock_interaction.user.id = 123456789
+        mock_interaction.response.defer = AsyncMock()
+        mock_interaction.followup.send = AsyncMock()
+
+        modal.start_time = MagicMock(value="22:00")
+        modal.end_time = MagicMock(value="08:00")
+        modal.enabled = MagicMock(value="yes")
+
+        with patch("app.services.quiet_hours_service.QuietHoursService") as mock_service_class:
             mock_service = AsyncMock()
-            mock_service.update_quiet_hours = AsyncMock(return_value=updated_quiet_hours)
+            mock_service.update_quiet_hours.return_value = sample_quiet_hours
             mock_service_class.return_value = mock_service
 
-            # Create mock choice
-            mock_choice = Mock()
-            mock_choice.value = 1  # Enabled
+            await modal.on_submit(mock_interaction)
 
-            # Execute command
-            await cog.set_quiet_hours(mock_interaction, "22:00", "08:00", mock_choice)
-
-            # Verify interaction
-            mock_interaction.response.defer.assert_called_once_with(ephemeral=True)
+            mock_service.update_quiet_hours.assert_called_once_with(
+                user_id=mock_supabase_service.get_or_create_user.return_value,
+                start_time=time(22, 0),
+                end_time=time(8, 0),
+                enabled=True,
+            )
             mock_interaction.followup.send.assert_called_once()
-
-            # Verify service call
-            mock_service.update_quiet_hours.assert_called_once()
-            call_args = mock_service.update_quiet_hours.call_args
-            assert call_args[1]["start_time"] == time(22, 0)
-            assert call_args[1]["end_time"] == time(8, 0)
-            assert call_args[1]["enabled"] is True
-
-            # Check embed content
-            call_args = mock_interaction.followup.send.call_args
-            embed = call_args[1]["embed"]
+            embed = mock_interaction.followup.send.call_args[1]["embed"]
             assert embed.title == "🌙 勿擾時段已更新"
 
     @pytest.mark.asyncio
-    async def test_set_quiet_hours_command_invalid_time_format(self, cog, mock_interaction):
-        """Test /set-quiet-hours command with invalid time format."""
-        mock_choice = Mock()
-        mock_choice.value = 1
+    async def test_set_quiet_hours_modal_submit_error(self, mock_supabase_service):
+        """Test modal submit service error handling."""
+        from app.bot.ui.modals import SetQuietHoursModal
 
-        # Execute command with invalid time format
-        await cog.set_quiet_hours(mock_interaction, "25:00", "08:00", mock_choice)
+        modal = SetQuietHoursModal(mock_supabase_service)
 
-        # Verify error response
-        mock_interaction.response.defer.assert_called_once_with(ephemeral=True)
-        mock_interaction.followup.send.assert_called_once()
+        mock_interaction = AsyncMock(spec=discord.Interaction)
+        mock_interaction.user.id = 123456789
+        mock_interaction.response.defer = AsyncMock()
+        mock_interaction.followup.send = AsyncMock()
 
-        call_args = mock_interaction.followup.send.call_args
-        assert "❌ 開始時間格式錯誤" in call_args[0][0]
+        modal.start_time = MagicMock(value="22:00")
+        modal.end_time = MagicMock(value="08:00")
+        modal.enabled = MagicMock(value="yes")
 
-    @pytest.mark.asyncio
-    async def test_set_quiet_hours_command_invalid_end_time(self, cog, mock_interaction):
-        """Test /set-quiet-hours command with invalid end time format."""
-        mock_choice = Mock()
-        mock_choice.value = 1
-
-        # Execute command with invalid end time format
-        await cog.set_quiet_hours(mock_interaction, "22:00", "invalid", mock_choice)
-
-        # Verify error response
-        mock_interaction.followup.send.assert_called_once()
-        call_args = mock_interaction.followup.send.call_args
-        assert "❌ 結束時間格式錯誤" in call_args[0][0]
-
-    @pytest.mark.asyncio
-    async def test_set_quiet_hours_command_overnight_range(self, cog, mock_interaction):
-        """Test /set-quiet-hours command with overnight range."""
-        updated_quiet_hours = QuietHoursSettings(
-            id=uuid4(),
-            user_id=uuid4(),
-            start_time=time(23, 30),
-            end_time=time(7, 30),
-            timezone="UTC",
-            weekdays=[1, 2, 3, 4, 5, 6, 7],
-            enabled=True,
-        )
-
-        with patch("app.bot.cogs.notification_settings.QuietHoursService") as mock_service_class:
-            # Setup mock service
+        with patch("app.services.quiet_hours_service.QuietHoursService") as mock_service_class:
             mock_service = AsyncMock()
-            mock_service.update_quiet_hours = AsyncMock(return_value=updated_quiet_hours)
+            mock_service.update_quiet_hours.side_effect = Exception("Service error")
             mock_service_class.return_value = mock_service
 
-            # Create mock choice
-            mock_choice = Mock()
-            mock_choice.value = 1  # Enabled
+            await modal.on_submit(mock_interaction)
 
-            # Execute command
-            await cog.set_quiet_hours(mock_interaction, "23:30", "07:30", mock_choice)
-
-            # Verify response includes overnight notice
-            call_args = mock_interaction.followup.send.call_args
-            embed = call_args[1]["embed"]
-
-            # Check for overnight range field
-            overnight_field = next((field for field in embed.fields if "跨夜設定" in field.name), None)
-            assert overnight_field is not None
+            mock_interaction.followup.send.assert_called_once_with("❌ 設定失敗，請稍後再試。", ephemeral=True)
 
     @pytest.mark.asyncio
     async def test_toggle_quiet_hours_command_enable(
@@ -258,7 +262,7 @@ class TestQuietHoursCommands:
             enabled=True,
         )
 
-        with patch("app.bot.cogs.notification_settings.QuietHoursService") as mock_service_class:
+        with patch("app.services.quiet_hours_service.QuietHoursService") as mock_service_class:
             # Setup mock service
             mock_service = AsyncMock()
             mock_service.get_quiet_hours = AsyncMock(return_value=disabled_quiet_hours)
@@ -266,7 +270,7 @@ class TestQuietHoursCommands:
             mock_service_class.return_value = mock_service
 
             # Execute command
-            await cog.toggle_quiet_hours(mock_interaction)
+            await cog.toggle_quiet_hours.callback(cog, mock_interaction)
 
             # Verify service calls
             mock_service.get_quiet_hours.assert_called_once()
@@ -298,7 +302,7 @@ class TestQuietHoursCommands:
             enabled=False,
         )
 
-        with patch("app.bot.cogs.notification_settings.QuietHoursService") as mock_service_class:
+        with patch("app.services.quiet_hours_service.QuietHoursService") as mock_service_class:
             # Setup mock service
             mock_service = AsyncMock()
             mock_service.get_quiet_hours = AsyncMock(
@@ -308,7 +312,7 @@ class TestQuietHoursCommands:
             mock_service_class.return_value = mock_service
 
             # Execute command
-            await cog.toggle_quiet_hours(mock_interaction)
+            await cog.toggle_quiet_hours.callback(cog, mock_interaction)
 
             # Verify update call with enabled=False
             call_args = mock_service.update_quiet_hours.call_args
@@ -342,7 +346,7 @@ class TestQuietHoursCommands:
             enabled=True,
         )
 
-        with patch("app.bot.cogs.notification_settings.QuietHoursService") as mock_service_class:
+        with patch("app.services.quiet_hours_service.QuietHoursService") as mock_service_class:
             # Setup mock service
             mock_service = AsyncMock()
             mock_service.get_quiet_hours = AsyncMock(return_value=None)
@@ -351,7 +355,7 @@ class TestQuietHoursCommands:
             mock_service_class.return_value = mock_service
 
             # Execute command
-            await cog.toggle_quiet_hours(mock_interaction)
+            await cog.toggle_quiet_hours.callback(cog, mock_interaction)
 
             # Verify service calls
             mock_service.get_quiet_hours.assert_called_once()
@@ -361,14 +365,14 @@ class TestQuietHoursCommands:
     @pytest.mark.asyncio
     async def test_quiet_hours_command_error_handling(self, cog, mock_interaction):
         """Test error handling in quiet hours commands."""
-        with patch("app.bot.cogs.notification_settings.QuietHoursService") as mock_service_class:
+        with patch("app.services.quiet_hours_service.QuietHoursService") as mock_service_class:
             # Setup mock service to raise exception
             mock_service = AsyncMock()
             mock_service.get_quiet_hours = AsyncMock(side_effect=Exception("Database error"))
             mock_service_class.return_value = mock_service
 
             # Execute command
-            await cog.quiet_hours(mock_interaction)
+            await cog.quiet_hours.callback(cog, mock_interaction)
 
             # Verify error response
             mock_interaction.followup.send.assert_called_once()
@@ -376,35 +380,16 @@ class TestQuietHoursCommands:
             assert "❌ 載入勿擾時段設定時發生錯誤" in call_args[0][0]
 
     @pytest.mark.asyncio
-    async def test_set_quiet_hours_command_service_error(self, cog, mock_interaction):
-        """Test error handling in set-quiet-hours command."""
-        with patch("app.bot.cogs.notification_settings.QuietHoursService") as mock_service_class:
-            # Setup mock service to raise exception
-            mock_service = AsyncMock()
-            mock_service.update_quiet_hours = AsyncMock(side_effect=Exception("Service error"))
-            mock_service_class.return_value = mock_service
-
-            mock_choice = Mock()
-            mock_choice.value = 1
-
-            # Execute command
-            await cog.set_quiet_hours(mock_interaction, "22:00", "08:00", mock_choice)
-
-            # Verify error response
-            call_args = mock_interaction.followup.send.call_args
-            assert "❌ 設定勿擾時段時發生錯誤" in call_args[0][0]
-
-    @pytest.mark.asyncio
     async def test_toggle_quiet_hours_command_service_error(self, cog, mock_interaction):
         """Test error handling in toggle-quiet-hours command."""
-        with patch("app.bot.cogs.notification_settings.QuietHoursService") as mock_service_class:
+        with patch("app.services.quiet_hours_service.QuietHoursService") as mock_service_class:
             # Setup mock service to raise exception
             mock_service = AsyncMock()
             mock_service.get_quiet_hours = AsyncMock(side_effect=Exception("Service error"))
             mock_service_class.return_value = mock_service
 
             # Execute command
-            await cog.toggle_quiet_hours(mock_interaction)
+            await cog.toggle_quiet_hours.callback(cog, mock_interaction)
 
             # Verify error response
             call_args = mock_interaction.followup.send.call_args
