@@ -118,7 +118,6 @@ class NotificationTimezoneSelect(discord.ui.Select):
 
             await interaction.followup.send(f"✅ 時區已成功更新為：`{selected_timezone}`！", ephemeral=True)
 
-            # Re-render dashboard
             preferences = await preference_service.get_user_preferences(user_id)
             view = NotificationSettingsControlView(preferences.dm_enabled, supabase_service)
             await view._refresh_dashboard(interaction, user_id, preference_service)
@@ -151,6 +150,16 @@ class NotificationSettingsControlView(discord.ui.View):
         self.quiet_hours_btn.callback = self._quiet_hours_callback
         self.add_item(self.quiet_hours_btn)
 
+        # Notification Time Button
+        self.time_btn = discord.ui.Button(
+            label="🕐 設定時間",
+            style=discord.ButtonStyle.primary,
+            custom_id="settings_configure_notification_time",
+            row=0,
+        )
+        self.time_btn.callback = self._time_callback
+        self.add_item(self.time_btn)
+
         # Frequency Select
         self.add_item(NotificationFrequencySelect(row=1))
 
@@ -179,7 +188,18 @@ class NotificationSettingsControlView(discord.ui.View):
             await self._refresh_dashboard(interaction, user_id, preference_service)
         except Exception as e:
             logger.error(f"Error in toggle notifications button: {e}", exc_info=True)
-            await interaction.followup.send("❌ 切換失敗，請稍後再試。", ephemeral=True)
+            await interaction.followup.send("❌ 處理失敗，請稍後再試。", ephemeral=True)
+
+    async def _time_callback(self, interaction: discord.Interaction):
+        # Trigger notification time config modal
+        from app.bot.ui.modals import SetNotificationTimeModal
+
+        try:
+            await interaction.response.send_modal(SetNotificationTimeModal(self.supabase_service))
+        except discord.InteractionResponded:
+            await interaction.followup.send(
+                "❌ 無法重新開啟時間設定表單，請使用 `/set-notification-time` 斜線指令。", ephemeral=True
+            )
 
     async def _quiet_hours_callback(self, interaction: discord.Interaction):
         # Trigger quiet hours config modal

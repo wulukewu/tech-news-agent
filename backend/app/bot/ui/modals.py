@@ -169,3 +169,66 @@ class AddFeedModal(discord.ui.Modal, title="訂閱 RSS 來源"):
         except Exception as e:
             logger.error("AddFeedModal error", error=str(e), exc_info=True)
             await interaction.followup.send("❌ 發生未預期的錯誤，請稍後再試。", ephemeral=True)
+
+
+class SetNotificationTimeModal(discord.ui.Modal, title="設定通知時間"):
+    """Modal for setting notification time via text input."""
+
+    notification_time = discord.ui.TextInput(
+        label="通知時間 (HH:MM)",
+        placeholder="例如：09:00",
+        min_length=4,
+        max_length=5,
+    )
+
+    def __init__(self, supabase_service):
+        super().__init__()
+        self.supabase_service = supabase_service
+
+    async def on_submit(self, interaction: discord.Interaction) -> None:
+        await interaction.response.defer(ephemeral=True)
+
+        import re
+
+        _time_re = re.compile(r"^([01]?\d|2[0-3]):([0-5]\d)$")
+        time_val = self.notification_time.value.strip()
+
+        if not _time_re.match(time_val):
+            await interaction.followup.send("❌ 通知時間格式錯誤，請使用 HH:MM（例如 09:30）", ephemeral=True)
+            return
+
+        h, m = map(int, time_val.split(":"))
+        formatted_time = f"{h:02d}:{m:02d}"
+
+        try:
+            from app.repositories.user_notification_preferences import (
+                UserNotificationPreferencesRepository,
+            )
+            from app.schemas.user_notification_preferences import (
+                UpdateUserNotificationPreferencesRequest,
+            )
+            from app.services.preference_service import PreferenceService
+
+            discord_id = str(interaction.user.id)
+            user_uuid = await self.supabase_service.get_or_create_user(discord_id)
+
+            prefs_repo = UserNotificationPreferencesRepository(self.supabase_service.client)
+            preference_service = PreferenceService(prefs_repo)
+
+            updates = UpdateUserNotificationPreferencesRequest(notification_time=formatted_time)
+            await preference_service.update_preferences(user_uuid, updates, source="discord")
+
+            embed = discord.Embed(title="⏰ 通知時間已更新", color=discord.Color.green())
+            embed.add_field(name="通知時間", value=formatted_time, inline=True)
+            await interaction.followup.send(embed=embed, ephemeral=True)
+
+            # Re-render dashboard
+            preferences = await preference_service.get_user_preferences(user_uuid)
+            from app.bot.cogs.notification_settings import NotificationSettingsControlView
+
+            view = NotificationSettingsControlView(preferences.dm_enabled, self.supabase_service)
+            await view._refresh_dashboard(interaction, user_uuid, preference_service)
+
+        except Exception as e:
+            logger.error(f"SetNotificationTimeModal error: {e}", exc_info=True)
+            await interaction.followup.send("❌ 設定失敗，請稍後再試。", ephemeral=True)

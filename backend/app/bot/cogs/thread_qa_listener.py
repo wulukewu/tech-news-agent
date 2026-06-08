@@ -36,6 +36,18 @@ class ThreadQAListener(commands.Cog):
         if message.content.startswith("/"):
             return
 
+        # Dev guild isolation check for production/global bot:
+        # Ignore thread messages in dev guild to let the local bot handle them.
+        from app.core.config import get_settings
+
+        settings = get_settings()
+        if (
+            settings.dev_guild_id
+            and message.guild
+            and message.guild.id == int(settings.dev_guild_id)
+        ):
+            return
+
         user = await self.supabase_service.get_user_by_discord_id(str(message.author.id))
         if not user:
             return

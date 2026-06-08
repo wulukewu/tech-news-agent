@@ -90,6 +90,14 @@ class TechNewsBot(commands.Bot):
                         f"Ignoring guild interaction from {interaction.guild_id} in local dev mode due to dev_guild_id isolation."
                     )
                     return
+            else:
+                # If running in production/global bot mode, ignore interactions from the dev guild
+                # so they are exclusively handled by the local dev bot.
+                if settings.dev_guild_id and interaction.guild_id == int(settings.dev_guild_id):
+                    logger.debug(
+                        f"Ignoring dev guild interaction from {interaction.guild_id} in production/global bot mode."
+                    )
+                    return
         except Exception as e:
             logger.warning(f"Error during dev guild isolation check: {e}")
 
@@ -218,6 +226,21 @@ class TechNewsBot(commands.Bot):
                     except Exception as e:
                         logger.error(
                             f"Error in stateless settings_configure_quiet_hours callback: {e}",
+                            exc_info=True,
+                        )
+
+                elif custom_id == "settings_configure_notification_time":
+                    try:
+                        from app.bot.cogs.notification_settings import (
+                            NotificationSettingsControlView,
+                        )
+
+                        view = NotificationSettingsControlView(True)
+                        await view._time_callback(interaction)
+                        return
+                    except Exception as e:
+                        logger.error(
+                            f"Error in stateless settings_configure_notification_time callback: {e}",
                             exc_info=True,
                         )
 
