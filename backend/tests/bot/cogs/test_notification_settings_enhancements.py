@@ -121,7 +121,8 @@ async def test_client_dev_guild_isolation_production():
 async def test_thread_qa_listener_isolation():
     """Test ThreadQAListener ignores thread messages in dev guild in production."""
     bot = MagicMock()
-    listener = ThreadQAListener(bot)
+    with patch("app.services.thread_memory_service.LLMService") as mock_llm:
+        listener = ThreadQAListener(bot)
 
     mock_settings = MagicMock()
     mock_settings.dev_guild_id = 9999
